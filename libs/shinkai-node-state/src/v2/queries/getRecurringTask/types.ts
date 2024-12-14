@@ -3,7 +3,7 @@ import { GetRecurringTaskResponse } from '@shinkai_network/shinkai-message-ts/ap
 
 export type GetRecurringTaskInput = Token & {
   nodeAddress: string;
-  recurringTaskId: number;
+  recurringTaskId: string;
 };
 
 export type GetRecurringTaskOutput = GetRecurringTaskResponse;
