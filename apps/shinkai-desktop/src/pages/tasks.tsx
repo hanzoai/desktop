@@ -19,7 +19,8 @@ import {
   Switch,
 } from '@shinkai_network/shinkai-ui';
 import { cn } from '@shinkai_network/shinkai-ui/utils';
-import { Edit, HistoryIcon, PlusIcon, TrashIcon } from 'lucide-react';
+import cronstrue from 'cronstrue';
+import { Edit, PlusIcon, TrashIcon } from 'lucide-react';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -41,10 +42,9 @@ export const Tasks = () => {
 
   return (
     <SimpleLayout
-      classname="max-w-3xl"
+      classname="max-w-4xl"
       headerRightElement={
         <div className="flex items-center gap-2">
-          {/*<ImportToolModal />*/}
           <Link
             className={cn(
               buttonVariants({
@@ -60,9 +60,9 @@ export const Tasks = () => {
           </Link>
         </div>
       }
-      title="Scheduled Tasks"
+      title="Cron Tasks"
     >
-      <div className="divide-y divide-gray-300">
+      <div className="divide-y divide-gray-300 pt-4">
         {isPending &&
           Array.from({ length: 8 }).map((_, idx) => (
             <div
@@ -126,10 +126,14 @@ const TaskCard = ({
   const [isDeleteTaskDrawerOpen, setIsDeleteTaskDrawerOpen] =
     React.useState(false);
 
+  const readableCron = cronstrue.toString(cronExpression, {
+    throwExceptionOnParseError: false,
+  });
+
   return (
     <div
       className={cn(
-        'grid grid-cols-[1fr_100px_100px_40px] items-start gap-5 rounded-sm bg-gray-500 px-2 py-4 text-left text-sm',
+        'grid grid-cols-[1fr_100px_120px_40px] items-start gap-5 rounded-sm bg-gray-500 px-2 py-4 text-left text-sm',
       )}
     >
       <div className="flex flex-col gap-2.5">
@@ -141,28 +145,19 @@ const TaskCard = ({
         <p className="text-gray-80 line-clamp-2 text-xs">
           {description ?? '-'}
         </p>
-        <p className="text-gray-80 line-clamp-2 text-xs">
-          <span className="mr-2">Prompt</span>
+        <p className="line-clamp-2 text-xs text-gray-50">
+          <span className="text-gray-80 mr-2">Prompt</span>
           {prompt}
         </p>
-        <p className="text-gray-80 line-clamp-2 text-xs">
-          <span className="mr-2">Schedule</span>
-          {cronExpression}
+        <p className="line-clamp-2 text-xs text-gray-50">
+          <span className="text-gray-80 mr-2">Schedule</span>
+          {readableCron}
         </p>
       </div>
       <div className="flex items-center gap-3 pt-1">
         <Switch
-        // checked={true}
-        // onCheckedChange={async () => {
-        //   await updateTool({
-        //     toolKey: task.tool_router_key,
-        //     toolType: task.tool_type,
-        //     toolPayload: {} as ShinkaiTool,
-        //     isToolEnabled: !task.enabled,
-        //     nodeAddress: auth?.node_address ?? '',
-        //     token: auth?.api_v2_key ?? '',
-        //   });
-        // }}
+          checked={true}
+          // TODO: need backend changes
         />
         <label className="text-xs text-gray-50" htmlFor="all">
           Active
@@ -176,10 +171,31 @@ const TaskCard = ({
           }),
           'h-[30px] gap-2 rounded-lg px-3 text-xs',
         )}
-        to="/tasks"
+        to={`/tasks/${taskId}`}
       >
-        <HistoryIcon className="size-4" />
-        History
+        <svg
+          className="size-4"
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          width="24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d="M13 12h8" />
+          <path d="M13 18h8" />
+          <path d="M13 6h8" />
+          <path d="M3 12h1" />
+          <path d="M3 18h1" />
+          <path d="M3 6h1" />
+          <path d="M8 12h1" />
+          <path d="M8 18h1" />
+          <path d="M8 6h1" />
+        </svg>
+        View Logs
       </Link>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -217,7 +233,7 @@ const TaskCard = ({
               name: t('common.delete'),
               icon: <TrashIcon className="mr-3 h-4 w-4" />,
               onClick: () => {
-                // setIsDeleteTaskDrawerOpen(true);
+                setIsDeleteTaskDrawerOpen(true);
               },
             },
           ].map((option) => (
@@ -278,7 +294,7 @@ const RemoveTaskDrawer = ({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
-          Delete Task <span className="font-mono text-base">{taskName}</span> ?
+          Delete Task <span className="font-mono text-base"> {taskName}</span> ?
         </DialogTitle>
         <DialogDescription>
           The task will be permanently deleted. This action cannot be undone.
@@ -304,7 +320,7 @@ const RemoveTaskDrawer = ({
                 await removeTask({
                   nodeAddress: auth?.node_address ?? '',
                   token: auth?.api_v2_key ?? '',
-                  recurringTaskId: taskId,
+                  recurringTaskId: taskId.toString(),
                 });
               }}
               size="sm"
