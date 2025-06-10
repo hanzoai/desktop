@@ -1,4 +1,5 @@
 import { fetch } from '@tauri-apps/plugin-http';
+import composioRegistry from './composio-registry.json' with { type: 'json' };
 export interface AppCategory {
   id: string;
   name: string;
@@ -102,33 +103,44 @@ export interface AppDetails {
 }
 
 export class ComposioApi {
-  async getApps(): Promise<App[]> {
-    console.log("Getting apps");
-    const response = await fetch("https://mcp.composio.dev/api/apps", {
-    });
-    console.log(response);
+  async getApps(fromCache = true): Promise<App[]> {
+    if (fromCache) {
+      return composioRegistry.apps as App[];
+    }
+    const response = await fetch('https://mcp.composio.dev/api/apps', {});
     return response.json();
   }
 
-  async getApp(appId: string): Promise<AppDetails> {
-    const response = await fetch(`https://mcp.composio.dev/api/apps/${appId}`, {
-    });
+  async getApp(appId: string, fromCache = true): Promise<AppDetails> {
+    if (fromCache) {
+      return composioRegistry.appDetails[
+        appId as keyof typeof composioRegistry.appDetails
+      ] as AppDetails;
+    }
+    const response = await fetch(
+      `https://mcp.composio.dev/api/apps/${appId}`,
+      {},
+    );
     return response.json();
   }
 
   async generateClientId(appId: string): Promise<string> {
-    console.log("generating client id for app", appId);
-    const response = await fetch(`https://mcp.composio.dev/${appId}`, {
-    });
+    console.log('generating client id for app', appId);
+    const response = await fetch(`https://mcp.composio.dev/${appId}`, {});
     const url = new URL(response.url);
     const customerId = url.searchParams.get('customerId') || '';
     return customerId;
   }
 
-  async getAppForClientId(appId: string, clientId: string): Promise<AppDetails> {
-    console.log("getting app for client id", appId, clientId);
-    const response = await fetch(`https://mcp.composio.dev/api/apps/${appId}?uuid=${clientId}`, {
-    });
+  async getAppForClientId(
+    appId: string,
+    clientId: string,
+  ): Promise<AppDetails> {
+    console.log('getting app for client id', appId, clientId);
+    const response = await fetch(
+      `https://mcp.composio.dev/api/apps/${appId}?uuid=${clientId}`,
+      {},
+    );
     return response.json();
   }
 }
