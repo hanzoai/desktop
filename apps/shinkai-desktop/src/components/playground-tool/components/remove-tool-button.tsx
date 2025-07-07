@@ -31,7 +31,7 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
-
+  console.log('toolKey', toolKey);
   const { mutateAsync: removeTool, isPending: isRemoveToolPending } =
     useRemoveTool({
       onSuccess: async () => {
@@ -72,7 +72,7 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
                   variant: 'outline',
                   size: 'sm',
                 }),
-                'min-h-auto flex h-auto w-10 justify-center rounded-md py-2',
+                'flex h-auto min-h-auto w-10 justify-center rounded-md py-2',
               )}
             >
               <Trash2 className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
                 type="button"
                 variant="ghost"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
             </DialogClose>
             <Button
@@ -109,7 +109,7 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
               size="sm"
               variant="destructive"
             >
-              Delete
+              {t('common.delete')}
             </Button>
           </div>
         </DialogFooter>
