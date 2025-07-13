@@ -28,6 +28,15 @@
 </p>
 
 <p align="center">
+  Read this in:
+  <a href="README.zh.md">简体中文</a> |
+  <a href="README.zh-HK.md">粵語</a> |
+  <a href="README.ko.md">한국어</a> |
+  <a href="README.ja.md">日本語</a> |
+  <a href="README.es.md">Español</a>
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-demo">Demo</a> •
   <a href="#-examples">Examples</a> •
@@ -241,7 +250,9 @@ shinkai-apps/
   <img src="https://img.shields.io/badge/English-supported-success?logo=alphabet&logoColor=white" alt="English supported">
   <img src="https://img.shields.io/badge/Español-supported-success?logo=alphabet&logoColor=white" alt="Spanish supported">
   <img src="https://img.shields.io/badge/中文-supported-success?logo=alphabet&logoColor=white" alt="Chinese supported">
+  <img src="https://img.shields.io/badge/粵語-supported-success?logo=alphabet&logoColor=white" alt="Cantonese supported">
   <img src="https://img.shields.io/badge/日本語-supported-success?logo=alphabet&logoColor=white" alt="Japanese supported">
+  <img src="https://img.shields.io/badge/한국어-supported-success?logo=alphabet&logoColor=white" alt="Korean supported">
   <img src="https://img.shields.io/badge/Bahasa Indonesia-supported-success?logo=alphabet&logoColor=white" alt="Indonesian supported">
   <img src="https://img.shields.io/badge/Türkçe-supported-success?logo=alphabet&logoColor=white" alt="Turkish supported">
 </p>
@@ -255,7 +266,7 @@ Shinkai supports multiple languages through our i18n system:
 # Generate updated translation types
 npx nx run shinkai-i18n:i18n
 
-# Supported languages: en-US, es-ES, zh-CN, ja-JP, id-ID, tr-TR
+# Supported languages: en-US, es-ES, zh-CN, zh-HK, ko-KR, ja-JP, id-ID, tr-TR
 ```
 
 ### 🤝 Contributing
