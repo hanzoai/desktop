@@ -105,6 +105,7 @@ export function UpdateToolsSwitchActionBarBase() {
         top_p: chatConfig?.top_p,
         top_k: chatConfig?.top_k,
         use_tools: !chatConfig?.use_tools,
+        thinking: chatConfig?.thinking,
       },
     });
   };
