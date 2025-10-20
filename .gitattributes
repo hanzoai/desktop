@@ -1,6 +1,7 @@
 apps/hanzo-desktop/src-tauri/bin/* filter=lfs diff=lfs merge=lfs -text
 apps/hanzo-desktop/src-tauri/bin/** filter=lfs diff=lfs merge=lfs -text
-apps/hanzo-desktop/src-tauri/external-binaries/** filter=lfs diff=lfs merge=lfs -text
-apps/*/src-tauri/external-binaries/**/*-apple-darwin filter=lfs diff=lfs merge=lfs -text
-apps/*/src-tauri/external-binaries/**/*-pc-windows-* filter=lfs diff=lfs merge=lfs -text
-apps/*/src-tauri/external-binaries/**/*-unknown-linux-* filter=lfs diff=lfs merge=lfs -text
+# External binaries are now downloaded from GitHub releases - see download-binaries.sh
+# apps/hanzo-desktop/src-tauri/external-binaries/** filter=lfs diff=lfs merge=lfs -text
+# apps/*/src-tauri/external-binaries/**/*-apple-darwin filter=lfs diff=lfs merge=lfs -text
+# apps/*/src-tauri/external-binaries/**/*-pc-windows-* filter=lfs diff=lfs merge=lfs -text
+# apps/*/src-tauri/external-binaries/**/*-unknown-linux-* filter=lfs diff=lfs merge=lfs -text

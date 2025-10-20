@@ -5,3 +5,6 @@
 /db
 
 /llm-models
+
+# Downloaded external binaries
+/external-binaries/

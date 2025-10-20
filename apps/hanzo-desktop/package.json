@@ -4,8 +4,9 @@
   "version": "0.5.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "download-binaries": "cd src-tauri && ./download-binaries.sh",
+    "dev": "npm run download-binaries && vite",
+    "build": "npm run download-binaries && tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "tauri": "tauri",
