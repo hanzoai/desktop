@@ -1,6 +1,6 @@
 <H1 Align =“ Center”>
 <img width =“ 36” height =“ 36” src =“资产/iCon.png”/>
-Shinkai
+Hanzo
 </ h1>
 <div align =“中心”>
 
@@ -15,15 +15,15 @@ Shinkai
 </p>
 
 <p align =“中心”>
-<a href =“ https://github.com/dcspark/shinkai-apps/stargazers”> <img src =“ https://img.shields.io/github/github/github/dcspark/dcspark/dcspark/shinkai-shinkai-apps?style=social=Social=Social=Social alt alt alt alt =”
+<a href =“ https://github.com/dcspark/hanzo-apps/stargazers”> <img src =“ https://img.shields.io/github/github/github/dcspark/dcspark/dcspark/hanzo-hanzo-apps?style=social=Social=Social=Social alt alt alt alt =”
 <A href =“ https://discord.gg/eua45u3seu”> <img src =“ https://img.shields.io/discord/1303749220842340412？alt =“ Discord”> </a>
-<a href =“ https://x.com/shinkailocalai”> <img src =“ https://img.shields.io/twitter/twitter/twitter/follow/shinkailocalai?style?style=social = social” alt alt =“ twitter” twitter cont
+<a href =“ https://x.com/hanzolocalai”> <img src =“ https://img.shields.io/twitter/twitter/twitter/follow/hanzolocalai?style?style=social = social” alt alt =“ twitter” twitter cont
 </p>
 
 <p align =“中心”>
 <strong>建立协作AI代理，可以一起工作，处理付款和自动化复杂工作流程</strong>
 <br/>
-Shinkai是一个免费的开源平台，使AI代理创建民主化。
+Hanzo是一个免费的开源平台，使AI代理创建民主化。
 无需编码 - 只需拖动，掉落和部署可以跨平台工作并处理现实世界任务的智能代理。
 </p>
 
@@ -42,7 +42,7 @@ Shinkai是一个免费的开源平台，使AI代理创建民主化。
 <a href =“＃ - 示例”>示例</a>•
 <a href =“＃ - 快速启动”>快速启动</a>•
 <a href =“＃ - 开发”>开发</a>•
-<a href =“ https://docs.shinkai.com”>文档</a>
+<a href =“ https://docs.hanzo.com”>文档</a>
 </p>
 
 ---
@@ -65,9 +65,9 @@ Shinkai是一个免费的开源平台，使AI代理创建民主化。
 
 ##🎬演示
 
-[！[demo Video]（Assets/shinkai-screenshot.png）]（https://github.com/user-user-attachments/assets/bc5bbb7da-7ca5-7ca5-477d-838a-a-8238a-8239951b6c01）
+[！[demo Video]（Assets/hanzo-screenshot.png）]（https://github.com/user-user-attachments/assets/bc5bbb7da-7ca5-7ca5-477d-838a-a-8238a-8239951b6c01）
 
-_watch Shinkai代理商合作分析市场数据，执行交易并自动管理复杂工作流程。
+_watch Hanzo代理商合作分析市场数据，执行交易并自动管理复杂工作流程。
 
 ##📋示例
 
@@ -85,8 +85,8 @@ _watch Shinkai代理商合作分析市场数据，执行交易并自动管理复
 
 ###一键安装
 
-1。**下载**您的平台的最新版本从我们的[发行页]（https://github.com/dcspark/shinkai-apps/releases）
-2。**安装**并启动Shinkai
+1。**下载**您的平台的最新版本从我们的[发行页]（https://github.com/dcspark/hanzo-apps/releases）
+2。**安装**并启动Hanzo
 3。**创建**您的第一个AI代理使用我们的分步导界面
 
 ###系统要求
@@ -101,19 +101,19 @@ _watch Shinkai代理商合作分析市场数据，执行交易并自动管理复
 
 ###架构概述
 
-Shinkai是用** nx **进行编排和依赖管理的现代Monorepo建造的。该体系结构包括：
+Hanzo是用** nx **进行编排和依赖管理的现代Monorepo建造的。该体系结构包括：
 
 **核心应用程序：**
 
--  ** shinkai-desktop **  - 跨平台陶里（Tauri Tauri）应用于React前端
+-  ** hanzo-desktop **  - 跨平台陶里（Tauri Tauri）应用于React前端
 
 **共享库：**
 
--  ** Shinkai-Message-TS **  - 消息协议和与Shinkai节点的网络通信
--  ** Shinkai-Node-State **  - 基于REACT查询的节点数据的状态管理
--  ** Shinkai-UI **  - 可重复使用的反应组件与设计系统
--  ** Shinkai-Artifacts **  - 构建基于Radix和Tailwind CSS的样式的UI原语
--  ** shinkai-i18n **  - 由I18Next提供支持的国际化公用事业
+-  ** Hanzo-Message-TS **  - 消息协议和与Hanzo节点的网络通信
+-  ** Hanzo-Node-State **  - 基于REACT查询的节点数据的状态管理
+-  ** Hanzo-UI **  - 可重复使用的反应组件与设计系统
+-  ** Hanzo-Artifacts **  - 构建基于Radix和Tailwind CSS的样式的UI原语
+-  ** hanzo-i18n **  - 由I18Next提供支持的国际化公用事业
 
 **技术堆栈：**
 
@@ -128,15 +128,15 @@ Shinkai是用** nx **进行编排和依赖管理的现代Monorepo建造的。该
 #### 1。克隆和设置
 
 ```bash
-git clone https://github.com/dcSpark/shinkai-apps
-cd shinkai-apps
+git clone https://github.com/dcSpark/hanzo-apps
+cd hanzo-apps
 nvm use
 npm ci
 ```
 
 #### 2。下载必需的侧二进制
 
-在运行Shinkai之前，您需要下载为应用程序的核心功能提供动力的嵌入式Shinkai节点二进制文件。这可以通过基于您的平台的单个命令来完成：
+在运行Hanzo之前，您需要下载为应用程序的核心功能提供动力的嵌入式Hanzo节点二进制文件。这可以通过基于您的平台的单个命令来完成：
 
 ** macos（苹果硅）：**
 
@@ -171,17 +171,17 @@ npx ts-node ./ci-scripts/download-side-binaries.ts
 
 ```bash
 # Run desktop app (recommended for development)
-npx nx serve:tauri shinkai-desktop
+npx nx serve:tauri hanzo-desktop
 ```
 
 ＃＃＃＃ 建筑
 
 ```bash
 # Build desktop application
-npx nx build shinkai-desktop
+npx nx build hanzo-desktop
 
 # Create development build
-NODE_OPTIONS="--max_old_space_size=8192" npx nx build shinkai-desktop --config="./src-tauri/tauri.conf.development.json"
+NODE_OPTIONS="--max_old_space_size=8192" npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json"
 
 # Build all projects
 npx nx run-many --target=build
@@ -193,14 +193,14 @@ npx nx run-many --target=build
 # Update the built-in Ollama models repository. This repository contains model definitions, tags and metadata for all supported AI models. The command below regenerates the repository files to ensure compatibility with the latest Ollama version and model updates
 npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
 
-# Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Shinkai. It ensures the app catalog stays up-to-date with the latest official releases.
+# Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Hanzo. It ensures the app catalog stays up-to-date with the latest official releases.
 deno run -A ./ci-scripts/composio-repository/main.ts
 
 # Generate translations for all languages (EN, ES, etc.)
 # This command uses AI to automatically generate translations for all supported languages based on the primary i18n source file (English).
 # It ensures consistent translations across the entire application while maintaining natural language quality.
 
-npx nx run shinkai-i18n:i18n
+npx nx run hanzo-i18n:i18n
 ```
 
 ####测试和质量
@@ -218,15 +218,15 @@ npx nx run-many --target=lint
 ###🏗项目结构
 
 ```
-shinkai-apps/
+hanzo-apps/
 ├── apps/
-│   └── shinkai-desktop/          # Main desktop application
+│   └── hanzo-desktop/          # Main desktop application
 ├── libs/
-│   ├── shinkai-message-ts/       # Core messaging protocol
-│   ├── shinkai-node-state/       # State management
-│   ├── shinkai-ui/               # Component library
-│   ├── shinkai-artifacts/        # UI primitives
-│   └── shinkai-i18n/             # Internationalization
+│   ├── hanzo-message-ts/       # Core messaging protocol
+│   ├── hanzo-node-state/       # State management
+│   ├── hanzo-ui/               # Component library
+│   ├── hanzo-artifacts/        # UI primitives
+│   └── hanzo-i18n/             # Internationalization
 ├── ci-scripts/                   # Build and deployment scripts
 └── tools/                        # Development utilities
 ```
@@ -257,14 +257,14 @@ shinkai-apps/
 <img src =“https://img.shields.io/badge/türkçe-supported-success?logo= alphabet＆logogocolor=white = white” alt =“ turkish”
 </p>
 
-Shinkai通过我们的I18N系统支持多种语言：
+Hanzo通过我们的I18N系统支持多种语言：
 
 ```bash
 # Add new translation keys
-# Edit files in libs/shinkai-i18n/locales/
+# Edit files in libs/hanzo-i18n/locales/
 
 # Generate updated translation types
-npx nx run shinkai-i18n:i18n
+npx nx run hanzo-i18n:i18n
 
 # Supported languages: en-US, es-ES, zh-CN, zh-HK, ko-KR, ja-JP, id-ID, tr-TR
 ```
@@ -279,16 +279,16 @@ npx nx run shinkai-i18n:i18n
 
 ###📚其他资源
 
--  ** [官方文档]（https://docs.shinkai.com）**  - 全面的指南和API参考
+-  ** [官方文档]（https://docs.hanzo.com）**  - 全面的指南和API参考
 -  ** [DISCORD社区]（https：//discord.gg/eua45u3seu）**  - 获得帮助并与其他开发人员建立联系
--  ** [Twitter更新]（https://x.com/shinkailocalai）**  - 最新新闻和公告
+-  ** [Twitter更新]（https://x.com/hanzolocalai）**  - 最新新闻和公告
 
 ---
 
 <p align =“中心”>
-<strong>由Shinkai Community建造的❤️</strong>
+<strong>由Hanzo Community建造的❤️</strong>
 <br/>
-<a href =“ https://github.com/dcspark/shinkai-apps/blob/main/license”> apache许可证</a>•
-<a href =“ https://github.com/dcspark/shinkai-apps/issues”>报告错误</a>•
-<a href =“ https://github.com/dcspark/shinkai-apps/issues”>请求功能</a>
+<a href =“ https://github.com/dcspark/hanzo-apps/blob/main/license”> apache许可证</a>•
+<a href =“ https://github.com/dcspark/hanzo-apps/issues”>报告错误</a>•
+<a href =“ https://github.com/dcspark/hanzo-apps/issues”>请求功能</a>
 </p>

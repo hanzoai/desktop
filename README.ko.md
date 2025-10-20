@@ -15,15 +15,15 @@
 </p>
 
 <p align = "Center">
-<a href = "https://github.com/dcspark/shinkai-apps/stargazers"> <img src = "https://img.shields.io/github/stars/dcspark/shinkai-apps?style=social"github Stars "> </a>
+<a href = "https://github.com/dcspark/hanzo-apps/stargazers"> <img src = "https://img.shields.io/github/stars/dcspark/hanzo-apps?style=social"github Stars "> </a>
 <a href = "https://discord.gg/eua45u3seu"> <img src = "https://img.shields.io/discord/1303749220842340412?color=7289da&label iscord&logo=DISCORD&LOGUCORD>alt = "discord"> </a>
-<a href = "https://x.com/shinkailocalai"> <img src = "https://img.shields.io/twitter/follow/shinkailocalai?style=social"alt = "twitter follow"> </a>
+<a href = "https://x.com/hanzolocalai"> <img src = "https://img.shields.io/twitter/follow/hanzolocalai?style=social"alt = "twitter follow"> </a>
 </p>
 
 <p align = "Center">
 <strong> 함께 작동하고 결제를 처리하며 복잡한 워크 플로우를 자동화하는 협업 AI 에이전트 구축 </strong>
 <br/>
-Shinkai는 AI 에이전트 생성을 민주화하는 무료 오픈 소스 플랫폼입니다.
+Hanzo는 AI 에이전트 생성을 민주화하는 무료 오픈 소스 플랫폼입니다.
 코딩 필요-플랫폼에서 작동하고 실제 작업을 처리 할 수있는 지능형 에이전트를 드래그, 드롭 및 배포합니다.
 </p>
 
@@ -42,7 +42,7 @@ Shinkai는 AI 에이전트 생성을 민주화하는 무료 오픈 소스 플랫
 <a href = "#-예제"> 예제 </a> •
 <a href = "#-빠른 시작"> 빠른 시작 </a> •
 <a href = "#-개발"> 개발 </a> •
-<a href = "https://docs.shinkai.com"> 문서 </a>
+<a href = "https://docs.hanzo.com"> 문서 </a>
 </p>
 
 ---
@@ -67,7 +67,7 @@ Shinkai는 AI 에이전트 생성을 민주화하는 무료 오픈 소스 플랫
 
 [!
 
-_watch Shinkai 에이전트는 시장 데이터를 분석하고 거래를 실행하며 복잡한 워크 플로를 자율적으로 관리하기 위해 협력합니다 ._
+_watch Hanzo 에이전트는 시장 데이터를 분석하고 거래를 실행하며 복잡한 워크 플로를 자율적으로 관리하기 위해 협력합니다 ._
 
 ## 📋 예제
 
@@ -85,8 +85,8 @@ _watch Shinkai 에이전트는 시장 데이터를 분석하고 거래를 실행
 
 ### 한 클릭 설치
 
-1. ** 다운로드 ** [Releases Page] (https://github.com/dcspark/shinkai-apps/releases)에서 플랫폼의 최신 릴리스
-2. ** 설치 ** 및 Shinkai를 시작하십시오
+1. ** 다운로드 ** [Releases Page] (https://github.com/dcspark/hanzo-apps/releases)에서 플랫폼의 최신 릴리스
+2. ** 설치 ** 및 Hanzo를 시작하십시오
 3. ** 단계별 가이드 인터페이스를 사용하여 첫 번째 AI 에이전트 작성 **
 
 ### 시스템 요구 사항
@@ -101,19 +101,19 @@ _watch Shinkai 에이전트는 시장 데이터를 분석하고 거래를 실행
 
 ### 아키텍처 개요
 
-Shinkai는 오케스트레이션 및 의존성 관리를 위해 ** nx **를 사용하여 현대 모노레 포로 제작되었습니다.아키텍처는 다음으로 구성됩니다.
+Hanzo는 오케스트레이션 및 의존성 관리를 위해 ** nx **를 사용하여 현대 모노레 포로 제작되었습니다.아키텍처는 다음으로 구성됩니다.
 
 ** 핵심 응용 프로그램 : **
 
--** Shinkai-Desktop **-React Frontend를 사용한 크로스 플랫폼 Tauri 응용 프로그램
+-** Hanzo-Desktop **-React Frontend를 사용한 크로스 플랫폼 Tauri 응용 프로그램
 
 ** 공유 도서관 : **
 
--** Shinkai-Message-TS **-Shinkai 노드와의 메시지 프로토콜 및 네트워크 통신
--** Shinkai-Node-State **-노드 데이터에 대한 쿼리 기반 상태 관리 반응
-- ** Shinkai-ui **- 재사용 가능한 반응 구성 요소와 디자인 시스템
-- ** Shinkai-Artifacts **- Radix 및 Tailwind CSS에 구축 된 스타일의 UI 프리미티브
-- ** Shinkai-I18N **- I18NEXT로 구동되는 국제화 유틸리티
+-** Hanzo-Message-TS **-Hanzo 노드와의 메시지 프로토콜 및 네트워크 통신
+-** Hanzo-Node-State **-노드 데이터에 대한 쿼리 기반 상태 관리 반응
+- ** Hanzo-ui **- 재사용 가능한 반응 구성 요소와 디자인 시스템
+- ** Hanzo-Artifacts **- Radix 및 Tailwind CSS에 구축 된 스타일의 UI 프리미티브
+- ** Hanzo-I18N **- I18NEXT로 구동되는 국제화 유틸리티
 
 ** 기술 스택 : **
 
@@ -128,15 +128,15 @@ Shinkai는 오케스트레이션 및 의존성 관리를 위해 ** nx **를 사�
 #### 1. 클론 및 설정
 
 ```bash
-git clone https://github.com/dcSpark/shinkai-apps
-cd shinkai-apps
+git clone https://github.com/dcSpark/hanzo-apps
+cd hanzo-apps
 nvm use
 npm ci
 ```
 
 #### 2. 필요한 사이드 바이너리 다운로드
 
-Shinkai를 실행하기 전에 응용 프로그램의 핵심 기능에 전원을 공급하는 내장 된 Shinkai 노드 바이너리를 다운로드해야합니다.플랫폼을 기반으로 단일 명령으로 수행 할 수 있습니다.
+Hanzo를 실행하기 전에 응용 프로그램의 핵심 기능에 전원을 공급하는 내장 된 Hanzo 노드 바이너리를 다운로드해야합니다.플랫폼을 기반으로 단일 명령으로 수행 할 수 있습니다.
 
 ** MACOS (Apple Silicon) : **
 
@@ -171,17 +171,17 @@ npx ts-node ./ci-scripts/download-side-binaries.ts
 
 ```bash
 # Run desktop app (recommended for development)
-npx nx serve:tauri shinkai-desktop
+npx nx serve:tauri hanzo-desktop
 ```
 
 #### 건물
 
 ```bash
 # Build desktop application
-npx nx build shinkai-desktop
+npx nx build hanzo-desktop
 
 # Create development build
-NODE_OPTIONS="--max_old_space_size=8192" npx nx build shinkai-desktop --config="./src-tauri/tauri.conf.development.json"
+NODE_OPTIONS="--max_old_space_size=8192" npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json"
 
 # Build all projects
 npx nx run-many --target=build
@@ -193,14 +193,14 @@ npx nx run-many --target=build
 # Update the built-in Ollama models repository. This repository contains model definitions, tags and metadata for all supported AI models. The command below regenerates the repository files to ensure compatibility with the latest Ollama version and model updates
 npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
 
-# Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Shinkai. It ensures the app catalog stays up-to-date with the latest official releases.
+# Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Hanzo. It ensures the app catalog stays up-to-date with the latest official releases.
 deno run -A ./ci-scripts/composio-repository/main.ts
 
 # Generate translations for all languages (EN, ES, etc.)
 # This command uses AI to automatically generate translations for all supported languages based on the primary i18n source file (English).
 # It ensures consistent translations across the entire application while maintaining natural language quality.
 
-npx nx run shinkai-i18n:i18n
+npx nx run hanzo-i18n:i18n
 ```
 
 #### 테스트 및 품질
@@ -218,15 +218,15 @@ npx nx run-many --target=lint
 ### structure 프로젝트 구조
 
 ```
-shinkai-apps/
+hanzo-apps/
 ├── apps/
-│   └── shinkai-desktop/          # Main desktop application
+│   └── hanzo-desktop/          # Main desktop application
 ├── libs/
-│   ├── shinkai-message-ts/       # Core messaging protocol
-│   ├── shinkai-node-state/       # State management
-│   ├── shinkai-ui/               # Component library
-│   ├── shinkai-artifacts/        # UI primitives
-│   └── shinkai-i18n/             # Internationalization
+│   ├── hanzo-message-ts/       # Core messaging protocol
+│   ├── hanzo-node-state/       # State management
+│   ├── hanzo-ui/               # Component library
+│   ├── hanzo-artifacts/        # UI primitives
+│   └── hanzo-i18n/             # Internationalization
 ├── ci-scripts/                   # Build and deployment scripts
 └── tools/                        # Development utilities
 ```
@@ -257,14 +257,14 @@ shinkai-apps/
 <img src = "https://img.shields.io/badge/türkçe-supported-success?logo=alphabet&logocolor=white"alt = "터키 지원">
 </p>
 
-Shinkai는 i18N 시스템을 통해 여러 언어를 지원합니다.
+Hanzo는 i18N 시스템을 통해 여러 언어를 지원합니다.
 
 ```bash
 # Add new translation keys
-# Edit files in libs/shinkai-i18n/locales/
+# Edit files in libs/hanzo-i18n/locales/
 
 # Generate updated translation types
-npx nx run shinkai-i18n:i18n
+npx nx run hanzo-i18n:i18n
 
 # Supported languages: en-US, es-ES, zh-CN, zh-HK, ko-KR, ja-JP, id-ID, tr-TR
 ```
@@ -279,16 +279,16 @@ npx nx run shinkai-i18n:i18n
 
 ### resources 추가 리소스
 
-- ** [공식 문서] (https://docs.shinkai.com) ** - 포괄적 인 가이드 및 API 참조
+- ** [공식 문서] (https://docs.hanzo.com) ** - 포괄적 인 가이드 및 API 참조
 - ** [Discord Community] (https://discord.gg/eua45u3seu) ** - 도움을 받고 다른 개발자와 연결
-- ** [트위터 업데이트] (https://x.com/shinkailocalai) ** - 최신 뉴스 및 공지 사항
+- ** [트위터 업데이트] (https://x.com/hanzolocalai) ** - 최신 뉴스 및 공지 사항
 
 ---
 
 <p align = "Center">
-<strong> Shinkai Community </strong>에 의해 with️로 건축되었습니다
+<strong> Hanzo Community </strong>에 의해 with️로 건축되었습니다
 <br/>
-<a href = "https://github.com/dcspark/shinkai-apps/blob/main/license"> apache 라이센스 </a> •
-<a href = "https://github.com/dcspark/shinkai-apps/issues"> 보고서 </a> •
-<a href = "https://github.com/dcspark/shinkai-apps/issues"> 요청 기능 </a>
+<a href = "https://github.com/dcspark/hanzo-apps/blob/main/license"> apache 라이센스 </a> •
+<a href = "https://github.com/dcspark/hanzo-apps/issues"> 보고서 </a> •
+<a href = "https://github.com/dcspark/hanzo-apps/issues"> 요청 기능 </a>
 </p>
