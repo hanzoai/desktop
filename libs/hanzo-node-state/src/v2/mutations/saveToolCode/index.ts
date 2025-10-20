@@ -1,0 +1,61 @@
+import {
+  saveToolCode as saveToolCodeApi,
+  toggleEnableTool,
+} from '@hanzo_network/hanzo-message-ts/api/tools/index';
+import {} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { merge } from 'ts-deepmerge';
+
+import { type SaveToolCodeInput } from './types';
+
+export const saveToolCode = async ({
+  nodeAddress,
+  token,
+  jobId,
+  name,
+  description,
+  version,
+  metadata,
+  code,
+  language,
+  assets,
+  tools,
+  xHanzoAppId,
+  xHanzoToolId,
+  xHanzoOriginalToolRouterKey,
+  author,
+}: SaveToolCodeInput) => {
+  const mergedToolMetadata = merge(metadata, {
+    name,
+    description,
+    version,
+    tools,
+    author,
+  });
+
+  const response = await saveToolCodeApi(
+    nodeAddress,
+    token,
+    {
+      code: code ?? '',
+      metadata: mergedToolMetadata,
+      job_id: jobId,
+      language,
+      assets,
+    },
+    xHanzoAppId,
+    xHanzoToolId,
+    xHanzoOriginalToolRouterKey,
+  );
+
+  if (
+    response.metadata.tool_router_key &&
+    Object.keys(metadata?.configurations?.properties ?? {}).length === 0
+  ) {
+    await toggleEnableTool(nodeAddress, token, {
+      tool_router_key: response.metadata.tool_router_key,
+      enabled: true,
+    });
+  }
+
+  return response;
+};

@@ -46,8 +46,8 @@ export AWS_ENDPOINT_URL=https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.co
 
 # Update updates.json on R2
 echo "Updating updates.json on R2..."
-# aws s3 rm s3://shinkai-download/shinkai-desktop/binaries/production/updates.json --endpoint-url https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
-aws s3 cp s3://shinkai-download/shinkai-desktop/binaries/production/updates-next.json s3://shinkai-download/shinkai-desktop/binaries/production/updates.json --endpoint-url https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+# aws s3 rm s3://hanzo-download/hanzo-desktop/binaries/production/updates.json --endpoint-url https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
+aws s3 cp s3://hanzo-download/hanzo-desktop/binaries/production/updates-next.json s3://hanzo-download/hanzo-desktop/binaries/production/updates.json --endpoint-url https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com
 
 # Update Cloudflare Ruleset
 echo "Updating Cloudflare Ruleset..."

@@ -64,6 +64,6 @@ const composioRegistry = {
 
 const registryJson = JSON.stringify(composioRegistry, null, 2);
 await Deno.writeTextFile(
-  'apps/shinkai-desktop/src/lib/composio/composio-registry.json',
+  'apps/hanzo-desktop/src/lib/composio/composio-registry.json',
   registryJson,
 );

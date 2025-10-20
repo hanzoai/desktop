@@ -1,0 +1,14 @@
+{
+  "name": "hanzo-desktop",
+  "private": true,
+  "version": "0.5.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev"
+  }
+}
