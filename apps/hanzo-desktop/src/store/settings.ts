@@ -12,7 +12,7 @@ import {
 } from '../components/onboarding/constants';
 
 export enum TutorialBanner {
-  SHINKAI_TOOLS = 'hanzo-tools',
+  HANZO_TOOLS = 'hanzo-tools',
   FILES_EXPLORER = 'files-explorer',
   SCHEDULED_TASKS = 'scheduled-tasks',
   AIS_AND_AGENTS = 'ais-and-agents',

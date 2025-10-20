@@ -490,7 +490,7 @@ const RemoveAgentDrawer = ({
     </Dialog>
   );
 };
-const SHINKAI_DAPP_URL = 'https://hanzo-contracts.pages.dev';
+const HANZO_DAPP_URL = 'https://hanzo-contracts.pages.dev';
 
 export function AuthorAvatarLink({ author }: { author: string }) {
   const formattedAuthor = author
@@ -499,7 +499,7 @@ export function AuthorAvatarLink({ author }: { author: string }) {
 
   return (
     <a
-      href={`${SHINKAI_DAPP_URL}/identity/${formattedAuthor}`}
+      href={`${HANZO_DAPP_URL}/identity/${formattedAuthor}`}
       className="text-text-secondary isolate flex items-center gap-2 text-sm hover:[&>span]:underline"
       target="_blank"
       rel="noopener noreferrer"

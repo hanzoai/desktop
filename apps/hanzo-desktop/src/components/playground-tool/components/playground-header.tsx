@@ -30,7 +30,7 @@ import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
 import { useAuth } from '../../../store/auth';
-import { SHINKAI_STORE_URL } from '../../../utils/store';
+import { HANZO_STORE_URL } from '../../../utils/store';
 import { DockerStatus } from '../../tools/components/docker-status';
 import { usePlaygroundStore } from '../context/playground-context';
 import { type CreateToolCodeFormSchema } from '../hooks/use-tool-code';
@@ -105,7 +105,7 @@ function PlaygroundHeaderBase({
     usePublishTool({
       onSuccess: async (response) => {
         await open(
-          `${SHINKAI_STORE_URL}/store/revisions/complete?id=${response.response.revisionId}`,
+          `${HANZO_STORE_URL}/store/revisions/complete?id=${response.response.revisionId}`,
         );
       },
       onError: (error) => {
@@ -328,7 +328,7 @@ function PlaygroundHeaderBase({
                   Publishing will make your tool available in the{' '}
                   <a
                     className="text-text-default underline"
-                    href={SHINKAI_STORE_URL}
+                    href={HANZO_STORE_URL}
                     rel="noreferrer"
                     target="_blank"
                   >

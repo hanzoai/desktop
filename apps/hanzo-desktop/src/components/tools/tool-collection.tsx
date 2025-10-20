@@ -26,7 +26,7 @@ import { toast } from 'sonner';
 
 import { useDebounce } from '../../hooks/use-debounce';
 import { useAuth } from '../../store/auth';
-import { SHINKAI_STORE_URL } from '../../utils/store';
+import { HANZO_STORE_URL } from '../../utils/store';
 
 import { DockerStatus } from './components/docker-status';
 import ToolCard from './components/tool-card';
@@ -123,7 +123,7 @@ export const ToolCollection = () => {
               )}
               rel="noreferrer"
               target="_blank"
-              to={SHINKAI_STORE_URL}
+              to={HANZO_STORE_URL}
             >
               <StoreIcon className="size-4" />
               {t('tools.store.label')}

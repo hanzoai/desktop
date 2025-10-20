@@ -60,7 +60,7 @@ import { toast } from 'sonner';
 
 import { useAuth } from '../../../store/auth';
 import { useSettings } from '../../../store/settings';
-import { SHINKAI_STORE_URL } from '../../../utils/store';
+import { HANZO_STORE_URL } from '../../../utils/store';
 import { FileInputField } from '../../playground-tool/components/execution-panel';
 import RemoveToolButton from '../../playground-tool/components/remove-tool-button';
 import ToolCodeEditor from '../../playground-tool/tool-code-editor';
@@ -157,7 +157,7 @@ export default function ToolDetailsCard({
   } = usePublishTool({
     onSuccess: async (response) => {
       await open(
-        `${SHINKAI_STORE_URL}/store/revisions/complete?id=${response.response.revisionId}`,
+        `${HANZO_STORE_URL}/store/revisions/complete?id=${response.response.revisionId}`,
       );
     },
     onError: (error) => {
@@ -779,7 +779,7 @@ export default function ToolDetailsCard({
               toolStoreDetails?.product?.product?.category && {
                 label: 'Category',
                 value: toolStoreDetails?.product?.product?.category.name,
-                href: `${SHINKAI_STORE_URL}/category/${toolStoreDetails?.product?.product?.category.id}`,
+                href: `${HANZO_STORE_URL}/category/${toolStoreDetails?.product?.product?.category.id}`,
               },
               'author' in tool &&
                 tool.author && {
@@ -1335,7 +1335,7 @@ export default function ToolDetailsCard({
                       Publish your tool to the{' '}
                       <a
                         className="text-text-default underline"
-                        href={SHINKAI_STORE_URL}
+                        href={HANZO_STORE_URL}
                         rel="noreferrer"
                         target="_blank"
                       >
@@ -1376,7 +1376,7 @@ export default function ToolDetailsCard({
                         the submission details on the app store.{' '}
                         <a
                           className="font-medium text-inherit underline"
-                          href={`${SHINKAI_STORE_URL}/store/revisions/complete?id=${publishToolData?.response.revisionId}`}
+                          href={`${HANZO_STORE_URL}/store/revisions/complete?id=${publishToolData?.response.revisionId}`}
                           rel="noreferrer"
                           target="_blank"
                         >
