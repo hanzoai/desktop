@@ -30,7 +30,7 @@ jobs:
         with:
           script: |
             core.setFailed('Version mismatch')
-  # release-shinkai-visor:
+  # release-hanzo-visor:
   #   needs: prebuild
   #   runs-on: ubuntu-latest
   #   environment: production
@@ -53,8 +53,8 @@ jobs:
   #         npm cache verify
   #         npm ci --no-audit --prefer-offline
 
-  #     - name: Run NX build on shinkai-visor
-  #       run: npx nx build shinkai-visor --skip-nx-cache
+  #     - name: Run NX build on hanzo-visor
+  #       run: npx nx build hanzo-visor --skip-nx-cache
   #       env:
   #         VERSION: ${{ needs.prebuild.outputs.version }}.${{github.run_number}}
   #         NAME_PREFIX: ''
@@ -62,19 +62,19 @@ jobs:
   #         PUBLIC_KEY: ${{ secrets.CHROME_EXTENSION_PUBLIC_KEY }}
 
   #     - name: Zip extension
-  #       run: cd ./dist/apps && zip -r shinkai-visor.zip shinkai-visor
+  #       run: cd ./dist/apps && zip -r hanzo-visor.zip hanzo-visor
 
   #     - name: Upload & Release
   #       uses: mnao305/chrome-extension-upload@v4.0.1
   #       with:
-  #         file-path: dist/apps/shinkai-visor.zip
+  #         file-path: dist/apps/hanzo-visor.zip
   #         extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
   #         client-id: ${{ secrets.CHROME_CLIENT_ID }}
   #         client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
   #         refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
   #         publish: false
 
-  release-shinkai-desktop:
+  release-hanzo-desktop:
     permissions:
       contents: 'write'
       id-token: 'write'
@@ -87,27 +87,27 @@ jobs:
           - arch: x86_64-unknown-linux-gnu
             # os: ubuntu-22.04
             os: linux-amd64-4vcpu-16gb
-            build_output_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
-            build_output_update_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
-            build_output_update_signature_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
             distributable_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage
             distributable_update_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
             distributable_update_signature_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
             os: macos-14
-            build_output_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/dmg/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_aarch64.dmg
-            build_output_update_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/macos/Shinkai Desktop.app.tar.gz
-            build_output_update_signature_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/macos/Shinkai Desktop.app.tar.gz.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/dmg/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_aarch64.dmg
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Shinkai Desktop.app.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Shinkai Desktop.app.tar.gz.sig
             distributable_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.dmg
             distributable_update_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz
             distributable_update_signature_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
             os: windows-2022
-            build_output_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
-            build_output_update_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
-            build_output_update_signature_file_path: apps/shinkai-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Shinkai Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip.sig
             distributable_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.exe
             distributable_update_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip
             distributable_update_signature_file_name: Shinkai-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip.sig
@@ -209,7 +209,7 @@ jobs:
 
       - name: Setup cargo version from npm
         run: |
-          cd ./apps/shinkai-desktop/src-tauri
+          cd ./apps/hanzo-desktop/src-tauri
           cargo install cargo-edit --force
           cargo set-version ${{ needs.prebuild.outputs.version }}
 
@@ -225,18 +225,18 @@ jobs:
         run: |
           npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
 
-      - name: (Linux) Run NX build on shinkai-desktop
+      - name: (Linux) Run NX build on hanzo-desktop
         if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
-        run: npx nx build shinkai-desktop --skip-nx-cache
+        run: npx nx build hanzo-desktop --skip-nx-cache
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{ secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY }}
           NODE_OPTIONS: '--max_old_space_size=8192'
-      - name: (Macos) Run NX build on shinkai-desktop
+      - name: (Macos) Run NX build on hanzo-desktop
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
-        run: npx nx build shinkai-desktop --skip-nx-cache
+        run: npx nx build hanzo-desktop --skip-nx-cache
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -249,9 +249,9 @@ jobs:
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{ secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY }}
           NODE_OPTIONS: '--max_old_space_size=8192'
-      - name: (Windows) Run NX build on shinkai-desktop
+      - name: (Windows) Run NX build on hanzo-desktop
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
-        run: npx nx build shinkai-desktop --skip-nx-cache
+        run: npx nx build hanzo-desktop --skip-nx-cache
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -268,15 +268,15 @@ jobs:
         uses: 'google-github-actions/auth@v2'
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
         with:
-          project_id: 'shinkai-412316'
-          workload_identity_provider: 'projects/511721742630/locations/global/workloadIdentityPools/github/providers/shinkai-apps'
-          service_account: 'github-ksm-ev-code-signing@shinkai-412316.iam.gserviceaccount.com'
+          project_id: 'hanzo-412316'
+          workload_identity_provider: 'projects/511721742630/locations/global/workloadIdentityPools/github/providers/hanzo-apps'
+          service_account: 'github-ksm-ev-code-signing@hanzo-412316.iam.gserviceaccount.com'
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
         with:
-          project_id: 'shinkai-412316'
+          project_id: 'hanzo-412316'
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -303,7 +303,7 @@ jobs:
           jsign \
               --storetype GOOGLECLOUD \
               --storepass "$(gcloud auth print-access-token)" \
-              --keystore "projects/shinkai-412316/locations/us/keyRings/shinkai-apps" \
+              --keystore "projects/hanzo-412316/locations/us/keyRings/hanzo-apps" \
               --alias "EVCodeSigning/cryptoKeyVersions/1" \
               --certfile "OS20241029372986.cer" \
               --tsmode RFC3161 \
@@ -319,8 +319,8 @@ jobs:
           cp "${{ matrix.build_output_update_file_path }}" files-to-r2/${{ matrix.distributable_update_file_name }}
           cp "${{ matrix.build_output_update_signature_file_path }}" files-to-r2/${{ matrix.distributable_update_signature_file_name }}
           echo "signature-${{ matrix.arch }}=$(cat files-to-r2/${{ matrix.distributable_update_signature_file_name }})" >> "$GITHUB_OUTPUT"
-          echo "update-url-${{ matrix.arch }}=https://download.shinkai.com/shinkai-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
-          echo "app-url-${{ matrix.arch }}=https://download.shinkai.com/shinkai-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
+          echo "update-url-${{ matrix.arch }}=https://download.hanzo.com/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
+          echo "app-url-${{ matrix.arch }}=https://download.hanzo.com/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Upload binaries to R2 bucket
         uses: shallwefootball/s3-upload-action@master
@@ -328,9 +328,9 @@ jobs:
           endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
           aws_key_id: ${{ secrets.R2_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws_bucket: shinkai-download
+          aws_bucket: hanzo-download
           source_dir: files-to-r2
-          destination_dir: ./shinkai-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/
+          destination_dir: ./hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/
 
       - name: Upload installer to GitHub Release
         uses: softprops/action-gh-release@v2
@@ -338,11 +338,11 @@ jobs:
           tag_name: ${{ needs.prebuild.outputs.version }}
           files: files-to-r2/${{ matrix.distributable_file_name }}
 
-  rollout-shinkai-desktop:
+  rollout-hanzo-desktop:
     environment: production
     needs:
       - prebuild
-      - release-shinkai-desktop
+      - release-hanzo-desktop
     name: Generate & Update updates.json
     runs-on: ubuntu-22.04
     outputs:
@@ -373,16 +373,16 @@ jobs:
           JSON_PATH: files-to-r2/updates-next.json
           VERSION: ${{ needs.prebuild.outputs.version }}
           NOTES: Automatic update to ${{ needs.prebuild.outputs.version }}.${{ github.run_number }}
-          LINUX_x86_64_SIGNATURE: ${{ needs.release-shinkai-desktop.outputs.signature-x86_64-unknown-linux-gnu }}
-          LINUX_x86_64_URL: ${{ needs.release-shinkai-desktop.outputs.update-url-x86_64-unknown-linux-gnu }}
-          DARWIN_AARCH64_SIGNATURE: ${{ needs.release-shinkai-desktop.outputs.signature-aarch64-apple-darwin }}
-          DARWIN_AARCH64_URL: ${{ needs.release-shinkai-desktop.outputs.update-url-aarch64-apple-darwin }}
-          WINDOWS_x86_64_SIGNATURE: ${{ needs.release-shinkai-desktop.outputs.signature-x86_64-pc-windows-msvc }}
-          WINDOWS_x86_64_URL: ${{ needs.release-shinkai-desktop.outputs.update-url-x86_64-pc-windows-msvc }}
+          LINUX_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-unknown-linux-gnu }}
+          LINUX_x86_64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-x86_64-unknown-linux-gnu }}
+          DARWIN_AARCH64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-aarch64-apple-darwin }}
+          DARWIN_AARCH64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-aarch64-apple-darwin }}
+          WINDOWS_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-pc-windows-msvc }}
+          WINDOWS_x86_64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-x86_64-pc-windows-msvc }}
         run: |
           mkdir files-to-r2
           npx ts-node ./ci-scripts/generate-updates-json.ts
-          echo "updates-next-json-url=https://download.shinkai.com/shinkai-desktop/binaries/production/updates-next.json" >> "$GITHUB_OUTPUT"
+          echo "updates-next-json-url=https://download.hanzo.com/hanzo-desktop/binaries/production/updates-next.json" >> "$GITHUB_OUTPUT"
 
       - name: Upload updates.json to R2
         uses: shallwefootball/s3-upload-action@master
@@ -390,16 +390,16 @@ jobs:
           endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
           aws_key_id: ${{ secrets.R2_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          aws_bucket: shinkai-download
+          aws_bucket: hanzo-download
           source_dir: files-to-r2
-          destination_dir: ./shinkai-desktop/binaries/production/
+          destination_dir: ./hanzo-desktop/binaries/production/
 
   notify-slack:
     environment: production
     needs:
       - prebuild
-      - release-shinkai-desktop
-      - rollout-shinkai-desktop
+      - release-hanzo-desktop
+      - rollout-hanzo-desktop
     name: Notify Slack
     runs-on: ubuntu-22.04
     steps:
@@ -428,7 +428,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Download it from:\n* <${{ needs.release-shinkai-desktop.outputs.app-url-aarch64-apple-darwin }}|MacOS (Apple Silicon)>\n* <${{ needs.release-shinkai-desktop.outputs.app-url-x86_64-pc-windows-msvc }}|Windows (x86_64)>\n* <${{ needs.release-shinkai-desktop.outputs.app-url-x86_64-unknown-linux-gnu }}|Linux (x86_64)>"
+                    "text": "Download it from:\n* <${{ needs.release-hanzo-desktop.outputs.app-url-aarch64-apple-darwin }}|MacOS (Apple Silicon)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-pc-windows-msvc }}|Windows (x86_64)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-unknown-linux-gnu }}|Linux (x86_64)>"
                   }
                 },
                 {
@@ -439,7 +439,7 @@ jobs:
                   "elements": [
                     {
                       "type": "mrkdwn",
-                      "text": "_💡 Rename file <${{ needs.rollout-shinkai-desktop.outputs.updates-next-json-url }}|updates-next.json> to updates.json to start the rollout through the auto updater_"
+                      "text": "_💡 Rename file <${{ needs.rollout-hanzo-desktop.outputs.updates-next-json-url }}|updates-next.json> to updates.json to start the rollout through the auto updater_"
                     }
                   ]
                 }
@@ -469,7 +469,7 @@ jobs:
       #             "type": "section",
       #             "text": {
       #               "type": "mrkdwn",
-      #               "text": "Found it at <https://chromewebstore.google.com/detail/shinkai-visor-supercharge/${{ secrets.CHROME_EXTENSION_ID }}|Chrome Web Store>"
+      #               "text": "Found it at <https://chromewebstore.google.com/detail/hanzo-visor-supercharge/${{ secrets.CHROME_EXTENSION_ID }}|Chrome Web Store>"
       #             }
       #           },
       #           {

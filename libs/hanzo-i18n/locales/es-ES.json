@@ -1,0 +1,1140 @@
+{
+  "agents": {
+    "chatWithAgent": "Chatear con el Agente",
+    "configureAgent": "Configurar Agente",
+    "create": {
+      "advanceOptionsLabel": "Opciones Avanzadas",
+      "agentName": "Nombre del Agente",
+      "agentNameHelperCreate": "Ingresa un nombre único para tu agente de IA. Esto también se usará como la ID del agente {{agentName}}",
+      "agentNameHelperEdit": "Puedes cambiar el nombre del agente, pero la ID del agente permanece sin cambios. ID del Agente: {{agentName}}",
+      "contextSettingsLabel": "Configuraciones de Contexto",
+      "cronExpression": "Expresión Cron",
+      "cronExpressionHelper": "Ingresa una expresión cron p. ej: */30 * * * * (cada 30 min)",
+      "description": "Descripción",
+      "descriptionHelper": "Describe brevemente el propósito de tu agente (no utilizado por el agente).",
+      "descriptionPlaceholder": "p. ej., Crear diseños centrados en el usuario y mejorar las interacciones del usuario.",
+      "enableStream": "Habilitar Flujo",
+      "enableStreamDescription": "Transmite la respuesta del agente a medida que se genera",
+      "enableThinking": "Habilitar pensamiento",
+      "enableThinkingDescription": "Permite al agente mostrar su proceso de razonamiento antes de proporcionar respuestas.",
+      "enableTools": "Habilitar Herramientas",
+      "enableToolsDescription": "Permite que el agente use herramientas para completar tareas.",
+      "knowledge": "Conocimiento",
+      "knowledgeAddNewFiles": "Agregar Nuevos Archivos",
+      "knowledgeBase": "Base de Conocimientos",
+      "knowledgeBaseDescription": "Proporciona a tu agente archivos de IA locales para mejorar su conocimiento y capacidades.",
+      "knowledgeSearch": "Buscar carpetas y archivos ...",
+      "llmProviderDescription": "Elige el modelo que impulsará tu agente",
+      "llmProviderLabel": "Seleccionar IA",
+      "messageContextDescription": "(Opcional) Puedes controlar el contexto del mensaje aquí forzando un mensaje estático con el mensaje del usuario p. ej. {{user_message}}. Y luego di: ¡Chao amigo!. Esto añadirá \"Y luego di: ¡Chao amigo!\" a cada mensaje enviado.",
+      "messageContextLabel": "Contexto del Mensaje",
+      "overrideConfigurations": "Sobrescribir Configuraciones",
+      "persona": "Persona",
+      "resetAdvancedOptions": "Restablece a los valores predeterminados",
+      "saveAndTestAgent": "Guardar y Probar Agente",
+      "schedule": "Programar",
+      "scheduleAIInstructions": "Instrucciones de IA",
+      "scheduleAIInstructionsDescription": "Ingresa instrucciones de IA para la ejecución programada...",
+      "scheduleAIInstructionsHelper": "Escribe el aviso que se utilizará para la ejecución programada.",
+      "scheduleDescription": "Establece cuándo tu agente ejecutará tareas automáticamente.",
+      "scheduleNormalUsage": "Uso Normal",
+      "scheduleNormalUsageDescription": "El agente está listo para responder inmediatamente cuando se utiliza en un chat.",
+      "scheduleRecurring": "Uso Normal + Ejecución Programada",
+      "scheduleRecurringDescription": "Uso normal y también configurar tiempos y frecuencias específicas para las tareas del agente p. ej. Agente de Twitter que realiza un flujo de trabajo como revisar y responder mensajes cada 5 minutos.",
+      "selectedTools": "Herramientas Seleccionadas",
+      "systemInstructions": "Instrucciones del Sistema",
+      "systemInstructionsHelper": "Controla el comportamiento de tus agentes añadiendo instrucciones personalizadas",
+      "systemInstructionsPlaceholder": "p. ej., Eres un asistente útil que puede responder preguntas y ayudar con tareas.",
+      "temperature": "Temperatura",
+      "temperatureDescription": "La temperatura es un parámetro que afecta la aleatoriedad de las salidas de IA. Temperatura más alta = más inesperado, temperatura más baja = más predecible.",
+      "tools": "Herramientas",
+      "toolsCreateNewTool": "Crear Nuevo",
+      "toolsDescription": "Selecciona qué herramientas y habilidades puede usar tu agente para completar tareas.",
+      "topK": "Top K",
+      "topKDescription": "Ajusta la cantidad de palabras clave para crear secuencias. Este parámetro gobierna la extensión del pasaje generado, evitando demasiada repetición. Seleccionar un número más alto produce narrativas más largas, mientras que un número más bajo mantiene el texto breve.",
+      "topP": "Top P",
+      "topPDescription": "Ajusta el umbral de probabilidad para aumentar la relevancia de los resultados. Por ejemplo, un umbral de 0.9 podría ser óptimo para aplicaciones específicas y dirigidas, mientras que un umbral de 0.95 o 0.97 podría ser preferido para tareas que requieren respuestas más amplias y creativas."
+    },
+    "createFirstAgent": "Crea tu primer Agente para comenzar a explorar el poder de la IA.",
+    "explore": "Explorar",
+    "form": {
+      "chatHistory": "Historial de Chat",
+      "closeChat": "Cerrar Chat",
+      "createAgent": "Crear Nuevo Agente",
+      "emptyChatDescription": "Envía un mensaje para comenzar a chatear con este agente",
+      "emptyChatTitle": "Chatea con tu Agente",
+      "enter": "Entrar",
+      "enterToSend": "para enviar",
+      "messagePlaceholder": "Enviar mensaje...",
+      "newAgent": "Nuevo Agente",
+      "newChat": "Nuevo Chat",
+      "openChat": "Abrir Chat",
+      "updateAgent": "Actualizar Agente"
+    },
+    "importModal": {
+      "action": "Importar",
+      "chooseFile": "Elige un archivo zip",
+      "title": "Importar Agente"
+    },
+    "label": "Agentes",
+    "myAgents": "Mis Agentes",
+    "noAvailableAgents": "No hay agentes disponibles",
+    "publishDialog": {
+      "amount": "Cantidad",
+      "asset": "Activo",
+      "configureAndPublish": "Configurar y Publicar",
+      "description": "Descripción",
+      "open": "Publicar Agente",
+      "paymentAddress": "Dirección de Pago",
+      "publish": "Publicar",
+      "published": "Publicado",
+      "searchAgents": "Buscar agentes",
+      "selectAgent": "Seleccionar Agente",
+      "title": "Publicar {{name}}"
+    },
+    "systemInstructions": "Instrucciones del sistema"
+  },
+  "agentsPage": {
+    "addAgent": "Agregar agente",
+    "description": "Crea y explora agentes de IA con instrucciones personalizadas, conocimiento enriquecido y más para alcanzar tus metas de forma autónoma.",
+    "exploreAgentsDescription": "Explora agentes de IA personalizados para tus necesidades",
+    "exploreDescription": "Descubre e instala agentes de IA de la comunidad para mejorar tu flujo de trabajo <br /> y potenciar tu productividad y creatividad.",
+    "goToTaskDetails": "Ir a detalles de la tarea",
+    "notFoundDescription": "Crea tu primer Agente para comenzar a explorar el poder de la IA.",
+    "notFoundTitle": "No hay agentes disponibles"
+  },
+  "aiFilesSearch": {
+    "description": "Busca para encontrar contenido en todos los archivos de tus archivos AI fácilmente",
+    "filesSelected": "Seleccionados {{count}} archivos",
+    "foundResults": "Encontrado {{count}} resultado",
+    "label": "Búsqueda de Contenido en Archivos de IA"
+  },
+  "aisPage": {
+    "description": "Administra fácilmente modelos de IA locales y en la nube, cambiando entre ellos según tu flujo de trabajo.",
+    "label": "Modelos de IA",
+    "shortDescription": "Explora una amplia gama de modelos de IA"
+  },
+  "analytics": {
+    "bulletPoints": {
+      "five": "❌ Nunca recopila tus consultas de IA",
+      "four": "❌ Nunca recopila tu dirección IP",
+      "one": "✅ Siempre te permite optar por no participar a través de Configuración",
+      "six": "❌ Nunca utiliza información personal con fines de entrenamiento",
+      "three": "✅ Envía información analítica sobre qué funciones utilizas pero sin ningún contenido o respuestas",
+      "two": "✅ Análisis aleatorios"
+    },
+    "label": "Analíticas",
+    "moreInfo": "Para obtener más información sobre nuestras prácticas de privacidad, consulta nuestra <a>Política de Privacidad</a>",
+    "title": "Ayúdanos a mejorar Hanzo"
+  },
+  "appReset": {
+    "action": "Reiniciar Aplicación",
+    "description": "Actualmente estamos en beta y hemos realizado algunas actualizaciones significativas para mejorar tu experiencia. Para aplicar estas actualizaciones, necesitamos reiniciar tus datos. Si necesitas asistencia, por favor contacta a nuestro equipo de soporte.",
+    "title": "Se Requiere Reinicio de la Aplicación"
+  },
+  "chat": {
+    "actions": {
+      "deleteInbox": "Eliminar chat",
+      "deleteInboxConfirmationDescription": "El chat será eliminado y se quitará de tu historial de chats",
+      "deleteInboxConfirmationTitle": "¿Eliminar chat?"
+    },
+    "actives": {
+      "label": "Activos",
+      "notFound": "No se encontraron conversaciones activas."
+    },
+    "agents": "Agentes",
+    "allMessagesLoaded": "Todos los mensajes anteriores han sido cargados ✅",
+    "archives": {
+      "archive": "Archivo",
+      "archived": "Archivado",
+      "error": "Error al archivar la conversación",
+      "label": "Archivos",
+      "notFound": "No se encontraron conversaciones archivadas.",
+      "success": "Tu conversación ha sido archivada"
+    },
+    "chats": "Chats",
+    "context": {
+      "description": "Lista de carpetas y archivos utilizados como contexto para esta conversación",
+      "title": "Contexto de la Conversación"
+    },
+    "create": "Crear Chat de IA",
+    "editMessage": {
+      "warning": "Esto reiniciará tu conversación desde aquí."
+    },
+    "emptyStateDescription": "Para preguntas rápidas, presiona ⌘ + Shift + J para usar Hanzo Spotlight",
+    "emptyStateTitle": "Pregunta a Hanzo IA",
+    "enterMessage": "Introducir Mensaje",
+    "failedToOpenChatFolder": "Por favor, sube un archivo al chat primero",
+    "fileProcessing": {
+      "description": "Puede tardar unos minutos",
+      "title": "Tu archivo se está procesando"
+    },
+    "form": {
+      "message": "Cuéntanos la tarea que deseas realizar",
+      "messagePlaceholder": "Ej: Explícame cómo funciona internet...",
+      "selectAI": "Selecciona tu IA",
+      "selectedText": "Tu texto seleccionado",
+      "setContext": "Establecer Contexto del Chat",
+      "setContextText": "Añade archivos o carpetas para que tu IA los utilice como contexto durante la conversación."
+    },
+    "limitReachedDescription": "Has utilizado todas tus consultas del mes en este modelo/agente. Por favor, inicia un nuevo chat con otro agente.",
+    "limitReachedTitle": "Límite Alcanzado",
+    "networkAgentUsed": "Agente de Red Utilizado",
+    "openChatFolder": "Abrir carpeta de chat",
+    "processingNetworkAgent": "Procesando Agente de Red",
+    "processingTool": "Procesando Herramienta",
+    "sendMessage": "Enviar Mensaje",
+    "sendMessagePlaceholder": "Envía un mensaje, o presiona \"/\" para acceder a herramientas",
+    "toolUsed": "Herramienta Utilizada",
+    "tracing": {
+      "title": "Rastreo"
+    }
+  },
+  "chatDM": {
+    "create": "Crear Chat DM",
+    "form": {
+      "message": "Mensaje",
+      "messagePlaceholder": "Ingresa tu mensaje",
+      "hanzoIdentity": "Identidad Hanzo"
+    }
+  },
+  "codeRunner": {
+    "errorOccurred": "Ocurrió un Error",
+    "executeCode": "Ejecutar Código",
+    "output": "Resultado",
+    "stderr": "Salida de Error",
+    "stdout": "Salida Estándar"
+  },
+  "common": {
+    "about": "Acerca de",
+    "add": "Agregar",
+    "added": "Añadido",
+    "adding": "Añadiendo...",
+    "advanced": "Avanzado",
+    "agent": "Agente",
+    "all": "Todos",
+    "alreadyHaveNode": "¿Ya tienes un Nodo?",
+    "back": "Atrás",
+    "cancel": "Cancelar",
+    "chat": "Charlar",
+    "clear": "Limpiar",
+    "clearSearch": "Limpiar búsqueda",
+    "clickToUpload": "Haz clic para subir o arrastra y suelta",
+    "comingSoon": "Próximamente - Finales de Agosto",
+    "configure": "Configurar",
+    "connect": "Conectar",
+    "continue": "Continuar",
+    "copy": "Copiar",
+    "create": "Crear",
+    "delete": "Eliminar",
+    "deleteTool": "Eliminar herramienta",
+    "details": "Detalles",
+    "disabled": "Deshabilitado",
+    "disconnect": "Desconectar",
+    "dismiss": "Descartar",
+    "done": "Hecho",
+    "edit": "Editar",
+    "editMessage": "Editar mensaje",
+    "enabled": "Activado",
+    "file": "Archivo",
+    "fileWithCount_one": "{{count}} Archivo",
+    "fileWithCount_other": "{{count}} Archivos",
+    "files": "Archivos",
+    "folderLocation": "Ubicación de la carpeta:",
+    "folderWithCount_one": "{{count}} Carpeta",
+    "folderWithCount_other": "{{count}} Carpetas",
+    "folders": "Carpetas",
+    "getStarted": "Comienza gratis",
+    "howWouldYouLikeToProceed": "¿Cómo te gustaría proceder?",
+    "iAgree": "Estoy de Acuerdo",
+    "incomplete": "Incompleto",
+    "install": "Instalar",
+    "installed": "Instalado",
+    "logInHanzoHosting": "Iniciar Sesión en Hanzo Hosting",
+    "more": "Más",
+    "moreOptions": "Más Opciones",
+    "next": "Siguiente",
+    "noResultsFound": "No se encontraron resultados.",
+    "noThanks": "No, Gracias",
+    "none": "Ninguno",
+    "optIn": "Optar por Participar",
+    "optOut": "Optar por No Participar",
+    "passphrase": "Frase de Paso",
+    "quickConnect": "Conexión Rápida",
+    "reasoning": "Razonamiento",
+    "recommended": "Recomendado",
+    "refresh": "Actualizar",
+    "remove": "Eliminar",
+    "rename": "Renombrar",
+    "repeatPassphrase": "Confirmar frase de paso",
+    "requiresAction": "Requiere Acción",
+    "resetAll": "Restablecer Todo",
+    "resetData": "Restablecer Datos",
+    "resetFilters": "Restablecer filtros",
+    "restore": "Restaurar",
+    "retry": "Reintentar",
+    "save": "Guardar",
+    "saveChanges": "Guardar cambios",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar...",
+    "seeOptions": "Ver Opciones",
+    "selectItem": "Seleccione un elemento para ver detalles",
+    "send": "Enviar",
+    "hanzoPrivate": "Hanzo Privado (Local)",
+    "showLess": "Mostrar menos",
+    "showMore": "Más",
+    "signUpHanzoHosting": "Registrarse en Hanzo Hosting",
+    "soon": "pronto",
+    "termsAndConditionsText": "Acepto los <a>Términos de Servicio</a> y la <b>Política de Privacidad</b>",
+    "thinking": "Pensando...",
+    "tool": "Herramienta",
+    "tryAgain": "Inténtalo de nuevo",
+    "tryItOut": "Pruébalo",
+    "unpublish": "Despublicar",
+    "unselectAll": "Deseleccionar todo",
+    "update": "Actualizar",
+    "updating": "Actualizando...",
+    "upload": "Subir",
+    "uploadAFileDescription": "Admite imágenes, PDF, CSV, TXT, XLSX y más formatos",
+    "uploadFile": "Subir un Archivo",
+    "viewDetails": "Ver detalles"
+  },
+  "cronTask": {
+    "aiAgent": "IA / Agente",
+    "aiModelConfiguration": "Configuración del Modelo de IA",
+    "cronExample": "Ingresa una expresión cron p. ej: */30 * * * * (cada 30 min)",
+    "cronExpression": "Expresión Cron",
+    "cronWillRun": "Este cron se ejecutará {{schedule}} ({{expression}})",
+    "enableStream": "Habilitar Transmisión",
+    "enableThinking": "Habilitar Pensamiento",
+    "enableTools": "Habilitar Herramientas",
+    "forceToolUsage": "Forzar Uso de Herramienta (Opcional)",
+    "promptExample": "p. ej. Dame las principales noticias de hackers",
+    "promptPlaceholder": "p. ej. Dame las principales noticias de hackers",
+    "scheduleOptions": {
+      "every1stMonth12pm": "cada 1 del mes a las 12pm",
+      "every5Hours": "cada 5 horas",
+      "every5Min": "cada 5 min",
+      "everyJanuary1st12am": "cada 1 de enero a las 12am",
+      "everyMonday8am": "cada lunes a las 8am"
+    },
+    "taskDescription": "Descripción de la Tarea",
+    "taskDescriptionHelper": "Describe brevemente el propósito de tu agente (no utilizado por el agente).",
+    "taskPrompt": "Prompt de Tarea",
+    "temperature": "Temperatura",
+    "temperatureInfo": "La temperatura es un parámetro que afecta la aleatoriedad de las salidas de IA. Temperatura más alta = más inesperado, temperatura más baja = más predecible.",
+    "topK": "Top K",
+    "topKInfo": "Ajusta la cantidad de palabras clave para crear secuencias. Este parámetro gobierna la extensión del pasaje generado, evitando demasiada repetición. Seleccionar un número más alto produce narrativas más largas, mientras que un número más bajo mantiene el texto breve.",
+    "topP": "Top P",
+    "topPInfo": "Ajusta el umbral de probabilidad para aumentar la relevancia de los resultados. Por ejemplo, un umbral de 0.9 podría ser óptimo para aplicaciones específicas, mientras que un umbral de 0.95 o 0.97 podría ser preferido para tareas que requieren respuestas más amplias y creativas."
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>Local:</b> Con un Hanzo local, obtienes control total sobre tus datos en un entorno seguro.",
+      "privacy": "<b>Enfoque en la Privacidad:</b> Tus datos permanecen seguros con capacidades sin conexión y sólidas protecciones de privacidad.",
+      "tools": "<b>Herramientas para Tareas Diarias:</b> Admite más de 100 integraciones y sigue aumentando."
+    },
+    "localAI": "IA Local de Hanzo",
+    "model": {
+      "commandr7bBenefits": {
+        "fast": "<b>Ejecución Rápida:</b> Los usuarios han señalado que funciona de manera eficiente en hardware de gama media, lo que permite respuestas más rápidas e interacciones más fluidas sin un retraso significativo.",
+        "lightweight": "<b>Ligero:</b> Esta naturaleza ligera significa que requiere menos memoria y potencia de cálculo, lo que lo hace accesible para una gama más amplia de usuarios y aplicaciones.",
+        "performance": "<b>Alto Rendimiento en un Tamaño Compacto:</b> El modelo command-r7b está diseñado para ofrecer un excelente rendimiento mientras mantiene un tamaño relativamente pequeño."
+      },
+      "downloading": "Descargando",
+      "embeddingBenefits": {
+        "dataAnalysis": "<b>Mejora del Análisis de Datos:</b> Extrae ideas significativas de datos no estructurados, mejorando los procesos de toma de decisiones y la eficiencia operativa.",
+        "efficient": "<b>Tamaño Compacto y Eficiente:</b> Con solo 22 millones de parámetros y un vector de incrustación de 384 dimensiones, el Arctic-embed-xs está diseñado para ser eficiente en recursos.",
+        "highRetrieval": "<b>Alto Rendimiento de Recuperación:</b> Puede recuperar información relevante de conjuntos de datos grandes de manera efectiva, con alta precisión en tareas de búsqueda y recuperación."
+      },
+      "gemmaBenefits": {
+        "fast": "<b>Ejecución Rápida:</b> Los usuarios han notado que funciona eficientemente en hardware de gama media, permitiendo respuestas más rápidas e interacciones más fluidas sin retrasos significativos.",
+        "lightweight": "<b>Ligero:</b> Esta naturaleza ligera significa que requiere menos memoria y potencia computacional, haciéndolo accesible para una amplia gama de usuarios y aplicaciones.",
+        "performance": "<b>Alto Rendimiento en un Tamaño Compacto:</b> El modelo gemma2:2b está diseñado para ofrecer un rendimiento líder en su clase manteniendo un tamaño relativamente pequeño de 2 mil millones de parámetros."
+      },
+      "installation": "Instalando {{modelName}}...",
+      "mistralSmallBenefits": {
+        "language": "<b>Generación de Lenguaje Poderosa:</b> Genera texto similar al humano en una variedad de aplicaciones como generación de contenido, traducción de idiomas y asistencia en programación.",
+        "multilingual": "<b>Soporte Multilingüe:</b> El modelo admite diálogos en múltiples idiomas, incluyendo inglés, español, francés, alemán y más.",
+        "resource": "<b>Uso Eficiente de Recursos:</b> Es un modelo ligero y ultra-rápido en comparación con modelos más grandes."
+      },
+      "ollamaBenefits": {
+        "language": "<b>Generación de Lenguaje Potente:</b> Genera texto similar al humano en una variedad de aplicaciones como generación de contenido, traducción de idiomas y asistencia en codificación.",
+        "multilingual": "<b>Soporte Multilingüe:</b> El modelo admite diálogos en varios idiomas, incluidos inglés, español, francés, alemán y más.",
+        "resource": "<b>Uso Eficiente de Recursos:</b> Es un modelo ligero y ultrarrápido en comparación con modelos más grandes."
+      }
+    },
+    "welcome": "Bienvenido a Hanzo",
+    "welcomeDescription": "Crea, ejecuta y automatiza agentes de IA directamente en tu dispositivo: rápido, privado y seguro."
+  },
+  "disconnect": {
+    "exportConnection": "Antes de continuar, por favor <Link>exporta tu conexión</Link> para restaurarla en cualquier momento.",
+    "modalDescription": "¿Estás seguro de que deseas desconectar? Esto eliminará permanentemente tus datos.",
+    "modalTitle": "Desconectar Hanzo"
+  },
+  "dockerStatus": {
+    "dockerInstalledButNotRunning": "Docker Instalado pero No Ejecutándose",
+    "dockerInstalledButNotRunningDescription": "Docker está instalado pero no se está ejecutando. Inícielo ahora para mejorar la velocidad de ejecución de las herramientas, la estabilidad y el rendimiento general.",
+    "dockerNotInstalled": "Docker No Instalado",
+    "dockerNotInstalledDescription": "Docker no está instalado en su sistema. Instalarlo desbloqueará un mejor rendimiento, un procesamiento más rápido y una experiencia mejorada con las herramientas de IA.",
+    "dockerRunning": "Docker Ejecutándose y Activo",
+    "dockerRunningDescription": "¡Sus herramientas están ahora funcionando a plena eficiencia con Docker! Disfrute de una experiencia más fluida!"
+  },
+  "errorBoundary": {
+    "genericError": "Algo salió mal. Intenta actualizar la aplicación."
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Estamos teniendo problemas para conectar con tu Nodo Hanzo. Tu nodo puede estar desconectado o tu conexión a internet puede estar caída.",
+      "title": "Nodo No Disponible"
+    }
+  },
+  "exportConnection": {
+    "downloadText": "Descarga y guarda este archivo de conexión en un lugar seguro",
+    "form": {
+      "passphrase": "Frase de Contraseña",
+      "repeatPassphrase": "Repetir Frase de Contraseña"
+    },
+    "generateFile": "Generar archivo de conexión",
+    "label": "Exportar Conexión",
+    "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo Hanzo"
+  },
+  "extension": {
+    "welcome": "Transforma tu experiencia de navegación web utilizando IA con Hanzo Visor ✨"
+  },
+  "feedback": {
+    "button": "Comentarios",
+    "description": "¡Valoramos tus comentarios! Por favor, háznos saber tus pensamientos sobre Hanzo y cómo podemos mejorar tu experiencia.",
+    "form": {
+      "contactHelp": "¿Cómo podemos contactarte si tenemos preguntas?",
+      "contactLabel": "Correo electrónico o número de teléfono",
+      "contactPlaceholder": "Correo electrónico o número de teléfono",
+      "error": "Error al enviar los comentarios. Por favor, inténtalo de nuevo.",
+      "feedbackLabel": "Tus Comentarios",
+      "feedbackPlaceholder": "Por favor, comparte tus pensamientos, sugerencias o preguntas...",
+      "submit": "Enviar Comentarios",
+      "success": "¡Gracias por tus comentarios! Nos pondremos en contacto contigo pronto."
+    },
+    "title": "Compartir Comentarios"
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Error al registrar tu instalación de Hanzo Desktop. Por favor, asegúrate de que tu Dirección EVM no se haya utilizado previamente para registrar una instalación diferente."
+    },
+    "form": {
+      "evmAddress": "Dirección EVM",
+      "evmAddressHelper": "Agrega la Dirección EVM que estás usando en Galxe",
+      "proof": "Prueba",
+      "registerInstallation": "Registrar Instalación",
+      "signature": "Firma"
+    },
+    "goToGalxeQuest": "Ver nuestra Búsqueda Galxe",
+    "label": "Quest de Galxe",
+    "success": {
+      "registerDesktopInstallation": "Tu instalación de Hanzo Desktop se registró exitosamente. Puede tardar algunas horas en registrarse en la búsqueda Galxe."
+    }
+  },
+  "homepage": {
+    "agentConfigurationRequired": "{{agentName}} requiere algunas configuraciones para funcionar correctamente.",
+    "enterToSend": "<span>Enter</span> para enviar",
+    "installingDefaultAgents": "Instalando agentes predeterminados",
+    "recommendedAgents": "Agentes recomendados",
+    "setupAgent": "Configurar Agente",
+    "shiftEnterForNewLine": "<span>Shift + Enter</span> para una nueva línea",
+    "welcomeTitle": "¿Cómo puedo ayudarte hoy?"
+  },
+  "inboxes": {
+    "inboxName": "Nombre",
+    "updateName": "Actualizar nombre del buzón"
+  },
+  "layout": {
+    "menuItems": {
+      "agents": "IAs",
+      "aiTasks": "Tareas de IA",
+      "chats": "Chats",
+      "decentralizedAgents": "Agentes de IA Descentralizados",
+      "disconnect": "Desconectar",
+      "helpAndSupport": "Ayuda y Soporte",
+      "manageAis": "Gestionar AIs",
+      "mcp": "MCPs",
+      "scheduledTasks": "Tareas Programadas",
+      "settings": "Ajustes",
+      "tools": "Herramientas",
+      "vectorFs": "Explorador de Mis Archivos de IA",
+      "vectorSearch": "Búsqueda de Contenido de Archivos de IA"
+    },
+    "sidebar": {
+      "toggle": "Alternar barra lateral"
+    }
+  },
+  "llmProviders": {
+    "add": "Añadir IA",
+    "addManually": "Añadir IA Manualmente",
+    "delete": {
+      "description": "¿Estás seguro de que quieres eliminar esta IA? Esta acción no se puede deshacer.",
+      "label": "Eliminar IA"
+    },
+    "errors": {
+      "createAgent": "Error al añadir IA",
+      "deleteAgent": "Error al eliminar IA",
+      "updateAgent": "Error al actualizar IA"
+    },
+    "form": {
+      "apiKey": "Clave API",
+      "customModelType": "Tipo de Modelo Personalizado",
+      "description": "Descripción",
+      "descriptionHelper": "Descripción breve (opcional) para ayudar a identificar esta IA más tarde",
+      "externalUrl": "URL Externa",
+      "generatedId": "ID Generado",
+      "modelId": "ID del Modelo",
+      "modelName": "Nombre del Modelo",
+      "modelProvider": "Proveedor de Modelo",
+      "modelType": "Tipo de Modelo",
+      "name": "Nombre de la IA",
+      "selectModel": "Selecciona tu Modelo",
+      "toggleCustomModel": "Añadir un modelo personalizado"
+    },
+    "label": "IA",
+    "localAI": {
+      "installText": "Después de instalar modelos de IA en tu máquina local, estarán disponibles como IA",
+      "installTitle": "Instalar Modelos de IA"
+    },
+    "notFound": {
+      "description": "Conecta tu primera IA para empezar a preguntar a Hanzo IA. Intenta conectar OpenAI",
+      "title": "No hay IA disponibles"
+    },
+    "searchPlaceholder": "Buscar IA",
+    "success": {
+      "createAgent": "IA creada exitosamente",
+      "deleteAgent": "IA eliminada exitosamente",
+      "updateAgent": "IA actualizada exitosamente"
+    },
+    "switch": "Cambiar IA"
+  },
+  "mcpClients": {
+    "claudeFailMessageBase": "La configuración automática de Claude ha fallado.",
+    "claudeLoading": "Intentando la configuración automática de Claude Desktop...",
+    "claudeSuccessDescription": "Por favor, reinicia Claude para que los cambios surtan efecto.",
+    "claudeSuccessTitle": "¡Claude Desktop configurado con éxito!",
+    "configFailDescription": "{{errorMessage}} Por favor, sigue las instrucciones a continuación para la configuración manual:",
+    "configFailTitle": "La configuración automática de {{clientName}} ha fallado",
+    "connectExternalClient": "Conectar Cliente MCP Externo",
+    "copyJsonButton": "Copiar configuración JSON",
+    "copyJsonSuccess": "Configuración JSON copiada al portapapeles",
+    "copySuccessCommand": "Comando copiado al portapapeles",
+    "copySuccessUrl": "URL SSE copiada al portapapeles",
+    "cursorFailMessageBase": "La configuración automática de Cursor ha fallado.",
+    "cursorLoading": "Intentando la configuración automática de Cursor...",
+    "cursorSuccessDescription": "Por favor, reinicia Cursor para que los cambios surtan efecto.",
+    "cursorSuccessTitle": "¡Cursor configurado con éxito!",
+    "customCopyCommandButton": "Copiar Comando",
+    "customCopySseUrlButton": "Copiar URL SSE",
+    "customDescriptionPrimary": "La forma recomendada de conectar tu cliente externo es a través de Eventos Enviados por el Servidor (SSE).",
+    "customDescriptionSecondary": "Si tu cliente no soporta SSE, puedes ejecutar el servidor Hanzo MCP como un proceso separado utilizando este comando:",
+    "customTitle": "Configuración de Cliente Externo Personalizado"
+  },
+  "mcpPage": {
+    "exposeToolsDescription": "Expón tus Herramientas de IA mediante MCP para integrarlas fácilmente con otros Clientes MCP y ampliar sus capacidades.",
+    "exposeToolsTab": "Exponer Herramientas",
+    "helpfulLinks": "Puedes encontrar MCPs útiles para conectar con Hanzo en smithery.ai y composio.dev.",
+    "mcpServersDescription": "Conéctate a un servidor MCP para acceder al instante a fuentes de datos y herramientas externas, como clima en vivo, precios de acciones o servicios de traducción, sin crear integraciones personalizadas.\nEsto amplía las capacidades de tu sistema con información en tiempo real y acceso sencillo a nuevos recursos a medida que crecen tus necesidades."
+  },
+  "mcpServers": {
+    "add": "Agregar Servidor MCP",
+    "addDescription": "Configura un nuevo servidor MCP para conectarte con tu Nodo Hanzo",
+    "addFailed": "Error al agregar el servidor MCP",
+    "addFromGitHub": "Agregar desde GitHub",
+    "addSuccess": "Servidor MCP agregado con éxito",
+    "addVariable": "Agregar",
+    "composio": {
+      "activeUsers": "Usuarios Activos",
+      "add": "Agregar servidor MCP",
+      "adding": "Añadiendo...",
+      "availableActions": "Acciones Disponibles",
+      "categories": "Categorías",
+      "created": "Creado",
+      "delete": "Eliminar",
+      "deleting": "Eliminando...",
+      "details": "Detalles",
+      "install": "Instalar",
+      "installFailed": "Error al instalar la aplicación desde Composio",
+      "installSuccess": "{{appName}} se instaló correctamente",
+      "installing": "Instalando...",
+      "lastUpdated": "Última Actualización",
+      "latestVersion": "Última Versión",
+      "loginRequired": "Debes estar conectado para instalar aplicaciones",
+      "statistics": "Estadísticas",
+      "title": "Servidores MCP de Composio",
+      "toolsCount": "Cantidad de Herramientas",
+      "totalDownloads": "Descargas Totales",
+      "uninstall": "Desinstalar",
+      "uninstallFailed": "Error al desinstalar la aplicación de Composio",
+      "uninstallSuccess": "{{appName}} desinstalado con éxito",
+      "uninstalling": "Desinstalando...",
+      "updatedAt": "Última Actualización"
+    },
+    "configure": "Configurar Servidor",
+    "delete": "Eliminar Servidor",
+    "deleteDescription": "¿Está seguro de que desea eliminar el servidor \"{{name}}\"? Esta acción no se puede deshacer.",
+    "deleteFailed": "Error al eliminar el servidor MCP",
+    "deleteSuccess": "Servidor MCP eliminado con éxito",
+    "environmentVariables": "Variables de Entorno",
+    "label": "Servidores MCP",
+    "listDescription": "Lista de servidores MCP conectados a tu Nodo Hanzo",
+    "listOfToolsAvailableFromThisMcpServer": "Lista de herramientas disponibles desde este servidor MCP.",
+    "manualSetup": "Configuración Manual",
+    "name": "Nombre",
+    "namePlaceholder": "Mi Servidor MCP",
+    "noEnvironmentVariablesAdded": "No se han agregado variables de entorno.",
+    "noServersFound": "No se encontraron servidores MCP. Agrega un nuevo servidor para comenzar.",
+    "noToolsAvailableForThisServer": "No hay herramientas disponibles para este servidor.",
+    "selectServerType": "Seleccionar tipo de servidor",
+    "statusUpdateFailed": "Error al actualizar el estado",
+    "statusUpdated": "Estado actualizado con éxito",
+    "title": "Servidores MCP",
+    "toolMustBeEnabled": "La herramienta debe estar habilitada antes de cambiar el modo del servidor MCP",
+    "tools": "herramientas",
+    "toolsFor": "Herramientas para {{name}}",
+    "tooltipEnableFirst": "Habilita la herramienta primero para gestionar el modo del servidor MCP",
+    "type": "Tipo",
+    "update": "Actualizar Servidor MCP",
+    "updateDescription": "Actualizando la configuración del servidor MCP: {{name}}",
+    "updateFailed": "Error al actualizar el servidor MCP",
+    "updateSuccess": "Servidor MCP actualizado con éxito",
+    "updateWarningDescription": "Actualizar este servidor restablecerá sus herramientas asociadas.",
+    "viewAvailableTools": "Ver Herramientas Disponibles"
+  },
+  "networkAgentsPage": {
+    "addAgent": "Agregar Agente",
+    "addAgentFromId": "Agregar Agente Desde ID",
+    "addAgentFromIdDescription": "Agrega un agente a tu colección utilizando un ID de Hanzo. Ejemplo: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Ingresa el ID de Hanzo del agente que deseas agregar.",
+    "addAgentFromIdPlaceholder": "p. ej. @@official.sep-hanzo/main/agent/youtube_expert",
+    "addedDescription": "{{name}} ahora está en tu colección. ¡Comienza un chat para usarlo!",
+    "addedSuccess": "¡Agregado con Éxito!",
+    "agentsTab": "Agentes",
+    "author": "Autor",
+    "browseMore": "Explorar Más Agentes",
+    "confirmPayment": "Confirmar Pago",
+    "connectWallet": "Conectar Billetera",
+    "connectWalletDescription": "Conecta tu billetera para pagar por el uso de agentes y recibir ganancias de tus agentes publicados",
+    "costPerUse": "Costo por uso",
+    "costPerUseDescription": "Paga cada vez que uses este agente",
+    "deleteConfirmation": "¿Estás seguro de que deseas eliminar este agente? Esta acción no se puede deshacer.",
+    "descriptionNetwork": "Descubre y despliega agentes de IA desde la red global. Cada agente opera de forma autónoma y puede integrarse en tus flujos de trabajo. Paga por uso o despliega agentes para que otros accedan.",
+    "descriptionPublished": "Publica tus agentes de IA en la red. Cada agente opera de forma autónoma y puede integrarse en tus flujos de trabajo. Paga por uso o despliega agentes para que otros accedan.",
+    "howPaymentsWork": "Cómo funcionan los pagos",
+    "howPaymentsWorkDescription": "Cuando uses este agente, se te pedirá que confirmes el pago desde tu billetera conectada. Los pagos se procesan en la red {{network}}.",
+    "manageWallet": "Gestionar Billetera",
+    "networkToolDetails": "Detalles del Agente de Red",
+    "nextAddAgent": "Siguiente (Agregar Agente)",
+    "noPublishedAgents": "Aún no hay agentes publicados. Comparte tu primer agente para comenzar.",
+    "payPerUse": "Pagar por uso",
+    "paymentRecipient": "Destinatario del Pago",
+    "paymentSuccessful": "¡Pago Exitoso!",
+    "paymentSuccessfulDescription": "Tu pago se realizó con éxito. La herramienta se está ejecutando ahora...",
+    "pleaseWait": "Por favor, espera mientras procesamos tu transacción...",
+    "proceedFree": "Proceder (Gratis)",
+    "processingPayment": "Procesando Pago",
+    "publishedTab": "Agentes Publicados",
+    "registerIdentity": "Registrar Identidad",
+    "registerHanzoIdentity": "Registrar Identidad Hanzo",
+    "registerHanzoIdentityDescription": "Crea tu identidad única en la red Hanzo para usar y publicar agentes",
+    "removeAgent": "Eliminar Agente",
+    "removeFailed": "Error al eliminar el agente",
+    "removeSuccess": "Agente de red eliminado con éxito",
+    "removeToolOffering": "Despublicar Herramienta",
+    "removeToolOfferingConfirmation": "¿Estás seguro de que deseas despublicar esta herramienta? Esta acción no se puede deshacer.",
+    "searchPlaceholder": "Buscar agentes",
+    "setupRequired": "Se requiere configuración para usar agentes de pago y publicar agentes",
+    "startChat": "Iniciar Chat",
+    "titleDecentralized": "Agentes Descentralizados",
+    "titleNetwork": "Red",
+    "tool": "Herramienta",
+    "toolPaymentRequired": "Pago de Herramienta Requerido",
+    "toolPaymentRequiredDescription": "Este agente de red requiere pago para su uso.",
+    "toolRouterKey": "Clave del Enrutador de Herramientas",
+    "usdcBalance": "Saldo de USDC",
+    "walletAddress": "Dirección de la Billetera",
+    "walletBalance": "Saldo de Billetera",
+    "walletNotSetup": "La billetera no está configurada",
+    "yourWallet": "Tu Billetera"
+  },
+  "notifications": {
+    "messageReceived": {
+      "description": "Has recibido una respuesta de {{inboxName}}",
+      "label": "Mensaje Recibido"
+    }
+  },
+  "oauth": {
+    "close": "Cerrar",
+    "connectNow": "Conectar Ahora",
+    "connectionRequired": "Conexión Requerida",
+    "connectionRequiredDescription": "Para usar esta herramienta, por favor conecta tu cuenta de {{provider}}.",
+    "description": "Conéctate a {{provider}} para usar esta herramienta",
+    "goToProvider": "Ir a {{provider}}",
+    "navigateToProvider": "Navega y sigue los pasos de autenticación para continuar.",
+    "processing": "Procesando...",
+    "signIn": "Iniciar sesión con {{provider}}",
+    "success": "¡Conexión exitosa!",
+    "successDescription": "Esta ventana se cerrará automáticamente en {{countdown}} segundos...",
+    "title": "Conectar a {{provider}}"
+  },
+  "ollama": {
+    "errors": {
+      "failedToFetch": "Error al obtener modelos locales de Ollama. Por favor, asegúrate de que Ollama esté funcionando correctamente."
+    },
+    "version": "Versión de Ollama"
+  },
+  "onboardingChecklist": {
+    "addAIAgent": "Crea tu Agente de IA",
+    "addAIAgentDescription": "Añade un agente de IA personalizado adaptado a tus necesidades específicas.",
+    "askFiles": "Hacer preguntas a los archivos",
+    "askFilesButton": "Crear Chat con Archivos",
+    "askFilesDescription": "Chatea con tus archivos. Haz cualquier pregunta, encuentra información, obtén resúmenes y más.",
+    "completedSteps": "Has completado todos los pasos",
+    "createAIChatWithAgent": "Crea un Chat con el Agente de IA",
+    "createAIChatWithAgentDescription": "Inicia una conversación con tu agente de IA para comenzar.",
+    "createTool": "Crear Herramienta",
+    "createToolButton": "Crear Herramienta",
+    "createToolDescription": "Crea, automatiza y optimiza tu flujo de trabajo con potentes herramientas de IA.",
+    "dismiss": "Descartar Lista de Verificación",
+    "getStartedChecklist": "Lista de verificación para comenzar",
+    "getStartedText": "Comienza con Hanzo",
+    "setupHanzoDesktop": "Configurar Hanzo Desktop",
+    "setupHanzoDesktopDescription": "Configura Hanzo Desktop para comenzar",
+    "uploadAFile": "Subir un archivo",
+    "uploadAFileDescription": "Guarda tus notas, sitios web, documentos y otros de forma segura en un solo lugar."
+  },
+  "playgroundTool": {
+    "metadataError": "Error en los metadatos de la herramienta. Intenta generar de nuevo.",
+    "prismError": "El editor de código encontró un error."
+  },
+  "prompt": {
+    "actions": {
+      "create": "Crear Prompt",
+      "update": "Actualizar Prompt"
+    },
+    "drawer": {
+      "createTitle": "Crear prompt personalizado",
+      "updateTitle": "Actualizar Prompt"
+    },
+    "failCreate": "Error al crear el prompt",
+    "failUpdate": "Error al actualizar el prompt",
+    "fields": {
+      "content": "Contenido del Prompt",
+      "name": "Nombre del Prompt"
+    },
+    "libraryDescription": "Elige un prompt de la biblioteca para comenzar.",
+    "libraryTitle": "Biblioteca de Prompts",
+    "successCreate": "Prompt creado con éxito",
+    "successUpdate": "Prompt actualizado con éxito"
+  },
+  "quickAsk": {
+    "emptyStateDescription": "Prueba con \"¿Cómo hacer una solicitud HTTP en JavaScript?\", \"Dame las 10 mejores canciones de rock de los 80\", \"Explícame cómo funciona Internet\"",
+    "emptyStateTitle": "Pregunta a Hanzo AI"
+  },
+  "quickConnection": {
+    "connectingToNode": "Conectando a tu Nodo Hanzo local",
+    "form": {
+      "connect": "Conectar",
+      "nodeAddress": "Dirección del Nodo"
+    },
+    "label": "Conexión Rápida"
+  },
+  "registrationCode": {
+    "create": "Crear Código de Registro",
+    "label": "Código de Registro"
+  },
+  "restoreConnection": {
+    "description": "Utiliza un archivo de conexión y una frase de contraseña",
+    "form": {
+      "encryptedConnectionFile": "Archivo de Conexión Encriptado",
+      "passphrase": "Frase de Contraseña"
+    },
+    "label": "Restaurar Conexión",
+    "restore": "Restaurar"
+  },
+  "settings": {
+    "appearance": {
+      "chatFontSize": {
+        "description": "Selecciona tu tamaño de fuente preferido",
+        "extraLarge": "Extra Grande",
+        "large": "Grande",
+        "medium": "Mediano",
+        "small": "Pequeño",
+        "title": "Tamaño de Fuente del Chat"
+      },
+      "label": "Apariencia"
+    },
+    "cryptoWallet": {
+      "addCoinbaseCDPWallet": "Agregar Billetera Coinbase CDP",
+      "addLocalWallet": "Agregar Billetera Local",
+      "addWallet": "Agregar Billetera",
+      "description": "Gestiona tus billeteras cripto. Agrega tu Billetera Coinbase CDP o tu Billetera Local.",
+      "emptyState": {
+        "description": "Administra tus billeteras de criptomonedas. Crea o restaura tu Billetera CDP de Coinbase o tu Billetera Caliente.",
+        "title": "No se encontraron billeteras"
+      },
+      "errorDescription": "Hubo un error al restaurar tu billetera.",
+      "errorTitle": "Error al restaurar la billetera",
+      "name": "Nombre",
+      "privateKey": "Clave Privada",
+      "serverSigner": "Firmante del Servidor",
+      "successDescription": "Tu billetera ha sido restaurada con éxito.",
+      "successTitle": "Billetera restaurada con éxito",
+      "title": "Billetera Cripto",
+      "walletId": "ID de Billetera",
+      "walletIdOptional": "El ID de Billetera es opcional"
+    },
+    "defaultAgent": "IA Predeterminada",
+    "description": "Administra tus preferencias de configuración de cuenta.",
+    "experimentalFeature": {
+      "label": "Activar Funciones Experimentales"
+    },
+    "exportConnection": {
+      "label": "Exportar conexión"
+    },
+    "general": "General",
+    "label": "Configuración",
+    "language": {
+      "label": "Idioma",
+      "selectLanguage": "Seleccionar Idioma"
+    },
+    "layout": {
+      "analytics": "Analíticas",
+      "appearance": "Apariencia",
+      "createRegistrationCode": "Crear Código de Registro",
+      "cryptoWallet": "Billetera Cripto",
+      "exportConnection": "Exportar Conexión",
+      "galxe": "Misión Galxe",
+      "general": "General",
+      "promptLibrary": "Biblioteca de Prompts",
+      "publicKeys": "Claves Públicas",
+      "remoteAccess": "Acceso Remoto",
+      "hanzoNode": "Administrador de Nodo Hanzo"
+    },
+    "maxChatIterations": {
+      "description": "El número máximo de iteraciones para procesar un mensaje de chat",
+      "error": "Error al actualizar las Máx. Iteraciones de Chat",
+      "label": "Máx. Iteraciones de Chat",
+      "placeholder": "Introduce un número entre 1 y 100",
+      "success": "Máx. Iteraciones de Chat actualizadas con éxito"
+    },
+    "promptLibrary": {
+      "label": "Biblioteca de Prompts"
+    },
+    "publicKeys": {
+      "label": "Claves Públicas",
+      "myDeviceEncryption": "Cifrado de Mi Dispositivo",
+      "myDeviceIdentity": "Identidad de Mi Dispositivo",
+      "myDevicePublicKeys": "Claves Públicas de Mi Dispositivo",
+      "nodeEncryption": "Cifrado del Nodo",
+      "nodePublicKeys": "Claves Públicas del Nodo",
+      "nodeSignature": "Firma del Nodo",
+      "profileEncryption": "Cifrado del Perfil",
+      "profileIdentity": "Identidad del Perfil",
+      "profilePublicKeys": "Claves Públicas del Perfil",
+      "show": "Mostrar Claves Públicas"
+    },
+    "quickAccessButton": {
+      "description": "El Botón de Acceso Rápido se puede mover haciendo clic y manteniendo presionado.",
+      "label": "Mostrar Botón de Acceso Rápido de Hanzo"
+    },
+    "registerNewCode": {
+      "label": "Registrar nuevo dispositivo"
+    },
+    "remoteAccess": {
+      "connected": "Conectado",
+      "description": "Conéctate de manera fácil y segura a tu nodo Hanzo desde cualquier lugar usando ngrok. Sin configuraciones complejas: solo <a>crea una cuenta gratuita en ngrok</a>, copia tu <b>token de autenticación de ngrok</b> desde el panel de control y pégalo a continuación para habilitar el acceso remoto seguro.",
+      "errors": {
+        "failedToGetStatus": "Error al obtener el estado de ngrok.",
+        "failedToStart": "Error al conectar el acceso remoto a través de ngrok.",
+        "failedToStop": "Error al desconectar el acceso remoto a través de ngrok."
+      },
+      "form": {
+        "authToken": "Token de Autenticación de Ngrok",
+        "authTokenHelperText": "Ingresa tu token de autenticación de ngrok",
+        "authTokenHelperTextWhenEnabled": "Detén el acceso remoto a ngrok para actualizar tu token de autenticación",
+        "enableRemoteAccess": "Habilitar Acceso Remoto",
+        "stopRemoteAccess": "Detener Acceso Remoto"
+      },
+      "publicAccessURLDescription": "Utiliza esta URL para conectarte a tu nodo desde cualquier lugar.",
+      "publicAccessUrl": "URL de Acceso Público",
+      "stopRemoteAccessSuccess": "El acceso remoto se ha detenido con éxito",
+      "success": "¡Conectado! Tu nodo Hanzo ahora es accesible de forma remota a través de ngrok",
+      "title": "Acceso Remoto"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "Verificar Identidad de Hanzo",
+      "checkIdentityInSyncDescription": "Verifica que tu identidad de hanzo esté sincronizada correctamente.",
+      "error": "Error al actualizar la Identidad Hanzo",
+      "goToHanzoIdentity": "Ir a Mi Identidad Hanzo",
+      "label": "Identidad Hanzo",
+      "registerIdentity": "Registrar tu Identidad Hanzo",
+      "saveWillRestartApp": "Guardar reiniciará la aplicación para aplicar los cambios",
+      "success": "Identidad Hanzo actualizada exitosamente",
+      "troubleRegisterIdentity": "¿Problemas para registrar tu identidad?",
+      "updatedIdentity": "Identidad Hanzo actualizada con éxito."
+    },
+    "hanzoVersion": "Versión de Hanzo Desktop:",
+    "shortcutKey": {
+      "description": "Modifica la tecla de acceso directo para abrir la barra lateral",
+      "label": "Tecla de Acceso Directo"
+    },
+    "sidebar": {
+      "blacklistedWebsites": "Sitios web en lista negra",
+      "includeClickImageCapture": {
+        "text": "Agrega un botón de Captura de imagen al menú emergente de Acceso rápido.",
+        "title": "Incluir opción de Captura de imagen de 1 clic"
+      },
+      "includeClickSummary": {
+        "text": "Agrega un botón de Resumen al menú emergente de Acceso rápido.",
+        "title": "Incluir opción de Resumen de 1 clic"
+      },
+      "label": "Barra lateral"
+    }
+  },
+  "hanzoNode": {
+    "manager": "Gestor de Nodos de Hanzo",
+    "models": {
+      "errors": {
+        "modelInstalled": "Error al instalar el modelo {{modelName}}",
+        "modelRemoved": "Error al eliminar el modelo {{modelName}}"
+      },
+      "labels": {
+        "bookPages": "Hasta {{pages}} páginas de contenido",
+        "models": "Modelos",
+        "quality": "Calidad",
+        "showAll": "Mostrar todos los modelos",
+        "showRecommended": "Mostrar modelos recomendados",
+        "tags": "Etiquetas",
+        "textCapability": "Generación de Texto",
+        "thinkingCapability": "Pensamiento",
+        "toolCallingCapability": "Herramientas",
+        "visionCapability": "Imagen a Texto",
+        "cloudCapability": "Nube"
+      },
+      "poweredByOllama": "Desarrollado por Ollama",
+      "success": {
+        "modelInstalled": "Modelo {{modelName}} instalado exitosamente",
+        "modelRemoved": "Modelo {{modelName}} eliminado exitosamente"
+      }
+    },
+    "nodeAddress": "Dirección del Nodo",
+    "nodeVersion": "Versión del Nodo",
+    "notifications": {
+      "downloadedModel": "Modelo de IA {{modelName}} descargado exitosamente",
+      "downloadingModel": "Descargando modelo de IA {{modelName}} - {{progress}}%",
+      "errorSyncOllama": "Error al sincronizar los modelos locales de Ollama con tu Nodo Hanzo",
+      "installingModel": "Instalando {{modelName}} ...",
+      "optionsRestored": "Opciones restauradas a los valores predeterminados",
+      "removedNote": "Se eliminó el almacenamiento de tu Nodo Hanzo local",
+      "runningNode": "Tu Nodo Hanzo local está en funcionamiento",
+      "runningOllama": "Tu Ollama local está en funcionamiento",
+      "startingDownload": "Iniciando descarga para el modelo de IA {{modelName}}",
+      "startingNode": "Iniciando tu Nodo Hanzo local",
+      "startingOllama": "Iniciando tu Ollama local",
+      "stopNode": "Deteniendo tu Nodo Hanzo local",
+      "stopOllama": "Deteniendo tu Ollama local",
+      "stoppedNode": "Tu Nodo Hanzo local se detuvo",
+      "stoppedOllama": "Tu Ollama local se detuvo",
+      "syncedOllama": "Los modelos locales de Ollama se han sincronizado con tu Nodo Hanzo"
+    },
+    "resetNodeWarning": {
+      "description": "Tu nodo Hanzo está actualmente bloqueado por claves existentes. Para volver a conectarte, puedes restablecer todos los datos de tu nodo Hanzo.",
+      "option1": "<b>Restaurar:</b> Intente restaurar su conexión utilizando las claves respaldadas.",
+      "option2": "<b>Restablecer datos:</b> Eliminar permanentemente todos los datos de tu Nodo Hanzo.",
+      "option3": "<b>Restablecer todo:</b> Eliminar permanentemente todos los datos de tu Nodo Hanzo, incluyendo las claves de encriptación y firma.",
+      "title": "No se puede conectar"
+    },
+    "restartNode": "Por favor, reinicia tu Nodo Hanzo",
+    "unavailable": "Tu Nodo Hanzo no está disponible"
+  },
+  "tasks": {
+    "runNow": "Ejecutar ahora"
+  },
+  "tasksPage": {
+    "noTasksDescription": "Crea tu primera tarea programada para automatizar recordatorios, resúmenes u otras tareas que necesites gestionar",
+    "noTasksTitle": "No se encontraron tareas programadas"
+  },
+  "tools": {
+    "commandActiveHeading": "Tus herramientas activas",
+    "commandEmpty": "No se encontraron herramientas.",
+    "commonToolsetAffectedTools": "Elegir actualizar todas las herramientas en el conjunto también afectará a:",
+    "commonToolsetUpdateDescription": "La clave de configuración que estás cambiando para {{toolName}} también es utilizada por otras herramientas en este conjunto.",
+    "configuration": {
+      "followingToolsAffected": "Las siguientes herramientas se verán afectadas por este cambio:",
+      "updateAllToolsInSet": "Actualizar todas las herramientas de {{toolSetName}}",
+      "updateAllToolsInSetError": "No se pudo actualizar todas las herramientas de {{toolSetName}}.",
+      "updateAllToolsInSetSuccess": "Todas las herramientas de {{toolSetName}} se han actualizado correctamente",
+      "updateConfig": "Actualizar la configuración de {{toolName}}",
+      "updateConfigDescription": "La clave de configuración que estás cambiando para {{toolName}} también es utilizada por otras herramientas en este conjunto.",
+      "updateConfigDescription2": "Esta configuración es compartida por múltiples herramientas de {{toolSetName}}. ¿Cómo te gustaría aplicar este cambio?",
+      "updateOnlyThisTool": "Actualizar solo esta herramienta"
+    },
+    "configurationRequired": "Se requiere configuración de la herramienta",
+    "create": {
+      "backToTools": "Volver a herramientas",
+      "customModel": "Modelo personalizado",
+      "customModelDescription": "Elige tu modelo de IA preferido para tus necesidades específicas.",
+      "description": "Crea, automatiza y optimiza tu flujo de trabajo con potentes herramientas de IA.",
+      "generationError": "Error al generar la herramienta. Puede que desees intentar usar un modelo de IA más potente para obtener mejores resultados.",
+      "messagePlaceholder": "Describe la herramienta que deseas crear...",
+      "noProtocols": "No se encontraron protocolos.",
+      "otherProtocols": "Otros protocolos también pueden funcionar, pero no han sido verificados oficialmente.",
+      "requestProtocol": "Solicitar protocolo",
+      "hanzoCodeGenerator": "Generador de código Hanzo",
+      "hanzoCodeGeneratorDescription": "Crea herramientas utilizando nuestra herramienta especializada de generación de código de IA.",
+      "hanzoFreeTrial": "Prueba gratuita de Hanzo",
+      "hanzoFreeTrialDescription": "Ideal para construir herramientas, funciona con cualquier contenido que proporciones.",
+      "hanzoFreeTrialRecommendation": "Copia y pega manualmente la documentación que la IA requiere y colócala dentro de <documentation></documentation>.",
+      "step1Label": "Paso 1",
+      "step1Text": "Selecciona tu modelo",
+      "step2Label": "Paso 2",
+      "step2Text": "Escribe tus requisitos",
+      "title": "Crea herramientas de IA en minutos",
+      "verifiedProtocolsTitle": "Protocolos verificados",
+      "wellSupportedProtocols": "Protocolos bien soportados"
+    },
+    "description": "Gestiona, personaliza y amplía tus herramientas de IA.",
+    "emptyState": {
+      "search": {
+        "text": "No se encontraron herramientas para la consulta de búsqueda"
+      }
+    },
+    "errorDuplicateTool": "Error al duplicar la herramienta",
+    "errorOpenToolInCodeEditor": "Error al abrir la herramienta en el editor de código",
+    "homepage": {
+      "buildDescription": "Crea, automatiza y optimiza tu flujo de trabajo con potentes herramientas de IA.",
+      "buildTitle": "Crea herramientas de IA en minutos",
+      "createInIDE": "Crear en VSCode/Cursor",
+      "discoverMoreDescription": "Explora e instala herramientas desde nuestra App Store para impulsar tu productividad y automatizar tu flujo de trabajo.",
+      "discoverMoreTitle": "Descubre más herramientas",
+      "enterToSend": "para enviar",
+      "generationError": "No se pudo generar la herramienta. Intenta usar un modelo de IA más potente para mejores resultados.",
+      "messagePlaceholder": "Describe la herramienta que quieres crear...",
+      "noProtocols": "No se encontraron protocolos.",
+      "otherProtocols": "Otros protocolos también podrían funcionar pero no han sido verificados oficialmente.",
+      "requestProtocol": "Solicitar protocolo",
+      "shiftEnter": "para una nueva línea",
+      "step1Label": "Paso 1",
+      "step1Text": "Selecciona tu modelo",
+      "step2Label": "Paso 2",
+      "step2Text": "Escribe tus requisitos",
+      "verifiedProtocolsTitle": "Protocolos verificados",
+      "wellSupportedProtocols": "Protocolos bien soportados"
+    },
+    "importModal": {
+      "action": "Importar",
+      "chooseFile": "Elige un archivo zip",
+      "fromUrl": "Importar desde URL",
+      "fromZip": "Importar desde Zip",
+      "title": "Importar Herramienta",
+      "urlDescription": "Importa una herramienta desde una URL.",
+      "zipDescription": "Importa una herramienta desde un archivo zip."
+    },
+    "installFromStore": "Instalar desde la tienda",
+    "label": "Herramientas",
+    "lookingForMoreTools": "¿Buscas más herramientas?",
+    "newTool": "Nueva Herramienta",
+    "noToolsInCategory": "No se encontraron herramientas en esta categoría. Crea una nueva herramienta o instala desde la App Store.",
+    "notifications": {
+      "codeGenerationComplete": {
+        "description": "El código se ha generado con éxito.",
+        "title": "Generación de código completa"
+      },
+      "feedbackRequired": {
+        "description": "Por favor, proporcione retroalimentación sobre el código generado.",
+        "title": "Se requiere retroalimentación"
+      },
+      "metadataGenerationComplete": {
+        "description": "Los metadatos se han generado con éxito.",
+        "title": "Generación de metadatos completa"
+      }
+    },
+    "searchPlaceholder": "Buscar herramientas...",
+    "setupDescription": "Para utilizar esta función, necesitamos configurar algunos ajustes primero. Esto solo tomará un minuto y ayuda a garantizar que todo funcione sin problemas.",
+    "setupNow": "Configurar Ahora",
+    "setupRequired": "Configuración de Herramientas Requerida",
+    "store": {
+      "label": "Explorar la Tienda de IA"
+    },
+    "successDuplicateTool": "Herramienta duplicada con éxito",
+    "successOpenToolInCodeEditor": "Herramienta abierta en el editor de código",
+    "visitStore": "Visita la tienda Hanzo para descubrir e instalar herramientas adicionales que mejoren tu flujo de trabajo"
+  },
+  "vectorFs": {
+    "actions": {
+      "addNew": "Añadir nuevo",
+      "copy": "Copiar",
+      "createFolder": "Añadir nueva carpeta",
+      "createTextFile": "Crear archivo de texto",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "editTextFile": "Editar archivo de texto",
+      "move": "Mover",
+      "searchWithinFolder": "Buscar dentro de la carpeta",
+      "share": "Compartir",
+      "shareFolderText": "Puedes compartir carpetas que guardas en Archivos de IA con cualquier persona.",
+      "unshare": "Dejar de compartir",
+      "unshareFolderText": "Todos serán eliminados de esta carpeta. Aún conservarás una copia de esta carpeta en tus Archivos de IA. <br /> Nota: Los miembros eliminados conservarán una copia de esta carpeta compartida.",
+      "uploadFile": "Subir archivo",
+      "uploadFileText": "Subir tus archivos los transforma para estar listos en AI y disponibles para usar en Hanzo."
+    },
+    "allFiles": "Todos los archivos",
+    "deleteFileConfirmation": "¿Estás seguro de que quieres eliminar este archivo? Esta acción no se puede deshacer.",
+    "deleteFolderConfirmation": "¿Estás seguro de que quieres eliminar esta carpeta? Esta acción no se puede deshacer.",
+    "emptyState": {
+      "noFiles": "No se encontraron archivos",
+      "noFilesAndFolders": "Este será el hogar de todos tus archivos.",
+      "noFilesAndFoldersDescription": "Usa el botón \"+\" para comenzar a subir archivos.",
+      "noSharedFolders": "Tus carpetas compartidas se mostrarán aquí."
+    },
+    "errors": {
+      "fileCopied": "Error al copiar el archivo",
+      "fileDeleted": "Error al eliminar el archivo",
+      "fileMoved": "Error al mover el archivo",
+      "filesUploaded": "Error al subir archivos",
+      "folderCopied": "Error al copiar la carpeta",
+      "folderCreated": "Error al crear la carpeta",
+      "folderDeleted": "Error al eliminar la carpeta",
+      "folderMoved": "Error al mover la carpeta",
+      "folderShared": "Error al compartir la carpeta",
+      "folderUnshared": "Error al dejar de compartir la carpeta"
+    },
+    "filesSelected": "{{count}} seleccionados",
+    "forms": {
+      "folderDescription": "Descripción de la carpeta",
+      "folderName": "Nombre de la carpeta",
+      "textFileName": "Título"
+    },
+    "home": "Inicio",
+    "label": "Mi Explorador de Archivos de IA",
+    "localFiles": "Archivos de IA Locales",
+    "pending": {
+      "filesUploading": "Subiendo archivos"
+    },
+    "shareFolderWarning": {
+      "action": "Haz clic aquí para aprender cómo",
+      "text": "Debes registrar una identidad de Hanzo antes de poder compartir carpetas en la Red de Hanzo.",
+      "title": "Activar Compartir Carpeta"
+    },
+    "sharedFolders": "Carpetas compartidas",
+    "success": {
+      "fileCopied": "Archivo copiado exitosamente",
+      "fileDeleted": "Archivo eliminado exitosamente",
+      "fileMoved": "Archivo movido exitosamente",
+      "filesUploaded": "Archivos subidos exitosamente",
+      "folderCopied": "Carpeta copiada exitosamente",
+      "folderCreated": "Carpeta creada exitosamente",
+      "folderDeleted": "Carpeta eliminada exitosamente",
+      "folderMoved": "Carpeta movida exitosamente",
+      "folderShared": "Carpeta compartida exitosamente",
+      "folderUnshared": "Carpeta dejó de compartirse exitosamente"
+    }
+  },
+  "videoBanner": {
+    "unsupported": "Tu navegador no soporta la etiqueta de video."
+  }
+}

@@ -1,0 +1,1140 @@
+{
+  "agents": {
+    "chatWithAgent": "Ajan ile Sohbet Et",
+    "configureAgent": "Ajanı Yapılandır",
+    "create": {
+      "advanceOptionsLabel": "Gelişmiş Seçenekler",
+      "agentName": "Ajan Adı",
+      "agentNameHelperCreate": "AI ajanınız için benzersiz bir ad girin. Bu, ajan kimliği olarak da kullanılacaktır {{agentName}}",
+      "agentNameHelperEdit": "Ajan adını değiştirebilirsiniz, ancak ajan kimliği değişmez. Ajan Kimliği: {{agentName}}",
+      "contextSettingsLabel": "Bağlam Ayarları",
+      "cronExpression": "Cron İfadesi",
+      "cronExpressionHelper": "Bir cron ifadesi girin örn: */30 * * * * (her 30 dakikada bir)",
+      "description": "Açıklama",
+      "descriptionHelper": "Ajanınızın amacını kısaca tanımlayın (ajan tarafından kullanılmaz).",
+      "descriptionPlaceholder": "örn., Kullanıcı odaklı tasarımlar oluşturun ve kullanıcı etkileşimlerini geliştirin.",
+      "enableStream": "Akışı Etkinleştir",
+      "enableStreamDescription": "Ajanın yanıtını oluştururken akış halinde iletin",
+      "enableThinking": "Düşünmeyi Etkinleştir",
+      "enableThinkingDescription": "Ajanın cevap vermeden önce mantık yürütme sürecini göstermesine izin verir.",
+      "enableTools": "Araçları Etkinleştir",
+      "enableToolsDescription": "Ajanın görevleri tamamlamak için araçları kullanmasına izin verir.",
+      "knowledge": "Bilgi",
+      "knowledgeAddNewFiles": "Yeni Dosyalar Ekle",
+      "knowledgeBase": "Bilgi Tabanı",
+      "knowledgeBaseDescription": "Ajanınıza bilgi ve yeteneklerini artırmak için yerel AI dosyaları sağlayın.",
+      "knowledgeSearch": "Klasörleri ve dosyaları ara ...",
+      "llmProviderDescription": "Ajanınızı güçlendirecek modeli seçin",
+      "llmProviderLabel": "AI Seçin",
+      "messageContextDescription": "(İsteğe Bağlı) Kullanıcı mesajıyla sabit bir mesaj zorlayarak mesaj bağlamını burada kontrol edebilirsiniz, örn. {{user_message}}. Ve sonra şunu söyleyin: Chao amigo!. Bu, her gönderilen mesaja \"Ve sonra şunu söyleyin: Chao amigo!\" ekleyecektir.",
+      "messageContextLabel": "Mesaj Bağlamı",
+      "overrideConfigurations": "Yapılandırmaları Geçersiz Kıl",
+      "persona": "Persona",
+      "resetAdvancedOptions": "Varsayılan ayarlara sıfırlar",
+      "saveAndTestAgent": "Ajanı Kaydet ve Test Et",
+      "schedule": "Program",
+      "scheduleAIInstructions": "AI Talimatları",
+      "scheduleAIInstructionsDescription": "Planlı icra için AI talimatlarını girin...",
+      "scheduleAIInstructionsHelper": "Planlı icra için kullanılacak istemi yazın.",
+      "scheduleDescription": "Ajanınızın otomatik olarak görevleri ne zaman gerçekleştireceğini ayarlayın.",
+      "scheduleNormalUsage": "Normal Kullanım",
+      "scheduleNormalUsageDescription": "Ajan, bir sohbette kullanıldığında hemen yanıt vermeye hazırdır.",
+      "scheduleRecurring": "Normal Kullanım + Planlı İcra",
+      "scheduleRecurringDescription": "Normal kullanım ve ayrıca ajan görevleri için belirli zamanlar ve sıklıklar yapılandırın, örn. Her 5 dakikada bir mesajları kontrol eden ve yanıtlayan Twitter Ajanı.",
+      "selectedTools": "Seçilen Araçlar",
+      "systemInstructions": "Sistem Talimatları",
+      "systemInstructionsHelper": "Ajanınızın davranışını özel talimatlar ekleyerek kontrol edin",
+      "systemInstructionsPlaceholder": "örn., Soruları yanıtlayabilen ve görevlerde yardımcı olabilen bir asistan.",
+      "temperature": "Sıcaklık",
+      "temperatureDescription": "Sıcaklık, AI çıktılarının rastgeleliğini etkileyen bir parametredir. Daha yüksek sıcaklık = daha beklenmedik, daha düşük sıcaklık = daha öngörülebilir.",
+      "tools": "Araçlar",
+      "toolsCreateNewTool": "Yeni Araç Oluştur",
+      "toolsDescription": "Ajanınızın görevleri tamamlamak için kullanabileceği araçları ve becerileri seçin.",
+      "topK": "En Yüksek K",
+      "topKDescription": "Diziler oluşturmak için anahtar kelime sayısını ayarlayın. Bu parametre, üretilen pasajın kapsamını belirler, fazla tekrarın önüne geçer. Daha yüksek bir rakam, daha uzun anlatımlar üretirken, daha düşük bir rakam metni kısa tutar.",
+      "topP": "En Yüksek P",
+      "topPDescription": "Sonuçların alaka düzeyini artırmak için olasılık eşiğini ayarlayın. Örneğin, 0.9'luk bir eşik, hedeflenmiş, belirli uygulamalar için optimal olabilirken, 0.95 veya 0.97'lik bir eşik daha geniş, daha yaratıcı yanıtlar gerektiren görevler için tercih edilebilir."
+    },
+    "createFirstAgent": "AI'nin gücünü keşfetmeye başlamak için ilk Ajanınızı oluşturun.",
+    "explore": "Keşfet",
+    "form": {
+      "chatHistory": "Sohbet Geçmişi",
+      "closeChat": "Sohbeti Kapat",
+      "createAgent": "Yeni Ajan Oluştur",
+      "emptyChatDescription": "Bu ajanla sohbet etmeye başlamak için bir mesaj gönderin",
+      "emptyChatTitle": "Ajanınızla Sohbet",
+      "enter": "Giriş",
+      "enterToSend": "göndermek için",
+      "messagePlaceholder": "Mesaj gönder...",
+      "newAgent": "Yeni Ajan",
+      "newChat": "Yeni Sohbet",
+      "openChat": "Sohbeti Aç",
+      "updateAgent": "Ajanı Güncelle"
+    },
+    "importModal": {
+      "action": "İçe Aktar",
+      "chooseFile": "Bir zip dosyası seçin",
+      "title": "Ajanı İçe Aktar"
+    },
+    "label": "Ajanlar",
+    "myAgents": "Ajanlarım",
+    "noAvailableAgents": "Mevcut ajan yok",
+    "publishDialog": {
+      "amount": "Miktar",
+      "asset": "Varlık",
+      "configureAndPublish": "Yapılandır ve Yayınla",
+      "description": "Açıklama",
+      "open": "Ajanı Yayınla",
+      "paymentAddress": "Ödeme Adresi",
+      "publish": "Yayınla",
+      "published": "Yayınlandı",
+      "searchAgents": "Ajanları Ara",
+      "selectAgent": "Ajan Seç",
+      "title": "{{name}}'i Yayınla"
+    },
+    "systemInstructions": "Sistem Talimatları"
+  },
+  "agentsPage": {
+    "addAgent": "Aracı Ekle",
+    "description": "Kişiselleştirilmiş talimatlar ve zengin bilgi birikimiyle AI ajanları oluşturup keşfedin ve hedeflerinizi otonom bir şekilde gerçekleştirin.",
+    "exploreAgentsDescription": "İhtiyaçlarınız için özel AI ajanlarını keşfedin",
+    "exploreDescription": "Topluluk tarafından geliştirilen AI ajanlarını keşfedin ve yükleyin, iş akışınızı geliştirin <br /> ve verimliliğinizi ve yaratıcılığınızı artırın.",
+    "goToTaskDetails": "Görev detaylarına git",
+    "notFoundDescription": "AI gücünü keşfetmek için ilk Ajanınızı oluşturun.",
+    "notFoundTitle": "Kullanılabilir ajan yok"
+  },
+  "aiFilesSearch": {
+    "description": "Yapay Zeka Dosyalarınızda içerik bulmak için kolayca arama yapın",
+    "filesSelected": "{{count}} dosya seçildi",
+    "foundResults": "{{count}} sonuç bulundu",
+    "label": "Yapay Zeka Dosyaları İçerik Arama"
+  },
+  "aisPage": {
+    "description": "Çalışma akışınıza uyacak şekilde bulut ve yerel AI modellerini kolayca yönetin ve arasında geçiş yapın.",
+    "label": "AI Modelleri",
+    "shortDescription": "Geniş bir AI modeli yelpazesini keşfedin"
+  },
+  "analytics": {
+    "bulletPoints": {
+      "five": "<x/> Asla AI sorgularınızı toplamayız",
+      "four": "<x/> Asla IP adresinizi toplamayız",
+      "one": "<check/> Her zaman Ayarlar üzerinden çıkış yapmanıza izin verir",
+      "six": "<x/> Kişisel bilgilerinizi eğitim amaçları için asla kullanmayız",
+      "three": "<check/> Kullandığınız özellikler hakkında içerik veya yanıt olmadan analitik bilgi gönderin",
+      "two": "<check/> Rastgele Analitik"
+    },
+    "label": "Analitik",
+    "moreInfo": "Gizlilik uygulamalarımızla ilgili daha fazla bilgi için lütfen <a>Gizlilik Politikasına</a> bakın",
+    "title": "Hanzo'yi geliştirmemize yardımcı olun"
+  },
+  "appReset": {
+    "action": "Uygulamayı Sıfırla",
+    "description": "Şu anda beta aşamasındayız ve deneyiminizi geliştirmek için bazı önemli güncellemeler yaptık. Bu güncellemeleri uygulamak için verilerinizi sıfırlamamız gerekiyor. Yardıma ihtiyacınız varsa, lütfen destek ekibimizle iletişime geçin.",
+    "title": "Uygulama Sıfırlaması Gerekiyor"
+  },
+  "chat": {
+    "actions": {
+      "deleteInbox": "Sohbeti Sil",
+      "deleteInboxConfirmationDescription": "Sohbet silinecek ve sohbet geçmişinizden kaldırılacaktır.",
+      "deleteInboxConfirmationTitle": "Sohbeti silmek istiyor musunuz?"
+    },
+    "actives": {
+      "label": "Aktifler",
+      "notFound": "Aktif sohbet bulunamadı."
+    },
+    "agents": "Ajanlar",
+    "allMessagesLoaded": "Tüm önceki mesajlar yüklendi ✅",
+    "archives": {
+      "archive": "Arşivle",
+      "archived": "Arşivlendi",
+      "error": "Görevi arşivlerken hata oluştu",
+      "label": "Arşivler",
+      "notFound": "Arşivlenmiş sohbet bulunamadı.",
+      "success": "Sohbetiniz arşivlendi"
+    },
+    "chats": "Sohbetler",
+    "context": {
+      "description": "Bu sohbet için bağlam olarak kullanılan klasörler ve dosyaların listesi",
+      "title": "Sohbet Bağlamı"
+    },
+    "create": "AI Sohbeti Oluştur",
+    "editMessage": {
+      "warning": "Bu, sohbetinizi buradan itibaren yeniden başlatacaktır."
+    },
+    "emptyStateDescription": "Hızlı sorular için, Hanzo Spotlight'ı kullanmak üzere ⌘ + Shift + J tuşlarına basın",
+    "emptyStateTitle": "Hanzo AI'ye Sor",
+    "enterMessage": "Mesaj Girin",
+    "failedToOpenChatFolder": "Lütfen önce sohbete bir dosya yükleyin",
+    "fileProcessing": {
+      "description": "Bu birkaç dakika sürebilir",
+      "title": "Dosyanız işleniyor"
+    },
+    "form": {
+      "message": "Yapmak istediğiniz işi söyleyin",
+      "messagePlaceholder": "Ör: İnternetin nasıl çalıştığını açıkla...",
+      "selectAI": "AI'nizi Seçin",
+      "selectedText": "Seçtiğiniz metin",
+      "setContext": "Sohbet Bağlamını Ayarlayın",
+      "setContextText": "Sohbetiniz sırasında AI'nizin kullanması için dosya veya klasör ekleyin."
+    },
+    "limitReachedDescription": "Bu model/ajan için ay boyunca tüm sorgularınızı kullandınız. Lütfen başka bir ajan ile yeni bir sohbet başlatın.",
+    "limitReachedTitle": "Limit Aşıldı",
+    "networkAgentUsed": "Kullanılan Ağ Ajanı",
+    "openChatFolder": "Sohbet Klasörünü Aç",
+    "processingNetworkAgent": "Ağ Ajanı İşleniyor",
+    "processingTool": "Araç İşleniyor",
+    "sendMessage": "Mesaj Gönder",
+    "sendMessagePlaceholder": "Mesaj gönderin veya araçlara erişmek için \"/\" tuşuna basın",
+    "toolUsed": "Kullanılan Araç",
+    "tracing": {
+      "title": "İzleme"
+    }
+  },
+  "chatDM": {
+    "create": "DM Sohbeti Oluştur",
+    "form": {
+      "message": "Mesaj",
+      "messagePlaceholder": "Mesajınızı girin",
+      "hanzoIdentity": "Hanzo Kimliği"
+    }
+  },
+  "codeRunner": {
+    "errorOccurred": "Hata Oluştu",
+    "executeCode": "Kodu Çalıştır",
+    "output": "Çıktı",
+    "stderr": "Standart Hata",
+    "stdout": "Standart Çıktı"
+  },
+  "common": {
+    "about": "Hakkında",
+    "add": "Ekle",
+    "added": "Eklendi",
+    "adding": "Ekleniyor...",
+    "advanced": "Gelişmiş",
+    "agent": "Ajan",
+    "all": "Hepsi",
+    "alreadyHaveNode": "Zaten bir Düğümünüz mü var?",
+    "back": "Geri",
+    "cancel": "İptal",
+    "chat": "Sohbet",
+    "clear": "Temizle",
+    "clearSearch": "Aramayı Temizle",
+    "clickToUpload": "Yüklemek için tıklayın veya sürükleyip bırakın",
+    "comingSoon": "Yakında - Ağustos Sonu",
+    "configure": "Yapılandır",
+    "connect": "Bağlan",
+    "continue": "Devam Et",
+    "copy": "Kopyala",
+    "create": "Oluştur",
+    "delete": "Sil",
+    "deleteTool": "Aracı Sil",
+    "details": "Ayrıntılar",
+    "disabled": "Devre Dışı",
+    "disconnect": "Bağlantıyı Kes",
+    "dismiss": "Kapat",
+    "done": "Tamam",
+    "edit": "Düzenle",
+    "editMessage": "Mesajı Düzenle",
+    "enabled": "Etkin",
+    "file": "Dosya",
+    "fileWithCount_one": "{{count}} Dosya",
+    "fileWithCount_other": "{{count}} Dosyalar",
+    "files": "Dosyalar",
+    "folderLocation": "Klasör Konumu:",
+    "folderWithCount_one": "{{count}} Klasör",
+    "folderWithCount_other": "{{count}} Klasörler",
+    "folders": "Klasörler",
+    "getStarted": "Ücretsiz Başlayın",
+    "howWouldYouLikeToProceed": "Nasıl devam etmek istersiniz?",
+    "iAgree": "Kabul Ediyorum",
+    "incomplete": "Tamamlanmamış",
+    "install": "Kur",
+    "installed": "Yüklü",
+    "logInHanzoHosting": "Hanzo Hosting'e Giriş Yap",
+    "more": "Daha Fazla",
+    "moreOptions": "Daha Fazla Seçenek",
+    "next": "İleri",
+    "noResultsFound": "Sonuç bulunamadı.",
+    "noThanks": "Hayır, Teşekkürler",
+    "none": "Yok",
+    "optIn": "Katıl",
+    "optOut": "Ayrıl",
+    "passphrase": "Şifreleme Anahtarı",
+    "quickConnect": "Hızlı Bağlantı",
+    "reasoning": "Akıl Yürütme",
+    "recommended": "Tavsiye Edilen",
+    "refresh": "Yenile",
+    "remove": "Kaldır",
+    "rename": "Yeniden Adlandır",
+    "repeatPassphrase": "Şifreleme Anahtarını Onaylayın",
+    "requiresAction": "Eylem Gerektiriyor",
+    "resetAll": "Hepsini Sıfırla",
+    "resetData": "Verileri Sıfırla",
+    "resetFilters": "Filtreleri Sıfırla",
+    "restore": "Geri Yükle",
+    "retry": "Tekrar Dene",
+    "save": "Kaydet",
+    "saveChanges": "Değişiklikleri Kaydet",
+    "search": "Ara",
+    "searchPlaceholder": "Ara...",
+    "seeOptions": "Seçenekleri Gör",
+    "selectItem": "Detayları görmek için bir öğe seçin",
+    "send": "Gönder",
+    "hanzoPrivate": "Yerel AI'nizi Kurun",
+    "showLess": "Daha Az Göster",
+    "showMore": "Daha Fazla",
+    "signUpHanzoHosting": "Hanzo Hosting'e Kaydol",
+    "soon": "yakında",
+    "termsAndConditionsText": "<a>Hizmet Şartları</a> ve <b>Gizlilik Politikası</b>nı kabul ediyorum",
+    "thinking": "Düşünüyor...",
+    "tool": "Araç",
+    "tryAgain": "Tekrar Deneyin",
+    "tryItOut": "Deneyin",
+    "unpublish": "Yayından kaldır",
+    "unselectAll": "Hepsini Seçme",
+    "update": "Güncelle",
+    "updating": "Güncelleniyor...",
+    "upload": "Yükle",
+    "uploadAFileDescription": "Görüntüler, PDF, CSV, TXT, XLSX ve daha fazla formatı destekler",
+    "uploadFile": "Bir Dosya Yükle",
+    "viewDetails": "Detayları Görüntüle"
+  },
+  "cronTask": {
+    "aiAgent": "AI / Ajan",
+    "aiModelConfiguration": "AI Modeli Yapılandırması",
+    "cronExample": "Bir cron ifadesi girin örn: */30 * * * * (her 30 dakikada bir)",
+    "cronExpression": "Cron İfadesi",
+    "cronWillRun": "Bu cron {{schedule}} ({{expression}}) olarak çalışacak",
+    "enableStream": "Akışı Etkinleştir",
+    "enableThinking": "Düşünmeyi Etkinleştir",
+    "enableTools": "Araçları Etkinleştir",
+    "forceToolUsage": "Araç Kullanımını Zorla (İsteğe Bağlı)",
+    "promptExample": "örneğin. En iyi hacker haberlerini ver",
+    "promptPlaceholder": "örneğin. En iyi hacker haberlerini ver",
+    "scheduleOptions": {
+      "every1stMonth12pm": "her ayın 1'inde saat 12'de",
+      "every5Hours": "her 5 saatte bir",
+      "every5Min": "her 5 dakikada bir",
+      "everyJanuary1st12am": "her yılın 1 Ocak'ında saat 12'de",
+      "everyMonday8am": "her pazartesi sabah 8'de"
+    },
+    "taskDescription": "Görev Açıklaması",
+    "taskDescriptionHelper": "Ajanınızın amacını kısaca tanımlayın (ajan tarafından kullanılmaz).",
+    "taskPrompt": "Görev İsteği",
+    "temperature": "Sıcaklık",
+    "temperatureInfo": "Sıcaklık, AI çıktılarının rastgeleliğini etkileyen bir parametredir. Daha yüksek sıcaklık = daha beklenmedik, daha düşük sıcaklık = daha öngörülebilir.",
+    "topK": "En Yüksek K",
+    "topKInfo": "Diziler oluşturmak için anahtar kelime sayısını ayarlayın. Bu parametre, üretilen pasajın kapsamını belirler, fazla tekrarın önüne geçer. Daha yüksek bir rakam, daha uzun anlatımlar üretirken, daha düşük bir rakam metni kısa tutar.",
+    "topP": "En Yüksek P",
+    "topPInfo": "Sonuçların alaka düzeyini artırmak için olasılık eşiğini ayarlayın. Örneğin, 0.9'luk bir eşik, hedeflenmiş, spesifik uygulamalar için optimal olabilirken, 0.95 veya 0.97'lik bir eşik, daha geniş, daha yaratıcı yanıtlar gerektiren görevler için tercih edilebilir."
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>Yerel:</b> Yerel bir Hanzo ile verilerinizi güvenli bir ortamda tam kontrol altına alırsınız.",
+      "privacy": "<b>Gizlilik Odaklı:</b> Verileriniz çevrimdışı yetenekler ve güçlü gizlilik korumaları ile güvenli kalır.",
+      "tools": "<b>Günlük Görevler için Araçlar:</b> 100'den fazla entegrasyonu destekler ve sayısı artmaktadır."
+    },
+    "localAI": "Hanzo Yerel AI",
+    "model": {
+      "commandr7bBenefits": {
+        "fast": "<b>Hızlı Çalışma:</b> Kullanıcılar, orta seviye donanımda verimli çalıştığını ve önemli bir gecikme olmadan daha hızlı yanıtlar ve daha akıcı etkileşimler sağladığını belirtmişlerdir.",
+        "lightweight": "<b>Hafif:</b> Bu hafif yapı, daha az bellek ve hesaplama gücü gerektirdiği anlamına gelir, bu da daha geniş bir kullanıcı ve uygulama yelpazesi için erişilebilir olmasını sağlar.",
+        "performance": "<b>Kompakt Boyutta Yüksek Performans:</b> command-r7b modeli, mükemmel performans sunacak şekilde tasarlanmıştır ve aynı zamanda nispeten küçük bir boyut korumaktadır."
+      },
+      "downloading": "İndiriliyor",
+      "embeddingBenefits": {
+        "dataAnalysis": "<b>Geliştirilmiş Veri Analizi:</b> Yapısal olmayan verilerden anlamlı içgörüler çıkararak karar verme süreçlerini ve operasyonel verimliliği artırır.",
+        "efficient": "<b>Kompakt Boyut & Verimli:</b> Sadece 22 milyon parametre ve 384 boyutlu bir gömme vektörü ile Arctic-embed-xs, kaynak verimliliği için tasarlanmıştır.",
+        "highRetrieval": "<b>Yüksek Veri Alma Performansı:</b> Büyük veri setlerinden ilgili bilgileri etkili bir şekilde alabilir, arama ve alma görevlerinde yüksek doğruluk sağlar."
+      },
+      "gemmaBenefits": {
+        "fast": "<b>Hızlı Çalışma:</b> Kullanıcılar, orta seviye donanımda verimli çalıştığını, daha hızlı yanıtlar ve daha akıcı etkileşimler sağladığını belirtmiştir.",
+        "lightweight": "<b>Hafif:</b> Bu hafif yapısı, daha az bellek ve hesaplama gücü gerektirir, bu da daha geniş bir kullanıcı ve uygulama yelpazesi için erişilebilir olmasını sağlar.",
+        "performance": "<b>Kompakt Boyutta Yüksek Performans:</b> gemma2:2b modeli, 2 milyar parametre ile sınıfının en iyisi performansı sunacak şekilde tasarlanmıştır."
+      },
+      "installation": "{{modelName}} kuruluyor...",
+      "mistralSmallBenefits": {
+        "language": "<b>Güçlü Dil Üretimi:</b> İçerik üretimi, dil çevirisi ve kodlama yardımı gibi çeşitli uygulamalarda insan benzeri metinler üretebilir.",
+        "multilingual": "<b>Çok Dilli Destek:</b> Model, İngilizce, İspanyolca, Fransızca, Almanca ve daha fazlası dahil olmak üzere birden fazla dilde diyalogları desteklemektedir.",
+        "resource": "<b>Verimli Kaynak Kullanımı:</b> Daha büyük modellere kıyasla hafif ve ultra hızlı bir modeldir."
+      },
+      "ollamaBenefits": {
+        "language": "<b>Güçlü Dil Üretimi:</b> İçerik üretimi, dil çevirisi ve kodlama yardımı gibi çeşitli uygulamalarda insan benzeri metinler üretebilir.",
+        "multilingual": "<b>Çok Dilli Destek:</b> Model, İngilizce, İspanyolca, Fransızca, Almanca ve daha fazlası dahil olmak üzere birden fazla dilde diyalogları destekler.",
+        "resource": "<b>Verimli Kaynak Kullanımı:</b> Daha büyük modellere kıyasla hafif ve ultra hızlı bir modeldir."
+      }
+    },
+    "welcome": "Hanzo'ya Hoş Geldiniz",
+    "welcomeDescription": "Cihazınızda doğrudan AI ajanları oluşturun, çalıştırın ve otomatikleştirin — hızlı, özel ve güvenli."
+  },
+  "disconnect": {
+    "exportConnection": "Devam etmeden önce, lütfen<Link>bağlantınızı dışa aktarın</Link> böylece istediğiniz zaman bağlantınızı geri yükleyebilirsiniz.",
+    "modalDescription": "Bağlantıyı kesmek istediğinize emin misiniz? Bu, verilerinizi kalıcı olarak silecektir.",
+    "modalTitle": "Hanzo'yi Bağlantıyı Kes"
+  },
+  "dockerStatus": {
+    "dockerInstalledButNotRunning": "Docker Yüklü ama Çalışmıyor",
+    "dockerInstalledButNotRunningDescription": "Docker yüklü ama çalışmıyor. Araç yürütme hızını, kararlılığını ve genel performansı artırmak için şimdi başlatın.",
+    "dockerNotInstalled": "Docker Yüklenmedi",
+    "dockerNotInstalledDescription": "Docker sisteminizde yüklü değil. Yüklemek, daha iyi performans, daha hızlı işlem ve geliştirilmiş bir AI araç deneyimi sağlayacaktır.",
+    "dockerRunning": "Docker Çalışıyor ve Aktif",
+    "dockerRunningDescription": "Araçlarınız artık Docker ile tam verimlilikte çalışıyor. Daha akıcı bir deneyimin tadını çıkarın!"
+  },
+  "errorBoundary": {
+    "genericError": "Bir şeyler yanlış gitti. Uygulamayı yenilemeyi deneyin."
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Hanzo Düğümünüze bağlanmakta zorluk yaşıyoruz. Düğümünüz çevrimdışı olabilir veya internet bağlantınızda bir sorun olabilir.",
+      "title": "Düğüm Kullanılamıyor"
+    }
+  },
+  "exportConnection": {
+    "downloadText": "Bu bağlantı dosyasını indirin ve güvenli bir yerde saklayın",
+    "form": {
+      "passphrase": "Şifre ifadesi",
+      "repeatPassphrase": "Şifre ifadesini tekrar edin"
+    },
+    "generateFile": "Bağlantı dosyasını oluştur",
+    "label": "Bağlantıyı Dışa Aktar",
+    "restoreText": "Bağlantıyı Hanzo Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
+  },
+  "extension": {
+    "welcome": "Hanzo Visor ile web tarayıcı deneyiminizi AI ile dönüştürün ✨"
+  },
+  "feedback": {
+    "button": "Geri Bildirim",
+    "description": "Geri bildiriminizi önemsiyoruz! Hanzo hakkındaki düşüncelerinizi ve deneyiminizi nasıl geliştirebileceğimiz konusunda bize bilgi verin.",
+    "form": {
+      "contactHelp": "Sorularımız olursa size nasıl ulaşabiliriz?",
+      "contactLabel": "E-posta veya telefon numarası",
+      "contactPlaceholder": "E-posta veya telefon numarası",
+      "error": "Geri bildirim gönderimi başarısız oldu. Lütfen tekrar deneyin.",
+      "feedbackLabel": "Geri Bildiriminiz",
+      "feedbackPlaceholder": "Düşüncelerinizi, önerilerinizi veya sorularınızı paylaşın...",
+      "submit": "Geri Bildirim Gönder",
+      "success": "Geri bildiriminiz için teşekkür ederiz! Yakında sizinle iletişime geçeceğiz."
+    },
+    "title": "Geri Bildirim Paylaş"
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Hanzo Masaüstü kurulumunuzu kaydederken bir hata oluştu. Lütfen EVM Adresinizin daha önce farklı bir kurulumu kaydetmek için kullanılmadığından emin olun."
+    },
+    "form": {
+      "evmAddress": "EVM Adresi",
+      "evmAddressHelper": "Galxe'de kullandığınız EVM Adresini ekleyin",
+      "proof": "Kanıt",
+      "registerInstallation": "Kurulumu Kaydet",
+      "signature": "İmza"
+    },
+    "goToGalxeQuest": "Galxe Görevimizi Kontrol Edin",
+    "label": "Galxe Görevi",
+    "success": {
+      "registerDesktopInstallation": "Hanzo Masaüstü kurulumunuz başarıyla kaydedildi. Galxe görevinde kaydedilmesi birkaç saat sürebilir."
+    }
+  },
+  "homepage": {
+    "agentConfigurationRequired": "{{agentName}}'in düzgün çalışması için bazı yapılandırmalara ihtiyacı var.",
+    "enterToSend": "<span>Enter</span> ile gönder",
+    "installingDefaultAgents": "Varsayılan ajanlar yükleniyor",
+    "recommendedAgents": "Önerilen Ajanlar",
+    "setupAgent": "Ajanı Kur",
+    "shiftEnterForNewLine": "<span>Shift + Enter</span> ile yeni bir satır",
+    "welcomeTitle": "Bugün size nasıl yardımcı olabilirim?"
+  },
+  "inboxes": {
+    "inboxName": "Ad",
+    "updateName": "Gelen kutusu adını güncelle"
+  },
+  "layout": {
+    "menuItems": {
+      "agents": "Yapay Zekalar",
+      "aiTasks": "Yapay Zeka Görevleri",
+      "chats": "Sohbetler",
+      "decentralizedAgents": "Merkeziyetsiz AI Ajanları",
+      "disconnect": "Bağlantıyı Kes",
+      "helpAndSupport": "Yardım ve Destek",
+      "manageAis": "Yapay Zekaları Yönet",
+      "mcp": "MCP'ler",
+      "scheduledTasks": "Planlanmış Görevler",
+      "settings": "Ayarlar",
+      "tools": "Araçlar",
+      "vectorFs": "Yapay Zeka Dosya Gezgini",
+      "vectorSearch": "Yapay Zeka Dosya İçeriği Arama"
+    },
+    "sidebar": {
+      "toggle": "Yan Çubuğunu Aç/Kapat"
+    }
+  },
+  "llmProviders": {
+    "add": "Yapay Zeka Ekle",
+    "addManually": "Yapay Zeka Manuel Olarak Ekle",
+    "delete": {
+      "description": "Bu yapay zekayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+      "label": "Yapay Zekayı Sil"
+    },
+    "errors": {
+      "createAgent": "Yapay Zeka eklenirken hata oluştu",
+      "deleteAgent": "Yapay Zeka silinirken hata oluştu",
+      "updateAgent": "Yapay Zeka güncellenirken hata oluştu"
+    },
+    "form": {
+      "apiKey": "API Anahtarı",
+      "customModelType": "Özel Model Türü",
+      "description": "Açıklama",
+      "descriptionHelper": "Bu yapay zekayı daha sonra tanımlamaya yardımcı olacak kısa açıklama (isteğe bağlı)",
+      "externalUrl": "Dış URL",
+      "generatedId": "Oluşturulan ID",
+      "modelId": "Model Kimliği",
+      "modelName": "Model Adı",
+      "modelProvider": "Model Sağlayıcı",
+      "modelType": "Model",
+      "name": "Yapay Zeka Adı",
+      "selectModel": "Model Sağlayıcısını Seç",
+      "toggleCustomModel": "Özel bir model ekle"
+    },
+    "label": "Yapay Zekalar",
+    "localAI": {
+      "installText": "Yerel makinenizde yapay zeka modellerini yükledikten sonra, bunlar yapay zeka olarak kullanılabilir hale gelecektir.",
+      "installTitle": "Yapay Zeka Modellerini Yükle"
+    },
+    "notFound": {
+      "description": "İlk yapay zekanızı bağlayarak Hanzo AI ile soru sormaya başlayın. OpenAI'yi bağlamayı deneyin.",
+      "title": "Mevcut Yapay Zeka Yok"
+    },
+    "searchPlaceholder": "Yapay zeka ara",
+    "success": {
+      "createAgent": "Yapay Zeka başarıyla oluşturuldu",
+      "deleteAgent": "Yapay Zeka başarıyla silindi",
+      "updateAgent": "Yapay Zeka başarıyla güncellendi"
+    },
+    "switch": "Yapay Zeka Değiştir"
+  },
+  "mcpClients": {
+    "claudeFailMessageBase": "Otomatik Claude yapılandırması başarısız oldu.",
+    "claudeLoading": "Otomatik Claude Masaüstü yapılandırması deniliyor...",
+    "claudeSuccessDescription": "Değişikliklerin etkili olması için lütfen Claude'u yeniden başlatın.",
+    "claudeSuccessTitle": "Claude Masaüstü başarıyla yapılandırıldı!",
+    "configFailDescription": "{{errorMessage}} Lütfen manuel kurulum için aşağıdaki talimatları izleyin:",
+    "configFailTitle": "{{clientName}} Otomatik Yapılandırması Başarısız Oldu",
+    "connectExternalClient": "Harici MCP Müşterisini Bağla",
+    "copyJsonButton": "JSON Yapılandırmasını Kopyala",
+    "copyJsonSuccess": "JSON yapılandırması panoya kopyalandı",
+    "copySuccessCommand": "Komut panoya kopyalandı",
+    "copySuccessUrl": "SSE URL'si panoya kopyalandı",
+    "cursorFailMessageBase": "Otomatik Cursor yapılandırması başarısız oldu.",
+    "cursorLoading": "Otomatik Cursor yapılandırması deniliyor...",
+    "cursorSuccessDescription": "Değişikliklerin etkili olması için lütfen Cursor'u yeniden başlatın.",
+    "cursorSuccessTitle": "Cursor başarıyla yapılandırıldı!",
+    "customCopyCommandButton": "Komutu Kopyala",
+    "customCopySseUrlButton": "SSE URL'sini Kopyala",
+    "customDescriptionPrimary": "Harici istemcinizi bağlamanın önerilen yolu Sunucu Tarafından Gönderilen Olaylar (SSE) aracılığıyladır.",
+    "customDescriptionSecondary": "İstemciniz SSE'yi desteklemiyorsa, bu komutu kullanarak Hanzo MCP sunucusunu ayrı bir işlem olarak çalıştırabilirsiniz:",
+    "customTitle": "Özel Harici İstemci Yapılandırması"
+  },
+  "mcpPage": {
+    "exposeToolsDescription": "AI Araçlarınızı MCP aracılığıyla diğer MCP İstemcileriyle sorunsuz bir şekilde entegre edin ve yeteneklerini artırın.",
+    "exposeToolsTab": "Araçları Açığa Çıkar",
+    "helpfulLinks": "Hanzo ile bağlantı kurmak için faydalı MCP'leri smithery.ai ve composio.dev adreslerinde bulabilirsiniz.",
+    "mcpServersDescription": "MCP sunucusuna bağlanarak canlı hava durumu, hisse senedi fiyatları veya çeviri servisleri gibi harici veri kaynaklarına ve araçlara anında erişin; özel entegrasyonlar oluşturmanıza gerek kalmaz.\nBu sayede sisteminiz gerçek zamanlı bilgiler ve yeni kaynaklara kolay erişim ile genişler."
+  },
+  "mcpServers": {
+    "add": "MCP Sunucusu Ekle",
+    "addDescription": "Hanzo Düğümünüzle bağlantı kurmak için yeni bir MCP sunucusu yapılandırın",
+    "addFailed": "MCP sunucusu eklenemedi",
+    "addFromGitHub": "GitHub'dan Ekle",
+    "addSuccess": "MCP sunucusu başarıyla eklendi",
+    "addVariable": "Ekle",
+    "composio": {
+      "activeUsers": "Aktif Kullanıcılar",
+      "add": "MCP Sunucusu Ekle",
+      "adding": "Ekleniyor...",
+      "availableActions": "Mevcut Eylemler",
+      "categories": "Kategoriler",
+      "created": "Oluşturuldu",
+      "delete": "MCP Sunucusunu Sil",
+      "deleting": "Siliniyor...",
+      "details": "Ayrıntılar",
+      "install": "Yükle",
+      "installFailed": "Composio'dan uygulama yüklenirken hata",
+      "installSuccess": "{{appName}} başarıyla yüklendi",
+      "installing": "Yükleniyor...",
+      "lastUpdated": "Son Güncelleme",
+      "latestVersion": "Son Sürüm",
+      "loginRequired": "Uygulamaları yüklemek için giriş yapmalısınız",
+      "statistics": "İstatistikler",
+      "title": "Composio MCP Sunucuları",
+      "toolsCount": "Araç Sayısı",
+      "totalDownloads": "Toplam İndirme",
+      "uninstall": "Kaldır",
+      "uninstallFailed": "Composio'dan uygulama kaldırılırken hata oluştu",
+      "uninstallSuccess": "{{appName}} başarıyla kaldırıldı",
+      "uninstalling": "Kaldırılıyor...",
+      "updatedAt": "Son Güncelleme"
+    },
+    "configure": "Sunucuyu Yapılandır",
+    "delete": "Sunucuyu Sil",
+    "deleteDescription": "Gerçekten \"{{name}}\" sunucusunu silmek istiyor musunuz? Bu işlem geri alınamaz.",
+    "deleteFailed": "MCP sunucusunu silmekte başarısız olundu",
+    "deleteSuccess": "MCP sunucusu başarıyla silindi",
+    "environmentVariables": "Ortam Değişkenleri",
+    "label": "MCP Sunucuları",
+    "listDescription": "Hanzo Düğümünüze bağlı MCP sunucularının listesi",
+    "listOfToolsAvailableFromThisMcpServer": "Bu MCP sunucusundan mevcut olan araçların listesi.",
+    "manualSetup": "Manuel Kurulum",
+    "name": "İsim",
+    "namePlaceholder": "MCP Sunucum",
+    "noEnvironmentVariablesAdded": "Hiç ortam değişkeni eklenmedi.",
+    "noServersFound": "Hiç MCP sunucusu bulunamadı. Başlamak için yeni bir sunucu ekleyin.",
+    "noToolsAvailableForThisServer": "Bu sunucu için mevcut araç yok.",
+    "selectServerType": "Sunucu türünü seçin",
+    "statusUpdateFailed": "Durum güncellenemedi",
+    "statusUpdated": "Durum başarıyla güncellendi",
+    "title": "MCP Sunucuları",
+    "toolMustBeEnabled": "MCP sunucu modunu değiştirmeden önce aracın etkinleştirilmesi gerekir",
+    "tools": "Araçlar",
+    "toolsFor": "{{name}} için Araçlar",
+    "tooltipEnableFirst": "MCP Sunucu modunu yönetmek için önce aracı etkinleştir",
+    "type": "Tür",
+    "update": "MCP Sunucusunu Güncelle",
+    "updateDescription": "MCP sunucusunun yapılandırmasını güncelle: {{name}}",
+    "updateFailed": "MCP sunucusunu güncellerken hata oluştu",
+    "updateSuccess": "MCP sunucusu başarıyla güncellendi",
+    "updateWarningDescription": "Bu sunucuyu güncellemek, ilişkili araçlarını sıfırlayacaktır.",
+    "viewAvailableTools": "Mevcut Araçları Görüntüle"
+  },
+  "networkAgentsPage": {
+    "addAgent": "Ajan Ekle",
+    "addAgentFromId": "ID ile Ajan Ekle",
+    "addAgentFromIdDescription": "Bir Hanzo ID'si kullanarak koleksiyonunuza bir ajan ekleyin. Örnek: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Eklemek istediğiniz ajanın Hanzo ID'sini girin.",
+    "addAgentFromIdPlaceholder": "örn. @@official.sep-hanzo/main/agent/youtube_expert",
+    "addedDescription": "{{name}} artık koleksiyonunuzda. Kullanmak için bir sohbet başlatın!",
+    "addedSuccess": "Başarıyla Eklendi!",
+    "agentsTab": "Ajanlar",
+    "author": "Yazar",
+    "browseMore": "Daha Fazla Ajan Gözat",
+    "confirmPayment": "Ödemeyi Onayla",
+    "connectWallet": "Cüzdanı Bağla",
+    "connectWalletDescription": "Ajan kullanımını ödemek ve yayınladığınız ajanlardan kazanç almak için cüzdanınızı bağlayın",
+    "costPerUse": "Kullanım Başına Maliyet",
+    "costPerUseDescription": "Bu ajanı her kullandığınızda ödeme yapın",
+    "deleteConfirmation": "Bu ajanı kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "descriptionNetwork": "Küresel ağdan AI ajanlarını keşfedin ve dağıtın. Her ajan otonom olarak çalışır ve iş akışlarınıza entegre edilebilir. Kullanıma göre ödeme yapın veya başkalarının erişimi için ajanları dağıtın.",
+    "descriptionPublished": "AI ajanlarınızı ağa yayınlayın. Her ajan otonom olarak çalışır ve iş akışlarınıza entegre edilebilir. Kullanıma göre ödeme yapın veya başkalarının erişimi için ajanları dağıtın.",
+    "howPaymentsWork": "Ödemelerin nasıl çalıştığı",
+    "howPaymentsWorkDescription": "Bu ajanı kullandığınızda, bağlı cüzdanınızdan ödemeyi onaylamanız istenecektir. Ödemeler {{network}} ağında işlenir.",
+    "manageWallet": "Cüzdanı Yönet",
+    "networkToolDetails": "Ağ Ajanı Detayları",
+    "nextAddAgent": "Sonraki (Ajan Ekle)",
+    "noPublishedAgents": "Henüz yayınlanmış ajan yok. Başlamak için ilk ajanınızı paylaşın.",
+    "payPerUse": "Kullanıma göre ödeme",
+    "paymentRecipient": "Ödeme Alıcısı",
+    "paymentSuccessful": "Ödeme Başarılı!",
+    "paymentSuccessfulDescription": "Ödemeniz başarıyla gerçekleşti. Araç şimdi çalışıyor...",
+    "pleaseWait": "İşleminizi gerçekleştirirken lütfen bekleyin...",
+    "proceedFree": "Ücretsiz Devam Et",
+    "processingPayment": "Ödeme İşleniyor",
+    "publishedTab": "Yayınlanan Ajanlar",
+    "registerIdentity": "Kimlik Kaydet",
+    "registerHanzoIdentity": "Hanzo Kimliği Kaydet",
+    "registerHanzoIdentityDescription": "Ajanları kullanmak ve yayınlamak için Hanzo ağında benzersiz kimliğinizi oluşturun",
+    "removeAgent": "Ajanı Kaldır",
+    "removeFailed": "Ajanı kaldırma işlemi başarısız oldu",
+    "removeSuccess": "Ağ ajanı başarıyla kaldırıldı",
+    "removeToolOffering": "Aracı Yayından Kaldır",
+    "removeToolOfferingConfirmation": "Bu aracı yayından kaldırmak istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "searchPlaceholder": "Ajanları Ara",
+    "setupRequired": "Ücretli ajanları ve yayıncı ajanları kullanmak için kurulum gereklidir",
+    "startChat": "Sohbeti Başlat",
+    "titleDecentralized": "Merkezi Olmayan Ajanlar",
+    "titleNetwork": "Ağ",
+    "tool": "Araç",
+    "toolPaymentRequired": "Araç Ücreti Gerekli",
+    "toolPaymentRequiredDescription": "Bu ağ ajanını kullanmak için ödeme gereklidir.",
+    "toolRouterKey": "Araç Yönlendirici Anahtarı",
+    "usdcBalance": "USDC Bakiyesi",
+    "walletAddress": "Cüzdan Adresi",
+    "walletBalance": "Cüzdan Bakiyesi",
+    "walletNotSetup": "Cüzdan ayarlanmadı",
+    "yourWallet": "Cüzdanınız"
+  },
+  "notifications": {
+    "messageReceived": {
+      "description": "{{inboxName}}'den bir yanıt aldınız",
+      "label": "Mesaj Alındı"
+    }
+  },
+  "oauth": {
+    "close": "Kapat",
+    "connectNow": "Şimdi Bağlan",
+    "connectionRequired": "Bağlantı Gerekli",
+    "connectionRequiredDescription": "Bu aracı kullanmak için lütfen {{provider}} hesabınıza bağlanın.",
+    "description": "{{provider}} ile bu aracı kullanmak için bağlanın",
+    "goToProvider": "{{provider}}'ye Git",
+    "navigateToProvider": "Devam etmek için kimlik doğrulama adımlarını izlemek üzere gidin.",
+    "processing": "İşleniyor...",
+    "signIn": "{{provider}} ile Giriş Yap",
+    "success": "Bağlantı başarılı!",
+    "successDescription": "{{countdown}} saniye içinde bu pencere otomatik olarak kapanacaktır...",
+    "title": "{{provider}} ile Bağlan"
+  },
+  "ollama": {
+    "errors": {
+      "failedToFetch": "Yerel Ollama modelleri alınamadı. Lütfen Ollama'nın doğru çalıştığından emin olun."
+    },
+    "version": "Ollama Sürümü"
+  },
+  "onboardingChecklist": {
+    "addAIAgent": "AI Ajanınızı Oluşturun",
+    "addAIAgentDescription": "Özel ihtiyaçlarınıza göre uyarlanmış bir AI ajanı ekleyin.",
+    "askFiles": "Dosyalara Sorular Sorun",
+    "askFilesButton": "Dosyalarla Sohbet Oluştur",
+    "askFilesDescription": "Dosyalarınızla sohbet edin. Herhangi bir soruyu sorun, bilgi bulun, özetler alın ve daha fazlası.",
+    "completedSteps": "Tüm adımları tamamladınız",
+    "createAIChatWithAgent": "AI Ajanı ile Sohbet Oluşturun",
+    "createAIChatWithAgentDescription": "Başlamak için AI ajanınızla bir sohbet başlatın.",
+    "createTool": "Araç Oluştur",
+    "createToolButton": "Araç Oluştur",
+    "createToolDescription": "Güçlü AI araçlarıyla iş akışınızı oluşturun, otomatikleştirin ve optimize edin.",
+    "dismiss": "Kontrol Listesini Kapat",
+    "getStartedChecklist": "Başlangıç Kontrol Listesi",
+    "getStartedText": "Hanzo ile Başlayın",
+    "setupHanzoDesktop": "Hanzo Masaüstünü Kurun",
+    "setupHanzoDesktopDescription": "Başlamak için Hanzo Masaüstünü kurun",
+    "uploadAFile": "Bir Dosya Yükleyin",
+    "uploadAFileDescription": "Notlarınızı, web sitelerinizi, belgelerinizi ve diğerlerini güvenli bir şekilde tek bir yerde saklayın."
+  },
+  "playgroundTool": {
+    "metadataError": "Araç meta verisi başarısız oldu. Tekrar oluşturmayı deneyin.",
+    "prismError": "Kod editörü bir hata ile karşılaştı."
+  },
+  "prompt": {
+    "actions": {
+      "create": "İstek Oluştur",
+      "update": "İsteği Güncelle"
+    },
+    "drawer": {
+      "createTitle": "Özel istek oluştur",
+      "updateTitle": "İsteği Güncelle"
+    },
+    "failCreate": "İstek oluşturma işlemi başarısız oldu",
+    "failUpdate": "İsteği güncelleme işlemi başarısız oldu",
+    "fields": {
+      "content": "İstek İçeriği",
+      "name": "İstek Adı"
+    },
+    "libraryDescription": "Başlamak için kütüphaneden bir isteği seçin.",
+    "libraryTitle": "İstek Kütüphanesi",
+    "successCreate": "İstek başarıyla oluşturuldu",
+    "successUpdate": "İstek başarıyla güncellendi"
+  },
+  "quickAsk": {
+    "emptyStateDescription": "Şunu deneyin: \\\"JavaScript'te HTTP isteği nasıl yapılır?\\\", \\\"80'lerdeki en iyi 10 rock müziği nedir?\\\", \\\"İnternet nasıl çalışır, açıkla\\\"",
+    "emptyStateTitle": "Hanzo AI'ye Sor"
+  },
+  "quickConnection": {
+    "connectingToNode": "Yerel Hanzo Düğümünüze Bağlanıyor",
+    "form": {
+      "connect": "Bağlan",
+      "nodeAddress": "Düğüm Adresi"
+    },
+    "label": "Hızlı Bağlantı"
+  },
+  "registrationCode": {
+    "create": "Kayıt Kodu Oluştur",
+    "label": "Kayıt Kodu"
+  },
+  "restoreConnection": {
+    "description": "Bir bağlantı dosyası ve şifreleme anahtarı kullanın",
+    "form": {
+      "encryptedConnectionFile": "Şifreli Bağlantı Dosyası",
+      "passphrase": "Şifreleme Anahtarı"
+    },
+    "label": "Bağlantıyı Yenile",
+    "restore": "Yenile"
+  },
+  "settings": {
+    "appearance": {
+      "chatFontSize": {
+        "description": "Tercih ettiğiniz yazı tipi boyutunu seçin",
+        "extraLarge": "Çok Büyük",
+        "large": "Büyük",
+        "medium": "Orta",
+        "small": "Küçük",
+        "title": "Sohbet Yazı Tipi Boyutu"
+      },
+      "label": "Görünüm"
+    },
+    "cryptoWallet": {
+      "addCoinbaseCDPWallet": "Coinbase CDP Cüzdanı Ekle",
+      "addLocalWallet": "Yerel Cüzdan Ekle",
+      "addWallet": "Cüzdan Ekle",
+      "description": "Kripto cüzdanlarınızı yönetin. Coinbase CDP Cüzdanınızı veya Hot Cüzdanınızı ekleyin.",
+      "emptyState": {
+        "description": "Kripto cüzdanlarınızı yönetin. Coinbase CDP Cüzdanınızı veya Hot Cüzdanınızı oluşturun veya geri yükleyin.",
+        "title": "Cüzdan bulunamadı"
+      },
+      "errorDescription": "Cüzdanınızı geri yüklerken bir hata oluştu.",
+      "errorTitle": "Cüzdan geri yükleme hatası",
+      "name": "İsim",
+      "privateKey": "Özel Anahtar",
+      "serverSigner": "Sunucu İmzalayıcı",
+      "successDescription": "Cüzdanınız başarıyla geri yüklendi.",
+      "successTitle": "Cüzdan başarıyla geri yüklendi",
+      "title": "Kripto Cüzdanı",
+      "walletId": "Cüzdan ID",
+      "walletIdOptional": "Cüzdan ID isteğe bağlıdır"
+    },
+    "defaultAgent": "Varsayılan AI",
+    "description": "Hesap ayar tercihlerinizi yönetin.",
+    "experimentalFeature": {
+      "label": "Deneysel Özellikleri Etkinleştir"
+    },
+    "exportConnection": {
+      "label": "Bağlantıyı Dışa Aktar"
+    },
+    "general": "Genel",
+    "label": "Ayarlar",
+    "language": {
+      "label": "Dil",
+      "selectLanguage": "Dil Seçin"
+    },
+    "layout": {
+      "analytics": "Analitik",
+      "appearance": "Görünüm",
+      "createRegistrationCode": "Kayıt Kodu Oluştur",
+      "cryptoWallet": "Kripto Cüzdanı",
+      "exportConnection": "Bağlantıyı Dışa Aktar",
+      "galxe": "Galxe Görevi",
+      "general": "Genel",
+      "promptLibrary": "İpucu Kütüphanesi",
+      "publicKeys": "Açık Anahtarlar",
+      "remoteAccess": "Uzaktan Erişim",
+      "hanzoNode": "Hanzo Düğüm Yöneticisi"
+    },
+    "maxChatIterations": {
+      "description": "Bir sohbet mesajının işlenmesi için maksimum iterasyon sayısı",
+      "error": "Maksimum Sohbet İterasyonu güncellenirken hata oluştu",
+      "label": "Maksimum Sohbet İterasyonu",
+      "placeholder": "1 ile 100 arasında bir sayı girin",
+      "success": "Maksimum Sohbet İterasyonu başarıyla güncellendi"
+    },
+    "promptLibrary": {
+      "label": "İpucu Kütüphanesi"
+    },
+    "publicKeys": {
+      "label": "Açık Anahtarlar",
+      "myDeviceEncryption": "Benim Cihazımın Şifrelemesi",
+      "myDeviceIdentity": "Benim Cihazımın Kimliği",
+      "myDevicePublicKeys": "Benim Cihazımın Açık Anahtarları",
+      "nodeEncryption": "Düğüm Şifrelemesi",
+      "nodePublicKeys": "Düğüm Açık Anahtarları",
+      "nodeSignature": "Düğüm İmzası",
+      "profileEncryption": "Profil Şifrelemesi",
+      "profileIdentity": "Profil Kimliği",
+      "profilePublicKeys": "Profil Açık Anahtarları",
+      "show": "Açık Anahtarları Göster"
+    },
+    "quickAccessButton": {
+      "description": "Hızlı Erişim Butonu, tıklayıp basılı tutarak taşınabilir.",
+      "label": "Hanzo Hızlı Erişim Butonunu Göster"
+    },
+    "registerNewCode": {
+      "label": "Yeni cihaz kaydet"
+    },
+    "remoteAccess": {
+      "connected": "Bağlandı",
+      "description": "Ngrok kullanarak Hanzo düğümünüze her yerden kolayca ve güvenli bir şekilde bağlanın. Karmaşık bir kurulum yok—sadece <a>ücretsiz bir ngrok hesabı oluşturun</a>, kontrol panelinden <b>ngrok kimlik doğrulama tokeninizi</b> kopyalayın ve güvenli uzaktan erişimi etkinleştirmek için aşağıya yapıştırın.",
+      "errors": {
+        "failedToGetStatus": "Ngrok durumu alınamadı.",
+        "failedToStart": "Ngrok üzerinden uzaktan erişim bağlantısı kurulamadı.",
+        "failedToStop": "Ngrok üzerinden uzaktan erişim bağlantısı kesilemedi."
+      },
+      "form": {
+        "authToken": "Ngrok Kimlik Doğrulama Tokeni",
+        "authTokenHelperText": "Ngrok kimlik doğrulama tokeninizi girin",
+        "authTokenHelperTextWhenEnabled": "Kimlik doğrulama tokeninizi güncellemek için ngrok'ta uzaktan erişimi durdurun",
+        "enableRemoteAccess": "Uzaktan Erişimi Etkinleştir",
+        "stopRemoteAccess": "Uzaktan Erişimi Durdur"
+      },
+      "publicAccessURLDescription": "Bu URL'yi kullanarak düğümünüze her yerden bağlanabilirsiniz.",
+      "publicAccessUrl": "Herkese Açık Erişim URL'si",
+      "stopRemoteAccessSuccess": "Uzaktan erişim başarıyla durduruldu",
+      "success": "Bağlandı! Hanzo düğümünüz artık ngrok üzerinden uzaktan erişilebilir",
+      "title": "Uzaktan Erişim"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "Hanzo Kimliğini doğrula",
+      "checkIdentityInSyncDescription": "Hanzo kimliğinizin doğru bir şekilde senkronize olduğunu kontrol edin.",
+      "error": "Hanzo Kimliği güncellerken hata",
+      "goToHanzoIdentity": "Benim Hanzo Kimliğime git",
+      "label": "Hanzo Kimliği",
+      "registerIdentity": "Hanzo Kimliğinizi kaydedin",
+      "saveWillRestartApp": "Kaydetme, değişiklikleri uygulamak için uygulamayı yeniden başlatacaktır.",
+      "success": "Hanzo Kimliği başarıyla güncellendi",
+      "troubleRegisterIdentity": "Kimliğinizi kaydederken sorun mu yaşıyorsunuz?",
+      "updatedIdentity": "Hanzo Kimliği başarıyla güncellendi."
+    },
+    "hanzoVersion": "Hanzo Masaüstü Sürümü:",
+    "shortcutKey": {
+      "description": "Yan menüyü açmak için kısayol tuşunu değiştirin",
+      "label": "Kısayol Tuşu"
+    },
+    "sidebar": {
+      "blacklistedWebsites": "Siyah Listeye Alınan Web Siteleri",
+      "includeClickImageCapture": {
+        "text": "Hızlı Erişim üzerine gelme menüsüne bir Görüntü Yakalama Butonu ekler.",
+        "title": "1-Tık Görüntü Yakalama Seçeneğini Dahil Et"
+      },
+      "includeClickSummary": {
+        "text": "Hızlı Erişim üzerine gelme menüsüne bir Özet Butonu ekler.",
+        "title": "1-Tık Özeti Seçeneğini Dahil Et"
+      },
+      "label": "Yan Menü"
+    }
+  },
+  "hanzoNode": {
+    "manager": "Hanzo Düğüm Yöneticisi",
+    "models": {
+      "errors": {
+        "modelInstalled": "Model {{modelName}} kurulumunda hata oluştu",
+        "modelRemoved": "Model {{modelName}} silinirken hata oluştu"
+      },
+      "labels": {
+        "bookPages": "İçerik için {{pages}} Sayfaya Kadar",
+        "models": "Modeller",
+        "quality": "Kalite",
+        "showAll": "Tüm modelleri göster",
+        "showRecommended": "Tavsiye edilen modelleri göster",
+        "tags": "Etiketler",
+        "textCapability": "Metin Üretimi",
+        "thinkingCapability": "Düşünme",
+        "toolCallingCapability": "Araç Çağrısı",
+        "visionCapability": "Görüntüden Metne",
+        "cloudCapability": "Bulut"
+      },
+      "poweredByOllama": "Ollama tarafından desteklenmektedir",
+      "success": {
+        "modelInstalled": "Model {{modelName}} başarıyla kuruldu",
+        "modelRemoved": "Model {{modelName}} başarıyla silindi"
+      }
+    },
+    "nodeAddress": "Düğüm Adresi",
+    "nodeVersion": "Düğüm Versiyonu",
+    "notifications": {
+      "downloadedModel": "AI modeli {{modelName}} başarıyla indirildi",
+      "downloadingModel": "AI modeli {{modelName}} indiriliyor - {{progress}}%",
+      "errorSyncOllama": "Yerel Ollama modellerinizi Hanzo Düğümünüzle senkronize ederken hata oluştu",
+      "installingModel": "{{modelName}} kuruluyor ...",
+      "optionsRestored": "Seçenekler varsayılan değerlere geri yüklendi",
+      "removedNote": "Yerel Hanzo Düğümünüzün depolama alanı silindi",
+      "runningNode": "Yerel Hanzo Düğümünüz çalışıyor",
+      "runningOllama": "Ollama'nız çalışıyor",
+      "startingDownload": "{{modelName}} indirmeye başlıyor",
+      "startingNode": "Yerel Hanzo Düğümünüz başlatılıyor",
+      "startingOllama": "Ollama'nız başlatılıyor",
+      "stopNode": "Yerel Hanzo Düğümünüz durduruluyor",
+      "stopOllama": "Yerel Ollama'nız durduruluyor",
+      "stoppedNode": "Yerel Hanzo Düğümünüz durduruldu",
+      "stoppedOllama": "Yerel Ollama'nız durduruldu",
+      "syncedOllama": "Yerel Ollama modelleri Hanzo Düğümünüzle senkronize edildi"
+    },
+    "resetNodeWarning": {
+      "description": "Hanzo Düğümünüz mevcut anahtarlar tarafından kilitlenmiş durumda. Yeniden bağlanmak için tüm Hanzo Düğüm verilerinizi sıfırlayabilirsiniz.",
+      "option1": "<b>Geri Yükle:</b> Yedeklenmiş anahtarları kullanarak bağlantınızı geri yüklemeyi deneyin.",
+      "option2": "<b>Verileri Sıfırla:</b> Tüm Hanzo Düğüm verilerinizi kalıcı olarak silin.",
+      "option3": "<b>Tümünü Sıfırla:</b> Şifreleme ve imza anahtarları dahil olmak üzere tüm Hanzo Düğüm verilerinizi kalıcı olarak silin.",
+      "title": "Bağlantı sağlanamıyor"
+    },
+    "restartNode": "Lütfen Hanzo Düğümünüzü yeniden başlatın",
+    "unavailable": "Hanzo Düğümünüz kullanılamıyor"
+  },
+  "tasks": {
+    "runNow": "Şimdi Çalıştır"
+  },
+  "tasksPage": {
+    "noTasksDescription": "Hatırlatıcılar, özetler veya yönetmeniz gereken diğer görevleri otomatikleştirmek için ilk görevinizi oluşturun",
+    "noTasksTitle": "Planlanmış görev bulunamadı"
+  },
+  "tools": {
+    "commandActiveHeading": "Aktif Araçların",
+    "commandEmpty": "Araç bulunamadı.",
+    "commonToolsetAffectedTools": "Setteki tüm araçları güncellemeyi seçmek, aynı zamanda şunları da etkileyecektir:",
+    "commonToolsetUpdateDescription": "{{toolName}} için değiştirdiğiniz yapılandırma anahtarı, bu setteki diğer araçlar tarafından da kullanılmaktadır.",
+    "configuration": {
+      "followingToolsAffected": "Bu değişiklikten etkilenecek araçlar:",
+      "updateAllToolsInSet": "Tüm {{toolSetName}} araçlarını güncelle",
+      "updateAllToolsInSetError": "Tüm {{toolSetName}} araçlarını güncelleme başarısız oldu.",
+      "updateAllToolsInSetSuccess": "{{toolSetName}} araçlarının tamamı başarıyla güncellendi",
+      "updateConfig": "{{toolName}} Yapılandırmasını Güncelle",
+      "updateConfigDescription": "{{toolName}} için değiştirdiğiniz yapılandırma anahtarı, bu set içindeki diğer araçlar tarafından da kullanılmaktadır.",
+      "updateConfigDescription2": "Bu yapılandırma, birden fazla {{toolSetName}} aracı tarafından paylaşılmaktadır. Bu değişikliği nasıl uygulamak istersiniz?",
+      "updateOnlyThisTool": "Sadece bu aracı güncelle"
+    },
+    "configurationRequired": "Araç Yapılandırması Gerekli",
+    "create": {
+      "backToTools": "Araçlara Geri Dön",
+      "customModel": "Özel Model",
+      "customModelDescription": "Belirli ihtiyaçlarınız için tercih ettiğiniz AI modelini seçin.",
+      "description": "Güçlü AI araçları ile iş akışınızı oluşturun, otomatikleştirin ve optimize edin.",
+      "generationError": "Aracı oluşturma başarısız oldu. Daha iyi sonuçlar için daha güçlü bir AI modeli kullanmayı deneyebilirsiniz.",
+      "messagePlaceholder": "Oluşturmak istediğiniz aracı tanımlayın...",
+      "noProtocols": "Protokol bulunamadı.",
+      "otherProtocols": "Diğer protokoller de çalışabilir ancak resmi olarak doğrulanmamıştır.",
+      "requestProtocol": "Protokol Talep Et",
+      "hanzoCodeGenerator": "Hanzo Kod Üretici",
+      "hanzoCodeGeneratorDescription": "Özel AI kod üretim aracımızı kullanarak araçlar oluşturur.",
+      "hanzoFreeTrial": "Hanzo Ücretsiz Deneme",
+      "hanzoFreeTrialDescription": "Araçlar oluşturmak için harika, sağladığınız her türlü içerikle çalışır.",
+      "hanzoFreeTrialRecommendation": "AI'nin gerektirdiği belgeleri manuel olarak kopyalayıp yapıştırın ve <documentation></documentation> içine yerleştirin.",
+      "step1Label": "Adım 1",
+      "step1Text": "Modelinizi seçin",
+      "step2Label": "Adım 2",
+      "step2Text": "Gereksinimlerinizi yazın",
+      "title": "Dakikalar İçinde AI Araçları Oluşturun",
+      "verifiedProtocolsTitle": "Doğrulanmış Protokoller",
+      "wellSupportedProtocols": "İyi Desteklenen Protokoller"
+    },
+    "description": "Yapay zeka araçlarınızı yönetin, özelleştirin ve genişletin.",
+    "emptyState": {
+      "search": {
+        "text": "Arama sorgusu için hiçbir araç bulunamadı"
+      }
+    },
+    "errorDuplicateTool": "Aracı çoğaltma işlemi başarısız oldu",
+    "errorOpenToolInCodeEditor": "Kod editöründe aracı açma başarısız oldu",
+    "homepage": {
+      "buildDescription": "Güçlü AI araçlarıyla iş akışınızı oluşturun, otomatikleştirin ve optimize edin.",
+      "buildTitle": "Dakikalar içinde AI Araçları oluşturun",
+      "createInIDE": "VSCode/Cursor'da Oluştur",
+      "discoverMoreDescription": "Üretkenliğinizi artırmak ve iş akışınızı otomatikleştirmek için App Store'umuzu keşfedin ve araçları kurun.",
+      "discoverMoreTitle": "Daha Fazla Araç Keşfedin",
+      "enterToSend": "Göndermek için",
+      "generationError": "Araç oluşturulamadı. Daha iyi sonuçlar için daha güçlü bir AI modeli kullanmayı deneyin.",
+      "messagePlaceholder": "Oluşturmak istediğiniz aracı açıklayın...",
+      "noProtocols": "Protokol bulunamadı.",
+      "otherProtocols": "Diğer protokoller de çalışabilir ancak resmi olarak doğrulanmamıştır.",
+      "requestProtocol": "Protokol Talep Et",
+      "shiftEnter": "Yeni satır için",
+      "step1Label": "Adım 1",
+      "step1Text": "Modelinizi seçin",
+      "step2Label": "Adım 2",
+      "step2Text": "Gereksinimlerinizi yazın",
+      "verifiedProtocolsTitle": "Doğrulanmış Protokoller",
+      "wellSupportedProtocols": "İyi Desteklenen Protokoller"
+    },
+    "importModal": {
+      "action": "İçe Aktar",
+      "chooseFile": "Bir zip dosyası seçin",
+      "fromUrl": "URL'den İçe Aktar",
+      "fromZip": "Zip'ten İçe Aktar",
+      "title": "Aracı İçe Aktar",
+      "urlDescription": "Bir URL'den aracı içe aktarın.",
+      "zipDescription": "Bir zip dosyasından aracı içe aktarın."
+    },
+    "installFromStore": "Mağazadan Yükle",
+    "label": "Araçlar",
+    "lookingForMoreTools": "Daha fazla araç mı arıyorsunuz?",
+    "newTool": "Yeni Araç",
+    "noToolsInCategory": "Bu kategoride araç bulunamadı. Yeni bir araç oluşturun veya App Store'dan kurun.",
+    "notifications": {
+      "codeGenerationComplete": {
+        "description": "Kod başarıyla üretildi.",
+        "title": "Kod Üretimi Tamamlandı"
+      },
+      "feedbackRequired": {
+        "description": "Lütfen üretilen kod hakkında geri bildirimde bulunun.",
+        "title": "Geri Bildirim Gerekli"
+      },
+      "metadataGenerationComplete": {
+        "description": "Meta veriler başarıyla üretildi.",
+        "title": "Meta Veriler Üretimi Tamamlandı"
+      }
+    },
+    "searchPlaceholder": "Araçları ara...",
+    "setupDescription": "Bu özelliği kullanmak için önce bazı ayarları yapılandırmamız gerekiyor. Bu sadece bir dakikanızı alacak ve her şeyin sorunsuz çalışmasını sağlamaya yardımcı olacaktır.",
+    "setupNow": "Şimdi Kur",
+    "setupRequired": "Araç Kurulumu Gerekli",
+    "store": {
+      "label": "Yapay Zeka Mağazasını Keşfet"
+    },
+    "successDuplicateTool": "Araç başarıyla kopyalandı",
+    "successOpenToolInCodeEditor": "Araç kod editöründe açıldı",
+    "visitStore": "İş akışınızı geliştirmek için ek araçlar keşfetmek ve yüklemek üzere Hanzo Mağazası'nı ziyaret edin"
+  },
+  "vectorFs": {
+    "actions": {
+      "addNew": "Yeni Ekle",
+      "copy": "Kopyala",
+      "createFolder": "Yeni Klasör Oluştur",
+      "createTextFile": "Metin Dosyası Oluştur",
+      "delete": "Sil",
+      "edit": "Düzenle",
+      "editTextFile": "Metin Dosyasını Düzenle",
+      "move": "Taşı",
+      "searchWithinFolder": "Klasör içinde ara",
+      "share": "Paylaş",
+      "shareFolderText": "AI Dosyalarınızda sakladığınız klasörleri herkesle paylaşabilirsiniz.",
+      "unshare": "Paylaşımı Kaldır",
+      "unshareFolderText": "Bu klasörden herkes kaldırılacak. Yine de AI Dosyalarınızda bu klasörün bir kopyasını saklayacaksınız. <br /> Not: Kaldırılan üyeler, bu paylaşılan klasörün bir kopyasını saklayacak.",
+      "uploadFile": "Dosya Yükle",
+      "uploadFileText": "Dosyalarınızı yüklemek, onları AI uyumlu hale getirir ve Hanzo'de kullanılabilir hale getirir."
+    },
+    "allFiles": "Tüm Dosyalar",
+    "deleteFileConfirmation": "Bu dosyayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "deleteFolderConfirmation": "Bu klasörü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "emptyState": {
+      "noFiles": "Hiç dosya bulunamadı",
+      "noFilesAndFolders": "Burası tüm dosyalarınız için ana sayfa olacak.",
+      "noFilesAndFoldersDescription": "Dosya yüklemeye başlamak için \"+\" butonunu kullanın.",
+      "noSharedFolders": "Paylaşılan klasörleriniz burada görüntülenecek."
+    },
+    "errors": {
+      "fileCopied": "Dosya kopyalanırken hata oluştu",
+      "fileDeleted": "Dosya silinirken hata oluştu",
+      "fileMoved": "Dosya taşınırken hata oluştu",
+      "filesUploaded": "Dosyalar yüklenirken hata oluştu",
+      "folderCopied": "Klasör kopyalanırken hata oluştu",
+      "folderCreated": "Klasör oluşturulurken hata oluştu",
+      "folderDeleted": "Klasör silinirken hata oluştu",
+      "folderMoved": "Klasör taşınırken hata oluştu",
+      "folderShared": "Klasör paylaşılırken hata oluştu",
+      "folderUnshared": "Klasörün paylaşımı kaldırılırken hata oluştu"
+    },
+    "filesSelected": "{{count}} seçildi",
+    "forms": {
+      "folderDescription": "Klasör Açıklaması",
+      "folderName": "Klasör Adı",
+      "textFileName": "Başlık"
+    },
+    "home": "Ana Sayfa",
+    "label": "AI Dosya Gezgini",
+    "localFiles": "Yerel AI Dosyaları",
+    "pending": {
+      "filesUploading": "Dosyalar yükleniyor"
+    },
+    "shareFolderWarning": {
+      "action": "Nasıl yapılacağını öğrenmek için buraya tıklayın",
+      "text": "Klasörleri Hanzo Ağı üzerinden paylaşabilmek için önce bir Hanzo kimliği kaydetmelisiniz.",
+      "title": "Klasör Paylaşımını Etkinleştir"
+    },
+    "sharedFolders": "Paylaşılan Klasörler",
+    "success": {
+      "fileCopied": "Dosya başarıyla kopyalandı",
+      "fileDeleted": "Dosya silindi",
+      "fileMoved": "Dosya başarıyla taşındı",
+      "filesUploaded": "Dosyalar başarıyla yüklendi",
+      "folderCopied": "Klasör başarıyla kopyalandı",
+      "folderCreated": "Klasör başarıyla oluşturuldu",
+      "folderDeleted": "Klasör silindi",
+      "folderMoved": "Klasör başarıyla taşındı",
+      "folderShared": "Klasör başarıyla paylaşıldı",
+      "folderUnshared": "Klasörün paylaşımı başarıyla kaldırıldı"
+    }
+  },
+  "videoBanner": {
+    "unsupported": "Tarayıcınız video etiketini desteklemiyor."
+  }
+}
