@@ -2195,6 +2195,52 @@ dependencies = [
 ]
 
 [[package]]
+name = "hanzo-desktop"
+version = "0.0.0"
+dependencies = [
+ "anyhow",
+ "base64 0.22.1",
+ "blake3",
+ "chrono",
+ "ed25519-dalek",
+ "fix-path-env",
+ "futures-util",
+ "hex",
+ "kill_tree",
+ "lazy_static",
+ "listeners",
+ "log",
+ "once_cell",
+ "opener",
+ "regex",
+ "reqwest 0.11.27",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sysinfo",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-deep-link",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
+ "tauri-plugin-log",
+ "tauri-plugin-notification",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-process",
+ "tauri-plugin-shell",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+ "time",
+ "tokio",
+ "uuid",
+ "wgpu",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5137,52 +5183,6 @@ checksum = "09fa9338aed9a1df411814a5b2252f7cd206c55ae9bf2fa763f8de84603aa60c"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
-]
-
-[[package]]
-name = "hanzo-desktop"
-version = "0.0.0"
-dependencies = [
- "anyhow",
- "base64 0.22.1",
- "blake3",
- "chrono",
- "ed25519-dalek",
- "fix-path-env",
- "futures-util",
- "hex",
- "kill_tree",
- "lazy_static",
- "listeners",
- "log",
- "once_cell",
- "opener",
- "regex",
- "reqwest 0.11.27",
- "semver",
- "serde",
- "serde_json",
- "sha2",
- "sysinfo",
- "tauri",
- "tauri-build",
- "tauri-plugin-deep-link",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-http",
- "tauri-plugin-log",
- "tauri-plugin-notification",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-process",
- "tauri-plugin-shell",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
- "time",
- "tokio",
- "uuid",
- "wgpu",
 ]
 
 [[package]]

@@ -56,3 +56,9 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 .with-cache
 .nx
+
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+QWEN.md
+GROK.md
