@@ -30,9 +30,9 @@ const HanzoNodeLogsLabel = ({
   );
 };
 
-export const SHINKAI_NODE_MANAGER_TOAST_ID = 'hanzo-node-manager-toast-id';
+export const HANZO_NODE_MANAGER_TOAST_ID = 'hanzo-node-manager-toast-id';
 const defaultToastOptions: ExternalToast = {
-  id: SHINKAI_NODE_MANAGER_TOAST_ID,
+  id: HANZO_NODE_MANAGER_TOAST_ID,
   position: 'top-right',
 };
 
