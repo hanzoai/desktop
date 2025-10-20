@@ -1,5 +1,5 @@
 import config from '../config';
 
-export const SHINKAI_STORE_URL = config.isDev
+export const HANZO_STORE_URL = config.isDev
   ? 'http://localhost:3000'
-  : import.meta.env.VITE_SHINKAI_STORE_URL || 'https://store.hanzo.com';
+  : import.meta.env.VITE_HANZO_STORE_URL || 'https://store.hanzo.com';
