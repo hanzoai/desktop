@@ -167,13 +167,13 @@ const TermsAndConditionsPage = () => {
   return (
     <div className="flex h-full flex-col justify-between gap-10">
       <div className="space-y-5">
-        <h1 className="font-clash text-4xl font-semibold">
+        <h1 className="font-clash text-4xl font-semibold text-white">
           {t('desktop.welcome')}
         </h1>
-        <p className="text-text-secondary text-base">
+        <p className="text-white text-base">
           <Trans
             components={{
-              b: <span className={'text-text-default font-semibold'} />,
+              b: <span className={'text-white font-semibold'} />,
             }}
             i18nKey="desktop.welcomeDescription"
           />
@@ -188,7 +188,7 @@ const TermsAndConditionsPage = () => {
           }
         />
         <label
-          className="inline-block cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="inline-block cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white"
           htmlFor="terms"
         >
           <span className={'leading-4 tracking-wide'}>
@@ -196,7 +196,7 @@ const TermsAndConditionsPage = () => {
               components={{
                 a: (
                   <a
-                    className={'text-text-default underline'}
+                    className={'text-white underline'}
                     href={'https://www.hanzo.com/terms-of-service'}
                     rel="noreferrer"
                     target={'_blank'}
@@ -204,7 +204,7 @@ const TermsAndConditionsPage = () => {
                 ),
                 b: (
                   <a
-                    className={'text-text-default underline'}
+                    className={'text-white underline'}
                     href={'https://www.hanzo.com/privacy-policy'}
                     rel="noreferrer"
                     target={'_blank'}
@@ -233,10 +233,10 @@ const TermsAndConditionsPage = () => {
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (
-          <div className="text-text-secondary items-center space-x-2 text-center text-sm">
+          <div className="text-white items-center space-x-2 text-center text-sm">
             <span>{t('common.alreadyHaveNode')}</span>
             <Link
-              className="text-text-default font-semibold underline"
+              className="text-white font-semibold underline"
               to="/quick-connection"
             >
               {t('common.quickConnect')}
