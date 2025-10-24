@@ -267,7 +267,7 @@ export function AIModelSelectorBase({
               heading={
                 <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="space-y-0.5">
-                    <h3 className="font-clash text-text-default text-base font-medium">
+                    <h3 className="font-inter text-text-default text-base font-medium">
                       {t('agents.label')}
                     </h3>
                     <p className="text-text-secondary text-sm font-normal">
@@ -338,7 +338,7 @@ export function AIModelSelectorBase({
               heading={
                 <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="space-y-0.5">
-                    <h3 className="font-clash text-text-default text-base font-medium">
+                    <h3 className="font-inter text-text-default text-base font-medium">
                       {t('aisPage.label')}
                     </h3>
                     <p className="text-text-secondary text-sm font-normal">

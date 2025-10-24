@@ -131,7 +131,7 @@ export function AIModelSelectorBase({
             <CommandGroup
               className="py-4"
               heading={
-                <h3 className="font-clash text-sm font-medium text-white">
+                <h3 className="font-inter text-sm font-medium text-white">
                   Agents
                 </h3>
               }
@@ -159,7 +159,7 @@ export function AIModelSelectorBase({
             <CommandGroup
               className="py-4"
               heading={
-                <h3 className="font-clash text-sm font-medium text-white">
+                <h3 className="font-inter text-sm font-medium text-white">
                   AI Models
                 </h3>
               }

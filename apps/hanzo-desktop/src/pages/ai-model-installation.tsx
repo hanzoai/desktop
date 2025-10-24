@@ -234,7 +234,7 @@ const AIModelInstallation = () => {
           <TabsContent className="h-full" value="local">
             <div className="flex items-center justify-between gap-10 space-y-2 pb-4">
               <div className="flex-1">
-                <h1 className="font-clash text-lg font-medium">Local AI</h1>
+                <h1 className="font-inter text-lg font-medium">Local AI</h1>
                 <p className="text-text-secondary text-sm">
                   Local AI operates directly on your device, providing immediate
                   responses and strict data privacy <br />
@@ -285,7 +285,7 @@ const AIModelInstallation = () => {
           <TabsContent className="h-full" value="cloud">
             <div className="flex items-center justify-between gap-10 space-y-2 pb-4">
               <div className="max-w-3xl">
-                <h1 className="font-clash text-lg font-medium">Cloud AI</h1>
+                <h1 className="font-inter text-lg font-medium">Cloud AI</h1>
                 <p className="text-text-secondary text-sm">
                   Cloud AI leverages remote servers for powerful computational
                   capabilities, offering scalability and real-time updates.
@@ -317,7 +317,7 @@ const AIModelInstallation = () => {
                         >
                           {model.icon}
                         </div>
-                        <h3 className="font-clash text-lg font-semibold">
+                        <h3 className="font-inter text-lg font-semibold">
                           {model.name}
                         </h3>
                       </div>

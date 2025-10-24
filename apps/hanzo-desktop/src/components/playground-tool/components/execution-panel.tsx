@@ -173,7 +173,7 @@ function ExecutionPanelBase({
                   size="xs"
                 >
                   Run
-                  <CommandShortcut className="font-clash flex items-center text-xs text-white">
+                  <CommandShortcut className="font-inter flex items-center text-xs text-white">
                     ⌘⏎
                   </CommandShortcut>
                 </Button>
