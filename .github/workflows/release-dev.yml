@@ -75,37 +75,37 @@ jobs:
 
   release-hanzo-desktop:
     needs: prebuild
-    name: Release Shinkai Desktop
+    name: Release Hanzo Desktop
     environment: development
     strategy:
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz.sig
-            distributable_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage
-            distributable_update_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
-            distributable_update_signature_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz.sig
+            distributable_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage
+            distributable_update_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
+            distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
             os: macos-14
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/dmg/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_aarch64.dmg
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Shinkai Desktop Dev.app.tar.gz
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Shinkai Desktop Dev.app.tar.gz.sig
-            distributable_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.dmg
-            distributable_update_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz
-            distributable_update_signature_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/dmg/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_aarch64.dmg
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Hanzo Desktop Dev.app.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Hanzo Desktop Dev.app.tar.gz.sig
+            distributable_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.dmg
+            distributable_update_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz
+            distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
             os: windows-2022
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.exe
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Shinkai Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip.sig
-            distributable_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.exe
-            distributable_update_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip
-            distributable_update_signature_file_name: Shinkai-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip.sig
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.exe
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip.sig
+            distributable_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.exe
+            distributable_update_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip
+            distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip.sig
 
     runs-on: ${{ matrix.os }}
     outputs:
@@ -213,7 +213,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
           OLLAMA_VERSION: v0.12.3
-          SHINKAI_NODE_VERSION: v1.1.14
+          HANZO_NODE_VERSION: v1.1.14
         run: |
           npx ts-node ./ci-scripts/download-side-binaries.ts
 
@@ -344,7 +344,7 @@ jobs:
     name: Notify Slack
     runs-on: ubuntu-22.04
     steps:
-      - name: Post Shinkai Desktop to a Slack channel
+      - name: Post Hanzo Desktop to a Slack channel
         uses: slackapi/slack-github-action@v1.26.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -358,7 +358,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "📦 New build: Shinkai Desktop Dev v${{ needs.prebuild.outputs.version }}.${{ github.run_number }}",
+                    "text": "📦 New build: Hanzo Desktop Dev v${{ needs.prebuild.outputs.version }}.${{ github.run_number }}",
                     "emoji": true
                   }
                 },
@@ -386,7 +386,7 @@ jobs:
                 }
               ]
             }
-      - name: Post Shinkai Visor to a Slack channel
+      - name: Post Hanzo Visor to a Slack channel
         uses: slackapi/slack-github-action@v1.26.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -399,7 +399,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "📦 New build: Shinkai Visor Dev v${{ needs.prebuild.outputs.version }}.${{ github.run_number }}",
+                    "text": "📦 New build: Hanzo Visor Dev v${{ needs.prebuild.outputs.version }}.${{ github.run_number }}",
                     "emoji": true
                   }
                 },
