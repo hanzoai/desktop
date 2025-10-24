@@ -203,7 +203,7 @@ const ConversationHeaderWithInboxId = () => {
                     <SheetHeader className="">
                       <div className="flex items-center gap-4">
                         <AgentIcon className="size-5" />
-                        <SheetTitle className="font-clash inline-flex items-center gap-2 text-xl font-medium tracking-wide capitalize">
+                        <SheetTitle className="font-inter inline-flex items-center gap-2 text-xl font-medium tracking-wide capitalize">
                           {selectedAgent.name}
                           {selectedAgent?.cron_tasks?.length &&
                             selectedAgent?.cron_tasks?.length > 0 && (

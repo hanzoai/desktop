@@ -98,7 +98,7 @@ const TermsAndConditionsPage = () => {
   const setupDataForm = useForm<QuickConnectFormSchema>({
     resolver: zodResolver(quickConnectFormSchema),
     defaultValues: {
-      node_address: 'http://127.0.0.1:9550',
+      node_address: 'http://127.0.0.1:3690',
     },
   });
 
@@ -167,7 +167,7 @@ const TermsAndConditionsPage = () => {
   return (
     <div className="flex h-full flex-col justify-between gap-10">
       <div className="space-y-5">
-        <h1 className="font-clash text-4xl font-semibold text-white">
+        <h1 className="font-inter text-4xl font-semibold text-white">
           {t('desktop.welcome')}
         </h1>
         <p className="text-white text-base">

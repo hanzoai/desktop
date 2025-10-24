@@ -1296,7 +1296,7 @@ function AgentForm({ mode }: AgentFormProps) {
                 <LucideArrowLeft />
                 <span className="sr-only">{t('common.back')}</span>
               </Link>
-              <h1 className="font-clash text-2xl font-medium">
+              <h1 className="font-inter text-2xl font-medium">
                 {mode === 'edit'
                   ? t('agents.form.updateAgent')
                   : t('agents.form.createAgent')}

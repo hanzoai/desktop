@@ -87,7 +87,7 @@ function AgentsPage() {
         <div className="container flex flex-col">
           <div className="flex flex-col gap-3 pt-10 pb-4">
             <div className="flex justify-between gap-4">
-              <div className="font-clash inline-flex items-center gap-5 text-3xl font-medium">
+              <div className="font-inter inline-flex items-center gap-5 text-3xl font-medium">
                 <h1>{t('agents.label')}</h1>
                 <TabsList className="flex h-10 w-fit items-center gap-2 rounded-full bg-transparent px-1 py-1">
                   <TabsTrigger

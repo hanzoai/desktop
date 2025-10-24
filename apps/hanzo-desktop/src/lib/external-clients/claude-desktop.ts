@@ -24,7 +24,7 @@ export const getClaudeDesktopConfigPath = (): string => {
 
 export const handleConfigureClaude = async (serverId: string, t: TFunction) => {
   const auth = useAuth.getState().auth;
-  const nodeUrl = auth?.node_address || 'http://localhost:9550';
+  const nodeUrl = auth?.node_address || 'http://localhost:3690';
   const loadingToastId = toast.loading(t('mcpClients.claudeLoading'));
 
   try {

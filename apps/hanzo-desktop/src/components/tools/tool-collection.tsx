@@ -109,7 +109,7 @@ export const ToolCollection = () => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 pt-10 pb-6">
         <div className="flex justify-between gap-4">
-          <h1 className="font-clash text-3xl font-medium">
+          <h1 className="font-inter text-3xl font-medium">
             {t('tools.label')}
           </h1>
           <div className="flex gap-2">

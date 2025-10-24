@@ -38,7 +38,7 @@ const AnalyticsPage = () => {
 
   return (
     <div className="mx-auto flex h-full max-w-lg flex-col gap-8">
-      <h1 className="font-clash text-4xl font-semibold">
+      <h1 className="font-inter text-4xl font-semibold">
         {t('analytics.title')}
       </h1>
       <div className="text-text-secondary flex flex-1 flex-col gap-10 text-base">

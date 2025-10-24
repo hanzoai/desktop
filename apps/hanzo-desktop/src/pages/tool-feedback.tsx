@@ -211,7 +211,7 @@ function ToolFeedbackPrompt() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                <h1 className="font-clash py-3 text-center font-semibold">
+                <h1 className="font-inter py-3 text-center font-semibold">
                   Creating Tool
                 </h1>
                 <div className="size-6" />

@@ -693,7 +693,7 @@ const QuickAskBody = () => {
           initial={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <h1 className="font-clash text-2xl font-semibold text-white">
+          <h1 className="font-inter text-2xl font-semibold text-white">
             How can I help you today?
           </h1>
         </motion.div>

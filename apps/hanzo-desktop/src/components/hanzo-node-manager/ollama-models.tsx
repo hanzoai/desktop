@@ -107,7 +107,7 @@ export const OllamaModels = ({
                       </span>
 
                       <span>
-                        <span className="font-clash text-xl font-semibold">
+                        <span className="font-inter text-xl font-semibold">
                           {model.name}
                         </span>
                         {isDefaultModel(model.fullName) && (

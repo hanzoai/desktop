@@ -319,8 +319,8 @@ jobs:
           cp "${{ matrix.build_output_update_file_path }}" files-to-r2/${{ matrix.distributable_update_file_name }}
           cp "${{ matrix.build_output_update_signature_file_path }}" files-to-r2/${{ matrix.distributable_update_signature_file_name }}
           echo "signature-${{ matrix.arch }}=$(cat files-to-r2/${{ matrix.distributable_update_signature_file_name }})" >> "$GITHUB_OUTPUT"
-          echo "update-url-${{ matrix.arch }}=https://download.hanzo.com/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
-          echo "app-url-${{ matrix.arch }}=https://download.hanzo.com/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
+          echo "update-url-${{ matrix.arch }}=https://github.com/hanzoai/desktop/releases/download/${{ needs.prebuild.outputs.version }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
+          echo "app-url-${{ matrix.arch }}=https://github.com/hanzoai/desktop/releases/download/${{ needs.prebuild.outputs.version }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Upload binaries to R2 bucket
         uses: shallwefootball/s3-upload-action@master
@@ -332,11 +332,14 @@ jobs:
           source_dir: files-to-r2
           destination_dir: ./hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/
 
-      - name: Upload installer to GitHub Release
+      - name: Upload installer and update bundle to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prebuild.outputs.version }}
-          files: files-to-r2/${{ matrix.distributable_file_name }}
+          files: |
+            files-to-r2/${{ matrix.distributable_file_name }}
+            files-to-r2/${{ matrix.distributable_update_file_name }}
+            files-to-r2/${{ matrix.distributable_update_signature_file_name }}
 
   rollout-hanzo-desktop:
     environment: production
@@ -382,7 +385,14 @@ jobs:
         run: |
           mkdir files-to-r2
           npx ts-node ./ci-scripts/generate-updates-json.ts
+          cp files-to-r2/updates-next.json files-to-r2/latest.json
           echo "updates-next-json-url=https://download.hanzo.com/hanzo-desktop/binaries/production/updates-next.json" >> "$GITHUB_OUTPUT"
+
+      - name: Upload latest.json to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prebuild.outputs.version }}
+          files: files-to-r2/latest.json
 
       - name: Upload updates.json to R2
         uses: shallwefootball/s3-upload-action@master

@@ -80,7 +80,6 @@
 
   /* Font */
   --font-inter: 'Inter', sans-serif;
-  --font-clash: 'Clash Display', sans-serif;
 
   --font-size-em-xs: 0.75em;
   --font-size-em-sm: 0.875em;
@@ -91,9 +90,6 @@
 
   --font-family-inter:
     Inter, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-family-clash:
-    'Clash Display', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Semantic Tokens */
@@ -272,7 +268,7 @@
   @apply h-full w-full rounded-md;
 }
 .p-checkbox.p-highlight .p-checkbox-box {
-  @apply bg-brand border-brand-500 hover:border-brand-500 p-0.5 text-white;
+  @apply bg-brand border-brand-500 hover:border-brand-500 p-0.5 text-black;
 }
 .p-tree .p-tree-container .p-treenode .p-treenode-content.p-highlight {
   @apply bg-brand/10 text-white;

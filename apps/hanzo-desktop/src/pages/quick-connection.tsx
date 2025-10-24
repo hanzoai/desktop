@@ -84,7 +84,7 @@ const QuickConnectionPage = () => {
     defaultValues: {
       node_address: isHanzoPrivate
         ? LOCAL_NODE_ADDRESS
-        : 'http://127.0.0.1:9550',
+        : 'http://127.0.0.1:3690',
     },
   });
 

@@ -542,7 +542,7 @@ function ToolsHome({
       <div className="flex w-full flex-col items-center justify-between gap-6 pt-2">
         <div className="flex flex-col gap-2">
           <div className="flex flex-col items-center">
-            <h1 className="font-clash text-text-default text-center text-4xl font-medium">
+            <h1 className="font-inter text-text-default text-center text-4xl font-medium">
               {t('tools.create.title')}
             </h1>
             <p className="text-text-secondary text-center text-sm">
