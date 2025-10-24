@@ -42,7 +42,7 @@ export const ResetConnectionDialog = ({
     onSuccess: async () => {
       if (!encryptionKeys) return;
       await submitRegistrationNoCode({
-        nodeAddress: 'http://127.0.0.1:9550',
+        nodeAddress: 'http://127.0.0.1:3690',
         profileEncryptionPk: encryptionKeys.profile_encryption_pk,
         profileIdentityPk: encryptionKeys.profile_identity_pk,
       });

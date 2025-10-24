@@ -123,7 +123,7 @@ export const NetworkAgentPage = () => {
           <div className="flex items-center justify-between gap-4">
             <div
               className={cn(
-                'font-clash inline-flex items-center gap-3 text-3xl font-medium',
+                'font-inter inline-flex items-center gap-3 text-3xl font-medium',
               )}
             >
               <h1>

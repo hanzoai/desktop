@@ -71,7 +71,7 @@ export const McpRegistryPage = () => {
       <div className="container max-w-screen-lg">
         <div className="flex flex-col gap-5 pt-10 pb-6">
           <div className="flex justify-between gap-4">
-            <div className="font-clash inline-flex items-center gap-5 text-3xl font-medium">
+            <div className="font-inter inline-flex items-center gap-5 text-3xl font-medium">
               <h1>{t('mcpServers.title')}</h1>
               <TabsList className="flex h-10 w-fit items-center gap-2 rounded-full bg-transparent px-1 py-1">
                 <TabsTrigger
@@ -222,7 +222,7 @@ const ExposeToolsAsMcp = () => {
 
   const handleShowCustomInstructions = async () => {
     // Generate SSE URL (same logic as cursor)
-    const nodeUrl = auth?.node_address || 'http://localhost:9550'; // Default or get from auth
+    const nodeUrl = auth?.node_address || 'http://localhost:3690'; // Default or get from auth
     const sseUrl = `${nodeUrl}/mcp/sse`;
     setCustomSseUrl(sseUrl);
 

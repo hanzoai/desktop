@@ -132,7 +132,7 @@ function Payment({
                     <p className="font-medium">
                       {t('networkAgentsPage.costPerUse')}
                     </p>
-                    <p className="font-clash text-xl font-semibold">
+                    <p className="font-inter text-xl font-semibold">
                       {data.usage_type.PerUse === 'Free'
                         ? 'Free'
                         : 'Payment' in data.usage_type.PerUse
@@ -226,7 +226,7 @@ function Payment({
                         className="hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-brand [&:has([data-state=checked])]:border-brand flex w-full flex-col items-center justify-between rounded-md border-2 border-gray-400 bg-gray-500 p-4"
                         htmlFor="one-time"
                       >
-                        <span className="font-clash text-2xl font-semibold">
+                        <span className="font-inter text-2xl font-semibold">
                           {data.usage_type.PerUse === 'Free'
                             ? 'Free'
                             : 'Payment' in data.usage_type.PerUse
@@ -255,7 +255,7 @@ function Payment({
                         className="hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-brand [&:has([data-state=checked])]:border-brand flex w-full flex-col items-center justify-between rounded-md border-2 border-gray-400 bg-gray-500 p-4"
                         htmlFor="download"
                       >
-                        <span className="font-clash text-xl font-semibold">
+                        <span className="font-inter text-xl font-semibold">
                           {data.usage_type.Downloadable === 'Free'
                             ? 'Free'
                             : 'Payment' in data.usage_type.Downloadable

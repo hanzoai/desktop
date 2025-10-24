@@ -313,7 +313,7 @@ export function MainNav() {
         )}
       >
         {sidebarExpanded && (
-          <HanzoCombinationMarkIcon className="text-text-secondary h-auto w-[90px]" />
+          <HanzoCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
         )}
 
         <Tooltip>

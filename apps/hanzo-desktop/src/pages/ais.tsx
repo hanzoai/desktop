@@ -102,7 +102,7 @@ const AIsPage = () => {
         {/* prettier-ignore */}
         <div className="flex flex-col gap-1 pb-6 pt-10">
           <div className="flex justify-between gap-4">
-            <h1 className="font-clash text-3xl font-medium">
+            <h1 className="font-inter text-3xl font-medium">
               {t('layout.menuItems.manageAis')}
             </h1>
             <div className="flex gap-2">

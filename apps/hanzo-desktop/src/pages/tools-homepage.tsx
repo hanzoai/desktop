@@ -33,7 +33,7 @@ export function ToolsPage() {
         <div className="bg-bg-dark relative rounded-lg">
           <div className="relative z-[1] mx-auto flex flex-col items-center gap-8 p-10 text-center">
             <div className="flex flex-col gap-2">
-              <h3 className="font-clash max-w-xl text-2xl font-semibold tracking-normal">
+              <h3 className="font-inter max-w-xl text-2xl font-semibold tracking-normal">
                 Discover More Tools
               </h3>
               <p className="text-text-secondary max-w-xl text-base leading-relaxed tracking-tight">

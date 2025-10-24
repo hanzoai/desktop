@@ -209,17 +209,17 @@ impl Default for HanzoNodeOptions {
 
         HanzoNodeOptions {
             node_api_ip: Some("127.0.0.1".to_string()),
-            node_api_port: Some("9550".to_string()),
-            node_ws_port: Some("9551".to_string()),
+            node_api_port: Some("3690".to_string()),
+            node_ws_port: Some("3694".to_string()),
             node_ip: Some("127.0.0.1".to_string()),
-            node_port: Some("9552".to_string()),
-            node_https_port: Some("9553".to_string()),
+            node_port: Some("3692".to_string()),
+            node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
             embeddings_server_url: Some("http://127.0.0.1:11435".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
-                "https://api.hanzo.com/inference,https://api.hanzo.com/inference".to_string(),
+                "https://api.shinkai.com/inference,https://api.shinkai.com/inference".to_string(),
             ),
             initial_agent_names: Some("hanzo_free_trial,hanzo_code_gen".to_string()),
             initial_agent_models: Some(
@@ -234,7 +234,7 @@ impl Default for HanzoNodeOptions {
             supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,jina/jina-embeddings-v2-base-es:latest".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
-            hanzo_store_url: Some("https://store-api.hanzo.com".to_string()),
+            hanzo_store_url: Some("https://store-api.shinkai.com".to_string()),
             secret_desktop_installation_proof_key: option_env!(
                 "SECRET_DESKTOP_INSTALLATION_PROOF_KEY"
             )

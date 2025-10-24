@@ -68,7 +68,7 @@ export const FixedHeaderLayout = ({
             <LucideArrowLeft />
             <span className="sr-only">{t('common.back')}</span>
           </Link>
-          <h1 className="font-clash text-center text-2xl font-semibold tracking-tight">
+          <h1 className="font-inter text-center text-2xl font-semibold tracking-tight">
             {title}
           </h1>
         </div>
@@ -95,7 +95,7 @@ export const SimpleLayout = ({
     >
       <div className="flex items-center justify-between gap-4">
         {title ? (
-          <h1 className="font-clash text-3xl font-medium">{title}</h1>
+          <h1 className="font-inter text-3xl font-medium">{title}</h1>
         ) : null}
         {headerRightElement}
       </div>

@@ -449,7 +449,7 @@ const ChatList = () => {
   return (
     <div className="">
       <div className="mb-1 flex h-8 items-center justify-between gap-2 pl-3">
-        <h2 className="font-clash text-base font-medium tracking-wide">
+        <h2 className="font-inter text-base font-medium tracking-wide">
           {t('chat.chats')}
         </h2>
         <Tooltip>
@@ -545,7 +545,7 @@ const AgentInboxList = ({ agentId }: { agentId?: string }) => {
   return (
     <div className=" ">
       <div className="flex h-8 items-center justify-between gap-1">
-        <h2 className="font-clash flex items-center gap-2 px-2 text-sm font-normal tracking-wide capitalize">
+        <h2 className="font-inter flex items-center gap-2 px-2 text-sm font-normal tracking-wide capitalize">
           <AIAgentIcon name={agent?.name ?? ''} size="xs" />
           {agent?.name}
         </h2>
@@ -634,7 +634,7 @@ const AgentList = ({
   return (
     <div className="">
       <div className="mb-1 flex h-8 items-center justify-between gap-2 pl-3">
-        <h2 className="font-clash text-base font-medium tracking-wide">
+        <h2 className="font-inter text-base font-medium tracking-wide">
           {t('chat.agents')}
         </h2>
         <Tooltip>
