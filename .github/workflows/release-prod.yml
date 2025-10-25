@@ -323,6 +323,7 @@ jobs:
           echo "app-url-${{ matrix.arch }}=https://github.com/hanzoai/desktop/releases/download/${{ needs.prebuild.outputs.version }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
 
       - name: Upload binaries to R2 bucket
+        continue-on-error: true
         uses: shallwefootball/s3-upload-action@master
         with:
           endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
@@ -395,6 +396,7 @@ jobs:
           files: files-to-r2/latest.json
 
       - name: Upload updates.json to R2
+        continue-on-error: true
         uses: shallwefootball/s3-upload-action@master
         with:
           endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
@@ -414,6 +416,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Post Hanzo Desktop to a Slack channel
+        continue-on-error: true
         id: slack
         uses: slackapi/slack-github-action@v1.26.0
         env:
