@@ -61,12 +61,21 @@ export const useCheckUpdateQuery = (
       if (updateState.update) {
         return updateState;
       }
-      const update = await check();
-      void debug(`check update available:${update?.available}`);
-      updateState.state = update?.available ? 'available' : undefined;
-      updateState.update = update;
-      void queryClient.invalidateQueries({ queryKey: ['update_state'] });
-      return updateState;
+      try {
+        const update = await check();
+        void debug(`check update available:${update?.available}`);
+        updateState.state = update?.available ? 'available' : undefined;
+        updateState.update = update;
+        void queryClient.invalidateQueries({ queryKey: ['update_state'] });
+        return updateState;
+      } catch (error) {
+        void debug(`Failed to check for updates: ${error}`);
+        console.error('Failed to check for updates', error);
+        updateState.state = undefined;
+        updateState.update = null;
+        void queryClient.invalidateQueries({ queryKey: ['update_state'] });
+        return updateState;
+      }
     },
     ...options,
   });
