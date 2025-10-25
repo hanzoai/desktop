@@ -108,3 +108,15 @@ All artifacts uploaded to:
 - App continues without error if update check/download fails
 - Errors logged via Tauri debug logger
 - No user-facing errors for update failures
+
+### Troubleshooting Releases (Updated 2025-10-25)
+**Certificate Import Failures:**
+- Ensure APPLE_CERTIFICATE is base64 encoded without newlines
+- Ensure APPLE_CERTIFICATE_PASSWORD has no trailing newlines
+- Use output redirection `>` instead of `-o` flag for base64 decode (more portable)
+- Test certificate import locally: `security import cert.p12 -P password -k test.keychain`
+
+**Common Issues:**
+- Version mismatch: Ensure package.json version matches git tag
+- Tag timing: Create tags AFTER secrets are configured
+- Base64 syntax: Use `base64 --decode > file` not `base64 --decode -o file`
