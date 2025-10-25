@@ -14,7 +14,7 @@ interface VideoBannerProps {
   videoUrl: string;
   duration: string;
 }
-export const HANZO_DOCS_URL = 'https://docs.hanzo.com';
+export const HANZO_DOCS_URL = 'https://docs.hanzo.ai';
 
 export function VideoBanner({ title, videoUrl, duration }: VideoBannerProps) {
   const [isVideoDialogOpen, setIsVideoDialogOpen] = React.useState(false);

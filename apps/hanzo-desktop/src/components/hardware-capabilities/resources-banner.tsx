@@ -86,7 +86,7 @@ export const ResourcesBanner = ({
             <TextLink
               className="text-yellow-200"
               label={'Hanzo Hosting'}
-              url={'https://www.hanzo.com/get-hanzo'}
+              url={'https://hanzo.ai/get-hanzo'}
             />
           </div> */}
         </div>

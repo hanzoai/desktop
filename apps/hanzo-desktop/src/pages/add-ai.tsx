@@ -89,25 +89,25 @@ const modelOptions: { value: Models; label: string }[] = [
 
 const getGuideUrl = (model: Models) => {
   if (!model) {
-    return 'https://docs.hanzo.com/advanced/models';
+    return 'https://docs.hanzo.ai/advanced/models';
   }
 
   const urlMap = {
-    [Models.OpenAI]: 'https://docs.hanzo.com/advanced/models/gpt',
-    [Models.OpenAILegacy]: 'https://docs.hanzo.com/advanced/models/gpt',
+    [Models.OpenAI]: 'https://docs.hanzo.ai/advanced/models/gpt',
+    [Models.OpenAILegacy]: 'https://docs.hanzo.ai/advanced/models/gpt',
     [Models.TogetherComputer]:
-      'https://docs.hanzo.com/advanced/models/together-ai',
-    [Models.Ollama]: 'https://docs.hanzo.com/advanced/models/ollama',
-    [Models.Gemini]: 'https://docs.hanzo.com/advanced/models/gemini',
-    [Models.Groq]: 'https://docs.hanzo.com/advanced/models/groq',
-    [Models.OpenRouter]: 'https://docs.hanzo.com/advanced/models/openrouter',
-    [Models.Exo]: 'https://docs.hanzo.com/advanced/models/exo',
-    [Models.Claude]: 'https://docs.hanzo.com/advanced/models/claude',
-    [Models.DeepSeek]: 'https://docs.hanzo.com/advanced/models/deepseek',
-    [Models.Grok]: 'https://docs.hanzo.com/advanced/models/grok',
+      'https://docs.hanzo.ai/advanced/models/together-ai',
+    [Models.Ollama]: 'https://docs.hanzo.ai/advanced/models/ollama',
+    [Models.Gemini]: 'https://docs.hanzo.ai/advanced/models/gemini',
+    [Models.Groq]: 'https://docs.hanzo.ai/advanced/models/groq',
+    [Models.OpenRouter]: 'https://docs.hanzo.ai/advanced/models/openrouter',
+    [Models.Exo]: 'https://docs.hanzo.ai/advanced/models/exo',
+    [Models.Claude]: 'https://docs.hanzo.ai/advanced/models/claude',
+    [Models.DeepSeek]: 'https://docs.hanzo.ai/advanced/models/deepseek',
+    [Models.Grok]: 'https://docs.hanzo.ai/advanced/models/grok',
   };
 
-  return urlMap[model] || 'https://docs.hanzo.com/advanced/models';
+  return urlMap[model] || 'https://docs.hanzo.ai/advanced/models';
 };
 
 export const getModelObject = (

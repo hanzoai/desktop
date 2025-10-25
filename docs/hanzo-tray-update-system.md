@@ -111,7 +111,7 @@ They are uploaded to a R2 bucket in Cloudflare using the following structure:
 
 IE: `hanzo-desktop/binaries/development/aarch64-apple-darwin/0.5.5/*`
 
-🔗 R2 Bucket DNS: https://download.hanzo.com
+🔗 R2 Bucket DNS: https://download.hanzo.ai
 
 ### Distribute
 
@@ -126,7 +126,7 @@ At this point Hanzo Desktop is using the [default flow](https://tauri.app/v1/gui
   "platforms": {
     "darwin-aarch64": {
       "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVTNG50TktKVkozbXdiZXdua1pvUFVMT0d2M2pwd2g0RlZvck9zTjNNSHZ6TjJsN2ZtaWpnVzAySzFWSXZxckx0TUF6bmRjUHhiMDhsVVo5MTExcnJLR2I2RXNmOXhWRFFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzExMzk4Nzc0CWZpbGU6U2hpbmthaSBUcmF5LmFwcC50YXIuZ3oKRVE5aC9xSUt3cHpmWEtFVENHS1FCUm42Z2ZYSE5lV1lGVUtYbHdHOEZnMXFJTHBNU1V0czlKaTlxUlNnd1B6SkNhRWdibGpRblRselFqSXdMM2dUQ1E9PQo=",
-      "url": "https://download.hanzo.com/hanzo-desktop/binaries/development/aarch64-apple-darwin/0.5.2.202/Hanzo-Desktop-0.5.2.202_aarch64-apple-darwin.app.tar.gz"
+      "url": "https://download.hanzo.ai/hanzo-desktop/binaries/development/aarch64-apple-darwin/0.5.2.202/Hanzo-Desktop-0.5.2.202_aarch64-apple-darwin.app.tar.gz"
     }
   }
 }

@@ -278,7 +278,7 @@ export function MainNav() {
     },
     {
       title: t('layout.menuItems.helpAndSupport'),
-      href: `https://docs.hanzo.com/`,
+      href: `https://docs.hanzo.ai/`,
       icon: <HelpCircleIcon className="size-[18px]" />,
       external: true,
     },
