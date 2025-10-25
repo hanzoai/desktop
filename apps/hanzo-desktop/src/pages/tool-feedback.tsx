@@ -112,7 +112,7 @@ function ToolFeedbackPrompt() {
     }
   }, [error, resetPlaygroundStore, navigate]);
 
-  // Effect to switch from CODE_GENERATOR to SHINKAI_FREE_TRIAL model when tool creation is completed
+  // Effect to switch from CODE_GENERATOR to HANZO_FREE_TRIAL model when tool creation is completed
   useEffect(() => {
     if (!auth || !currentProvider || !llmProviders || !jobId) return;
     

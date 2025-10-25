@@ -56,10 +56,10 @@ FULL_VERSION="${VERSION}.${RUN_NUMBER}"
 # Make the sed command compatible with both macOS and Linux
 if [[ "$OSTYPE" == "darwin"* ]]; then
   # macOS (BSD) sed
-  RULES=$(echo "${CLOUDFLARE_RULES}" | sed -E "s/SHINKAI_RELEASE_VERSION/${FULL_VERSION}/g")
+  RULES=$(echo "${CLOUDFLARE_RULES}" | sed -E "s/HANZO_RELEASE_VERSION/${FULL_VERSION}/g")
 else
   # Linux (GNU) sed
-  RULES=$(echo "${CLOUDFLARE_RULES}" | sed "s/SHINKAI_RELEASE_VERSION/${FULL_VERSION}/g")
+  RULES=$(echo "${CLOUDFLARE_RULES}" | sed "s/HANZO_RELEASE_VERSION/${FULL_VERSION}/g")
 fi
 
 curl -L -X PUT "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/rulesets/${CLOUDFLARE_RULESET_ID}" \

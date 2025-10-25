@@ -7,7 +7,7 @@ export type GetHanzoFreeModelQuotaInput = Token & {
   nodeAddress: string;
 };
 export type UseGetHanzoFreeModelQuota = [
-  FunctionKeyV2.GET_SHINKAI_FREE_MODEL_QUOTA,
+  FunctionKeyV2.GET_HANZO_FREE_MODEL_QUOTA,
   GetHanzoFreeModelQuotaInput,
 ];
 export type GetHanzoFreeModelQuotaOutput = {

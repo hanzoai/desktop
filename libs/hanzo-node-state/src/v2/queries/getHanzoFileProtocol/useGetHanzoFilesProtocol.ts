@@ -8,7 +8,7 @@ import {
 import { getHanzoFilesProtocol } from './index';
 
 export type UseGetHanzoFilesProtocol = [
-  FunctionKeyV2.GET_SHINKAI_FILE_PROTOCOLS,
+  FunctionKeyV2.GET_HANZO_FILE_PROTOCOLS,
   GetHanzoFilesProtocolInput,
 ];
 type Options = QueryObserverOptions<
@@ -24,7 +24,7 @@ export const useGetHanzoFilesProtocol = (
   options?: Omit<Options, 'queryKey' | 'queryFn'>,
 ) => {
   const response = useQuery({
-    queryKey: [FunctionKeyV2.GET_SHINKAI_FILE_PROTOCOLS, input],
+    queryKey: [FunctionKeyV2.GET_HANZO_FILE_PROTOCOLS, input],
     queryFn: () => getHanzoFilesProtocol(input),
     ...options,
   });

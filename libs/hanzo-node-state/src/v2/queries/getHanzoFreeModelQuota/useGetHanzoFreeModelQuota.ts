@@ -9,7 +9,7 @@ export const useGetHanzoFreeModelQuota = (
   options?: Omit<Options, 'queryKey' | 'queryFn'>,
 ) => {
   const response = useQuery({
-    queryKey: [FunctionKeyV2.GET_SHINKAI_FREE_MODEL_QUOTA, input] as const,
+    queryKey: [FunctionKeyV2.GET_HANZO_FREE_MODEL_QUOTA, input] as const,
     queryFn: async () => await getHanzoFreeModelQuota(input),
     ...options,
   });
