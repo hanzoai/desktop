@@ -5,7 +5,7 @@ use tauri::{
 };
 
 use crate::{
-    globals::SHINKAI_NODE_MANAGER_INSTANCE,
+    globals::HANZO_NODE_MANAGER_INSTANCE,
     windows::{recreate_window, Window, show_spotlight_window},
 };
 
@@ -64,7 +64,7 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 tauri::async_runtime::spawn(async move {
                     // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
                     let mut hanzo_node_manager_guard =
-                        SHINKAI_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
+                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     if hanzo_node_manager_guard.is_running().await {
                         hanzo_node_manager_guard.kill().await;
                     }
