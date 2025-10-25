@@ -16,7 +16,7 @@ enum Arch {
 const envSchema = z.object({
   ARCH: z.nativeEnum(Arch),
   OLLAMA_VERSION: z.string().min(6),
-  SHINKAI_NODE_VERSION: z.string().min(6),
+  HANZO_NODE_VERSION: z.string().min(6),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -26,7 +26,7 @@ const env: Env = envSchema.parse(process.env);
 const TEMP_PATH = './temp';
 const OLLAMA_RESOURCES_PATH =
   './apps/hanzo-desktop/src-tauri/external-binaries/ollama/';
-const SHINKAI_NODE_RESOURCES_PATH =
+const HANZO_NODE_RESOURCES_PATH =
   './apps/hanzo-desktop/src-tauri/external-binaries/hanzo-node/';
 const LLM_MODELS_PATH = './apps/hanzo-desktop/src-tauri/llm-models/';
 
@@ -78,7 +78,8 @@ const downloadFile = async (url: string, path: string): Promise<void> => {
 
 const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   console.log(`Downloading hanzo-node arch:${arch} version:${version}`);
-  const downloadUrl = `https://download.hanzo.com/hanzo-node/binaries/production/${arch}/${version}.zip`;
+  // Download from GitHub releases (dcSpark/hanzo-node)
+  const downloadUrl = `https://github.com/dcSpark/hanzo-node/releases/download/${version}/hanzo-node-${arch}.zip`;
   const zippedPath = path.join(TEMP_PATH, `hanzo-node-${version}.zip`);
   await downloadFile(downloadUrl, zippedPath);
   let unzippedPath = path.join(TEMP_PATH, `hanzo-node-${version}`);
@@ -90,7 +91,7 @@ const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   for (const file of files) {
     await cp(
       path.join(unzippedPath, file),
-      path.join(SHINKAI_NODE_RESOURCES_PATH, file),
+      path.join(HANZO_NODE_RESOURCES_PATH, file),
       {
         recursive: true,
       },
@@ -246,15 +247,21 @@ const downloadOllama = {
 
 const downloadEmbeddingModel = async () => {
   console.log(`Downloading embedding model`);
+  // TODO: Update this URL when hanzo CDN is ready
+  // For now, download from shinkai releases or skip if not critical
   const downloadUrl = `https://download.hanzo.com/llm-models/embeddinggemma-300M-BF16.gguf`;
-  await downloadFile(
-    downloadUrl,
-    path.join(LLM_MODELS_PATH, 'embeddinggemma-300M-BF16.gguf'),
-  );
+  try {
+    await downloadFile(
+      downloadUrl,
+      path.join(LLM_MODELS_PATH, 'embeddinggemma-300M-BF16.gguf'),
+    );
+  } catch (error) {
+    console.warn('Embedding model download failed (optional), continuing...', error);
+  }
 };
 
 export const main = async () => {
-  await downloadHanzoNodeBinary(env.ARCH, env.SHINKAI_NODE_VERSION);
+  await downloadHanzoNodeBinary(env.ARCH, env.HANZO_NODE_VERSION);
   await downloadOllama[env.ARCH](env.OLLAMA_VERSION);
   await downloadEmbeddingModel();
 };

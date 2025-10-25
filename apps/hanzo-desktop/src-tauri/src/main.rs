@@ -30,7 +30,7 @@ use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
-use globals::SHINKAI_NODE_MANAGER_INSTANCE;
+use globals::HANZO_NODE_MANAGER_INSTANCE;
 use local_hanzo_node::hanzo_node_manager::HanzoNodeManager;
 use tauri::{Emitter, WindowEvent};
 use tauri::{Manager, RunEvent};
@@ -145,7 +145,7 @@ fn main() {
             let app_data_dir = app.path().app_data_dir()?;
 
             {
-                let _ = SHINKAI_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
+                let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
                     HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
                 )));
             }
@@ -162,7 +162,7 @@ fn main() {
                 async move {
                     // Kill any existing process related to hanzo and/or using hanzo ports
                     let mut hanzo_node_manager_guard =
-                        SHINKAI_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
+                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     hanzo_node_manager_guard.kill().await;
                     drop(hanzo_node_manager_guard);
 
@@ -176,7 +176,7 @@ fn main() {
                 let app_handle = app.handle().clone();
                 async move {
                     let mut hanzo_node_manager_guard =
-                        SHINKAI_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
+                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     let mut receiver = hanzo_node_manager_guard.subscribe_to_events();
                     drop(hanzo_node_manager_guard);
                     while let Ok(state_change) = receiver.recv().await {
@@ -202,7 +202,7 @@ fn main() {
 
                     // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
                     let mut hanzo_node_manager_guard =
-                        SHINKAI_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
+                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     hanzo_node_manager_guard.kill().await;
                     drop(hanzo_node_manager_guard);
                     // Force exit the application

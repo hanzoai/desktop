@@ -71,23 +71,23 @@ download_binary() {
     echo "Downloaded and made executable: $output_path"
 }
 
-# Download Hanzo Node (currently using shinkai-node releases until hanzoai/node has releases)
-# The shinkai-node zip includes: shinkai-node, shinkai-tools-runner-resources/deno, shinkai-tools-runner-resources/uv
+# Download Hanzo Node (currently using hanzo-node releases until hanzoai/node has releases)
+# The hanzo-node zip includes: hanzo-node, hanzo-tools-runner-resources/deno, hanzo-tools-runner-resources/uv
 # TODO: Update to use hanzoai/node once releases are available
 HANZO_NODE_TAG="v1.1.14"
-HANZO_NODE_BINARY="shinkai-node-${TARGET}.zip"
+HANZO_NODE_BINARY="hanzo-node-${TARGET}.zip"
 if [ ! -f "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}" ]; then
-    if download_binary "dcSpark/shinkai-node" "$HANZO_NODE_TAG" "$HANZO_NODE_BINARY" \
-        "$BINARIES_DIR/hanzo-node/shinkai-node.zip"; then
-        unzip -o "$BINARIES_DIR/hanzo-node/shinkai-node.zip" -d "$BINARIES_DIR/hanzo-node/"
+    if download_binary "dcSpark/hanzo-node" "$HANZO_NODE_TAG" "$HANZO_NODE_BINARY" \
+        "$BINARIES_DIR/hanzo-node/hanzo-node.zip"; then
+        unzip -o "$BINARIES_DIR/hanzo-node/hanzo-node.zip" -d "$BINARIES_DIR/hanzo-node/"
 
-        # Rename shinkai-node to hanzo-node-<target>
-        mv "$BINARIES_DIR/hanzo-node/shinkai-node" \
+        # Rename hanzo-node to hanzo-node-<target>
+        mv "$BINARIES_DIR/hanzo-node/hanzo-node" \
             "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
 
-        # Rename shinkai-tools-runner-resources to hanzo-tools-runner-resources
-        if [ -d "$BINARIES_DIR/hanzo-node/shinkai-tools-runner-resources" ]; then
-            mv "$BINARIES_DIR/hanzo-node/shinkai-tools-runner-resources" \
+        # Rename hanzo-tools-runner-resources to hanzo-tools-runner-resources
+        if [ -d "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources" ]; then
+            mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources" \
                 "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
         fi
 
@@ -102,8 +102,8 @@ if [ ! -f "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}" ]; then
                 "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${TARGET}"
         fi
 
-        rm "$BINARIES_DIR/hanzo-node/shinkai-node.zip"
-        echo "Downloaded Hanzo Node (shinkai-node) successfully with bundled tools"
+        rm "$BINARIES_DIR/hanzo-node/hanzo-node.zip"
+        echo "Downloaded Hanzo Node (hanzo-node) successfully with bundled tools"
     else
         echo "Warning: Could not download Hanzo Node binary"
     fi
