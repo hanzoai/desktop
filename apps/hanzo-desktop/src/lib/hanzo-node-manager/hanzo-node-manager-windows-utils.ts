@@ -11,5 +11,5 @@ export const isLocalHanzoNode = (nodeAddress: string) => {
 };
 
 export const isHostingHanzoNode = (nodeAddress: string) => {
-  return nodeAddress?.includes('hosting.hanzo.com');
+  return nodeAddress?.includes('hosting.hanzo.ai');
 };

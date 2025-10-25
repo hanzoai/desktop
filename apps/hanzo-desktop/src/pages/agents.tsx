@@ -571,7 +571,7 @@ const DownloadAgents = () => {
                 <CardTitle className="text-text-default truncate text-base leading-tight font-semibold">
                   <Link
                     className="text-text-default truncate text-base leading-tight font-semibold hover:underline"
-                    to={`https://store.hanzo.com/product/${agent.routerKey}`}
+                    to={`https://store.hanzo.ai/product/${agent.routerKey}`}
                     target="_blank"
                   >
                     {agent.name}
@@ -602,7 +602,7 @@ const DownloadAgents = () => {
                       size: 'sm',
                     }),
                   )}
-                  to={`https://store.hanzo.com/product/${agent.routerKey}`}
+                  to={`https://store.hanzo.ai/product/${agent.routerKey}`}
                   target="_blank"
                 >
                   Get Agent

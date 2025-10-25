@@ -111,7 +111,7 @@ export default function PublishAgentDialog() {
             mimeType: 'application/json',
             asset: asset,
             outputSchema: {},
-            resource: 'https://hanzo.com',
+            resource: 'https://hanzo.ai',
             extra: { name: asset, version: '1' },
             payTo: payTo,
             description: description,

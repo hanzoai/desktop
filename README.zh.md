@@ -42,7 +42,7 @@ Hanzo是一个免费的开源平台，使AI代理创建民主化。
 <a href =“＃ - 示例”>示例</a>•
 <a href =“＃ - 快速启动”>快速启动</a>•
 <a href =“＃ - 开发”>开发</a>•
-<a href =“ https://docs.hanzo.com”>文档</a>
+<a href =“ https://docs.hanzo.ai”>文档</a>
 </p>
 
 ---
@@ -279,7 +279,7 @@ npx nx run hanzo-i18n:i18n
 
 ###📚其他资源
 
--  ** [官方文档]（https://docs.hanzo.com）**  - 全面的指南和API参考
+-  ** [官方文档]（https://docs.hanzo.ai）**  - 全面的指南和API参考
 -  ** [DISCORD社区]（https：//discord.gg/eua45u3seu）**  - 获得帮助并与其他开发人员建立联系
 -  ** [Twitter更新]（https://x.com/hanzolocalai）**  - 最新新闻和公告
 

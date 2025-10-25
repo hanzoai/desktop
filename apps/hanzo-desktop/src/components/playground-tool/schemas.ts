@@ -78,7 +78,7 @@ export const ToolMetadataSchema = z.object({
         name: z.string().default(''),
         version: z.string().default('2.0'),
         authorizationUrl: z.string().default(''),
-        redirectUrl: z.string().default('https://secrets.hanzo.com/redirect'),
+        redirectUrl: z.string().default('https://secrets.hanzo.ai/redirect'),
         tokenUrl: z.string().default(''),
         clientId: z.string().default('YOUR_PROVIDER_CLIENT_ID'),
         clientSecret: z.string().default('YOUR_PROVIDER_CLIENT_SECRET'),
