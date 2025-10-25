@@ -104,7 +104,7 @@ export default function ConfigureAgentDialog({
                   mimeType: 'application/json',
                   asset: 'USDC',
                   outputSchema: {},
-                  resource: 'https://hanzo.com',
+                  resource: 'https://hanzo.ai',
                   extra: { name: 'USDC', version: '1' },
                   payTo: walletInfo.payment_wallet.data.address.address_id,
                   description: description,

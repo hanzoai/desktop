@@ -100,7 +100,7 @@ Each release produces:
 
 All artifacts uploaded to:
 - **GitHub Releases** - For public downloads
-- **Cloudflare R2** - CDN at download.hanzo.com
+- **Cloudflare R2** - CDN at download.hanzo.ai
 - **updates.json** - Auto-updater manifest (rename updates-next.json → updates.json to rollout)
 
 ### Update Error Handling (Fixed 2025-10-24)

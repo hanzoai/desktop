@@ -41,8 +41,8 @@ export const useGalxeRegisterHanzoDesktopInstallationMutation = (
       const appName = await getName();
       const baseUrl =
         appName === 'Hanzo Desktop'
-          ? 'https://backend-hosting.hanzo.com'
-          : 'https://dev-backend-hosting.hanzo.com';
+          ? 'https://backend-hosting.hanzo.ai'
+          : 'https://dev-backend-hosting.hanzo.ai';
       await axios.post(`${baseUrl}/galxe/hanzo-desktop-installation`, {
         address,
         signature,

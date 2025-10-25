@@ -44,7 +44,7 @@ const AnalyticsSettingsPage = () => {
                 a: (
                   <a
                     className={'text-white underline'}
-                    href={'https://www.hanzo.com/privacy-policy'}
+                    href={'https://hanzo.ai/privacy-policy'}
                     rel="noreferrer"
                     target={'_blank'}
                   />

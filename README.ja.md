@@ -42,7 +42,7 @@ Hanzoは、AIエージェントの作成を民主化する無料のオープン�
 <a href = "＃ -  examples">例</a>•
 <a href = "＃ -  Quick-start">クイックスタート</a>•
 <a href = "＃ - 開発">開発</a>•
-<a href = "https://docs.hanzo.com">ドキュメント</a>
+<a href = "https://docs.hanzo.ai">ドキュメント</a>
 </p>
 
 ---
@@ -279,7 +279,7 @@ npx nx run hanzo-i18n:i18n
 
 ###📚追加リソース
 
--  ** [公式ドキュメント]（https://docs.hanzo.com）**  - 包括的なガイドとAPIリファレンス
+-  ** [公式ドキュメント]（https://docs.hanzo.ai）**  - 包括的なガイドとAPIリファレンス
 -  ** [Discord Community]（https://discord.gg/eua45u3seu）**  - ヘルプを取得して他の開発者とつながる
 -  ** [Twitterの更新]（https://x.com/hanzolocalai）**  - 最新のニュースとアナウンス
 

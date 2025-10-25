@@ -174,7 +174,7 @@ const HanzoIdentityDialog = () => {
               }),
               'text-text-secondary hover:text-text-default block rounded-lg p-0 text-left text-xs hover:underline',
             )}
-            href="https://docs.hanzo.com/advanced/hanzo-identity"
+            href="https://docs.hanzo.ai/advanced/hanzo-identity"
             rel="noreferrer"
             target="_blank"
           >

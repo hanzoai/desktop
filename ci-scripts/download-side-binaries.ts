@@ -16,7 +16,7 @@ enum Arch {
 const envSchema = z.object({
   ARCH: z.nativeEnum(Arch),
   OLLAMA_VERSION: z.string().min(6),
-  HANZO_NODE_VERSION: z.string().min(6),
+  SHINKAI_NODE_VERSION: z.string().min(6),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -246,14 +246,13 @@ const downloadOllama = {
 };
 
 const downloadEmbeddingModel = async () => {
-  console.log(`Downloading embedding model`);
-  // TODO: Update this URL when hanzo CDN is ready
-  // For now, download from shinkai releases or skip if not critical
-  const downloadUrl = `https://download.hanzo.com/llm-models/embeddinggemma-300M-BF16.gguf`;
+  console.log(`Downloading embedding model from Hugging Face`);
+  // Download from Hugging Face public CDN
+  const downloadUrl = `https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q4_K_M.gguf`;
   try {
     await downloadFile(
       downloadUrl,
-      path.join(LLM_MODELS_PATH, 'embeddinggemma-300M-BF16.gguf'),
+      path.join(LLM_MODELS_PATH, 'nomic-embed-text-v1.5.Q4_K_M.gguf'),
     );
   } catch (error) {
     console.warn('Embedding model download failed (optional), continuing...', error);
@@ -261,7 +260,7 @@ const downloadEmbeddingModel = async () => {
 };
 
 export const main = async () => {
-  await downloadHanzoNodeBinary(env.ARCH, env.HANZO_NODE_VERSION);
+  await downloadHanzoNodeBinary(env.ARCH, env.SHINKAI_NODE_VERSION);
   await downloadOllama[env.ARCH](env.OLLAMA_VERSION);
   await downloadEmbeddingModel();
 };

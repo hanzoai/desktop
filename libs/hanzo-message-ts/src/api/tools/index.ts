@@ -916,7 +916,7 @@ export const setToolMcpEnabled = async (
 
 export const getToolProtocols = async () => {
   const response = await httpClient.get(
-    'https://api.hanzo.com/kb/index.json',
+    'https://api.hanzo.ai/kb/index.json',
     {
       responseType: 'json',
     },
@@ -956,7 +956,7 @@ export const addNetworkTool = async (
 
 export const getNetworkAgents = async () => {
   const response = await httpClient.get(
-    'https://api.hanzo.com/store/dapps/offerings',
+    'https://api.hanzo.ai/store/dapps/offerings',
     { responseType: 'json' },
   );
   return response.data as GetNetworkAgentsResponse;

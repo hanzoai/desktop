@@ -42,7 +42,7 @@
   <a href="#-examples">Examples</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-development">Development</a> •
-  <a href="https://docs.hanzo.com">Documentation</a>
+  <a href="https://docs.hanzo.ai">Documentation</a>
 </p>
 
 ---
@@ -279,7 +279,7 @@ npx nx run hanzo-i18n:i18n
 
 ### 📚 Additional Resources
 
-- **[Official Documentation](https://docs.hanzo.com)** – Comprehensive guides and API reference
+- **[Official Documentation](https://docs.hanzo.ai)** – Comprehensive guides and API reference
 - **[Discord Community](https://discord.gg/EuA45U3sEu)** – Get help and connect with other developers
 - **[Twitter Updates](https://x.com/HanzoLocalAI)** – Latest news and announcements
 

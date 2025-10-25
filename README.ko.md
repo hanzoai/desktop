@@ -42,7 +42,7 @@ Hanzo는 AI 에이전트 생성을 민주화하는 무료 오픈 소스 플랫�
 <a href = "#-예제"> 예제 </a> •
 <a href = "#-빠른 시작"> 빠른 시작 </a> •
 <a href = "#-개발"> 개발 </a> •
-<a href = "https://docs.hanzo.com"> 문서 </a>
+<a href = "https://docs.hanzo.ai"> 문서 </a>
 </p>
 
 ---
@@ -279,7 +279,7 @@ npx nx run hanzo-i18n:i18n
 
 ### resources 추가 리소스
 
-- ** [공식 문서] (https://docs.hanzo.com) ** - 포괄적 인 가이드 및 API 참조
+- ** [공식 문서] (https://docs.hanzo.ai) ** - 포괄적 인 가이드 및 API 참조
 - ** [Discord Community] (https://discord.gg/eua45u3seu) ** - 도움을 받고 다른 개발자와 연결
 - ** [트위터 업데이트] (https://x.com/hanzolocalai) ** - 최신 뉴스 및 공지 사항
 
