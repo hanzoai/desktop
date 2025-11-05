@@ -1,7 +1,7 @@
 {
   "name": "hanzo-desktop",
   "private": true,
-  "version": "1.1.23",
+  "version": "1.1.24",
   "type": "module",
   "scripts": {
     "download-binaries": "cd src-tauri && ./download-binaries.sh",
