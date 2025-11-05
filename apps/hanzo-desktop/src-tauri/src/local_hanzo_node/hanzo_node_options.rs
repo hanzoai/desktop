@@ -216,7 +216,7 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            embeddings_server_url: Some("http://127.0.0.1:11435".to_string()),
+            embeddings_server_url: Some("https://gateway.hanzo.ai".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
                 "https://gateway.hanzo.ai,https://gateway.hanzo.ai".to_string(),

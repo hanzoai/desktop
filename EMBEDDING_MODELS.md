@@ -87,12 +87,13 @@ FREE_TIER_TOKENS_PER_DAY=50000
 ```
 ┌─────────────────┐
 │  Hanzo Desktop  │
+│  (Free Tier)    │
 └────────┬────────┘
          │
          ├─── Chat Inference ──────────> gateway.hanzo.ai ──> inference.do-ai.run (21 models)
          │
-         └─── Embeddings ──────────────> localhost:11435 (Ollama)
-                                          └─> snowflake-arctic-embed:xs (default)
+         └─── Embeddings ──────────────> gateway.hanzo.ai ──> api.voyageai.com (voyage-3.5)
+                                          └─> Falls back to Ollama for DO models
 ```
 
 ### Key Takeaways
@@ -101,10 +102,11 @@ FREE_TIER_TOKENS_PER_DAY=50000
    - 21 models including GPT-5, Claude Opus 4, Qwen3-32B
    - No API key required for free tier (IP-based rate limiting)
 
-2. **Embedding Models**: Use local Ollama ONLY
-   - Default: `snowflake-arctic-embed:xs` (works out-of-box)
-   - Users can download additional models from UI
-   - DigitalOcean does NOT support embeddings endpoint
+2. **Embedding Models**: Use Voyage AI via `gateway.hanzo.ai`
+   - Default: `voyage-3.5` (1024 dims, optimized quality)
+   - Also available: voyage-3.5-lite, voyage-code-3, voyage-finance-2, etc.
+   - Falls back to local Ollama for DO/sentence-transformers models
+   - No API key required for free tier (gateway handles auth)
 
 3. **hanzo-node Startup**: Now gracefully handles missing embedding GGUF
    - Won't crash if embedding model file missing
