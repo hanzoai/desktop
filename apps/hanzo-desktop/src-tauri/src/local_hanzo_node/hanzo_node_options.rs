@@ -231,7 +231,7 @@ impl Default for HanzoNodeOptions {
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
             default_embedding_model: Some("snowflake-arctic-embed:xs".to_string()),
-            supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,jina/jina-embeddings-v2-base-es:latest".to_string()),
+            supported_embedding_models: Some("snowflake-arctic-embed:xs,qwen3-embedding:0.6b,qwen3-embedding:4b,qwen3-embedding:8b,embeddinggemma:300m,nomic-embed-text:v1.5,mxbai-embed-large:335m".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
             hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),
