@@ -70,7 +70,7 @@ initial_agent_api_keys: "'',''"  // Empty for free tier
 - `GET /health` - Health check
 - `GET /v1/models` - List 21 available models
 - `POST /v1/chat/completions` - Chat inference (proxies to DO)
-- `POST /v1/embeddings` - ❌ NOT AVAILABLE (DO limitation)
+- `POST /v1/embeddings` - ✅ Embeddings (proxies to local Ollama)
 
 **Configuration** (`.env`):
 ```bash
@@ -110,16 +110,34 @@ FREE_TIER_TOKENS_PER_DAY=50000
    - Won't crash if embedding model file missing
    - Users guided to download via onboarding flow
 
+### Embedding Model Mappings
+
+The gateway maps DigitalOcean embedding model names to local Ollama equivalents:
+
+| DO Model (GradientAI) | Ollama Model | Dimensions | Size |
+|---|---|---|---|
+| sentence-transformers/all-MiniLM-L6-v2 | snowflake-arctic-embed:xs | 384 | 110MB |
+| sentence-transformers/multi-qa-mpnet-base-dot-v1 | qwen3-embedding:0.6b | 1024 | 639MB |
+| Alibaba-NLP/gte-large-en-v1.5 | nomic-embed-text:v1.5 | 768 | 274MB |
+
 ### Testing Embeddings
 
 ```bash
-# ✅ This works (local Ollama)
-curl http://127.0.0.1:11435/api/embeddings -d '{
-  "model": "snowflake-arctic-embed:xs",
-  "prompt": "test embedding"
-}'
+# ✅ Test with DO model names (gateway proxies to Ollama)
+curl -X POST http://localhost:3001/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "sentence-transformers/all-MiniLM-L6-v2", "input": "test"}'
 
-# ❌ This fails (DO doesn't support embeddings)
+curl -X POST http://localhost:3001/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "sentence-transformers/multi-qa-mpnet-base-dot-v1", "input": "test"}'
+
+curl -X POST http://localhost:3001/v1/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"model": "Alibaba-NLP/gte-large-en-v1.5", "input": "test"}'
+
+# ❌ Direct DO embeddings not available via API
+# DO embeddings are for agent knowledge bases only (OpenSearch storage)
 curl https://inference.do-ai.run/v1/embeddings \
   -H "Authorization: Bearer sk-do-..." \
   -d '{"input": "test", "model": "text-embedding-ada-002"}'
