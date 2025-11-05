@@ -120,3 +120,214 @@ All artifacts uploaded to:
 - Version mismatch: Ensure package.json version matches git tag
 - Tag timing: Create tags AFTER secrets are configured
 - Base64 syntax: Use `base64 --decode > file` not `base64 --decode -o file`
+
+---
+
+## GRPO (Group Relative Policy Optimization) Implementation Analysis
+
+### Executive Summary
+
+The Hanzo Desktop application is **NOT currently implementing GRPO** or training-free experience-based learning systems. The platform focuses on agent creation, orchestration, and management, but has no capability for collecting structured learning experiences or optimizing agent policies through feedback.
+
+### Current Relevant Capabilities
+
+#### 1. Agent Management (Strong Foundation)
+- **Location:** `/apps/hanzo-desktop/src/components/agent/`
+- Agent CRUD, configuration, export/import
+- Tool composition and orchestration
+- LLM provider integration
+- Agent marketplace discovery
+
+#### 2. Conversation/Job Management (Partial Support)
+- **Location:** `/libs/hanzo-message-ts/src/api/jobs/`
+- Message history with pagination
+- Tool execution metadata tracking
+- Reasoning content capture
+- Message hierarchy (parent references)
+- **MISSING:** Trajectory grouping, reward signals, decision probabilities
+
+#### 3. Feedback Collection (Minimal)
+- **Location:** `/apps/hanzo-desktop/src/components/feedback/`
+- Generic user feedback modal (text + contact only)
+- No structured experience capture
+- No preference/reward data
+- No trajectory storage
+
+#### 4. State Management (UI-Focused)
+- **Location:** `/apps/hanzo-desktop/src/store/`
+- Settings, auth, onboarding
+- No learning state persistence
+- No experience buffer system
+
+### Critical Gaps for GRPO Implementation
+
+#### 1. No Experience Storage System
+- Missing trajectory/experience database schema
+- No rollout history tracking
+- No preference signal storage
+- No batch collection mechanism
+
+#### 2. No Agent Versioning/Rollout
+- Agents are static configurations
+- No A/B testing framework
+- No canary/staged rollout support
+- No experiment tracking
+
+#### 3. No Learning Pipeline
+- Agents don't learn from interactions
+- No training job API
+- No model checkpoint management
+- No GRPO algorithm implementation
+
+#### 4. Limited Message Capture
+- Chat messages stored but not as structured trajectories
+- Tool execution metadata exists
+- Missing: reward signals, action probabilities, outcome markers
+- No trajectory context grouping
+
+#### 5. No Metrics/Observability for Learning
+- Only basic PostHog UI analytics
+- No ML-specific metrics
+- No reward tracking
+- No convergence monitoring
+
+### Data Available for Learning
+
+**Currently Captured (in JobMessage):**
+✓ Message content and hierarchy
+✓ Tool function calls and responses
+✓ Execution metadata (duration, timing)
+✓ Reasoning/thinking content
+
+**Missing for GRPO:**
+✗ Explicit reward signals
+✗ Agent decision probabilities
+✗ Outcome signals (success/failure)
+✗ Comparison trajectory pairs
+✗ Learning data split markers
+
+### Recommended Implementation Roadmap
+
+#### Phase 1: Experience Infrastructure (2 weeks)
+1. Extend JobMessage schema with reward, outcome, decision logs
+2. Create experience storage mutations/queries in hanzo-node-state
+3. Add experience feedback UI components
+4. Implement trajectory grouping mechanism
+
+#### Phase 2: Versioning & Rollout (2 weeks)
+1. Add agent versioning system
+2. Build rollout policy configuration
+3. Create rollout metrics tracking
+4. Implement experiment/treatment group assignment
+
+#### Phase 3: Learning Pipeline (2 weeks)
+1. Implement GRPO algorithm in new `/libs/hanzo-grpo-ts/`
+2. Build training job API integration
+3. Add model checkpoint management
+4. Implement preference learning pipeline
+
+#### Phase 4: Learning UI (2-3 weeks, concurrent)
+1. Trajectory review and annotation interface
+2. Training configuration and monitoring dashboard
+3. Agent version comparison and rollout controls
+4. Learning metrics visualization
+
+### Required File Structure
+
+```
+hanzo-desktop/
+├── libs/
+│   ├── hanzo-grpo-ts/
+│   │   └── src/
+│   │       ├── algorithms/
+│   │       ├── utils/
+│   │       └── types.ts
+│   └── hanzo-node-state/src/v2/
+│       ├── mutations/
+│       │   ├── submitExperience/
+│       │   ├── recordTrajectory/
+│       │   └── createTrainingJob/
+│       └── queries/
+│           ├── getTrajectories/
+│           ├── getExperienceBuffer/
+│           └── getTrainingJobs/
+└── apps/hanzo-desktop/src/
+    ├── components/
+    │   ├── experience/ (trajectory rating, preference UI)
+    │   ├── training/ (training control, monitoring)
+    │   └── agent/ (versioning, rollout control)
+    ├── pages/
+    │   ├── agent-training.tsx
+    │   ├── experience-management.tsx
+    │   └── training-metrics.tsx
+    └── hooks/
+        ├── use-trajectory-collection.ts
+        ├── use-training-job.ts
+        └── use-agent-versions.ts
+```
+
+### Implementation Priorities
+
+**MVP (Must Have):**
+- Experience capture schema extension
+- Trajectory storage and retrieval
+- Preference comparison UI
+- Training job API integration
+
+**Should Have:**
+- GRPO algorithm implementation
+- Agent versioning system
+- Rollout control dashboard
+- Training progress monitoring
+
+**Nice to Have:**
+- Advanced analytics dashboard
+- Automated rollout orchestration
+- Multi-agent learning coordination
+- GPU acceleration
+
+### Current Architecture Strengths
+
+✓ Strong TypeScript/Zod type safety
+✓ Modern React hooks and patterns
+✓ Robust React Query mutation/query system
+✓ Clean component architecture
+✓ Good state management (Zustand)
+✓ Message history with parent tracking
+✓ Tool execution metadata
+
+### Current Limitations
+
+✗ No distributed training infrastructure
+✗ Feedback system too minimal
+✗ No agent checkpointing
+✗ Message format not optimized for learning
+✗ No trajectory grouping
+✗ Limited ML metrics/observability
+
+### Estimated Timeline
+
+- **Phase 1 (Infrastructure):** 2 weeks
+- **Phase 2 (Versioning):** 2 weeks
+- **Phase 3 (Learning Algorithm):** 2 weeks
+- **Phase 4 (UI/Integration):** 2-3 weeks
+- **Testing & Deployment:** 1-2 weeks
+
+**Total: 6-8 weeks for production GRPO system**
+
+### Key Insights
+
+Hanzo Desktop is **well-positioned for GRPO integration** due to its solid foundation in:
+- Agent management and orchestration
+- Message/conversation tracking
+- Tool execution metadata
+- Clean architecture and type safety
+
+The main work involves:
+1. Extending message schemas for learning
+2. Building experience collection infrastructure
+3. Implementing GRPO algorithm
+4. Creating training control UI
+5. Adding agent versioning and rollout management
+
+No fundamental architectural changes needed—primarily additive work on top of existing systems.

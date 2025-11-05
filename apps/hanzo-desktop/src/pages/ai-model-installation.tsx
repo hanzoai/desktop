@@ -29,6 +29,7 @@ import { ModelProvider } from '../components/ais/constants';
 import ProviderIcon from '../components/ais/provider-icon';
 import { ResourcesBanner } from '../components/hardware-capabilities/resources-banner';
 import { OllamaModels } from '../components/hanzo-node-manager/ollama-models';
+import { CustomModelInput } from '../components/hanzo-node-manager/components/custom-model-input';
 import { useURLQueryParams } from '../hooks/use-url-query-params';
 import { hanzoNodeQueryClient } from '../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { useAuth } from '../store/auth';
@@ -277,6 +278,12 @@ const AIModelInstallation = () => {
                 </Tooltip>
               </div>
             </div>
+
+            {/* Custom Model Input */}
+            <div className="mb-6">
+              <CustomModelInput />
+            </div>
+
             <OllamaModels
               parentSetShowAllOllamaModels={setShowAllOllamaModels}
               parentShowAllOllamaModels={showAllOllamaModels}

@@ -110,20 +110,46 @@ if [ ! -f "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}" ]; then
 fi
 
 # Download Ollama
-OLLAMA_TAG="v0.5.4"
-# Ollama uses different naming: ollama-darwin (not ollama-apple-darwin)
+OLLAMA_TAG="v0.12.9"
+# Ollama v0.12.9+ uses .tgz/.zip archives instead of raw binaries
 if [[ "$PLATFORM" == "apple-darwin" ]]; then
-    OLLAMA_BINARY="ollama-darwin"
+    OLLAMA_ARCHIVE="ollama-darwin.tgz"
 elif [[ "$PLATFORM" == "unknown-linux-gnu" ]]; then
-    OLLAMA_BINARY="ollama-linux-${ARCH_NAME}"
+    OLLAMA_ARCHIVE="ollama-linux-${ARCH_NAME}.tgz"
 else
-    OLLAMA_BINARY="ollama-windows-${ARCH_NAME}.exe"
+    OLLAMA_ARCHIVE="ollama-windows-${ARCH_NAME}.zip"
 fi
 
 if [ ! -f "$BINARIES_DIR/ollama/ollama-${TARGET}" ]; then
-    if download_binary "ollama/ollama" "$OLLAMA_TAG" "$OLLAMA_BINARY" \
-        "$BINARIES_DIR/ollama/ollama-${TARGET}"; then
-        echo "Downloaded Ollama successfully"
+    echo "Downloading Ollama ${OLLAMA_TAG}..."
+
+    # Download the archive
+    url="https://github.com/ollama/ollama/releases/download/${OLLAMA_TAG}/${OLLAMA_ARCHIVE}"
+    if curl -L -f -o "$BINARIES_DIR/ollama/${OLLAMA_ARCHIVE}" "$url"; then
+        # Extract the archive
+        cd "$BINARIES_DIR/ollama"
+
+        if [[ "$OLLAMA_ARCHIVE" == *.tgz ]]; then
+            tar -xzf "$OLLAMA_ARCHIVE"
+            # The binary is extracted directly as 'ollama'
+            if [ -f "ollama" ]; then
+                mv ollama "ollama-${TARGET}"
+            fi
+        elif [[ "$OLLAMA_ARCHIVE" == *.zip ]]; then
+            unzip -o "$OLLAMA_ARCHIVE"
+            # Find and rename the ollama binary
+            if [ -f "ollama.exe" ]; then
+                mv ollama.exe "ollama-${TARGET}"
+            fi
+        fi
+
+        # Clean up archive
+        rm "$OLLAMA_ARCHIVE"
+        chmod +x "ollama-${TARGET}"
+
+        echo "Downloaded Ollama ${OLLAMA_TAG} successfully"
+    else
+        echo "Failed to download Ollama ${OLLAMA_TAG}"
     fi
 fi
 
