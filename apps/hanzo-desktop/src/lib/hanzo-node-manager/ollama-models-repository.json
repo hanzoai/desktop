@@ -834,6 +834,60 @@
     "cloud": false
   },
   {
+    "name": "qwen3-vl",
+    "description": "The most powerful vision-language model in the Qwen model family to date. Supports 256K context window and vision + text understanding.",
+    "supportTools": true,
+    "defaultTag": "qwen3-vl:8b",
+    "tags": [
+      {
+        "name": "qwen3-vl:latest",
+        "hash": "latest",
+        "size": "6.1GB",
+        "isDefault": false
+      },
+      {
+        "name": "qwen3-vl:2b",
+        "hash": "2b",
+        "size": "1.9GB",
+        "isDefault": false
+      },
+      {
+        "name": "qwen3-vl:4b",
+        "hash": "4b",
+        "size": "3.3GB",
+        "isDefault": false
+      },
+      {
+        "name": "qwen3-vl:8b",
+        "hash": "8b",
+        "size": "6.1GB",
+        "isDefault": true
+      },
+      {
+        "name": "qwen3-vl:30b",
+        "hash": "30b",
+        "size": "20GB",
+        "isDefault": false
+      },
+      {
+        "name": "qwen3-vl:32b",
+        "hash": "32b",
+        "size": "21GB",
+        "isDefault": false
+      },
+      {
+        "name": "qwen3-vl:235b",
+        "hash": "235b",
+        "size": "143GB",
+        "isDefault": false
+      }
+    ],
+    "embedding": false,
+    "vision": true,
+    "thinking": true,
+    "cloud": false
+  },
+  {
     "name": "deepseek-v3.1",
     "description": "DeepSeek-V3.1-Terminus is a hybrid model that supports both thinking mode and non-thinking mode.",
     "supportTools": true,
