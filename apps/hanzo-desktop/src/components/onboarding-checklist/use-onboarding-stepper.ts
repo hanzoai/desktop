@@ -65,7 +65,7 @@ export const useOnboardingSteps = () => {
   }, [installedOllamaModels]);
 
   useEffect(() => {
-    if ((agents ?? [])?.length > 4) {
+    if ((agents ?? [])?.length > 0) {
       currentStepsMap.set(GetStartedSteps.CreateAIAgent, GetStartedStatus.Done);
     }
   }, [agents]);
