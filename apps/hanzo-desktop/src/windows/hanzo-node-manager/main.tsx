@@ -206,11 +206,11 @@ const App = () => {
         className="absolute top-0 z-50 h-6 w-full"
         data-tauri-drag-region={true}
       />
-      <div className="flex flex-row items-center p-4">
-        <img alt="hanzo logo" className="h-10 w-10" src={logo} />
-        <div className="ml-4 flex flex-col">
-          <span className="text-lg">Local Hanzo Node</span>
-          <span className="text-text-secondary text-sm">{`API URL: http://${hanzoNodeOptions?.node_api_ip}:${hanzoNodeOptions?.node_api_port}`}</span>
+      <div className="flex flex-row items-center px-4 pt-10 pb-4">
+        <img alt="hanzo logo" className="h-8 w-8" src={logo} />
+        <div className="ml-3 flex flex-col">
+          <span className="text-base font-medium">Local Hanzo Node</span>
+          <span className="text-text-secondary text-xs">{`API URL: http://${hanzoNodeOptions?.node_api_ip}:${hanzoNodeOptions?.node_api_port}`}</span>
         </div>
         <div className="flex grow flex-row items-center justify-end space-x-4">
           <Tooltip>
