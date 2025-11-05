@@ -78,8 +78,8 @@ const downloadFile = async (url: string, path: string): Promise<void> => {
 
 const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   console.log(`Downloading hanzo-node arch:${arch} version:${version}`);
-  // Download from GitHub releases (dcSpark/hanzo-node)
-  const downloadUrl = `https://github.com/dcSpark/hanzo-node/releases/download/${version}/hanzo-node-${arch}.zip`;
+  // Download from GitHub releases (hanzoai/node)
+  const downloadUrl = `https://github.com/hanzoai/node/releases/download/${version}/hanzo-node-${arch}.zip`;
   const zippedPath = path.join(TEMP_PATH, `hanzo-node-${version}.zip`);
   await downloadFile(downloadUrl, zippedPath);
   let unzippedPath = path.join(TEMP_PATH, `hanzo-node-${version}`);
