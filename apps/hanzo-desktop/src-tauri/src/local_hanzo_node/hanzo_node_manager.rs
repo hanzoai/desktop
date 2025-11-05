@@ -122,34 +122,45 @@ impl HanzoNodeManager {
             .unwrap();
         if !installed_models.contains(&default_embedding_model.to_string()) {
             log::info!(
-                "default embedding model {} not found in local models list [{}], creating it",
+                "default embedding model {} not found in local models list [{}], attempting to create it",
                 default_embedding_model,
                 installed_models.join(", ")
             );
-            self.emit_event(HanzoNodeManagerEvent::CreatingModelStart {
-                model: default_embedding_model.to_string(),
-            });
 
             // Use the embedded GGUF model
             let gguf_data = embedding_model::get_model_data(&self.llm_models_path);
 
-            match ollama_api
-                .create_model_from_gguf(&default_embedding_model, gguf_data)
-                .await
-            {
-                Ok(_) => {
-                    self.emit_event(HanzoNodeManagerEvent::CreatingModelDone {
-                        model: default_embedding_model.to_string(),
-                    });
-                }
-                Err(e) => {
-                    error!("failed to create model from gguf: {}", e);
-                    self.kill().await;
-                    self.emit_event(HanzoNodeManagerEvent::CreatingModelError {
-                        model: default_embedding_model.to_string(),
-                        error: e.to_string(),
-                    });
-                    return Err(e.to_string());
+            // Check if GGUF data is valid (not empty)
+            if gguf_data.is_empty() {
+                log::warn!(
+                    "embedding model GGUF file not found or empty, skipping model creation. \
+                    The model will need to be downloaded manually via Ollama or the UI."
+                );
+                // Don't fail startup - just log warning and continue
+                log::info!("continuing hanzo-node startup without embedding model");
+            } else {
+                self.emit_event(HanzoNodeManagerEvent::CreatingModelStart {
+                    model: default_embedding_model.to_string(),
+                });
+
+                match ollama_api
+                    .create_model_from_gguf(&default_embedding_model, gguf_data)
+                    .await
+                {
+                    Ok(_) => {
+                        self.emit_event(HanzoNodeManagerEvent::CreatingModelDone {
+                            model: default_embedding_model.to_string(),
+                        });
+                    }
+                    Err(e) => {
+                        log::error!("failed to create model from gguf: {}", e);
+                        log::warn!("continuing hanzo-node startup without embedding model");
+                        // Don't kill the whole process - just log error and continue
+                        self.emit_event(HanzoNodeManagerEvent::CreatingModelError {
+                            model: default_embedding_model.to_string(),
+                            error: e.to_string(),
+                        });
+                    }
                 }
             }
         }

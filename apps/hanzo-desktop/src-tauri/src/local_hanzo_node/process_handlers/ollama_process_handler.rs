@@ -43,7 +43,7 @@ pub struct OllamaProcessHandler {
 }
 
 impl OllamaProcessHandler {
-    const HEALTH_TIMEOUT_MS: u64 = 5000;
+    const HEALTH_TIMEOUT_MS: u64 = 30000; // Increased to 30s for slower systems
     const PROCESS_NAME: &'static str = "ollama";
     const READY_MATCHER: &'static str = "Listening on ";
 

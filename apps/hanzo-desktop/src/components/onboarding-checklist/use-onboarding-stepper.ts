@@ -5,6 +5,8 @@ import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getTools
 import { useMap } from '@hanzo_network/hanzo-ui/hooks';
 import { useEffect } from 'react';
 
+import { useOllamaListQuery } from '../../lib/hanzo-node-manager/ollama-client';
+import { useHanzoNodeGetOllamaApiUrlQuery } from '../../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { useAuth } from '../../store/auth';
 import { GetStartedStatus, GetStartedSteps } from './onboarding';
 
@@ -16,6 +18,10 @@ export const useOnboardingSteps = () => {
     { nodeAddress: auth?.node_address ?? '' },
     { enabled: !!auth },
   );
+
+  const { data: ollamaApiUrl } = useHanzoNodeGetOllamaApiUrlQuery();
+  const ollamaConfig = { host: ollamaApiUrl || 'http://127.0.0.1:11435' };
+  const { data: installedOllamaModels } = useOllamaListQuery(ollamaConfig);
 
   const { data: agents } = useGetAgents({
     nodeAddress: auth?.node_address ?? '',
@@ -48,6 +54,15 @@ export const useOnboardingSteps = () => {
       );
     }
   }, [isSuccess]);
+
+  useEffect(() => {
+    if (installedOllamaModels?.models && installedOllamaModels.models.length > 0) {
+      currentStepsMap.set(
+        GetStartedSteps.DownloadFirstModel,
+        GetStartedStatus.Done,
+      );
+    }
+  }, [installedOllamaModels]);
 
   useEffect(() => {
     if ((agents ?? [])?.length > 4) {

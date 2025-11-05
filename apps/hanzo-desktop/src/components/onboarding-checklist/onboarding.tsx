@@ -27,6 +27,7 @@ import { useOnboardingSteps } from './use-onboarding-stepper';
 
 export enum GetStartedSteps {
   SetupHanzoNode = 'SetupHanzoNode',
+  DownloadFirstModel = 'DownloadFirstModel',
   CreateAIAgent = 'CreateAIAgent',
   CreateAIChatWithAgent = 'CreateAIChatWithAgent',
   CreateTool = 'CreateTool',
@@ -52,6 +53,31 @@ export default function OnboardingStepper() {
             GetStartedStatus.NotStarted,
           title: t('onboardingChecklist.setupHanzoDesktop'),
           body: t('onboardingChecklist.setupHanzoDesktopDescription'),
+        },
+        {
+          label: GetStartedSteps.DownloadFirstModel,
+          status:
+            currentStepsMap.get(GetStartedSteps.DownloadFirstModel) ??
+            GetStartedStatus.NotStarted,
+          title: 'Download Your First AI Model',
+          body: (
+            <div className="flex flex-col items-start gap-2">
+              <span>
+                Download a local AI model to start using Hanzo Desktop. We recommend qwen3-vl:8b for vision + text capabilities.
+              </span>
+              <Button
+                className="h-auto gap-1 px-3 py-2"
+                onClick={() => {
+                  void navigate('/ai-model-installation?provider=local');
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <Sparkles className="h-4 w-4" />
+                Download Model
+              </Button>
+            </div>
+          ),
         },
         {
           label: GetStartedSteps.CreateAIAgent,

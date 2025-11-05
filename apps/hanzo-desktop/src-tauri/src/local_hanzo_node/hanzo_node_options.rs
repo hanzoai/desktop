@@ -219,13 +219,13 @@ impl Default for HanzoNodeOptions {
             embeddings_server_url: Some("http://127.0.0.1:11435".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
-                "https://api.shinkai.com/inference,https://api.shinkai.com/inference".to_string(),
+                "https://inference.do-ai.run,https://inference.do-ai.run".to_string(),
             ),
-            initial_agent_names: Some("hanzo_free_trial,hanzo_code_gen".to_string()),
+            initial_agent_names: Some("do_llama33_70b,do_llama31_8b".to_string()),
             initial_agent_models: Some(
-                "hanzo-backend:FREE_TEXT_INFERENCE,hanzo-backend:CODE_GENERATOR".to_string(),
+                "openai:llama3.3-70b-instruct,openai:llama3.1-8b-instruct".to_string(),
             ),
-            initial_agent_api_keys: Some("'',''".to_string()),
+            initial_agent_api_keys: Some("YOUR_DO_MODEL_ACCESS_KEY,YOUR_DO_MODEL_ACCESS_KEY".to_string()),
             starting_num_qr_devices: Some("0".to_string()),
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
@@ -234,7 +234,7 @@ impl Default for HanzoNodeOptions {
             supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,jina/jina-embeddings-v2-base-es:latest".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
-            hanzo_store_url: Some("https://store-api.shinkai.com".to_string()),
+            hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),
             secret_desktop_installation_proof_key: option_env!(
                 "SECRET_DESKTOP_INSTALLATION_PROOF_KEY"
             )
