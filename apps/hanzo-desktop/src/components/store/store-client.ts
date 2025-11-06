@@ -55,7 +55,7 @@ const getStoreAgents = async (): Promise<FormattedStoreAgent[]> => {
     headers: Record<string, string[]>;
     body: string;
   }>('get_request', {
-    url: 'https://store-api.hanzo.ai/store/products?page=1&limit=10&sort=newest&type=agent',
+    url: 'https://store-api.shinkai.com/store/products?page=1&limit=10&sort=newest&type=agent',
     customHeaders: JSON.stringify({}),
   });
 
