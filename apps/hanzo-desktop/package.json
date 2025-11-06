@@ -7,6 +7,7 @@
     "download-binaries": "cd src-tauri && ./download-binaries.sh",
     "dev": "npm run download-binaries && vite",
     "build": "npm run download-binaries && tsc && vite build",
+    "build:ci": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "tauri": "tauri",
