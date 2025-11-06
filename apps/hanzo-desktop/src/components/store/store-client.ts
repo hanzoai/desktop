@@ -13,6 +13,8 @@ export interface StoreProduct {
   author: string;
   description: string;
   homepage: string;
+  repository: string;       // github.com/hanzoai/tools
+  path: string;             // /agents/audio-insight or /tools/tool-name
   downloads: number;
   icon: string;
   category: string;
@@ -30,6 +32,9 @@ export type FormattedStoreAgent = {
   downloads: number;
   iconUrl: string;
   routerKey: string;
+  repository: string;       // For future verification
+  path: string;             // For future verification
+  version: string;          // For version tracking
   category: {
     name: string;
   };
@@ -43,6 +48,8 @@ export type FormattedStoreTool = {
   downloads: number;
   iconUrl: string;
   routerKey: string;
+  repository: string;       // For future verification
+  path: string;             // For future verification
   category: {
     name: string;
   };
@@ -100,6 +107,9 @@ const getStoreAgents = async (): Promise<FormattedStoreAgent[]> => {
       downloads: item.downloads,
       iconUrl: item.icon,
       routerKey: item.homepage,
+      repository: item.repository,
+      path: item.path,
+      version: item.version,
       category: {
         name: item.category,
       },
@@ -143,6 +153,8 @@ const getStoreTools = async (): Promise<FormattedStoreTool[]> => {
       downloads: item.downloads,
       iconUrl: item.icon,
       routerKey: item.homepage,
+      repository: item.repository,
+      path: item.path,
       category: {
         name: item.category,
       },
