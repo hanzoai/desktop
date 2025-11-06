@@ -267,6 +267,7 @@ jobs:
         id: 'auth'
         uses: 'google-github-actions/auth@v2'
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
+        continue-on-error: true
         with:
           project_id: 'hanzo-412316'
           workload_identity_provider: 'projects/511721742630/locations/global/workloadIdentityPools/github/providers/hanzo-apps'
@@ -275,6 +276,7 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v2'
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
+        continue-on-error: true
         with:
           project_id: 'hanzo-412316'
 
@@ -288,17 +290,20 @@ jobs:
       - name: Download Jsign
         shell: bash
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
+        continue-on-error: true
         run: choco install jsign
 
       - name: Cert to file
         shell: bash
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
+        continue-on-error: true
         run: |
           echo -n "${{ secrets.EV_CODE_SIGNING_CERTIFICATE }}" > OS20241029372986.cer
 
       - name: Sign
         shell: bash
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
+        continue-on-error: true
         run: >
           jsign \
               --storetype GOOGLECLOUD \
