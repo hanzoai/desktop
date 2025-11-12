@@ -1,0 +1,367 @@
+name: E2E Cross-Platform Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Test model configuration (Zen Nano for fast CI)
+  TEST_MODEL_REPO: "zenlm/zen-nano"
+  TEST_MODEL_FILE: "zen-nano-0.6b-Q4_K_M.gguf"
+  HANZO_NODE_API_PORT: 3690
+  HANZO_NODE_WS_PORT: 3691
+  HANZO_NODE_P2P_PORT: 3692
+
+jobs:
+  e2e-tests:
+    name: E2E Tests - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            arch: x86_64-unknown-linux-gnu
+          - os: macos-latest
+            platform: macos
+            arch: aarch64-apple-darwin
+          - os: windows-latest
+            platform: windows
+            arch: x86_64-pc-windows-msvc
+
+    steps:
+      # ============================================
+      # Setup Phase
+      # ============================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.arch }}
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "../hanzo-node -> target"
+          key: ${{ matrix.os }}-rust-e2e
+
+      - name: Cache HuggingFace models
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/huggingface
+            ~/Library/Caches/huggingface
+            ~\AppData\Local\huggingface
+          key: ${{ matrix.os }}-hf-models-${{ env.TEST_MODEL_REPO }}-${{ env.TEST_MODEL_FILE }}
+          restore-keys: |
+            ${{ matrix.os }}-hf-models-
+
+      # ============================================
+      # Install Dependencies
+      # ============================================
+      - name: Install dependencies
+        run: npm ci --no-audit --prefer-offline
+
+      - name: (Linux) Install system dependencies
+        if: matrix.platform == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            wget \
+            curl \
+            libssl-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libasound2-dev \
+            patchelf
+
+      - name: (macOS) Install system dependencies
+        if: matrix.platform == 'macos'
+        run: |
+          brew install --quiet coreutils
+
+      # ============================================
+      # Build Hanzo Node with Embedded Engine
+      # ============================================
+      - name: Build hanzo-node (Rust backend)
+        working-directory: ../hanzo-node
+        run: |
+          echo "Building hanzo-node for ${{ matrix.arch }}..."
+          cargo build --release --bin hanzo_node --target ${{ matrix.arch }}
+
+          # Copy binary to known location
+          mkdir -p ./dist
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            cp target/${{ matrix.arch }}/release/hanzo_node.exe ./dist/
+          else
+            cp target/${{ matrix.arch }}/release/hanzo_node ./dist/
+            chmod +x ./dist/hanzo_node
+          fi
+
+          echo "✅ Hanzo node built successfully"
+        shell: bash
+
+      - name: Verify hanzo-node binary
+        working-directory: ../hanzo-node
+        run: |
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            ./dist/hanzo_node.exe --version || echo "hanzo_node.exe created"
+          else
+            ./dist/hanzo_node --version || echo "hanzo_node created"
+          fi
+        shell: bash
+
+      # ============================================
+      # Download Test Model from HuggingFace
+      # ============================================
+      - name: Install HuggingFace CLI
+        run: |
+          pip install --quiet huggingface_hub[cli]
+          echo "✅ HuggingFace CLI installed"
+
+      - name: Download Zen Nano test model from HuggingFace
+        env:
+          HF_HUB_ENABLE_HF_TRANSFER: 1
+        run: |
+          echo "Downloading Zen Nano model: ${{ env.TEST_MODEL_REPO }}/${{ env.TEST_MODEL_FILE }}..."
+
+          # Download Zen model to cache
+          python -c "
+          from huggingface_hub import hf_hub_download
+          import os
+
+          model_path = hf_hub_download(
+              repo_id='${{ env.TEST_MODEL_REPO }}',
+              filename='${{ env.TEST_MODEL_FILE }}',
+              cache_dir=os.path.expanduser('~/.cache/huggingface')
+          )
+          print(f'✅ Zen Nano model downloaded to: {model_path}')
+          print(f'Model size: {os.path.getsize(model_path) / (1024*1024):.1f} MB')
+          print(f'MODEL_PATH={model_path}')
+
+          # Write to GitHub ENV
+          with open(os.environ['GITHUB_ENV'], 'a') as f:
+              f.write(f'MODEL_PATH={model_path}\n')
+          "
+        shell: bash
+
+      # ============================================
+      # Start Hanzo Node
+      # ============================================
+      - name: Create hanzo-node test configuration
+        run: |
+          mkdir -p ./test-storage
+
+          cat > hanzo-node-test-config.json << EOF
+          {
+            "node_api_port": ${{ env.HANZO_NODE_API_PORT }},
+            "node_ws_port": ${{ env.HANZO_NODE_WS_PORT }},
+            "node_p2p_port": ${{ env.HANZO_NODE_P2P_PORT }},
+            "storage_path": "./test-storage",
+            "log_level": "debug"
+          }
+          EOF
+
+          echo "✅ Hanzo node configuration created"
+        shell: bash
+
+      - name: Start hanzo-node in background
+        working-directory: ../hanzo-node
+        run: |
+          export NODE_API_PORT=${{ env.HANZO_NODE_API_PORT }}
+          export NODE_WS_PORT=${{ env.HANZO_NODE_WS_PORT }}
+          export NODE_PORT=${{ env.HANZO_NODE_P2P_PORT }}
+          export NODE_STORAGE_PATH="$(pwd)/../hanzo-desktop/test-storage"
+          export LOG_ALL=1
+
+          echo "Starting hanzo-node on ports $NODE_API_PORT/$NODE_WS_PORT/$NODE_PORT..."
+
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            ./dist/hanzo_node.exe > hanzo-node.log 2>&1 &
+          else
+            ./dist/hanzo_node > hanzo-node.log 2>&1 &
+          fi
+
+          HANZO_NODE_PID=$!
+          echo "HANZO_NODE_PID=$HANZO_NODE_PID" >> $GITHUB_ENV
+          echo "✅ Hanzo node started (PID: $HANZO_NODE_PID)"
+
+          # Wait for node to be ready
+          sleep 10
+
+          # Check if process is running
+          if ps -p $HANZO_NODE_PID > /dev/null; then
+            echo "✅ Hanzo node is running"
+          else
+            echo "❌ Hanzo node failed to start"
+            cat hanzo-node.log
+            exit 1
+          fi
+        shell: bash
+
+      - name: Verify hanzo-node API is responding
+        run: |
+          echo "Testing hanzo-node API on port ${{ env.HANZO_NODE_API_PORT }}..."
+
+          # Try multiple times with delay
+          for i in {1..10}; do
+            if curl -s -f "http://localhost:${{ env.HANZO_NODE_API_PORT }}/v2/health" > /dev/null; then
+              echo "✅ Hanzo node API is responding"
+              curl -s "http://localhost:${{ env.HANZO_NODE_API_PORT }}/v2/health" | head -20
+              exit 0
+            fi
+            echo "Attempt $i/10: waiting for hanzo-node..."
+            sleep 3
+          done
+
+          echo "❌ Hanzo node API not responding"
+          cat ../hanzo-node/hanzo-node.log || true
+          exit 1
+        shell: bash
+
+      # ============================================
+      # Build Tauri App
+      # ============================================
+      - name: Download Tauri side binaries
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          npx ts-node ./ci-scripts/download-side-binaries.ts
+          echo "✅ Side binaries downloaded"
+
+      - name: Build Tauri app (development mode)
+        env:
+          NODE_OPTIONS: '--max-old-space-size=16384'
+        run: |
+          echo "Building Tauri app for ${{ matrix.platform }}..."
+          npx nx cargo-check hanzo-desktop
+          npx nx typecheck hanzo-desktop
+          npx nx build hanzo-desktop --configuration=development
+          echo "✅ Tauri app built"
+
+      # ============================================
+      # Install Playwright and Run E2E Tests
+      # ============================================
+      - name: Install Playwright browsers
+        working-directory: apps/hanzo-desktop
+        run: |
+          npx playwright install chromium --with-deps
+          echo "✅ Playwright browser installed"
+
+      - name: Run E2E tests - Engine Integration
+        working-directory: apps/hanzo-desktop
+        env:
+          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+          TEST_MODEL_PATH: ${{ env.MODEL_PATH }}
+        run: |
+          echo "Running E2E tests for engine integration..."
+          npx playwright test e2e-tests/engine-integration.spec.ts \
+            --config=playwright.config.ts \
+            --reporter=list,html
+          echo "✅ Engine integration tests passed"
+
+      - name: Run E2E tests - Add Model & Change Engine
+        working-directory: apps/hanzo-desktop
+        env:
+          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+        run: |
+          echo "Running E2E tests for model/engine management..."
+          npx playwright test e2e-tests/model-management.spec.ts \
+            --config=playwright.config.ts \
+            --reporter=list,html
+          echo "✅ Model management tests passed"
+
+      - name: Run E2E tests - Full Chat Flow
+        working-directory: apps/hanzo-desktop
+        env:
+          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+        run: |
+          echo "Running E2E tests for complete chat flow..."
+          npx playwright test e2e-tests/chat-flow.spec.ts \
+            --config=playwright.config.ts \
+            --reporter=list,html
+          echo "✅ Chat flow tests passed"
+
+      # ============================================
+      # Cleanup and Upload Artifacts
+      # ============================================
+      - name: Stop hanzo-node
+        if: always()
+        working-directory: ../hanzo-node
+        run: |
+          if [ -n "${{ env.HANZO_NODE_PID }}" ]; then
+            echo "Stopping hanzo-node (PID: ${{ env.HANZO_NODE_PID }})..."
+            kill ${{ env.HANZO_NODE_PID }} || true
+            sleep 2
+          fi
+
+          # Show last 100 lines of log
+          echo "=== Hanzo Node Log (last 100 lines) ==="
+          tail -100 hanzo-node.log || true
+        shell: bash
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results-${{ matrix.os }}
+          path: |
+            apps/hanzo-desktop/playwright-report/
+            apps/hanzo-desktop/test-results/
+            ../hanzo-node/hanzo-node.log
+          retention-days: 7
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots-${{ matrix.os }}
+          path: |
+            /tmp/hanzo-*.png
+            /tmp/onboarding-*.png
+            apps/hanzo-desktop/test-results/**/*.png
+          retention-days: 7
+
+  # ============================================
+  # Summary Job
+  # ============================================
+  e2e-summary:
+    name: E2E Tests Summary
+    needs: e2e-tests
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Check test results
+        run: |
+          if [ "${{ needs.e2e-tests.result }}" = "success" ]; then
+            echo "✅ All E2E tests passed across all platforms!"
+            exit 0
+          else
+            echo "❌ Some E2E tests failed"
+            exit 1
+          fi
