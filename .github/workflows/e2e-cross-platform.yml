@@ -48,6 +48,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Checkout hanzo-node repository
+        uses: actions/checkout@v4
+        with:
+          repository: hanzoai/node
+          path: hanzo-node
+          fetch-depth: 0
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -63,7 +70,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "../hanzo-node -> target"
+          workspaces: "hanzo-node -> target"
           key: ${{ matrix.os }}-rust-e2e
 
       - name: Cache HuggingFace models
@@ -108,7 +115,7 @@ jobs:
       # Build Hanzo Node with Embedded Engine
       # ============================================
       - name: Build hanzo-node (Rust backend)
-        working-directory: ../hanzo-node
+        working-directory: hanzo-node
         run: |
           echo "Building hanzo-node for ${{ matrix.arch }}..."
           cargo build --release --bin hanzo_node --target ${{ matrix.arch }}
@@ -126,7 +133,7 @@ jobs:
         shell: bash
 
       - name: Verify hanzo-node binary
-        working-directory: ../hanzo-node
+        working-directory: hanzo-node
         run: |
           if [ "${{ matrix.platform }}" = "windows" ]; then
             ./dist/hanzo_node.exe --version || echo "hanzo_node.exe created"
@@ -190,7 +197,7 @@ jobs:
         shell: bash
 
       - name: Start hanzo-node in background
-        working-directory: ../hanzo-node
+        working-directory: hanzo-node
         run: |
           export NODE_API_PORT=${{ env.HANZO_NODE_API_PORT }}
           export NODE_WS_PORT=${{ env.HANZO_NODE_WS_PORT }}
@@ -311,7 +318,7 @@ jobs:
       # ============================================
       - name: Stop hanzo-node
         if: always()
-        working-directory: ../hanzo-node
+        working-directory: hanzo-node
         run: |
           if [ -n "${{ env.HANZO_NODE_PID }}" ]; then
             echo "Stopping hanzo-node (PID: ${{ env.HANZO_NODE_PID }})..."
@@ -332,7 +339,7 @@ jobs:
           path: |
             apps/hanzo-desktop/playwright-report/
             apps/hanzo-desktop/test-results/
-            ../hanzo-node/hanzo-node.log
+            hanzo-node/hanzo-node.log
           retention-days: 7
 
       - name: Upload screenshots on failure
