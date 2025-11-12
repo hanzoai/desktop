@@ -69,8 +69,19 @@ export const useCheckUpdateQuery = (
         void queryClient.invalidateQueries({ queryKey: ['update_state'] });
         return updateState;
       } catch (error) {
-        void debug(`Failed to check for updates: ${error}`);
-        console.error('Failed to check for updates', error);
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        void debug(`Failed to check for updates: ${errorMsg}`);
+        // Gracefully handle signature verification errors (expected in dev builds)
+        if (
+          errorMsg.includes('UnexpectedKeyId') ||
+          errorMsg.includes('signature')
+        ) {
+          console.info(
+            'Update signature verification skipped (development build)',
+          );
+        } else {
+          console.warn('Failed to check for updates:', errorMsg);
+        }
         updateState.state = undefined;
         updateState.update = null;
         void queryClient.invalidateQueries({ queryKey: ['update_state'] });
