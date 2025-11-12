@@ -67,7 +67,64 @@ export function getCapabilitiesFromModel(model: OllamaModelDefinition): OllamaMo
 
 const currentPlatform = platform();
 
+// Pre-installed models for onboarding selection
+export const PREINSTALLED_MODELS: OllamaModel[] = [
+  // Zen LM models from huggingface.co/zenlm
+  {
+    model: 'qwen3',
+    tag: '4b-thinking-2507',
+    name: 'Zen Eco',
+    description:
+      '🧘 Balanced AI for everyday tasks. Advanced reasoning with efficient performance. From ZenLM - open models for mindful AI use.',
+    contextLength: 128000,
+    quality: OllamaModelQuality.Good,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 2.5,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'hermes-4',
+    tag: '70b',
+    name: 'Zen Coder',
+    description:
+      '⚡ Professional coding companion. Expert-level development with deep understanding. Built on ZenLM philosophy - powerful yet mindful.',
+    contextLength: 128000,
+    quality: OllamaModelQuality.Good,
+    speed: OllamaModelSpeed.Average,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 40.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3',
+    tag: '0.6b',
+    name: 'Zen Nano',
+    description:
+      '🪶 Ultra-lightweight clarity. Instant responses with minimal resources. From ZenLM - simplicity without compromise.',
+    contextLength: 128000,
+    quality: OllamaModelQuality.Low,
+    speed: OllamaModelSpeed.VeryFast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+    ],
+    size: 0.4,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+];
+
 export const OLLAMA_MODELS: OllamaModel[] = [
+  ...PREINSTALLED_MODELS,
   ...(currentPlatform === 'windows' || currentPlatform === 'linux'
     ? [
         {
