@@ -48,7 +48,9 @@ export const useSyncStorageSecondary = () => {
     );
 
     return () => {
-      void unlistenRehydrateStorage.then((fn) => fn());
+      unlistenRehydrateStorage.then((fn) => fn()).catch(() => {
+        // Ignore cleanup errors - this can happen if the process ends quickly
+      });
     };
   }, []);
 };
