@@ -51,7 +51,7 @@ jobs:
   #     - name: Install dependencies
   #       run: |
   #         npm cache verify
-  #         npm ci --no-audit --prefer-offline
+  #         npm ci --no-audit --prefer-offline --legacy-peer-deps
 
   #     - name: Run NX build on hanzo-visor
   #       run: npx nx build hanzo-visor --skip-nx-cache
@@ -205,7 +205,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm cache verify
-          npm ci --no-audit --prefer-offline
+          npm ci --no-audit --prefer-offline --legacy-peer-deps
 
       - name: Setup cargo version from npm
         run: |
@@ -374,7 +374,7 @@ jobs:
       - name: Install dependencies
         run: |
           npm cache verify
-          npm ci --no-audit --prefer-offline
+          npm ci --no-audit --prefer-offline --legacy-peer-deps
 
       - name: Generate updates-next.json
         id: generate-updates-next-json
