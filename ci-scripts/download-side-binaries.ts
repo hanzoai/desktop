@@ -16,7 +16,7 @@ enum Arch {
 const envSchema = z.object({
   ARCH: z.nativeEnum(Arch),
   OLLAMA_VERSION: z.string().min(6),
-  SHINKAI_NODE_VERSION: z.string().min(6),
+  HANZO_NODE_VERSION: z.string().min(6),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -260,7 +260,7 @@ const downloadEmbeddingModel = async () => {
 };
 
 export const main = async () => {
-  await downloadHanzoNodeBinary(env.ARCH, env.SHINKAI_NODE_VERSION);
+  await downloadHanzoNodeBinary(env.ARCH, env.HANZO_NODE_VERSION);
   await downloadOllama[env.ARCH](env.OLLAMA_VERSION);
   await downloadEmbeddingModel();
 };
