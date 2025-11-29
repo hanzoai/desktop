@@ -14,7 +14,7 @@ concurrency:
 env:
   # Test model configuration (Zen Nano for fast CI)
   TEST_MODEL_REPO: "zenlm/zen-nano"
-  TEST_MODEL_FILE: "zen-nano-0.6b-Q4_K_M.gguf"
+  TEST_MODEL_FILE: "gguf/zen-nano-0.6b-Q4_K_M.gguf"
   HANZO_NODE_API_PORT: 3690
   HANZO_NODE_WS_PORT: 3691
   HANZO_NODE_P2P_PORT: 3692
