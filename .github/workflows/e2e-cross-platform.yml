@@ -202,10 +202,12 @@ jobs:
           export NODE_API_PORT=${{ env.HANZO_NODE_API_PORT }}
           export NODE_WS_PORT=${{ env.HANZO_NODE_WS_PORT }}
           export NODE_PORT=${{ env.HANZO_NODE_P2P_PORT }}
-          export NODE_STORAGE_PATH="$(pwd)/../hanzo-desktop/test-storage"
+          export NODE_STORAGE_PATH="$(pwd)/../test-storage"
           export LOG_ALL=1
 
           echo "Starting hanzo-node on ports $NODE_API_PORT/$NODE_WS_PORT/$NODE_PORT..."
+          echo "Storage path: $NODE_STORAGE_PATH"
+          mkdir -p "$NODE_STORAGE_PATH"
 
           if [ "${{ matrix.platform }}" = "windows" ]; then
             ./dist/hanzo-node.exe > hanzo-node.log 2>&1 &
