@@ -118,15 +118,15 @@ jobs:
         working-directory: hanzo-node
         run: |
           echo "Building hanzo-node for ${{ matrix.arch }}..."
-          cargo build --release --bin hanzo_node --target ${{ matrix.arch }}
+          cargo build --release --bin hanzo-node --target ${{ matrix.arch }}
 
           # Copy binary to known location
           mkdir -p ./dist
           if [ "${{ matrix.platform }}" = "windows" ]; then
-            cp target/${{ matrix.arch }}/release/hanzo_node.exe ./dist/
+            cp target/${{ matrix.arch }}/release/hanzo-node.exe ./dist/
           else
-            cp target/${{ matrix.arch }}/release/hanzo_node ./dist/
-            chmod +x ./dist/hanzo_node
+            cp target/${{ matrix.arch }}/release/hanzo-node ./dist/
+            chmod +x ./dist/hanzo-node
           fi
 
           echo "✅ Hanzo node built successfully"
@@ -136,9 +136,9 @@ jobs:
         working-directory: hanzo-node
         run: |
           if [ "${{ matrix.platform }}" = "windows" ]; then
-            ./dist/hanzo_node.exe --version || echo "hanzo_node.exe created"
+            ./dist/hanzo-node.exe --version || echo "hanzo-node.exe created"
           else
-            ./dist/hanzo_node --version || echo "hanzo_node created"
+            ./dist/hanzo-node --version || echo "hanzo-node created"
           fi
         shell: bash
 
@@ -208,9 +208,9 @@ jobs:
           echo "Starting hanzo-node on ports $NODE_API_PORT/$NODE_WS_PORT/$NODE_PORT..."
 
           if [ "${{ matrix.platform }}" = "windows" ]; then
-            ./dist/hanzo_node.exe > hanzo-node.log 2>&1 &
+            ./dist/hanzo-node.exe > hanzo-node.log 2>&1 &
           else
-            ./dist/hanzo_node > hanzo-node.log 2>&1 &
+            ./dist/hanzo-node > hanzo-node.log 2>&1 &
           fi
 
           HANZO_NODE_PID=$!
