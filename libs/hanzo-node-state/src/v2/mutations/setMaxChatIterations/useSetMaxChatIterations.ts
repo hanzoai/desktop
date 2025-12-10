@@ -28,7 +28,7 @@ export const useSetMaxChatIterations = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_PREFERENCES],
       });
       if (onOptionsSuccess) {
-        onOptionsSuccess(data, variables, context);
+        onOptionsSuccess(data, variables, context, undefined as never);
       }
     },
     ...restOptions,

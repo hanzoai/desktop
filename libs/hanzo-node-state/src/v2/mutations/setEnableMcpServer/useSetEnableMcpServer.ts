@@ -26,7 +26,7 @@ export const useSetEnableMcpServer = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, undefined);
+        options.onSuccess(data, variables, undefined, undefined as never);
       }
     },
   });

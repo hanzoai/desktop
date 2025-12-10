@@ -43,7 +43,7 @@ export const useSetToolMcpEnabled = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, context);
+        options.onSuccess(data, variables, context, undefined as never);
       }
     },
   });

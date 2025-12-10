@@ -24,7 +24,7 @@ export const useSetNgrokEnabled = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_NGROK_STATUS],
       });
       if (onOptionsSuccess) {
-        onOptionsSuccess(data, variables, context);
+        onOptionsSuccess(data, variables, context, undefined as never);
       }
     },
     ...restOptions,

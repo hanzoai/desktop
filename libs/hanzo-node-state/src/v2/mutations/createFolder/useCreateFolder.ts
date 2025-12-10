@@ -21,7 +21,7 @@ export const useCreateFolder = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context);
+        options.onSuccess(response, variables, context, undefined as never);
       }
     },
   });
