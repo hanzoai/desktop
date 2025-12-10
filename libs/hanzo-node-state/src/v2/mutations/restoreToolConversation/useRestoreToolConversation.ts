@@ -29,7 +29,7 @@ export const useRestoreToolConversation = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_CHAT_CONVERSATION_PAGINATION],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context);
+        options.onSuccess(response, variables, context, undefined as never);
       }
     },
   });

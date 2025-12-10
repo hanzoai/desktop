@@ -29,7 +29,7 @@ export const useImportAgentFromUrl = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_AGENTS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context);
+        options.onSuccess(response, variables, context, undefined as never);
       }
     },
   });
