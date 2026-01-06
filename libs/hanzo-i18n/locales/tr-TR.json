@@ -381,7 +381,9 @@
     "dockerRunningDescription": "Araçlarınız artık Docker ile tam verimlilikte çalışıyor. Daha akıcı bir deneyimin tadını çıkarın!"
   },
   "errorBoundary": {
-    "genericError": "Bir şeyler yanlış gitti. Uygulamayı yenilemeyi deneyin."
+    "genericError": "Bir şeyler yanlış gitti. Uygulamayı yenilemeyi deneyin.",
+    "maxReloadAttemptsReached": "Maksimum yeniden yükleme denemesi sayısına ulaşıldı. Uygulama otomatik olarak kurtarılamıyor.",
+    "contactSupport": "Lütfen destek için iletişime geçin."
   },
   "errors": {
     "nodeUnavailable": {

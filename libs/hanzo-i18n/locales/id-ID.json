@@ -381,7 +381,9 @@
     "dockerRunningDescription": "Alat Anda sekarang berjalan dengan efisiensi penuh dengan Docker. Nikmati pengalaman yang lebih lancar!"
   },
   "errorBoundary": {
-    "genericError": "Terjadi kesalahan. Coba segarkan aplikasi."
+    "genericError": "Terjadi kesalahan. Coba segarkan aplikasi.",
+    "maxReloadAttemptsReached": "Upaya muat ulang maksimum telah tercapai. Aplikasi tidak dapat pulih secara otomatis.",
+    "contactSupport": "Silakan hubungi dukungan untuk bantuan."
   },
   "errors": {
     "nodeUnavailable": {

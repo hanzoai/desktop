@@ -381,7 +381,9 @@
     "dockerRunningDescription": "¡Sus herramientas están ahora funcionando a plena eficiencia con Docker! Disfrute de una experiencia más fluida!"
   },
   "errorBoundary": {
-    "genericError": "Algo salió mal. Intenta actualizar la aplicación."
+    "genericError": "Algo salió mal. Intenta actualizar la aplicación.",
+    "maxReloadAttemptsReached": "Se alcanzó el máximo número de intentos de recarga. La aplicación no puede recuperarse automáticamente.",
+    "contactSupport": "Por favor, contacta con soporte para obtener ayuda."
   },
   "errors": {
     "nodeUnavailable": {
