@@ -16,7 +16,7 @@ enum Arch {
 const envSchema = z.object({
   ARCH: z.nativeEnum(Arch),
   OLLAMA_VERSION: z.string().min(6),
-  HANZO_NODE_VERSION: z.string().min(6),
+  SHINKAI_NODE_VERSION: z.string().min(6),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -25,10 +25,10 @@ const env: Env = envSchema.parse(process.env);
 
 const TEMP_PATH = './temp';
 const OLLAMA_RESOURCES_PATH =
-  './apps/hanzo-desktop/src-tauri/external-binaries/ollama/';
-const HANZO_NODE_RESOURCES_PATH =
-  './apps/hanzo-desktop/src-tauri/external-binaries/hanzo-node/';
-const LLM_MODELS_PATH = './apps/hanzo-desktop/src-tauri/llm-models/';
+  './apps/shinkai-desktop/src-tauri/external-binaries/ollama/';
+const SHINKAI_NODE_RESOURCES_PATH =
+  './apps/shinkai-desktop/src-tauri/external-binaries/shinkai-node/';
+const LLM_MODELS_PATH = './apps/shinkai-desktop/src-tauri/llm-models/';
 
 const asBinaryName = (arch: Arch, path: string) => {
   return `${path}${arch === Arch.x86_64_pc_windows_msvc ? '.exe' : ''}`;
@@ -76,13 +76,12 @@ const downloadFile = async (url: string, path: string): Promise<void> => {
   console.log(`Download complete: ${url}`);
 };
 
-const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
-  console.log(`Downloading hanzo-node arch:${arch} version:${version}`);
-  // Download from GitHub releases (hanzoai/node)
-  const downloadUrl = `https://github.com/hanzoai/node/releases/download/${version}/hanzo-node-${arch}.zip`;
-  const zippedPath = path.join(TEMP_PATH, `hanzo-node-${version}.zip`);
+const downloadShinkaiNodeBinary = async (arch: Arch, version: string) => {
+  console.log(`Downloading shinkai-node arch:${arch} version:${version}`);
+  const downloadUrl = `https://download.shinkai.com/shinkai-node/binaries/production/${arch}/${version}.zip`;
+  const zippedPath = path.join(TEMP_PATH, `shinkai-node-${version}.zip`);
   await downloadFile(downloadUrl, zippedPath);
-  let unzippedPath = path.join(TEMP_PATH, `hanzo-node-${version}`);
+  let unzippedPath = path.join(TEMP_PATH, `shinkai-node-${version}`);
   await zl.extract(zippedPath, unzippedPath, {
     overwrite: true,
   });
@@ -91,7 +90,7 @@ const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   for (const file of files) {
     await cp(
       path.join(unzippedPath, file),
-      path.join(HANZO_NODE_RESOURCES_PATH, file),
+      path.join(SHINKAI_NODE_RESOURCES_PATH, file),
       {
         recursive: true,
       },
@@ -99,36 +98,36 @@ const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   }
 
   // They are used as sidecars in Tauri
-  const hanzoNodeBinaryPath = asBinaryName(
+  const shinkaiNodeBinaryPath = asBinaryName(
     arch,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/hanzo-node/hanzo-node`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/shinkai-node/shinkai-node`,
   );
-  const hanzoToolsRunnerDenoBinaryPath = asBinaryName(
+  const shinkaiToolsRunnerDenoBinaryPath = asBinaryName(
     arch,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/hanzo-node/hanzo-tools-runner-resources/deno`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/shinkai-node/shinkai-tools-runner-resources/deno`,
   );
-  const hanzoToolsRunnerUvBinaryPath = asBinaryName(
+  const shinkaiToolsRunnerUvBinaryPath = asBinaryName(
     arch,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/hanzo-node/hanzo-tools-runner-resources/uv`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/shinkai-node/shinkai-tools-runner-resources/uv`,
   );
   await rename(
-    hanzoNodeBinaryPath,
-    asSidecarName(arch, hanzoNodeBinaryPath),
+    shinkaiNodeBinaryPath,
+    asSidecarName(arch, shinkaiNodeBinaryPath),
   );
   await rename(
-    hanzoToolsRunnerDenoBinaryPath,
-    asSidecarName(arch, hanzoToolsRunnerDenoBinaryPath),
+    shinkaiToolsRunnerDenoBinaryPath,
+    asSidecarName(arch, shinkaiToolsRunnerDenoBinaryPath),
   );
   await rename(
-    hanzoToolsRunnerUvBinaryPath,
-    asSidecarName(arch, hanzoToolsRunnerUvBinaryPath),
+    shinkaiToolsRunnerUvBinaryPath,
+    asSidecarName(arch, shinkaiToolsRunnerUvBinaryPath),
   );
 
-  await addExecPermissions(asSidecarName(arch, hanzoNodeBinaryPath));
+  await addExecPermissions(asSidecarName(arch, shinkaiNodeBinaryPath));
   await addExecPermissions(
-    asSidecarName(arch, hanzoToolsRunnerDenoBinaryPath),
+    asSidecarName(arch, shinkaiToolsRunnerDenoBinaryPath),
   );
-  await addExecPermissions(asSidecarName(arch, hanzoToolsRunnerUvBinaryPath));
+  await addExecPermissions(asSidecarName(arch, shinkaiToolsRunnerUvBinaryPath));
 };
 
 const downloadOllamaAarch64AppleDarwin = async (version: string) => {
@@ -145,7 +144,7 @@ const downloadOllamaAarch64AppleDarwin = async (version: string) => {
   await zl.extract(zippedPath, unzippedPath);
   const ollamaBinaryPath = asSidecarName(
     Arch.aarch64_apple_darwin,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/ollama/ollama`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/ollama/ollama`,
   );
   await ensureFile(ollamaBinaryPath);
   await copyFile(
@@ -171,7 +170,7 @@ const downloadOllamax8664UnknownLinuxGnu = async (version: string) => {
   });
   const ollamaBinaryPath = asSidecarName(
     Arch.x86_64_unknown_linux_gnu,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/ollama/ollama`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/ollama/ollama`,
   );
   await ensureFile(ollamaBinaryPath);
   await copyFile(path.join(unzippedPath, 'bin/ollama'), ollamaBinaryPath);
@@ -228,7 +227,7 @@ const downloadOllamax8664PcWindowsMsvcNvidia = async (version: string) => {
 
   const ollamaBinaryPath = asBinaryName(
     Arch.x86_64_pc_windows_msvc,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/ollama/ollama`,
+    `./apps/shinkai-desktop/src-tauri/external-binaries/ollama/ollama`,
   );
   await rename(
     ollamaBinaryPath,
@@ -246,21 +245,16 @@ const downloadOllama = {
 };
 
 const downloadEmbeddingModel = async () => {
-  console.log(`Downloading embedding model from Hugging Face`);
-  // Download from Hugging Face public CDN
-  const downloadUrl = `https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q4_K_M.gguf`;
-  try {
-    await downloadFile(
-      downloadUrl,
-      path.join(LLM_MODELS_PATH, 'nomic-embed-text-v1.5.Q4_K_M.gguf'),
-    );
-  } catch (error) {
-    console.warn('Embedding model download failed (optional), continuing...', error);
-  }
+  console.log(`Downloading embedding model`);
+  const downloadUrl = `https://download.shinkai.com/llm-models/embeddinggemma-300M-BF16.gguf`;
+  await downloadFile(
+    downloadUrl,
+    path.join(LLM_MODELS_PATH, 'embeddinggemma-300M-BF16.gguf'),
+  );
 };
 
 export const main = async () => {
-  await downloadHanzoNodeBinary(env.ARCH, env.HANZO_NODE_VERSION);
+  await downloadShinkaiNodeBinary(env.ARCH, env.SHINKAI_NODE_VERSION);
   await downloadOllama[env.ARCH](env.OLLAMA_VERSION);
   await downloadEmbeddingModel();
 };

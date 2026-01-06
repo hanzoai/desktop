@@ -13,7 +13,7 @@
       // change this to your `beforeDevCommand`:
       "command": "npm",
       "options": {
-        "cwd": "./apps/hanzo-desktop"
+        "cwd": "./apps/shinkai-desktop"
       },
       "args": ["run", "dev"],
     },
@@ -22,7 +22,7 @@
       "type": "shell",
       // change this to your `beforeBuildCommand`:
       "options": {
-        "cwd": "./apps/hanzo-desktop"
+        "cwd": "./apps/shinkai-desktop"
       },
       "command": "npm",
       "args": ["run", "build"]
