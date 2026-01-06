@@ -28,17 +28,23 @@ use crate::commands::mcp_clients_install::{
 };
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::embedded_engine::{
+    engine_get_status, engine_load_gguf, engine_load_model, engine_unload_model,
+    engine_chat, engine_stream_chat, engine_is_model_loaded, engine_get_model_id,
+    EmbeddedEngine, EmbeddedEngineServer, DEFAULT_PORT,
+};
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
-use globals::HANZO_NODE_MANAGER_INSTANCE;
+use globals::{HANZO_NODE_MANAGER_INSTANCE, EMBEDDED_ENGINE_INSTANCE, EMBEDDED_ENGINE_SERVER};
 use local_hanzo_node::hanzo_node_manager::HanzoNodeManager;
 use tauri::{Emitter, WindowEvent};
 use tauri::{Manager, RunEvent};
-use tokio::sync::{RwLock};
+use tokio::sync::RwLock;
 use tray::create_tray;
 use windows::{recreate_window, Window};
 mod commands;
 mod deep_links;
+mod embedded_engine;
 mod galxe;
 mod global_shortcuts;
 mod globals;
@@ -138,16 +144,37 @@ fn main() {
             register_sse_server_in_cursor,
             get_cursor_command_config_help,
             get_cursor_sse_config_help,
+            // Embedded Hanzo Engine commands
+            engine_get_status,
+            engine_load_gguf,
+            engine_load_model,
+            engine_unload_model,
+            engine_chat,
+            engine_stream_chat,
+            engine_is_model_loaded,
+            engine_get_model_id,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
             let app_resource_dir = app.path().resource_dir()?;
             let app_data_dir = app.path().app_data_dir()?;
 
+            // Initialize Hanzo Node Manager (for optional sidecar processes)
             {
                 let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
-                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
+                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir.clone(), app_data_dir.clone()),
                 )));
+            }
+
+            // Initialize Embedded Hanzo Engine (default inference backend)
+            {
+                let engine = EmbeddedEngine::new();
+                let engine_arc = Arc::new(RwLock::new(engine));
+                let _ = EMBEDDED_ENGINE_INSTANCE.set(engine_arc.clone());
+
+                // Create and start the OpenAI-compatible HTTP server
+                let server = EmbeddedEngineServer::new(engine_arc);
+                let _ = EMBEDDED_ENGINE_SERVER.set(Arc::new(RwLock::new(server)));
             }
 
             create_tray(app.handle())?;
@@ -165,6 +192,17 @@ fn main() {
                         HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     hanzo_node_manager_guard.kill().await;
                     drop(hanzo_node_manager_guard);
+
+                    // Start the embedded engine HTTP server
+                    if let Some(server) = EMBEDDED_ENGINE_SERVER.get() {
+                        let mut server_guard = server.write().await;
+                        if let Err(e) = server_guard.start().await {
+                            log::error!("Failed to start embedded engine server: {}", e);
+                        } else {
+                            log::info!("Hanzo Engine server started on http://127.0.0.1:{}", DEFAULT_PORT);
+                        }
+                        drop(server_guard);
+                    }
 
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
                     let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
@@ -198,7 +236,16 @@ fn main() {
             }
             RunEvent::Exit { .. } => {
                 tauri::async_runtime::spawn(async {
-                    log::debug!("killing ollama and hanzo-node before exit");
+                    log::debug!("shutting down hanzo engine and sidecar processes before exit");
+
+                    // Stop the embedded engine server
+                    if let Some(server) = EMBEDDED_ENGINE_SERVER.get() {
+                        let mut server_guard = server.write().await;
+                        if let Err(e) = server_guard.stop().await {
+                            log::error!("Failed to stop embedded engine server: {}", e);
+                        }
+                        drop(server_guard);
+                    }
 
                     // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
                     let mut hanzo_node_manager_guard =

@@ -381,7 +381,9 @@
     "dockerRunningDescription": "您的工具现在在 Docker 中以全效能运行。享受更流畅的体验！"
   },
   "errorBoundary": {
-    "genericError": "出现问题。请尝试刷新应用。"
+    "genericError": "出现问题。请尝试刷新应用。",
+    "maxReloadAttemptsReached": "已达到最大重载尝试次数。应用程序无法自动恢复。",
+    "contactSupport": "请联系支持获取帮助。"
   },
   "errors": {
     "nodeUnavailable": {

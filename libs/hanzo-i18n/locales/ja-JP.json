@@ -381,7 +381,9 @@
     "dockerRunningDescription": "Dockerを使用して、ツールがフル効率で実行されています。よりスムーズな体験をお楽しみください！"
   },
   "errorBoundary": {
-    "genericError": "何かがうまくいきませんでした。アプリを更新してみてください。"
+    "genericError": "何かがうまくいきませんでした。アプリを更新してみてください。",
+    "maxReloadAttemptsReached": "最大リロード試行回数に達しました。アプリは自動的に回復できません。",
+    "contactSupport": "サポートにお問い合わせください。"
   },
   "errors": {
     "nodeUnavailable": {

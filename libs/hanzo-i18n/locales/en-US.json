@@ -1066,7 +1066,9 @@
     "helpfulLinks": "You can find helpful MCPs to connect with Hanzo at smithery.ai and composio.dev."
   },
   "errorBoundary": {
-    "genericError": "Something went wrong. Try refreshing the app."
+    "genericError": "Something went wrong. Try refreshing the app.",
+    "maxReloadAttemptsReached": "Maximum reload attempts reached. The app cannot recover automatically.",
+    "contactSupport": "Please contact support for assistance."
   },
   "videoBanner": {
     "unsupported": "Your browser does not support the video tag."
