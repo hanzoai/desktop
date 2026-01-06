@@ -33,7 +33,7 @@ npm-debug.log
 yarn-error.log
 testem.log
 /typings
-.nx
+/.nx
 .env
 
 # System Files
@@ -42,23 +42,16 @@ Thumbs.db
 
 qr_code_device_0.png
 
-apps/hanzo-desktop/src-tauri/storage
-apps/hanzo-desktop/src-tauri/node_storage
+apps/shinkai-desktop/src-tauri/storage
+apps/shinkai-desktop/src-tauri/node_storage
 
-apps/hanzo-desktop/src-tauri/external-binaries
+apps/shinkai-desktop/src-tauri/external-binaries
 launch.json
 temp
-apps/hanzo-app/android/.gradle
-apps/hanzo-desktop/src-tauri/gen
+apps/shinkai-app/android/.gradle
+apps/shinkai-desktop/src-tauri/gen
 output.txt
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
 .with-cache
-.nx
-
-AGENTS.md
-CLAUDE.md
-GEMINI.md
-QWEN.md
-GROK.md
