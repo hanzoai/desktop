@@ -18,6 +18,7 @@ env:
   HANZO_NODE_API_PORT: 3690
   HANZO_NODE_WS_PORT: 3691
   HANZO_NODE_P2P_PORT: 3692
+  EMBEDDINGS_SERVER_URL: "https://api.hanzo.ai/embeddings"
 
 jobs:
   e2e-tests:
@@ -203,6 +204,7 @@ jobs:
           export NODE_WS_PORT=${{ env.HANZO_NODE_WS_PORT }}
           export NODE_PORT=${{ env.HANZO_NODE_P2P_PORT }}
           export NODE_STORAGE_PATH="$(pwd)/../test-storage"
+          export EMBEDDINGS_SERVER_URL=${{ env.EMBEDDINGS_SERVER_URL }}
           export LOG_ALL=1
 
           echo "Starting hanzo-node on ports $NODE_API_PORT/$NODE_WS_PORT/$NODE_PORT..."
