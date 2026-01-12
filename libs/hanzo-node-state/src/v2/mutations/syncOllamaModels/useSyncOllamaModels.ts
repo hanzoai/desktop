@@ -21,12 +21,12 @@ export const useSyncOllamaModels = (options?: Options) => {
   const queryClient = useQueryClient();
   const response = useMutation({
     mutationFn: syncOllamaModels,
-    onSuccess: async (...onSuccessParameters) => {
+    onSuccess: async (data, variables, onMutateResult, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.SCAN_OLLAMA_MODELS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(...onSuccessParameters);
+        options.onSuccess(data, variables, onMutateResult, mutationContext);
       }
     },
     ...options,

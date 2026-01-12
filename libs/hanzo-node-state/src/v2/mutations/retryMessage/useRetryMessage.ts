@@ -20,7 +20,7 @@ export const useRetryMessage = (options?: Options) => {
   return useMutation({
     mutationFn: retryMessage,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [
           FunctionKeyV2.GET_CHAT_CONVERSATION_PAGINATION,
@@ -29,7 +29,7 @@ export const useRetryMessage = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

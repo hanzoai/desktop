@@ -16,7 +16,7 @@ export const useRemoveTool = (options?: Options) => {
   return useMutation({
     mutationFn: removeTool,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [
           FunctionKeyV2.GET_PLAYGROUND_TOOLS,
@@ -28,7 +28,7 @@ export const useRemoveTool = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

@@ -20,13 +20,13 @@ export const useSetEnableMcpServer = (options?: Options) => {
   return useMutation({
     mutationFn: (input: SetEnableMcpServerInput) => setEnableMcpServer(input),
     ...options,
-    onSuccess: async (data, variables) => {
+    onSuccess: async (data, variables, onMutateResult, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_MCP_SERVERS],
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, undefined, undefined as never);
+        options.onSuccess(data, variables, undefined, undefined as never, mutationContext);
       }
     },
   });

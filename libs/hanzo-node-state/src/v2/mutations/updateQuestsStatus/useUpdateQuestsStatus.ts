@@ -30,12 +30,12 @@ export const useUpdateQuestsStatus = (
   return useMutation({
     mutationFn: updateQuestsStatus,
     ...options,
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_QUESTS_STATUS, variables],
       });
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, context, undefined as never);
+        options.onSuccess(data, variables, context, undefined as never, mutationContext);
       }
     },
   });

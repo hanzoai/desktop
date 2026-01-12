@@ -24,12 +24,12 @@ export const useImportAgentFromUrl = (options?: Options) => {
   return useMutation({
     mutationFn: importAgentFromUrl,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_AGENTS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

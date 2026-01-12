@@ -18,12 +18,12 @@ export const useUpdateInboxName = (options?: Options) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateInboxName,
-    onSuccess: async (...onSuccessParameters) => {
+    onSuccess: async (data, variables, onMutateResult, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_INBOXES_WITH_PAGINATION],
       });
       if (options?.onSuccess) {
-        options.onSuccess(...onSuccessParameters);
+        options.onSuccess(data, variables, onMutateResult, mutationContext);
       }
     },
   });

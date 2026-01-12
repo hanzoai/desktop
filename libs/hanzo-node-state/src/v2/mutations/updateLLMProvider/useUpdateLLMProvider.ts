@@ -23,12 +23,12 @@ export const useUpdateLLMProvider = (options?: Options) => {
   return useMutation({
     mutationFn: updateLLMProvider,
     ...options,
-    onSuccess: async (...onSuccessParameters) => {
+    onSuccess: async (data, variables, onMutateResult, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_LLM_PROVIDERS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(...onSuccessParameters);
+        options.onSuccess(data, variables, onMutateResult, mutationContext);
       }
     },
   });

@@ -65,7 +65,13 @@ export function getCapabilitiesFromModel(model: OllamaModelDefinition): OllamaMo
   return capabilities;
 }
 
-const currentPlatform = platform();
+// Safely get platform - may fail in browser context
+let currentPlatform: string | undefined;
+try {
+  currentPlatform = platform();
+} catch {
+  currentPlatform = undefined;
+}
 
 // Pre-installed models for onboarding selection
 export const PREINSTALLED_MODELS: OllamaModel[] = [

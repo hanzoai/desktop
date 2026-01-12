@@ -23,13 +23,13 @@ export const useCreateRecurringTask = (options?: Options) => {
   return useMutation({
     mutationFn: createRecurringTask,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_RECURRING_TASKS],
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

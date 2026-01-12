@@ -23,12 +23,12 @@ export const useSetMaxChatIterations = (options?: Options) => {
   const { onSuccess: onOptionsSuccess, ...restOptions } = options || {};
   return useMutation({
     mutationFn: setMaxChatIterations,
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_PREFERENCES],
       });
       if (onOptionsSuccess) {
-        onOptionsSuccess(data, variables, context, undefined as never);
+        onOptionsSuccess(data, variables, context, mutationContext);
       }
     },
     ...restOptions,

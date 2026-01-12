@@ -12,7 +12,7 @@ export const useUpdateMcpServer = (
   return useMutation({
     mutationFn: (input: UpdateMcpServerInput) => updateMcpServer(input),
     ...options,
-    onSuccess: async (data, variables, context) => {
+    onSuccess: async (data, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_MCP_SERVERS],
       });
@@ -20,7 +20,7 @@ export const useUpdateMcpServer = (
         queryKey: [FunctionKeyV2.GET_MCP_SERVER_TOOLS, data.id],
       });
       if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context, undefined as never);
+        await options.onSuccess(data, variables, context, undefined as never, mutationContext);
       }
     },
   });
