@@ -232,7 +232,7 @@ const AIModelInstallation = () => {
           title={t('llmProviders.localAI.installTitle')}
         >
           <ResourcesBanner />
-          <TabsContent className="flex-1 overflow-y-auto" value="local">
+          <TabsContent className="h-full" value="local">
             <div className="flex items-center justify-between gap-10 space-y-2 pb-4">
               <div className="flex-1">
                 <h1 className="font-inter text-lg font-medium">Local AI</h1>
@@ -289,7 +289,7 @@ const AIModelInstallation = () => {
               parentShowAllOllamaModels={showAllOllamaModels}
             />
           </TabsContent>
-          <TabsContent className="flex-1 overflow-y-auto" value="cloud">
+          <TabsContent className="h-full" value="cloud">
             <div className="flex items-center justify-between gap-10 space-y-2 pb-4">
               <div className="max-w-3xl">
                 <h1 className="font-inter text-lg font-medium">Cloud AI</h1>
