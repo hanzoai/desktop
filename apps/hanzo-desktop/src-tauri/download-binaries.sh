@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Download external binaries from GitHub releases
+# Download external binaries from download.hanzo.ai (Cloudflare R2)
 # This script downloads the required binaries for the Hanzo Desktop app
 # instead of committing large executables to git
 
@@ -8,6 +8,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINARIES_DIR="$SCRIPT_DIR/external-binaries"
+LLM_MODELS_DIR="$SCRIPT_DIR/llm-models"
 
 # Detect platform
 OS="$(uname -s)"
@@ -48,70 +49,52 @@ echo "Detected platform: $TARGET"
 # Create directories
 mkdir -p "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
 mkdir -p "$BINARIES_DIR/ollama"
+mkdir -p "$LLM_MODELS_DIR"
 
-# Function to download and extract binary
-download_binary() {
-    local repo=$1
-    local tag=$2
-    local asset_name=$3
-    local output_path=$4
+# Hanzo Node version
+HANZO_NODE_VERSION="v1.13.0"
 
-    echo "Downloading $asset_name from $repo@$tag..."
+# Download and extract Hanzo Node from R2
+echo "Downloading Hanzo Node ${HANZO_NODE_VERSION} for ${TARGET}..."
+HANZO_NODE_URL="https://download.hanzo.ai/hanzo-node/binaries/production/${TARGET}/${HANZO_NODE_VERSION}.zip"
 
-    local url="https://github.com/$repo/releases/download/$tag/$asset_name"
-
-    # Download with curl
-    if ! curl -L -f -o "$output_path" "$url"; then
-        echo "Failed to download $asset_name"
-        echo "URL: $url"
-        return 1
-    fi
-
-    chmod +x "$output_path"
-    echo "Downloaded and made executable: $output_path"
-}
-
-# Download Hanzo Node (currently using hanzo-node releases until hanzoai/node has releases)
-# The hanzo-node zip includes: hanzo-node, hanzo-tools-runner-resources/deno, hanzo-tools-runner-resources/uv
-# TODO: Update to use hanzoai/node once releases are available
-HANZO_NODE_TAG="v1.1.14"
-HANZO_NODE_BINARY="hanzo-node-${TARGET}.zip"
 if [ ! -f "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}" ]; then
-    if download_binary "dcSpark/hanzo-node" "$HANZO_NODE_TAG" "$HANZO_NODE_BINARY" \
-        "$BINARIES_DIR/hanzo-node/hanzo-node.zip"; then
+    echo "Downloading from: $HANZO_NODE_URL"
+    if curl -L -f -o "$BINARIES_DIR/hanzo-node/hanzo-node.zip" "$HANZO_NODE_URL"; then
         unzip -o "$BINARIES_DIR/hanzo-node/hanzo-node.zip" -d "$BINARIES_DIR/hanzo-node/"
 
         # Rename hanzo-node to hanzo-node-<target>
-        mv "$BINARIES_DIR/hanzo-node/hanzo-node" \
-            "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
-
-        # Rename hanzo-tools-runner-resources to hanzo-tools-runner-resources
-        if [ -d "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources" ]; then
-            mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources" \
-                "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
+        if [ -f "$BINARIES_DIR/hanzo-node/hanzo-node" ]; then
+            mv "$BINARIES_DIR/hanzo-node/hanzo-node" \
+                "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
         fi
 
         # Rename the tools to include target suffix
         if [ -f "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno" ]; then
             mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno" \
                 "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${TARGET}"
         fi
 
         if [ -f "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv" ]; then
             mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv" \
                 "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${TARGET}"
         fi
 
         rm "$BINARIES_DIR/hanzo-node/hanzo-node.zip"
-        echo "Downloaded Hanzo Node (hanzo-node) successfully with bundled tools"
+        echo "Downloaded Hanzo Node successfully with bundled tools"
     else
-        echo "Warning: Could not download Hanzo Node binary"
+        echo "Failed to download Hanzo Node binary"
+        exit 1
     fi
+else
+    echo "Hanzo Node already downloaded"
 fi
 
 # Download Ollama
-OLLAMA_TAG="v0.12.9"
-# Ollama v0.12.9+ uses .tgz/.zip archives instead of raw binaries
+OLLAMA_VERSION="v0.12.9"
 if [[ "$PLATFORM" == "apple-darwin" ]]; then
     OLLAMA_ARCHIVE="ollama-darwin.tgz"
 elif [[ "$PLATFORM" == "unknown-linux-gnu" ]]; then
@@ -121,37 +104,56 @@ else
 fi
 
 if [ ! -f "$BINARIES_DIR/ollama/ollama-${TARGET}" ]; then
-    echo "Downloading Ollama ${OLLAMA_TAG}..."
+    echo "Downloading Ollama ${OLLAMA_VERSION}..."
 
-    # Download the archive
-    url="https://github.com/ollama/ollama/releases/download/${OLLAMA_TAG}/${OLLAMA_ARCHIVE}"
+    url="https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/${OLLAMA_ARCHIVE}"
     if curl -L -f -o "$BINARIES_DIR/ollama/${OLLAMA_ARCHIVE}" "$url"; then
-        # Extract the archive
         cd "$BINARIES_DIR/ollama"
 
         if [[ "$OLLAMA_ARCHIVE" == *.tgz ]]; then
             tar -xzf "$OLLAMA_ARCHIVE"
-            # The binary is extracted directly as 'ollama'
             if [ -f "ollama" ]; then
                 mv ollama "ollama-${TARGET}"
+            elif [ -f "bin/ollama" ]; then
+                mv bin/ollama "ollama-${TARGET}"
+                rm -rf bin
             fi
         elif [[ "$OLLAMA_ARCHIVE" == *.zip ]]; then
             unzip -o "$OLLAMA_ARCHIVE"
-            # Find and rename the ollama binary
             if [ -f "ollama.exe" ]; then
                 mv ollama.exe "ollama-${TARGET}"
             fi
         fi
 
-        # Clean up archive
         rm "$OLLAMA_ARCHIVE"
         chmod +x "ollama-${TARGET}"
+        cd "$SCRIPT_DIR"
 
-        echo "Downloaded Ollama ${OLLAMA_TAG} successfully"
+        echo "Downloaded Ollama ${OLLAMA_VERSION} successfully"
     else
-        echo "Failed to download Ollama ${OLLAMA_TAG}"
+        echo "Failed to download Ollama ${OLLAMA_VERSION}"
+        exit 1
     fi
+else
+    echo "Ollama already downloaded"
 fi
 
+# Download embedding model from R2
+EMBEDDING_MODEL="embeddinggemma-300M-BF16.gguf"
+if [ ! -f "$LLM_MODELS_DIR/$EMBEDDING_MODEL" ]; then
+    echo "Downloading embedding model..."
+    EMBEDDING_URL="https://download.hanzo.ai/llm-models/${EMBEDDING_MODEL}"
+    if curl -L -f -o "$LLM_MODELS_DIR/$EMBEDDING_MODEL" "$EMBEDDING_URL"; then
+        echo "Downloaded embedding model successfully"
+    else
+        echo "Failed to download embedding model"
+        exit 1
+    fi
+else
+    echo "Embedding model already downloaded"
+fi
+
+echo ""
 echo "Binary download complete!"
 echo "Binaries are located in: $BINARIES_DIR"
+echo "LLM models are located in: $LLM_MODELS_DIR"
