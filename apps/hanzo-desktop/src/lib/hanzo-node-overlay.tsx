@@ -1,10 +1,9 @@
 import { ReloadIcon } from '@radix-ui/react-icons';
 import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
 import { Button } from '@hanzo_network/hanzo-ui';
-import { listen } from '@tauri-apps/api/event';
 import { openPath } from '@tauri-apps/plugin-opener';
-import { AlertCircle, DownloadIcon, Loader2 } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import { DownloadIcon, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { ResetConnectionDialog } from '../components/reset-connection-dialog';
@@ -30,7 +29,6 @@ export const HanzoNodeRunningOverlay = ({
     isPending: isHealthPending,
     error: healthError,
     isError: isHealthError,
-    refetch: refetchHealth,
   } = useGetHealth(
     { nodeAddress: auth?.node_address ?? '' },
     { refetchInterval: 35000 },
@@ -60,18 +58,6 @@ export const HanzoNodeRunningOverlay = ({
 
   const isHanzoNodeHealthy = isHealthSuccess && health.status === 'ok';
 
-  useEffect(() => {
-    const handleFocus = () => {
-      void refetchHealth();
-    };
-
-    const unlistenPromise = listen('tauri://focus', handleFocus);
-
-    return () => {
-      void unlistenPromise.then((unlisten) => unlisten());
-    };
-  }, [auth?.node_address, refetchHealth]);
-
   if (isHealthPending || isHanzoNodeRunningPending) {
     return (
       <div className="flex size-full flex-col items-center justify-center gap-3 py-8">
@@ -83,33 +69,48 @@ export const HanzoNodeRunningOverlay = ({
     );
   }
 
-  if (isHealthError && !isHanzoNodeRunning && isInUse) {
+  if (isHealthError) {
     return (
-      <div className="flex size-full flex-col items-center justify-center gap-6 px-8">
-        <div className="flex max-w-lg flex-col items-center gap-4 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-red-500/10">
-            <AlertCircle className="size-6 text-red-400" />
+      <div className="flex size-full items-center justify-center">
+        <div
+          className="flex flex-col items-center gap-6 px-3 py-4 text-sm"
+          role="alert"
+        >
+          <div className="space-y-2 text-center text-red-400">
+            <p>Unable to connect to Hanzo Node.</p>
+            <pre className="px-4 whitespace-break-spaces">
+              {healthError.message}
+            </pre>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-semibold">
-              Connection Issue Detected
-            </h1>
-            <p className="text-text-secondary text-base">
-              We're unable to connect to your Hanzo node. Simply start or
-              reconnect to your node to continue.
-            </p>
+          <div className="flex items-center gap-4">
+            <Button
+              className="min-w-[140px]"
+              onClick={() => {
+                downloadTauriLogs();
+              }}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
+              <DownloadIcon className="size-3.5" />
+              Download Logs
+            </Button>
+            <Button
+              className="min-w-[140px]"
+              onClick={() => setIsResetConnectionDialogOpen(true)}
+              size="sm"
+              type="button"
+            >
+              <ReloadIcon className="size-3.5" />
+              Reset App
+            </Button>
+            <ResetConnectionDialog
+              allowClose
+              isOpen={isResetConnectionDialogOpen}
+              onOpenChange={setIsResetConnectionDialogOpen}
+            />
           </div>
         </div>
-        <Button
-          onClick={async () => {
-            await openHanzoNodeManagerWindow();
-          }}
-          size="md"
-          className="min-w-[160px]"
-          type="button"
-        >
-          Open Hanzo Node Manager
-        </Button>
       </div>
     );
   }
@@ -119,46 +120,25 @@ export const HanzoNodeRunningOverlay = ({
   }
 
   return (
-    <div className="flex size-full items-center justify-center">
-      <div
-        className="flex flex-col items-center gap-6 px-3 py-4 text-sm"
-        role="alert"
-      >
-        <div className="space-y-2 text-center text-red-400">
-          <p>Unable to connect to Hanzo Node.</p>
-          <pre className="px-4 whitespace-break-spaces">
-            {healthError?.message ?? 'Unknown error'}
-          </pre>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button
-            className="min-w-[140px]"
-            onClick={() => {
-              downloadTauriLogs();
-            }}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            <DownloadIcon className="size-3.5" />
-            Download Logs
-          </Button>
-          <Button
-            className="min-w-[140px]"
-            onClick={() => setIsResetConnectionDialogOpen(true)}
-            size="sm"
-            type="button"
-          >
-            <ReloadIcon className="size-3.5" />
-            Reset App
-          </Button>
-          <ResetConnectionDialog
-            allowClose
-            isOpen={isResetConnectionDialogOpen}
-            onOpenChange={setIsResetConnectionDialogOpen}
-          />
-        </div>
+    <div className="flex h-screen flex-col items-center justify-center gap-10">
+      <div className="mx-auto flex max-w-lg flex-col items-center gap-4">
+        <span className="text-4xl">⚠️</span>
+        <h1 className="text-3xl font-bold">
+          Unable to Connect to Hanzo Node
+        </h1>
+        <p className="text-text-secondary text-base">
+          Please make sure the Hanzo Node is running and try again.
+        </p>
       </div>
+      {isInUse && !isHanzoNodeRunning && (
+        <Button
+          onClick={async () => {
+            await openHanzoNodeManagerWindow();
+          }}
+        >
+          Launch Hanzo Node
+        </Button>
+      )}
     </div>
   );
 };
