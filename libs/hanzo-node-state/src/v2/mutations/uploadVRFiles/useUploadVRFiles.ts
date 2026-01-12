@@ -19,13 +19,13 @@ export const useUploadVRFiles = (options?: Options) => {
   return useMutation({
     mutationFn: uploadVRFiles,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKey.GET_VR_FILES],
       });
 
       if (options?.onSuccess) {
-        await options.onSuccess(response, variables, context, undefined as never);
+        await options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

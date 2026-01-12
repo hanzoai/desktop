@@ -21,12 +21,12 @@ export const useDisableAllTools = (options?: Options) => {
   return useMutation({
     mutationFn: disableAllTools,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_LIST_TOOLS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

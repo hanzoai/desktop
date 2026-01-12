@@ -14,9 +14,9 @@ export const useUpdateNodeName = (options?: Options) => {
   return useMutation({
     mutationFn: updateNodeName,
     ...options,
-    onSuccess: (response, variables, context) => {
+    onSuccess: (response, variables, context, mutationContext) => {
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

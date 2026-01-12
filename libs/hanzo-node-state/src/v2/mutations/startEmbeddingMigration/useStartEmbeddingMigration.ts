@@ -23,12 +23,12 @@ export const useStartEmbeddingMigration = (options?: Options) => {
   const response = useMutation({
     mutationFn: startEmbeddingMigration,
     ...options,
-    onSuccess: async (...onSuccessParameters) => {
+    onSuccess: async (data, variables, onMutateResult, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [FunctionKeyV2.GET_EMBEDDING_MIGRATION_STATUS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(...onSuccessParameters);
+        options.onSuccess(data, variables, onMutateResult, mutationContext);
       }
     },
   });

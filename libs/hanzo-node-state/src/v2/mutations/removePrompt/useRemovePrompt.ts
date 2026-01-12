@@ -20,7 +20,7 @@ export const useRemovePrompt = (options?: Options) => {
   return useMutation({
     mutationFn: removePrompt,
     ...options,
-    onSuccess: async (response, variables, context) => {
+    onSuccess: async (response, variables, context, mutationContext) => {
       await queryClient.invalidateQueries({
         queryKey: [
           FunctionKeyV2.GET_LIST_PROMPTS,
@@ -32,7 +32,7 @@ export const useRemovePrompt = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never);
+        options.onSuccess(response, variables, context, undefined as never, mutationContext);
       }
     },
   });

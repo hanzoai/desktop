@@ -14,9 +14,9 @@ export const useSetCommonToolsetConfig = (options?: Options) => {
   const { onSuccess: onOptionsSuccess, ...restOptions } = options || {};
   return useMutation({
     mutationFn: setCommonToolsetConfig,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, mutationContext) => {
       if (onOptionsSuccess) {
-        onOptionsSuccess(data, variables, context, undefined as never);
+        onOptionsSuccess(data, variables, context, mutationContext);
       }
     },
     ...restOptions,

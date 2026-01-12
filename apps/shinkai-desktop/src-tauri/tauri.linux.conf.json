@@ -1,9 +1,0 @@
-{
-  "bundle": {
-    "linux": {
-      "appimage": {
-        "bundleMediaFramework": true
-      }
-    }
-  }
-}
