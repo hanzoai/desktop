@@ -18,7 +18,7 @@ env:
   HANZO_NODE_API_PORT: 3690
   HANZO_NODE_WS_PORT: 3691
   HANZO_NODE_P2P_PORT: 3692
-  EMBEDDINGS_SERVER_URL: "https://api.hanzo.ai/embeddings"
+  EMBEDDINGS_SERVER_URL: "https://embeddings.hanzo.ai"
 
 jobs:
   e2e-tests:
