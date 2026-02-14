@@ -1,5 +1,95 @@
 [
   {
+    "name": "zen4",
+    "description": "Zen4 by Zen LM & Hanzo AI - Open, uncensored foundation models built on abliterated Qwen3 weights. From 4B edge to 80B MoE flagship.",
+    "supportTools": true,
+    "defaultTag": "zen4:8b",
+    "tags": [
+      {
+        "name": "zen4:latest",
+        "hash": "a1b2c3d4e5f6",
+        "size": "5.0GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4:4b",
+        "hash": "b2c3d4e5f6a1",
+        "size": "2.5GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4:8b",
+        "hash": "a1b2c3d4e5f6",
+        "size": "5.0GB",
+        "isDefault": true
+      },
+      {
+        "name": "zen4:14b",
+        "hash": "c3d4e5f6a1b2",
+        "size": "9.0GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4:30b",
+        "hash": "d4e5f6a1b2c3",
+        "size": "18GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4:80b",
+        "hash": "e5f6a1b2c3d4",
+        "size": "48GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4:1t-cloud",
+        "hash": "f6a1b2c3d4e5",
+        "size": "Unknown",
+        "isDefault": false
+      }
+    ],
+    "embedding": false,
+    "vision": false,
+    "thinking": true,
+    "cloud": true
+  },
+  {
+    "name": "zen4-coder",
+    "description": "Zen4 Coder by Zen LM & Hanzo AI - Specialized coding models for agentic programming. MoE architecture for efficient code generation.",
+    "supportTools": true,
+    "defaultTag": "zen4-coder:31b",
+    "tags": [
+      {
+        "name": "zen4-coder:latest",
+        "hash": "1a2b3c4d5e6f",
+        "size": "19GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4-coder:31b",
+        "hash": "1a2b3c4d5e6f",
+        "size": "19GB",
+        "isDefault": true
+      },
+      {
+        "name": "zen4-coder:80b",
+        "hash": "2b3c4d5e6f1a",
+        "size": "48GB",
+        "isDefault": false
+      },
+      {
+        "name": "zen4-coder:355b-cloud",
+        "hash": "3c4d5e6f1a2b",
+        "size": "Unknown",
+        "isDefault": false
+      }
+    ],
+    "embedding": false,
+    "vision": false,
+    "thinking": true,
+    "cloud": true
+  },
+  {
     "name": "gpt-oss",
     "description": "OpenAI’s open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases.",
     "supportTools": true,

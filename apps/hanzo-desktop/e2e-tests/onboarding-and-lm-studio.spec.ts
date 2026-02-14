@@ -19,8 +19,8 @@ test.describe('Complete Onboarding and Verify LM Studio', () => {
       await page.waitForTimeout(1000);
     }
 
-    // Step 3: Click "Get Started Free" button
-    const getStartedButton = page.locator('button:has-text("Get Started")').first();
+    // Step 3: Click "Login" or "Skip" button
+    const getStartedButton = page.locator('button:has-text("Login"), button:has-text("Skip")').first();
 
     // Wait for button to be enabled
     await getStartedButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -31,7 +31,7 @@ test.describe('Complete Onboarding and Verify LM Studio', () => {
 
     if (isDisabled === null || isDisabled === 'false') {
       await getStartedButton.click();
-      console.log('Step 3: Clicked Get Started Free button');
+      console.log('Step 3: Clicked Login/Skip button');
       await page.waitForTimeout(2000);
       await page.screenshot({ path: '/tmp/onboarding-step3-after-click.png' });
     } else {

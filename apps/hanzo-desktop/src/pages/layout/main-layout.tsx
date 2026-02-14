@@ -45,6 +45,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeftToLine,
   ArrowRightToLine,
+  Bot,
   Ellipsis,
   HelpCircleIcon,
 } from 'lucide-react';
@@ -243,6 +244,11 @@ export function MainNav() {
   ].filter(Boolean) as NavigationLink[];
 
   const secondaryNavigationLinks = [
+    {
+      title: 'Bot',
+      href: '/bot',
+      icon: <Bot className="size-[18px]" />,
+    },
     {
       title: t('layout.menuItems.tools'),
       href: '/tools',

@@ -7,6 +7,7 @@ export enum OllamaModelQuality {
   Low = 'low',
   Medium = 'medium',
   Good = 'good',
+  Excellent = 'excellent',
 }
 
 export enum OllamaModelSpeed {
@@ -75,13 +76,140 @@ try {
 
 // Pre-installed models for onboarding selection
 export const PREINSTALLED_MODELS: OllamaModel[] = [
-  // Zen LM models from huggingface.co/zenlm
+  // Zen4 family models from huggingface.co/zenlm
+  {
+    model: 'qwen3',
+    tag: '4b-instruct-2507',
+    name: 'Zen4 Mini',
+    description:
+      'Compact Zen4 family model. Fast reasoning and tool use with minimal footprint. From ZenLM - open models for mindful AI use.',
+    contextLength: 32768,
+    quality: OllamaModelQuality.Medium,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 2.5,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3',
+    tag: '8b',
+    name: 'Zen4',
+    description:
+      'Core Zen4 family model. Strong reasoning, thinking, and tool calling for everyday tasks. From ZenLM - open models for mindful AI use.',
+    contextLength: 32768,
+    quality: OllamaModelQuality.Medium,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 5.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3',
+    tag: '14b',
+    name: 'Zen4 Pro',
+    description:
+      'Professional Zen4 family model. High-quality reasoning and deep understanding for demanding tasks. From ZenLM - open models for mindful AI use.',
+    contextLength: 32768,
+    quality: OllamaModelQuality.Good,
+    speed: OllamaModelSpeed.Average,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 9.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3',
+    tag: '30b-a3b-instruct-2507',
+    name: 'Zen4 Max',
+    description:
+      'High-capacity Zen4 family MoE model. 30B parameters with 3B active for fast, high-quality reasoning with extended 256K context. From ZenLM.',
+    contextLength: 262144,
+    quality: OllamaModelQuality.Good,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 18.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3-next',
+    tag: '80b-a3b-instruct',
+    name: 'Zen4 Max Pro',
+    description:
+      'Flagship Zen4 family MoE model. 80B parameters with 3B active for excellent reasoning, thinking, and tool calling with 256K context. From ZenLM.',
+    contextLength: 262144,
+    quality: OllamaModelQuality.Excellent,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 45.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'glm4.7-flash',
+    tag: 'latest',
+    name: 'Zen4 Coder Flash',
+    description:
+      'Fast Zen4 family coding model. Strong code generation, thinking, and tool calling with 128K context. From ZenLM.',
+    contextLength: 131072,
+    quality: OllamaModelQuality.Good,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 18.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  {
+    model: 'qwen3-coder-next',
+    tag: 'latest',
+    name: 'Zen4 Coder',
+    description:
+      'Premier Zen4 family coding model. Excellent code generation with deep reasoning, thinking, and tool calling with 256K context. From ZenLM.',
+    contextLength: 262144,
+    quality: OllamaModelQuality.Excellent,
+    speed: OllamaModelSpeed.Fast,
+    capabilities: [
+      OllamaModelCapability.TextGeneration,
+      OllamaModelCapability.Thinking,
+      OllamaModelCapability.ToolCalling,
+    ],
+    size: 45.0,
+    fullName: '',
+    provider: 'ZenLM', // huggingface.co/zenlm
+  },
+  // Zen3 legacy models from huggingface.co/zenlm
   {
     model: 'qwen3',
     tag: '4b-thinking-2507',
-    name: 'Zen Eco',
+    name: 'Zen3 Eco',
     description:
-      '🧘 Balanced AI for everyday tasks. Advanced reasoning with efficient performance. From ZenLM - open models for mindful AI use.',
+      'Zen3 legacy. Balanced AI for everyday tasks. Advanced reasoning with efficient performance. From ZenLM - open models for mindful AI use.',
     contextLength: 128000,
     quality: OllamaModelQuality.Good,
     speed: OllamaModelSpeed.Fast,
@@ -97,9 +225,9 @@ export const PREINSTALLED_MODELS: OllamaModel[] = [
   {
     model: 'hermes-4',
     tag: '70b',
-    name: 'Zen Coder',
+    name: 'Zen3 Coder',
     description:
-      '⚡ Professional coding companion. Expert-level development with deep understanding. Built on ZenLM philosophy - powerful yet mindful.',
+      'Zen3 legacy. Professional coding companion. Expert-level development with deep understanding. Built on ZenLM philosophy.',
     contextLength: 128000,
     quality: OllamaModelQuality.Good,
     speed: OllamaModelSpeed.Average,
@@ -114,9 +242,9 @@ export const PREINSTALLED_MODELS: OllamaModel[] = [
   {
     model: 'qwen3',
     tag: '0.6b',
-    name: 'Zen Nano',
+    name: 'Zen3 Nano',
     description:
-      '🪶 Ultra-lightweight clarity. Instant responses with minimal resources. From ZenLM - simplicity without compromise.',
+      'Zen3 legacy. Ultra-lightweight clarity. Instant responses with minimal resources. From ZenLM - simplicity without compromise.',
     contextLength: 128000,
     quality: OllamaModelQuality.Low,
     speed: OllamaModelSpeed.VeryFast,

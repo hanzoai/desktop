@@ -16,6 +16,7 @@ import { Link } from 'react-router';
 import { OnboardingStep } from '../components/onboarding/constants';
 import { ResetStorageBeforeConnectConfirmationPrompt } from '../components/reset-storage-before-connect-confirmation-prompt';
 import config from '../config';
+import { useHanzoLogin } from '../hooks/hanzo-auth';
 import {
   useHanzoNodeRemoveStorageMutation,
   useHanzoNodeSpawnMutation,
@@ -142,6 +143,31 @@ const TermsAndConditionsPage = () => {
     hanzoNodeRemoveStorageIsPending ||
     submitRegistrationNodeCodeIsPending;
 
+  const { login: hanzoLogin } = useHanzoLogin();
+  const [hanzoLoginPending, setHanzoLoginPending] = useState(false);
+
+  const handleHanzoLogin = async () => {
+    setHanzoLoginPending(true);
+    try {
+      const tokens = await hanzoLogin();
+      setAuth({
+        api_v2_key: '',
+        node_address: 'http://127.0.0.1:3690',
+        profile: 'main',
+        hanzo_identity: '',
+        encryption_pk: '',
+        identity_pk: '',
+        hanzo_token: tokens.access_token,
+        hanzo_refresh_token: tokens.refresh_token,
+      });
+      void hanzoNodeSpawn();
+    } catch (err) {
+      console.error('Hanzo login failed:', err);
+    } finally {
+      setHanzoLoginPending(false);
+    }
+  };
+
   async function onSubmit(currentValues: QuickConnectFormSchema) {
     if (!encryptionKeys) return;
     await submitRegistrationNoCode({
@@ -225,11 +251,24 @@ const TermsAndConditionsPage = () => {
               size: 'lg',
             }),
           )}
+          disabled={!termsAndConditionsAccepted || hanzoLoginPending}
+          isLoading={hanzoLoginPending}
+          onClick={() => void handleHanzoLogin()}
+        >
+          {t('common.login')}
+        </Button>
+        <Button
+          className={cn(
+            buttonVariants({
+              variant: 'outline',
+              size: 'lg',
+            }),
+          )}
           disabled={!termsAndConditionsAccepted || isStartLocalButtonLoading}
           isLoading={isStartLocalButtonLoading}
           onClick={() => hanzoNodeSpawn()}
         >
-          {t('common.getStarted')}
+          {t('common.skip')}
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (

@@ -103,12 +103,10 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                         .unwrap_or_default();
                     let payload = OAuthDeepLinkPayload { state, code };
                     log::debug!(
-                        "emitting oauth-deep-link event to {}",
-                        Window::Coordinator.as_str()
+                        "emitting oauth-deep-link event to all windows",
                     );
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                    let _ = app_handle.emit_to(
-                        Window::Coordinator.as_str(),
+                    let _ = app_handle.emit(
                         "oauth-deep-link",
                         payload,
                     );

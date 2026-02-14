@@ -78,6 +78,7 @@ import TermsAndConditionsPage, {
 } from '../pages/terms-conditions';
 import ToolFeedbackPrompt from '../pages/tool-feedback';
 import { ToolsPage } from '../pages/tools-homepage';
+import BotPage from '../pages/bot';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
@@ -449,6 +450,7 @@ const AppRoutes = () => {
           >
             <Route element={<McpRegistryPage />} path={'mcp'} />
             <Route element={<NetworkAgentPage />} path={'network-ai-agents'} />
+            <Route element={<BotPage />} path={'bot'} />
           </Route>
           <Route
             element={
