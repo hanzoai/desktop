@@ -8,6 +8,8 @@ export type Auth = {
   encryption_pk: string;
   identity_pk: string;
   api_v2_key: string;
+  hanzo_token?: string;
+  hanzo_refresh_token?: string;
 };
 
 type AuthStore = {
