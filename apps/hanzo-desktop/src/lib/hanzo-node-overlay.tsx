@@ -19,6 +19,7 @@ export const HanzoNodeRunningOverlay = ({
   children: React.ReactNode;
 }) => {
   const auth = useAuth((store) => store.auth);
+  const isCloudMode = !!auth?.hanzo_token;
   const { data: isHanzoNodeRunning, isPending: isHanzoNodeRunningPending } =
     useHanzoNodeIsRunningQuery();
   const isInUse = useHanzoNodeManager((store) => store.isInUse);
@@ -31,8 +32,13 @@ export const HanzoNodeRunningOverlay = ({
     isError: isHealthError,
   } = useGetHealth(
     { nodeAddress: auth?.node_address ?? '' },
-    { refetchInterval: 35000 },
+    { enabled: !isCloudMode, refetchInterval: isCloudMode ? false : 35000 },
   );
+
+  // Cloud mode: skip all local node health checks
+  if (isCloudMode) {
+    return <>{children}</>;
+  }
 
   const { mutate: downloadTauriLogs } = useDownloadTauriLogsMutation({
     onSuccess: (result) => {

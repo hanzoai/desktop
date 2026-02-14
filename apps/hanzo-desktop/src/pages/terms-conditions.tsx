@@ -152,7 +152,7 @@ const TermsAndConditionsPage = () => {
       const tokens = await hanzoLogin();
       setAuth({
         api_v2_key: '',
-        node_address: 'http://127.0.0.1:3690',
+        node_address: '',
         profile: 'main',
         hanzo_identity: '',
         encryption_pk: '',
@@ -160,7 +160,8 @@ const TermsAndConditionsPage = () => {
         hanzo_token: tokens.access_token,
         hanzo_refresh_token: tokens.refresh_token,
       });
-      void hanzoNodeSpawn();
+      // Cloud login — skip local node, complete onboarding directly
+      completeStep(OnboardingStep.TERMS_CONDITIONS, true);
     } catch (err) {
       console.error('Hanzo login failed:', err);
     } finally {
