@@ -142,7 +142,7 @@ Hanzo를 실행하기 전에 응용 프로그램의 핵심 기능에 전원을 �
 
 ```bash
 ARCH="aarch64-apple-darwin" \
-HANZO_NODE_VERSION="v1.1.18" \
+HANZO_NODE_VERSION="v1.1.20" \
 OLLAMA_VERSION="v0.12.3" \
 npx ts-node ./ci-scripts/download-side-binaries.ts
 ```
@@ -152,7 +152,7 @@ npx ts-node ./ci-scripts/download-side-binaries.ts
 ```bash
 ARCH="x86_64-unknown-linux-gnu" \
 OLLAMA_VERSION="v0.12.3" \
-HANZO_NODE_VERSION="v1.1.18" \
+HANZO_NODE_VERSION="v1.1.20" \
 npx ts-node ./ci-scripts/download-side-binaries.ts
 ```
 
@@ -160,7 +160,7 @@ npx ts-node ./ci-scripts/download-side-binaries.ts
 
 ```powershell
 $ENV:OLLAMA_VERSION="v0.12.3"
-$ENV:HANZO_NODE_VERSION="v1.1.18"
+$ENV:HANZO_NODE_VERSION="v1.1.20"
 $ENV:ARCH="x86_64-pc-windows-msvc"
 npx ts-node ./ci-scripts/download-side-binaries.ts
 ```
