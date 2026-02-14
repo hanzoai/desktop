@@ -13,7 +13,7 @@ The streaming system uses a **hybrid approach** that separates ephemeral streami
 ```
 ┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
 │   User sends    │──────│  HTTP API       │──────│   Backend       │
-│   message       │      │  (mutation)     │      │   (Shinkai)     │
+│   message       │      │  (mutation)     │      │   (Hanzo)       │
 └─────────────────┘      └─────────────────┘      └─────────────────┘
                                                           │
                          WebSocket (streaming tokens)     │
@@ -206,11 +206,11 @@ onMutate: async (variables) => {
 WebSocket message flow:
 
 ```
-1. ShinkaiMessage (user echo)     → startStreaming(inboxId)
+1. HanzoMessage (user echo)     → startStreaming(inboxId)
 2. Stream (token)                 → Buffer → appendContent/appendReasoning
 3. Widget (tool call)             → updateToolCall(inboxId, toolCall, index)
 4. Stream (is_done: true)         → flushTokenBuffer({ markComplete: true })
-5. ShinkaiMessage (assistant)     → Finalize with real data
+5. HanzoMessage (assistant)     → Finalize with real data
 ```
 
 **Message Type Handling:**
