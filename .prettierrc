@@ -1,6 +1,6 @@
 {
   "singleQuote": true,
   "tailwindFunctions": ["clsx", "cn", "cva"],
-  "tailwindStyleSheet": "./libs/shinkai-ui/src/styles/styles.css",
+  "tailwindStyleSheet": "./libs/hanzo-ui/src/styles/styles.css",
   "plugins": ["prettier-plugin-tailwindcss"]
 }
