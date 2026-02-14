@@ -1,4 +1,4 @@
-import { removeJobs as removeJobsApi } from '@shinkai_network/shinkai-message-ts/api/jobs/index';
+import { removeJobs as removeJobsApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type RemoveJobsInput } from './types';
 

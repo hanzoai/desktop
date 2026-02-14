@@ -16,6 +16,7 @@ import { Link } from 'react-router';
 import { OnboardingStep } from '../components/onboarding/constants';
 import { ResetStorageBeforeConnectConfirmationPrompt } from '../components/reset-storage-before-connect-confirmation-prompt';
 import config from '../config';
+import { useHanzoLogin } from '../hooks/hanzo-auth';
 import {
   useHanzoNodeRemoveStorageMutation,
   useHanzoNodeSpawnMutation,
@@ -115,6 +116,10 @@ const TermsAndConditionsPage = () => {
           hanzo_identity: response.data?.node_name ?? '',
           encryption_pk: response.data?.encryption_public_key ?? '',
           identity_pk: response.data?.identity_public_key ?? '',
+          ...(hanzoTokens ? {
+            hanzo_token: hanzoTokens.access_token,
+            hanzo_refresh_token: hanzoTokens.refresh_token,
+          } : {}),
         });
         completeStep(OnboardingStep.TERMS_CONDITIONS, true);
       } else if (response.status === 'non-pristine') {
@@ -136,11 +141,27 @@ const TermsAndConditionsPage = () => {
   });
   const { isPending: hanzoNodeKillIsPending } = useHanzoNodeKillMutation();
 
+  const {
+    isLoading: hanzoLoginIsLoading,
+    error: hanzoLoginError,
+    tokens: hanzoTokens,
+    startLogin: startHanzoLogin,
+  } = useHanzoLogin();
+
+  // When IAM tokens arrive, spawn node and register
+  useEffect(() => {
+    if (hanzoTokens) {
+      void hanzoNodeSpawn();
+    }
+  }, [hanzoTokens, hanzoNodeSpawn]);
+
   const isStartLocalButtonLoading =
     hanzoNodeSpawnIsPending ||
     hanzoNodeKillIsPending ||
     hanzoNodeRemoveStorageIsPending ||
     submitRegistrationNodeCodeIsPending;
+
+  const isLoginButtonLoading = hanzoLoginIsLoading || (hanzoTokens != null && isStartLocalButtonLoading);
 
   async function onSubmit(currentValues: QuickConnectFormSchema) {
     if (!encryptionKeys) return;
@@ -222,6 +243,24 @@ const TermsAndConditionsPage = () => {
           className={cn(
             buttonVariants({
               variant: 'default',
+              size: 'lg',
+            }),
+          )}
+          disabled={!termsAndConditionsAccepted || isLoginButtonLoading}
+          isLoading={isLoginButtonLoading}
+          onClick={() => void startHanzoLogin()}
+        >
+          {t('common.login')}
+        </Button>
+
+        {hanzoLoginError && (
+          <p className="text-center text-sm text-red-400">{hanzoLoginError}</p>
+        )}
+
+        <Button
+          className={cn(
+            buttonVariants({
+              variant: 'outline',
               size: 'lg',
             }),
           )}
