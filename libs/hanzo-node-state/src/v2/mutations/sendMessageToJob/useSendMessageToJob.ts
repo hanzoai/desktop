@@ -88,7 +88,7 @@ export const useSendMessageToJob = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_VR_FILES],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never, mutationContext);
+        options.onSuccess(response, variables, context, mutationContext);
       }
     },
     onError: async (error, variables, rollback, mutationContext) => {
@@ -103,7 +103,7 @@ export const useSendMessageToJob = (options?: Options) => {
         queryKey: queryKey,
       });
       if (options?.onError) {
-        options.onError(error, variables, rollback, undefined as never, mutationContext);
+        options.onError(error, variables, rollback, mutationContext);
       }
     },
   });

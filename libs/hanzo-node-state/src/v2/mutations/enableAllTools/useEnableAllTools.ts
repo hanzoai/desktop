@@ -26,7 +26,7 @@ export const useEnableAllTools = (options?: Options) => {
         queryKey: [FunctionKeyV2.GET_LIST_TOOLS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never, mutationContext);
+        options.onSuccess(response, variables, context, mutationContext);
       }
     },
   });

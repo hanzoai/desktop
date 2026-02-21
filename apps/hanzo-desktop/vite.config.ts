@@ -1,7 +1,6 @@
 import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { resolve } from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import legacy from '@vitejs/plugin-legacy';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
@@ -9,16 +8,21 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
+  resolve: {
+    alias: {
+      // libsodium-wrappers-sumo ESM entry imports ./libsodium-sumo.mjs which
+      // lives in the separate libsodium-sumo package
+      './libsodium-sumo.mjs': resolve(
+        __dirname,
+        '../../node_modules/libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs',
+      ),
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
     nxViteTsPaths(),
     wasm(),
-    legacy({
-      targets: ['>0.3%', 'not dead', 'safari>=14'],
-      polyfills: ['es.array.at', 'es.object.has-own'],
-      modernPolyfills: ['es.array.at', 'es.object.has-own'],
-    }),
     nxCopyAssetsPlugin(['*.md']),
   ],
   esbuild: {

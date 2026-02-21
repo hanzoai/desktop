@@ -21,7 +21,7 @@ export const useAddNetworkTool = (
         queryKey: [FunctionKeyV2.GET_INSTALLED_NETWORK_TOOLS],
       });
       if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context, undefined as never, mutationContext);
+        await options.onSuccess(data, variables, context, mutationContext);
       }
     },
   });
