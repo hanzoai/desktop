@@ -25,7 +25,7 @@ export const useSetToolOffering = (
         queryKey: [FunctionKeyV2.GET_TOOLS_WITH_OFFERINGS],
       });
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, context, undefined as never, mutationContext);
+        options.onSuccess(data, variables, context, mutationContext);
       }
     },
   });

@@ -3,7 +3,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const IAM_BASE_URL = 'https://hanzo.id';
-const IAM_CLIENT_ID = 'app-hanzo-desktop';
+const IAM_CLIENT_ID = 'hanzo-app-client-id';
 const IAM_REDIRECT_URI = 'hanzo://oauth/hanzo';
 const IAM_SCOPE = 'openid profile email';
 

@@ -1,6 +1,5 @@
 import './globals.css';
 
-import * as Babel from '@babel/standalone';
 import * as shadcnComponents from '@hanzo_network/hanzo-artifacts';
 import { DotPattern } from '@hanzo_network/hanzo-ui';
 import { Loader2 } from 'lucide-react';
@@ -37,14 +36,127 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-export const getReactComponentFromCode = (code: string) => {
+// Simple JSX-to-JS transpiler using TypeScript compiler API (loaded from CDN)
+// Replaces the heavy @babel/standalone dependency (~3MB → ~200KB)
+let tsModule: typeof import('typescript') | null = null;
+
+async function loadTypeScript(): Promise<typeof import('typescript')> {
+  if (tsModule) return tsModule;
+  // Use the TypeScript compiler from CDN for runtime transpilation
+  const script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/typescript@5.5.4/lib/typescript.min.js';
+  await new Promise<void>((resolve, reject) => {
+    script.onload = () => resolve();
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+  tsModule = (window as any).ts;
+  return tsModule!;
+}
+
+function rewriteImports(code: string, scope: Record<string, any>): string {
+  // Rewrite import statements to scope variable lookups
+  // import { X } from 'react' → const { X } = scope.React
+  // import X from 'y' → const X = scope.X
+  const lines = code.split('\n');
+  const result: string[] = [];
+
+  for (const line of lines) {
+    const importMatch = line.match(
+      /^\s*import\s+(.+?)\s+from\s+['"](.+?)['"]\s*;?\s*$/,
+    );
+    if (importMatch) {
+      const [, imports, source] = importMatch;
+
+      // Map module names to scope keys
+      let scopeKey: string;
+      if (source === 'react') {
+        scopeKey = 'React';
+      } else {
+        // For other modules, use camelCase of the module name
+        scopeKey = source.replace(/[^a-zA-Z]/g, '');
+      }
+
+      // default import: import X from 'y'
+      const defaultMatch = imports.match(/^(\w+)$/);
+      if (defaultMatch) {
+        result.push(`const ${defaultMatch[1]} = scope.${defaultMatch[1]};`);
+        continue;
+      }
+
+      // named imports: import { X, Y } from 'z'
+      const namedMatch = imports.match(/^\{(.+)\}$/);
+      if (namedMatch) {
+        const names = namedMatch[1].split(',').map((n) => n.trim());
+        for (const name of names) {
+          const asMatch = name.match(/(\w+)\s+as\s+(\w+)/);
+          if (asMatch) {
+            result.push(
+              `const ${asMatch[2]} = scope.${scopeKey}.${asMatch[1]};`,
+            );
+          } else {
+            result.push(`const ${name} = scope.${scopeKey}.${name};`);
+          }
+        }
+        continue;
+      }
+
+      // default + named: import X, { Y } from 'z'
+      const mixedMatch = imports.match(/^(\w+)\s*,\s*\{(.+)\}$/);
+      if (mixedMatch) {
+        result.push(
+          `const ${mixedMatch[1]} = scope.${mixedMatch[1]};`,
+        );
+        const names = mixedMatch[2].split(',').map((n) => n.trim());
+        for (const name of names) {
+          result.push(`const ${name} = scope.${scopeKey}.${name};`);
+        }
+        continue;
+      }
+
+      // namespace import: import * as X from 'y'
+      const namespaceMatch = imports.match(/^\*\s+as\s+(\w+)$/);
+      if (namespaceMatch) {
+        result.push(`const ${namespaceMatch[1]} = scope.${scopeKey};`);
+        continue;
+      }
+
+      // Fallback: keep original (will likely error, but better than silently dropping)
+      result.push(line);
+    } else {
+      // Rewrite export default
+      const exportDefaultMatch = line.match(
+        /^\s*export\s+default\s+(.+?)\s*;?\s*$/,
+      );
+      if (exportDefaultMatch) {
+        result.push(`exports.default = ${exportDefaultMatch[1]};`);
+      } else {
+        result.push(line);
+      }
+    }
+  }
+
+  return result.join('\n');
+}
+
+export const getReactComponentFromCode = async (code: string) => {
   try {
-    const transpiledCode = Babel.transform(code, {
-      // presets: ['react'],
-      presets: ['react', 'typescript'],
-      filename: 'App.tsx',
-      plugins: [importToVariablePlugin],
-    }).code;
+    const ts = await loadTypeScript();
+
+    // First rewrite imports/exports
+    const rewrittenCode = rewriteImports(code, {});
+
+    // Then transpile TSX → JS using TypeScript compiler
+    const result = ts.transpileModule(rewrittenCode, {
+      compilerOptions: {
+        jsx: ts.JsxEmit.React,
+        module: ts.ModuleKind.None,
+        target: ts.ScriptTarget.ES2020,
+        esModuleInterop: true,
+      },
+    });
+
+    const transpiledCode = result.outputText;
 
     const scope: any = {
       React: {
@@ -72,61 +184,6 @@ export const getReactComponentFromCode = (code: string) => {
   }
 };
 
-const importToVariablePlugin = ({ types: t }: any) => ({
-  visitor: {
-    ImportDeclaration(path: any) {
-      const declarations = path.node.specifiers
-        .map((specifier: any) => {
-          if (t.isImportDefaultSpecifier(specifier)) {
-            return t.variableDeclarator(
-              specifier.local,
-              t.memberExpression(
-                t.identifier('scope'),
-                t.identifier(specifier.local.name),
-              ),
-            );
-          } else if (t.isImportSpecifier(specifier)) {
-            if (path.node.source.value === 'react') {
-              return t.variableDeclarator(
-                specifier.local,
-                t.memberExpression(
-                  t.memberExpression(
-                    t.identifier('scope'),
-                    t.identifier('React'),
-                  ),
-                  specifier.imported,
-                ),
-              );
-            } else {
-              return t.variableDeclarator(
-                specifier.local,
-                t.memberExpression(t.identifier('scope'), specifier.imported),
-              );
-            }
-          }
-          return null;
-        })
-        .filter(Boolean);
-
-      path.replaceWith(t.variableDeclaration('const', declarations));
-    },
-    ExportDefaultDeclaration(path: any) {
-      path.replaceWith(
-        t.expressionStatement(
-          t.assignmentExpression(
-            '=',
-            t.memberExpression(
-              t.identifier('exports'),
-              t.identifier('default'),
-            ),
-            path.node.declaration,
-          ),
-        ),
-      );
-    },
-  },
-});
-
 const App = () => {
   const [code, setCode] = useState<string | null>(null);
   const [component, setComponent] = useState<React.ComponentType | null>(null);
@@ -135,18 +192,20 @@ const App = () => {
 
   useEffect(() => {
     if (code) {
-      try {
-        const ComponentToRender = getReactComponentFromCode(code);
-        if (ComponentToRender) {
-          setComponent(() => ComponentToRender);
-        } else {
-          throw new Error(
-            'No valid React component found in the provided code',
-          );
+      (async () => {
+        try {
+          const ComponentToRender = await getReactComponentFromCode(code);
+          if (ComponentToRender) {
+            setComponent(() => ComponentToRender);
+          } else {
+            throw new Error(
+              'No valid React component found in the provided code',
+            );
+          }
+        } catch {
+          throw new Error('Error evaluating component code');
         }
-      } catch {
-        throw new Error('Error evaluating component code');
-      }
+      })();
     }
   }, [code]);
 

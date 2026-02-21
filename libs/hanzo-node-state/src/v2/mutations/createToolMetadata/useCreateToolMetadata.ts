@@ -16,7 +16,7 @@ export const useCreateToolMetadata = (options?: Options) => {
     ...options,
     onSuccess: (response, variables, context, mutationContext) => {
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never, mutationContext);
+        options.onSuccess(response, variables, context, mutationContext);
       }
     },
   });

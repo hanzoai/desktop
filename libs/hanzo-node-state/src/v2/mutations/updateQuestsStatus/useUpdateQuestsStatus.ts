@@ -35,7 +35,7 @@ export const useUpdateQuestsStatus = (
         queryKey: [FunctionKeyV2.GET_QUESTS_STATUS, variables],
       });
       if (options?.onSuccess) {
-        options.onSuccess(data, variables, context, undefined as never, mutationContext);
+        options.onSuccess(data, variables, context, mutationContext);
       }
     },
   });

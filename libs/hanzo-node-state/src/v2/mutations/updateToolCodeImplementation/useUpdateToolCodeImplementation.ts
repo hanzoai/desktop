@@ -29,7 +29,7 @@ export const useUpdateToolCodeImplementation = (options?: Options) => {
         queryKey: [FunctionKey.GET_CHAT_CONVERSATION_PAGINATION],
       });
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, undefined as never, mutationContext);
+        options.onSuccess(response, variables, context, mutationContext);
       }
     },
   });

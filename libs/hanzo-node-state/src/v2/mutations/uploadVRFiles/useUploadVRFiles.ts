@@ -25,7 +25,7 @@ export const useUploadVRFiles = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        await options.onSuccess(response, variables, context, undefined as never, mutationContext);
+        await options.onSuccess(response, variables, context, mutationContext);
       }
     },
   });

@@ -23,7 +23,7 @@ export const useAddMcpServer = (
         queryKey: [FunctionKeyV2.GET_MCP_SERVERS],
       });
       if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context, undefined as never, mutationContext);
+        await options.onSuccess(data, variables, context, mutationContext);
       }
     },
   });

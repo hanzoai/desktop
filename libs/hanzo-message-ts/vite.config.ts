@@ -9,6 +9,17 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/hanzo-message-ts',
+  resolve: {
+    alias: {
+      // libsodium-wrappers-sumo ESM entry imports ./libsodium-sumo.mjs which
+      // lives in the separate libsodium-sumo package — Vite can't resolve the
+      // relative import across packages, so we alias it explicitly.
+      './libsodium-sumo.mjs': path.resolve(
+        __dirname,
+        '../../node_modules/libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs',
+      ),
+    },
+  },
   build: {
     lib: {
       entry: {

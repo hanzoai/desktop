@@ -20,7 +20,7 @@ export const useUpdateMcpServer = (
         queryKey: [FunctionKeyV2.GET_MCP_SERVER_TOOLS, data.id],
       });
       if (options?.onSuccess) {
-        await options.onSuccess(data, variables, context, undefined as never, mutationContext);
+        await options.onSuccess(data, variables, context, mutationContext);
       }
     },
   });
