@@ -1,5 +1,5 @@
 import { ReloadIcon } from '@radix-ui/react-icons';
-import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { type ToolMetadata } from '@hanzoai/hanzo-message-ts/api/tools/types';
 import {
   Button,
   Skeleton,
@@ -7,8 +7,8 @@ import {
   TooltipContent,
   TooltipPortal,
   TooltipTrigger,
-} from '@hanzo_network/hanzo-ui';
-import { cn } from '@hanzo_network/hanzo-ui/utils';
+} from '@hanzoai/hanzo-ui';
+import { cn } from '@hanzoai/hanzo-ui/utils';
 import { AlertTriangleIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -154,7 +154,7 @@ function MetadataPanelBase({
       const mergedMetadata = merge(parseValue, {
         name: initialToolName,
         description: initialToolDescription,
-        author: auth?.hanzo_identity ?? '',
+        author: auth?.shinkai_identity ?? '',
       });
 
       setIsSaving(true);
@@ -185,7 +185,7 @@ function MetadataPanelBase({
       setIsSaving(false);
     }
   }, [
-    auth?.hanzo_identity,
+    auth?.shinkai_identity,
     codeEditorRef,
     form,
     handleSaveTool,
