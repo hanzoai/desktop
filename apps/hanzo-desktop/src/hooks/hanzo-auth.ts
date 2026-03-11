@@ -91,7 +91,7 @@ export const useHanzoLogin = () => {
 
         try {
           const tokenResponse = await fetch(
-            `${IAM_BASE_URL}/api/login/oauth/access_token`,
+            `${IAM_BASE_URL}/oauth/token`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

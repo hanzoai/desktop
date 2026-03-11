@@ -321,10 +321,10 @@ export const modelsConfig = {
         value: 'meta-llama/llama-prompt-guard-2-86m',
       },
       {
-        name: 'Moonshot Kimi K2 Instruct',
+        name: 'Zen K2 Instruct',
         value: 'moonshotai/kimi-k2-instruct',
       },
-      { name: 'Qwen3 32B', value: 'qwen/qwen3-32b' },
+      { name: 'Zen 32B', value: 'qwen/qwen3-32b' },
 
       // Text-to-Speech (Preview)
       { name: 'PlayAI TTS', value: 'playai-tts' },
