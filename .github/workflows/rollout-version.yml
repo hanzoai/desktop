@@ -49,19 +49,29 @@ jobs:
           sudo /tmp/aws/install --update
           rm -rf /tmp/aws/
 
+      - name: Fetch deploy credentials from KMS
+        id: kms
+        env:
+          HANZO_API_KEY: ${{ secrets.HANZO_API_KEY }}
+          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://kms.hanzo.ai' }}
+        run: |
+          response=$(curl -sf "${KMS_ENDPOINT}/api/v1/secrets/raw?secretPath=/deploy&environment=production" \
+            -H "Authorization: Bearer ${HANZO_API_KEY}" 2>/dev/null || echo "")
+          extract() { echo "$response" | jq -r ".secrets[] | select(.secretKey==\"$1\") | .secretValue // empty"; }
+          if [ -n "$response" ]; then
+            for key in R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_ZONE_ID CLOUDFLARE_AUTH_EMAIL CLOUDFLARE_AUTH_KEY CLOUDFLARE_RULES CLOUDFLARE_RULESET_ID; do
+              val=$(extract "$key")
+              if [ -n "$val" ]; then
+                echo "::add-mask::${val}"
+                echo "${key}=${val}" >> "$GITHUB_ENV"
+              fi
+            done
+          fi
+
       - name: Execute rollout script
         run: |
           chmod +x ./scripts/rollout-version.sh
           ./scripts/rollout-version.sh
-        env:
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_RULES: ${{ secrets.CLOUDFLARE_RULES }}
-          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID }}
-          CLOUDFLARE_RULESET_ID: ${{ secrets.CLOUDFLARE_RULESET_ID }}
-          CLOUDFLARE_AUTH_EMAIL: ${{ secrets.CLOUDFLARE_AUTH_EMAIL }}
-          CLOUDFLARE_AUTH_KEY: ${{ secrets.CLOUDFLARE_AUTH_KEY }}
           VERSION: ${{ needs.check-tag.outputs.version }}
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }} 
