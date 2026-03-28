@@ -149,11 +149,13 @@ jobs:
       - name: Install HuggingFace CLI
         run: |
           pip install --quiet huggingface_hub[cli]
-          echo "✅ HuggingFace CLI installed"
+          echo "HuggingFace CLI installed"
+        shell: bash
 
       - name: Download Zen Nano test model from HuggingFace
         env:
           HF_HUB_ENABLE_HF_TRANSFER: 1
+          PYTHONIOENCODING: utf-8
         run: |
           echo "Downloading Zen Nano model: ${{ env.TEST_MODEL_REPO }}/${{ env.TEST_MODEL_FILE }}..."
 
@@ -167,7 +169,7 @@ jobs:
               filename='${{ env.TEST_MODEL_FILE }}',
               cache_dir=os.path.expanduser('~/.cache/huggingface')
           )
-          print(f'✅ Zen Nano model downloaded to: {model_path}')
+          print(f'Zen Nano model downloaded to: {model_path}')
           print(f'Model size: {os.path.getsize(model_path) / (1024*1024):.1f} MB')
           print(f'MODEL_PATH={model_path}')
 
@@ -238,19 +240,22 @@ jobs:
         run: |
           echo "Testing hanzo-node API on port ${{ env.HANZO_NODE_API_PORT }}..."
 
-          # Try multiple times with delay
+          # hanzo-node does not implement /v2/health (returns 404).
+          # Verify the HTTP server is up by requesting any path and
+          # accepting any HTTP status code (including 404) as proof
+          # that warp is listening.
           for i in {1..10}; do
-            if curl -s -f "http://localhost:${{ env.HANZO_NODE_API_PORT }}/v2/health" > /dev/null; then
-              echo "✅ Hanzo node API is responding"
-              curl -s "http://localhost:${{ env.HANZO_NODE_API_PORT }}/v2/health" | head -20
+            HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:${{ env.HANZO_NODE_API_PORT }}/" 2>/dev/null || true)
+            if [ -n "$HTTP_CODE" ] && [ "$HTTP_CODE" != "000" ]; then
+              echo "Hanzo node API is responding (HTTP $HTTP_CODE)"
               exit 0
             fi
             echo "Attempt $i/10: waiting for hanzo-node..."
             sleep 3
           done
 
-          echo "❌ Hanzo node API not responding"
-          cat ../hanzo-node/hanzo-node.log || true
+          echo "Hanzo node API not responding"
+          cat hanzo-node/hanzo-node.log || true
           exit 1
         shell: bash
 
@@ -286,7 +291,7 @@ jobs:
       - name: Run E2E tests - Engine Integration
         working-directory: apps/hanzo-desktop
         env:
-          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+          ZOO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
           TEST_MODEL_PATH: ${{ env.MODEL_PATH }}
         run: |
           echo "Running E2E tests for engine integration..."
@@ -298,7 +303,7 @@ jobs:
       - name: Run E2E tests - Add Model & Change Engine
         working-directory: apps/hanzo-desktop
         env:
-          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+          ZOO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
         run: |
           echo "Running E2E tests for model/engine management..."
           npx playwright test e2e-tests/model-management.spec.ts \
@@ -309,7 +314,7 @@ jobs:
       - name: Run E2E tests - Full Chat Flow
         working-directory: apps/hanzo-desktop
         env:
-          HANZO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
+          ZOO_NODE_URL: "http://localhost:${{ env.HANZO_NODE_API_PORT }}"
         run: |
           echo "Running E2E tests for complete chat flow..."
           npx playwright test e2e-tests/chat-flow.spec.ts \
