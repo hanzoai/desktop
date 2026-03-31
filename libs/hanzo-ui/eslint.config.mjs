@@ -29,18 +29,4 @@ export default [
     // Override or add rules here
     rules: {},
   },
-  {
-    files: ['**/*.json'],
-    rules: {
-      '@nx/dependency-checks': [
-        'error',
-        {
-          ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
-        },
-      ],
-    },
-    languageOptions: {
-      parser: await import('jsonc-eslint-parser'),
-    },
-  },
 ];

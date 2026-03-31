@@ -1,10 +1,10 @@
 /// <reference types="vitest" />
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 // @ts-expect-error path
 import path from 'path';
 import dts from 'vite-plugin-dts';
 import topLevelAwait from 'vite-plugin-top-level-await';
 import wasm from 'vite-plugin-wasm';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -33,7 +33,7 @@ export default defineConfig({
     outDir: 'dist',
   },
   plugins: [
-    nxViteTsPaths(),
+    tsconfigPaths({ root: '../..' }),
     wasm(),
     topLevelAwait(),
     dts({

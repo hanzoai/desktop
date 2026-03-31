@@ -1,9 +1,8 @@
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 import { resolve } from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import wasm from 'vite-plugin-wasm';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
 
 // https://vitejs.dev/config/
@@ -21,9 +20,8 @@ export default defineConfig(() => ({
   plugins: [
     react(),
     tailwindcss(),
-    nxViteTsPaths(),
+    tsconfigPaths({ root: '../..' }),
     wasm(),
-    nxCopyAssetsPlugin(['*.md']),
   ],
   esbuild: {
     // Important for wasm plugin

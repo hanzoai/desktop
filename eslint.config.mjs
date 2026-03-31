@@ -1,4 +1,3 @@
-import nx from '@nx/eslint-plugin';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
 import globals from 'globals';
@@ -43,25 +42,7 @@ export default defineConfig([
     '**/scripts/setupTests.ts',
   ]),
 
-  { plugins: { '@nx': nx, 'jsx-a11y': jsxA11y } },
-  {
-    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    rules: {
-      '@nx/enforce-module-boundaries': [
-        'error',
-        {
-          enforceBuildableLibDependency: true,
-          allow: [],
-          depConstraints: [
-            {
-              sourceTag: '*',
-              onlyDependOnLibsWithTags: ['*'],
-            },
-          ],
-        },
-      ],
-    },
-  },
+  { plugins: { 'jsx-a11y': jsxA11y } },
 
   {
     files: ['**/*.tsx', '**/*.jsx'],
