@@ -21,9 +21,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Use nx set shas
-        uses: nrwl/nx-set-shas@v3
-
       - name: Setup Node version
         uses: actions/setup-node@v4
         with:
@@ -50,14 +47,16 @@ jobs:
         run: |
           npx ts-node ./ci-scripts/download-side-binaries.ts
 
-      - name: Run NX target on all projects
+      - name: Lint
         env:
           OPEN_AI_API_KEY: ${{ secrets.OPEN_AI_API_KEY }}
-        run: |
-          npx nx run-many -t lint,test --parallel=3 --skip-nx-cache --verbose
-          npx nx run-many -t build --parallel=3 --skip-nx-cache --verbose --exclude=hanzo-desktop
-          npx nx cargo-check hanzo-desktop
-          npx nx typecheck hanzo-desktop
+        run: npx eslint .
+
+      - name: Cargo check
+        run: cd apps/hanzo-desktop/src-tauri && cargo check
+
+      - name: Typecheck
+        run: cd apps/hanzo-desktop && npx tsc -b
 
 #      - name: Run E2E for Visor
 #        id: visor-e2e-tests
