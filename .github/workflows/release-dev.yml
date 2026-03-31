@@ -225,18 +225,20 @@ jobs:
         run: |
           npm version ${{ needs.prebuild.outputs.version }}${{ github.run_number }} --git-tag-version false
 
-      - name: (Linux) Run NX build on hanzo-desktop
+      - name: (Linux) Build hanzo-desktop
         if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
-        run: npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json" --skip-nx-cache --debug
+        working-directory: apps/hanzo-desktop
+        run: npx tauri build --config src-tauri/tauri.conf.development.json --debug
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY}}
           NODE_OPTIONS: '--max_old_space_size=8192'
-      - name: (Macos) Run NX build on hanzo-desktop
+      - name: (Macos) Build hanzo-desktop
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
-        run: npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json" --skip-nx-cache  --debug
+        working-directory: apps/hanzo-desktop
+        run: npx tauri build --config src-tauri/tauri.conf.development.json --debug
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -249,9 +251,10 @@ jobs:
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY}}
           NODE_OPTIONS: '--max_old_space_size=8192'
-      - name: (Windows) Run NX build on hanzo-desktop
+      - name: (Windows) Build hanzo-desktop
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
-        run: npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json" --skip-nx-cache  --debug
+        working-directory: apps/hanzo-desktop
+        run: npx tauri build --config src-tauri/tauri.conf.development.json --debug
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}

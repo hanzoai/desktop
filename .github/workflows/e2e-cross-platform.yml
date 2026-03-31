@@ -274,9 +274,9 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=16384'
         run: |
           echo "Building Tauri app for ${{ matrix.platform }}..."
-          npx nx cargo-check hanzo-desktop
-          npx nx typecheck hanzo-desktop
-          npx nx build hanzo-desktop --configuration=development
+          cd apps/hanzo-desktop/src-tauri && cargo check
+          cd apps/hanzo-desktop && npx tsc -b
+          cd apps/hanzo-desktop && npx tauri build --config src-tauri/tauri.conf.development.json
           echo "✅ Tauri app built"
 
       # ============================================
