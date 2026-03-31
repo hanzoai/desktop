@@ -28,4 +28,4 @@ jobs:
 
       - name: Audit
         run: |
-          npm audit --omit=dev
+          npm audit --omit=dev --audit-level=high
