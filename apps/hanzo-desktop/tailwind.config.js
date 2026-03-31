@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 
 const { join } = require('path');
-const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
 const sharedTailwindConfig = require('../../libs/hanzo-ui/src/hanzo-preset.js');
 
 module.exports = {
@@ -11,6 +10,9 @@ module.exports = {
       __dirname,
       '{src,pages,components,app}/**/*!(*.stories|*.spec).{ts,tsx,html,css}',
     ),
-    ...createGlobPatternsForDependencies(__dirname),
+    join(
+      __dirname,
+      '../../libs/*/src/**/*!(*.stories|*.spec).{ts,tsx,html,css}',
+    ),
   ],
 };
