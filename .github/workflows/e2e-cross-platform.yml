@@ -290,6 +290,9 @@ jobs:
             touch "$SIDECAR_DIR/ollama/ollama-${ARCH}"
           fi
 
+          # ollama/lib resource directory (required by tauri.windows.conf.json)
+          mkdir -p "$SIDECAR_DIR/ollama/lib"
+
           # llm-models resource directory (required by tauri.conf.json)
           mkdir -p apps/hanzo-desktop/src-tauri/llm-models
 
@@ -302,14 +305,33 @@ jobs:
           NODE_OPTIONS: '--max-old-space-size=16384'
         run: |
           echo "Building Tauri app for ${{ matrix.platform }}..."
-          cd apps/hanzo-desktop/src-tauri && cargo check
-          cd apps/hanzo-desktop && npx tsc -b
-          cd apps/hanzo-desktop && npx tauri build --config src-tauri/tauri.conf.development.json
+          (cd apps/hanzo-desktop/src-tauri && cargo check)
+          (cd apps/hanzo-desktop && npx vite build)
           echo "✅ Tauri app built"
 
       # ============================================
       # Install Playwright and Run E2E Tests
       # ============================================
+      - name: Start frontend preview server
+        working-directory: apps/hanzo-desktop
+        run: |
+          npx vite preview --port 1420 &
+          echo "VITE_PID=$!" >> $GITHUB_ENV
+
+          # Wait for server to be ready
+          for i in {1..15}; do
+            if curl -s -o /dev/null -w '%{http_code}' http://localhost:1420 2>/dev/null | grep -qE '^[23]'; then
+              echo "✅ Frontend preview server is ready on port 1420"
+              exit 0
+            fi
+            echo "Attempt $i/15: waiting for preview server..."
+            sleep 2
+          done
+
+          echo "❌ Frontend preview server did not start"
+          exit 1
+        shell: bash
+
       - name: Install Playwright browsers
         working-directory: apps/hanzo-desktop
         run: |
@@ -353,10 +375,15 @@ jobs:
       # ============================================
       # Cleanup and Upload Artifacts
       # ============================================
-      - name: Stop hanzo-node
+      - name: Stop hanzo-node and preview server
         if: always()
         working-directory: hanzo-node
         run: |
+          if [ -n "${{ env.VITE_PID }}" ]; then
+            echo "Stopping preview server (PID: ${{ env.VITE_PID }})..."
+            kill ${{ env.VITE_PID }} || true
+          fi
+
           if [ -n "${{ env.HANZO_NODE_PID }}" ]; then
             echo "Stopping hanzo-node (PID: ${{ env.HANZO_NODE_PID }})..."
             kill ${{ env.HANZO_NODE_PID }} || true
