@@ -308,6 +308,7 @@ jobs:
           (cd apps/hanzo-desktop/src-tauri && cargo check)
           (cd apps/hanzo-desktop && npx vite build)
           echo "✅ Tauri app built"
+        shell: bash
 
       # ============================================
       # Install Playwright and Run E2E Tests
