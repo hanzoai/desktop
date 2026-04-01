@@ -265,12 +265,34 @@ jobs:
       # ============================================
       # Build Tauri App
       # ============================================
-      - name: Download Tauri side binaries
-        env:
-          ARCH: ${{ matrix.arch }}
+      - name: Populate Tauri side binaries from local build
         run: |
-          npx ts-node ./ci-scripts/download-side-binaries.ts
-          echo "✅ Side binaries downloaded"
+          ARCH="${{ matrix.arch }}"
+          SIDECAR_DIR="apps/hanzo-desktop/src-tauri/external-binaries"
+
+          # hanzo-node sidecar — use the binary we just built
+          mkdir -p "$SIDECAR_DIR/hanzo-node/hanzo-tools-runner-resources"
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            cp hanzo-node/dist/hanzo-node.exe "$SIDECAR_DIR/hanzo-node/hanzo-node-${ARCH}.exe"
+            touch "$SIDECAR_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${ARCH}.exe"
+            touch "$SIDECAR_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${ARCH}.exe"
+          else
+            cp hanzo-node/dist/hanzo-node "$SIDECAR_DIR/hanzo-node/hanzo-node-${ARCH}"
+            touch "$SIDECAR_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${ARCH}"
+            touch "$SIDECAR_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${ARCH}"
+          fi
+
+          # ollama sidecar — placeholder (not needed for E2E)
+          mkdir -p "$SIDECAR_DIR/ollama"
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            touch "$SIDECAR_DIR/ollama/ollama-${ARCH}.exe"
+          else
+            touch "$SIDECAR_DIR/ollama/ollama-${ARCH}"
+          fi
+
+          echo "✅ Side binaries populated from local build"
+          ls -la "$SIDECAR_DIR/hanzo-node/" "$SIDECAR_DIR/ollama/"
+        shell: bash
 
       - name: Build Tauri app (development mode)
         env:
