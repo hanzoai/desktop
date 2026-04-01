@@ -290,6 +290,9 @@ jobs:
             touch "$SIDECAR_DIR/ollama/ollama-${ARCH}"
           fi
 
+          # llm-models resource directory (required by tauri.conf.json)
+          mkdir -p apps/hanzo-desktop/src-tauri/llm-models
+
           echo "✅ Side binaries populated from local build"
           ls -la "$SIDECAR_DIR/hanzo-node/" "$SIDECAR_DIR/ollama/"
         shell: bash
