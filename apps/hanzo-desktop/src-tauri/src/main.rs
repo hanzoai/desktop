@@ -27,7 +27,14 @@ use crate::commands::mcp_clients_install::{
     register_sse_server_in_cursor,
 };
 use crate::commands::logs::{download_logs, retrieve_logs};
+use crate::commands::mining::{
+    mining_get_balance, mining_get_state, mining_get_wallet_address, mining_start, mining_stop,
+};
+use crate::commands::secure_storage::{
+    init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
+};
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::mining::MiningManager;
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
 use globals::HANZO_NODE_MANAGER_INSTANCE;
@@ -44,6 +51,7 @@ mod global_shortcuts;
 mod globals;
 mod hardware;
 mod local_hanzo_node;
+mod mining;
 mod models;
 mod tray;
 mod windows;
@@ -138,6 +146,14 @@ fn main() {
             register_sse_server_in_cursor,
             get_cursor_command_config_help,
             get_cursor_sse_config_help,
+            mining_get_state,
+            mining_start,
+            mining_stop,
+            mining_get_balance,
+            mining_get_wallet_address,
+            secure_storage_set,
+            secure_storage_get,
+            secure_storage_delete,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -146,9 +162,18 @@ fn main() {
 
             {
                 let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
-                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
+                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir.clone()),
                 )));
             }
+
+            // Initialize mining manager
+            let mining_storage_path = app_data_dir.join("mining_state.json");
+            let mining_manager = Arc::new(MiningManager::new(mining_storage_path));
+            app.manage(mining_manager.clone());
+
+            // Initialize secure storage (OS keyring with in-memory fallback)
+            let secure_store = init_secure_storage();
+            app.manage(secure_store);
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
@@ -184,6 +209,12 @@ fn main() {
                             log::info!("auto-spawned hanzo-node on app start");
                         }
                     }
+
+                    // Auto-start mining. Empty wallet address means MiningManager
+                    // will use the persisted address or generate a new one.
+                    let mining_manager = app_handle.state::<Arc<MiningManager>>();
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                    mining_manager.start_mining(app_handle.clone(), String::new()).await;
                 }
             });
 
