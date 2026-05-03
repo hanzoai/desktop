@@ -1,0 +1,16 @@
+{
+  "name": "@hanzo_network/brand-config",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    }
+  },
+  "peerDependencies": {
+    "@hanzo_network/hanzo-ui": "0.0.1"
+  }
+}

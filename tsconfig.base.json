@@ -15,6 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@hanzo_network/brand-config": ["libs/brand-config/src/index.ts"],
       "@hanzo_network/hanzo-artifacts": [
         "libs/hanzo-artifacts/src/index.ts"
       ],
