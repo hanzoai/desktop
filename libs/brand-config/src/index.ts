@@ -19,9 +19,9 @@ const HANZO: BrandConfig = {
   productName: 'Hanzo Desktop',
   identifier: 'com.hanzo.desktop',
   logo: {
-    light: './assets/hanzo-logo.svg',
-    dark: './assets/hanzo-logo-dark.svg',
-    favicon: './assets/hanzo-favicon.svg',
+    light: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',
+    dark: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',
+    favicon: 'libs/hanzo-logo/assets/hanzo/hanzo-icon.svg',
   },
   colors: {
     primary: '#000000',
@@ -49,9 +49,9 @@ const ZOO: BrandConfig = {
   productName: 'Zoo Desktop',
   identifier: 'com.zoo.desktop',
   logo: {
-    light: './assets/zoo-logo.svg',
-    dark: './assets/zoo-logo-dark.svg',
-    favicon: './assets/zoo-favicon.svg',
+    light: 'libs/hanzo-logo/assets/zoo/zoo-logo.svg',
+    dark: 'libs/hanzo-logo/assets/zoo/zoo-logo.svg',
+    favicon: 'libs/hanzo-logo/assets/zoo/zoo-icon.svg',
   },
   colors: {
     primary: '#000000',

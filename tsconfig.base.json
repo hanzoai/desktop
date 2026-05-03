@@ -20,6 +20,7 @@
         "libs/hanzo-artifacts/src/index.ts"
       ],
       "@hanzo_network/hanzo-i18n": ["libs/hanzo-i18n/src/index.ts"],
+      "@hanzo_network/hanzo-logo": ["libs/hanzo-logo/src/index.ts"],
       "@hanzo_network/hanzo-message-ts/*": [
         "libs/hanzo-message-ts/src/*.ts"
       ],
