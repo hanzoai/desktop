@@ -1,4 +1,5 @@
 import { Button } from '@hanzo_network/hanzo-ui';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Wallet, WifiOff } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -6,6 +7,39 @@ import { useNavigate } from 'react-router';
 import { useMiningWithWallet } from '../../hooks/useMiningWithWallet';
 import { useWallet } from '../../store/wallet';
 import { isTauriAvailable, safeInvoke, safeListen } from '../../utils/tauri-check';
+
+// Synthesize a 3-note ascending coin-jingle using Web Audio (no asset file).
+// Triggered when balance increases. ~250ms total. Falls back silently if
+// AudioContext is unavailable.
+function playCoinJingle() {
+  try {
+    const Ctx =
+      (window as unknown as { AudioContext?: typeof AudioContext }).AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = new Ctx();
+    const now = ctx.currentTime;
+    // E5, A5, C#6 — bright major triad arpeggio
+    const notes = [659.25, 880.0, 1108.73];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = now + i * 0.07;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.2);
+    });
+    setTimeout(() => void ctx.close(), 600);
+  } catch {
+    /* swallow — sound is non-essential */
+  }
+}
 
 interface MiningStatusProps {
   sidebarExpanded: boolean;
@@ -25,7 +59,20 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
   const [balance, setBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState('Loading...');
   const [isMining, setIsMining] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [pulses, setPulses] = useState<{ id: number; delta: number }[]>([]);
+  const pulseIdRef = useRef(0);
+
+  const handleBalanceIncrease = (delta: number) => {
+    if (delta <= 0) return;
+    playCoinJingle();
+    const id = ++pulseIdRef.current;
+    setPulses((prev) => [...prev, { id, delta }]);
+    // Auto-remove after animation lifetime
+    window.setTimeout(
+      () => setPulses((prev) => prev.filter((p) => p.id !== id)),
+      1400,
+    );
+  };
 
   useMiningWithWallet();
   const { wallet } = useWallet();
@@ -60,10 +107,7 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
     void safeListen<MiningState>('mining-update', (event) => {
       const state = event.payload;
       setBalance((prev) => {
-        if (audioRef.current && state.balance > prev) {
-          audioRef.current.currentTime = 0;
-          audioRef.current.play().catch(() => undefined);
-        }
+        if (state.balance > prev) handleBalanceIncrease(state.balance - prev);
         return state.balance;
       });
       setWalletAddress(state.wallet_address);
@@ -74,18 +118,6 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
 
     return () => {
       unlisten?.();
-    };
-  }, []);
-
-  useEffect(() => {
-    const audio = new Audio();
-    audio.src =
-      'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjCM0fPTgjMGHGq96OegWBEMTKXh8bllHAU2jdXyzn0pBi==';
-    audioRef.current = audio;
-
-    return () => {
-      audio.pause();
-      audio.src = '';
     };
   }, []);
 
@@ -110,23 +142,40 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
 
   return (
     <Button
-      className="border-divider group flex w-full items-center gap-3 border-t px-4 py-3 hover:bg-white/5"
+      className="border-divider group relative flex w-full items-center gap-3 border-t px-4 py-3 hover:bg-white/5"
       onClick={handleWalletClick}
       size="auto"
       variant="ghost"
     >
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
-        <Wallet className="h-6 w-6 text-white" />
+      <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
+        {isMining && (
+          <span className="absolute inset-0 animate-ping rounded-2xl bg-emerald-400/30" />
+        )}
+        <Wallet className="relative h-6 w-6 text-white" />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
           {isOnline ? (
             <>
               <span className="text-lg font-bold text-white">
                 ${balance.toFixed(1)}
               </span>
               <span className="text-xs text-white/60">AI</span>
+              <AnimatePresence>
+                {pulses.map((p) => (
+                  <motion.span
+                    key={p.id}
+                    className="pointer-events-none absolute -top-1 left-0 text-xs font-semibold text-emerald-400"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: -18 }}
+                    exit={{ opacity: 0, y: -28 }}
+                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                  >
+                    +{p.delta.toFixed(1)} AI
+                  </motion.span>
+                ))}
+              </AnimatePresence>
             </>
           ) : (
             <div className="flex items-center gap-1.5">

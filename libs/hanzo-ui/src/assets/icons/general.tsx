@@ -51,6 +51,9 @@ export const HanzoCombinationMarkIcon = ({
   </svg>
 );
 
+// Source: ~/work/zoo/logo/dist/zoo-logo-white.svg — three intersecting rings
+// clipped to a circle. Uses currentColor so it inherits text color (matches
+// hanzo's same convention) and works on light + dark.
 export const ZooCombinationMarkIcon = ({
   className,
 }: {
@@ -58,18 +61,20 @@ export const ZooCombinationMarkIcon = ({
 }) => (
   <svg
     className={cn('shrink-0', className)}
-    viewBox="241 241 542 542"
+    viewBox="0 0 1024 1024"
     xmlns="http://www.w3.org/2000/svg"
   >
     <defs>
-      <filter height="100%" id="zoo-overlap" width="100%" x="0%" y="0%">
-        <feBlend in2="BackgroundImage" mode="multiply" />
-      </filter>
+      <clipPath id="zoo-outer-clip">
+        <circle cx="508" cy="510" r="283" />
+      </clipPath>
     </defs>
-    <circle cx="512" cy="512" fill="none" r="270" stroke="#000" strokeWidth="4" />
-    <circle cx="513" cy="369" fill="#00A652" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
-    <circle cx="365" cy="595" fill="#ED1C24" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
-    <circle cx="643" cy="595" fill="#2E3192" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
+    <g clipPath="url(#zoo-outer-clip)" stroke="currentColor" fill="none">
+      <circle cx="513" cy="369" r="234" strokeWidth="33" />
+      <circle cx="365" cy="595" r="234" strokeWidth="33" />
+      <circle cx="643" cy="595" r="234" strokeWidth="33" />
+      <circle cx="508" cy="510" r="265" strokeWidth="36" />
+    </g>
   </svg>
 );
 

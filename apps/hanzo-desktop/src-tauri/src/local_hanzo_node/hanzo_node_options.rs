@@ -216,12 +216,26 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            embeddings_server_url: Some("https://embeddings.hanzo.ai".to_string()),
+            // Use the gateway as the embedding endpoint — embeddings.hanzo.ai
+            // currently has an untrusted cert chain. Gateway proxies to a
+            // valid embedding model. Same gateway is used for inference below.
+            embeddings_server_url: Some("https://gateway.hanzo.ai".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
                 "https://gateway.hanzo.ai,https://gateway.hanzo.ai".to_string(),
             ),
-            initial_agent_names: Some("hanzo_free_trial,hanzo_code_gen".to_string()),
+            // Brand-aware agent names: "zoo_free_trial,zoo_code_gen" when
+            // compiled with BRAND=zoo, "hanzo_free_trial,hanzo_code_gen"
+            // otherwise. The agent ID is what surfaces as the display name
+            // (formatText("zoo_free_trial") -> "Zoo Free Trial").
+            // option_env! reads the env at *compile time* and bakes it in.
+            initial_agent_names: Some(
+                if option_env!("BRAND") == Some("zoo") {
+                    "zoo_free_trial,zoo_code_gen".to_string()
+                } else {
+                    "hanzo_free_trial,hanzo_code_gen".to_string()
+                },
+            ),
             initial_agent_models: Some(
                 "hanzo-backend:FREE_TEXT_INFERENCE,hanzo-backend:CODE_GENERATOR".to_string(),
             ),
