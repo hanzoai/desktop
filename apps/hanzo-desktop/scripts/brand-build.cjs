@@ -1,0 +1,55 @@
+#!/usr/bin/env node
+// Build a brand-variant Tauri bundle by deep-merging the brand overlay into
+// tauri.conf.json before invoking `tauri build`. Tauri 2.x's `-c <file>` flag
+// merges the runtime config but does NOT propagate compile-time fields like
+// `identifier` into `tauri::generate_context!()` — so we swap the base config
+// for the duration of the build, then restore it.
+//
+// Usage: node ./scripts/brand-build.cjs <hanzo|zoo>
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require('child_process');
+
+const brand = process.argv[2];
+if (!brand || (brand !== 'hanzo' && brand !== 'zoo')) {
+  console.error('usage: brand-build.cjs <hanzo|zoo>');
+  process.exit(2);
+}
+
+const tauriDir = path.join(__dirname, '..', 'src-tauri');
+const baseConfigPath = path.join(tauriDir, 'tauri.conf.json');
+const overlayPath = path.join(tauriDir, `tauri.conf.${brand}.json`);
+const backupPath = path.join(tauriDir, `tauri.conf.json.brand-build-backup`);
+
+const deepMerge = (a, b) => {
+  if (Array.isArray(a) && Array.isArray(b)) return b;
+  if (a && b && typeof a === 'object' && typeof b === 'object') {
+    const out = { ...a };
+    for (const k of Object.keys(b)) out[k] = deepMerge(a[k], b[k]);
+    return out;
+  }
+  return b === undefined ? a : b;
+};
+
+const base = JSON.parse(fs.readFileSync(baseConfigPath, 'utf8'));
+const overlay = JSON.parse(fs.readFileSync(overlayPath, 'utf8'));
+const merged = deepMerge(base, overlay);
+
+fs.copyFileSync(baseConfigPath, backupPath);
+fs.writeFileSync(baseConfigPath, JSON.stringify(merged, null, 2) + '\n');
+
+const restore = () => {
+  if (fs.existsSync(backupPath)) {
+    fs.copyFileSync(backupPath, baseConfigPath);
+    fs.unlinkSync(backupPath);
+  }
+};
+process.on('SIGINT', () => { restore(); process.exit(130); });
+process.on('SIGTERM', () => { restore(); process.exit(143); });
+
+const env = { ...process.env, VITE_BRAND: brand, BRAND: brand };
+const result = spawnSync('tauri', ['build'], { stdio: 'inherit', env });
+
+restore();
+process.exit(result.status ?? 1);
