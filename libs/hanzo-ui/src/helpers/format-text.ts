@@ -1,6 +1,7 @@
 import { type HanzoToolHeader } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
-export const formatText = (text: string) => {
+export const formatText = (text: string | null | undefined) => {
+  if (!text) return '';
   const camelToSpaces = text.replace(/([a-z])([A-Z])/g, '$1 $2');
   const snakeToSpaces = camelToSpaces.replace(/_/g, ' ');
   return snakeToSpaces
@@ -9,7 +10,8 @@ export const formatText = (text: string) => {
     .join(' ');
 };
 
-export const formatCamelCaseText = (text: string) => {
+export const formatCamelCaseText = (text: string | null | undefined) => {
+  if (!text) return '';
   const words = text.split(/(?=[A-Z])/);
 
   const formattedWords = words.map((word) => {
