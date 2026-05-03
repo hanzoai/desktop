@@ -103,9 +103,17 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                         .unwrap_or_default();
                     let payload = OAuthDeepLinkPayload { state, code };
 
-                    // Check if this is an IAM login callback (path starts with /hanzo)
+                    // Brand-aware IAM login callback. The OAuth redirect is
+                    // <scheme>://oauth/<brand> (e.g. zoo://oauth/zoo,
+                    // hanzo://oauth/hanzo). Path /hanzo|/zoo signals login;
+                    // emit the brand-specific callback event the JS-side hook
+                    // is listening for.
                     let path = url.path();
-                    if path.starts_with("/hanzo") {
+                    if path.starts_with("/zoo") {
+                        log::debug!("emitting zoo-iam-callback event globally");
+                        let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                        let _ = app_handle.emit("zoo-iam-callback", payload);
+                    } else if path.starts_with("/hanzo") {
                         log::debug!("emitting hanzo-iam-callback event globally");
                         let _ = recreate_window(app_handle.clone(), Window::Main, true);
                         let _ = app_handle.emit("hanzo-iam-callback", payload);

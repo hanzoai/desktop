@@ -11,6 +11,15 @@ export interface BrandConfig {
   storeUrl: { mac: string; win: string; ios: string; android: string };
   network: { rpc: string; chainId: number; token: string };
   miningEndpoint: string;
+  // OAuth IAM provider used by "Login with <Brand>" flow.
+  // The deep-link scheme must match the brand's tauri.conf.<brand>.json
+  // plugins.deep-link.desktop.schemes entry.
+  iam: {
+    baseUrl: string;       // e.g. https://hanzo.id or https://zoolabs.id
+    clientId: string;      // OAuth client id registered with the IAM
+    redirectUri: string;   // <scheme>://oauth/<brand>
+    callbackEvent: string; // Tauri event name emitted by deep-link handler
+  };
 }
 
 const HANZO: BrandConfig = {
@@ -41,6 +50,12 @@ const HANZO: BrandConfig = {
     token: '$AI',
   },
   miningEndpoint: 'https://gateway.hanzo.ai',
+  iam: {
+    baseUrl: 'https://hanzo.id',
+    clientId: 'hanzo-app-client-id',
+    redirectUri: 'hanzo://oauth/hanzo',
+    callbackEvent: 'hanzo-iam-callback',
+  },
 };
 
 const ZOO: BrandConfig = {
@@ -71,6 +86,12 @@ const ZOO: BrandConfig = {
     token: '$AI',
   },
   miningEndpoint: 'https://gateway.hanzo.ai',
+  iam: {
+    baseUrl: 'https://zoolabs.id',
+    clientId: 'zoo-app-client-id',
+    redirectUri: 'zoo://oauth/zoo',
+    callbackEvent: 'zoo-iam-callback',
+  },
 };
 
 export function getBrandFromHostname(h: string): BrandConfig {
