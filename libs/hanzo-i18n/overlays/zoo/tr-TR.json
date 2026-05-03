@@ -1,0 +1,139 @@
+{
+  "analytics": {
+    "title": "Zoo'yi geliştirmemize yardımcı olun"
+  },
+  "chat": {
+    "emptyStateDescription": "Hızlı sorular için, Zoo Spotlight'ı kullanmak üzere ⌘ + Shift + J tuşlarına basın",
+    "emptyStateTitle": "Zoo AI'ye Sor"
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Zoo Kimliği"
+    }
+  },
+  "common": {
+    "logInHanzoHosting": "Zoo Hosting'e Giriş Yap",
+    "signUpHanzoHosting": "Zoo Hosting'e Kaydol"
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>Yerel:</b> Yerel bir Zoo ile verilerinizi güvenli bir ortamda tam kontrol altına alırsınız."
+    },
+    "localAI": "Zoo Yerel AI",
+    "welcome": "Zoo'ya Hoş Geldiniz"
+  },
+  "disconnect": {
+    "modalTitle": "Zoo'yi Bağlantıyı Kes"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Zoo Düğümünüze bağlanmakta zorluk yaşıyoruz. Düğümünüz çevrimdışı olabilir veya internet bağlantınızda bir sorun olabilir."
+    }
+  },
+  "exportConnection": {
+    "restoreText": "Bağlantıyı Zoo Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
+  },
+  "extension": {
+    "welcome": "Zoo Visor ile web tarayıcı deneyiminizi AI ile dönüştürün ✨"
+  },
+  "feedback": {
+    "description": "Geri bildiriminizi önemsiyoruz! Zoo hakkındaki düşüncelerinizi ve deneyiminizi nasıl geliştirebileceğimiz konusunda bize bilgi verin."
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Zoo Masaüstü kurulumunuzu kaydederken bir hata oluştu. Lütfen EVM Adresinizin daha önce farklı bir kurulumu kaydetmek için kullanılmadığından emin olun."
+    },
+    "success": {
+      "registerDesktopInstallation": "Zoo Masaüstü kurulumunuz başarıyla kaydedildi. Galxe görevinde kaydedilmesi birkaç saat sürebilir."
+    }
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "İlk yapay zekanızı bağlayarak Zoo AI ile soru sormaya başlayın. OpenAI'yi bağlamayı deneyin."
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "İstemciniz SSE'yi desteklemiyorsa, bu komutu kullanarak Zoo MCP sunucusunu ayrı bir işlem olarak çalıştırabilirsiniz:"
+  },
+  "mcpPage": {
+    "helpfulLinks": "Zoo ile bağlantı kurmak için faydalı MCP'leri smithery.ai ve composio.dev adreslerinde bulabilirsiniz."
+  },
+  "mcpServers": {
+    "addDescription": "Zoo Düğümünüzle bağlantı kurmak için yeni bir MCP sunucusu yapılandırın",
+    "listDescription": "Zoo Düğümünüze bağlı MCP sunucularının listesi"
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "Bir Zoo ID'si kullanarak koleksiyonunuza bir ajan ekleyin. Örnek: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Eklemek istediğiniz ajanın Zoo ID'sini girin.",
+    "registerHanzoIdentity": "Zoo Kimliği Kaydet",
+    "registerHanzoIdentityDescription": "Ajanları kullanmak ve yayınlamak için Zoo ağında benzersiz kimliğinizi oluşturun"
+  },
+  "onboardingChecklist": {
+    "getStartedText": "Zoo ile Başlayın",
+    "setupHanzoDesktop": "Zoo Masaüstünü Kurun",
+    "setupHanzoDesktopDescription": "Başlamak için Zoo Masaüstünü kurun"
+  },
+  "quickAsk": {
+    "emptyStateTitle": "Zoo AI'ye Sor"
+  },
+  "quickConnection": {
+    "connectingToNode": "Yerel Zoo Düğümünüze Bağlanıyor"
+  },
+  "settings": {
+    "layout": {
+      "hanzoNode": "Zoo Düğüm Yöneticisi"
+    },
+    "quickAccessButton": {
+      "label": "Zoo Hızlı Erişim Butonunu Göster"
+    },
+    "remoteAccess": {
+      "description": "Ngrok kullanarak Zoo düğümünüze her yerden kolayca ve güvenli bir şekilde bağlanın. Karmaşık bir kurulum yok—sadece <a>ücretsiz bir ngrok hesabı oluşturun</a>, kontrol panelinden <b>ngrok kimlik doğrulama tokeninizi</b> kopyalayın ve güvenli uzaktan erişimi etkinleştirmek için aşağıya yapıştırın.",
+      "success": "Bağlandı! Zoo düğümünüz artık ngrok üzerinden uzaktan erişilebilir"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "Zoo Kimliğini doğrula",
+      "checkIdentityInSyncDescription": "Zoo kimliğinizin doğru bir şekilde senkronize olduğunu kontrol edin.",
+      "error": "Zoo Kimliği güncellerken hata",
+      "goToHanzoIdentity": "Benim Zoo Kimliğime git",
+      "label": "Zoo Kimliği",
+      "registerIdentity": "Zoo Kimliğinizi kaydedin",
+      "success": "Zoo Kimliği başarıyla güncellendi",
+      "updatedIdentity": "Zoo Kimliği başarıyla güncellendi."
+    },
+    "hanzoVersion": "Zoo Masaüstü Sürümü:"
+  },
+  "hanzoNode": {
+    "manager": "Zoo Düğüm Yöneticisi",
+    "notifications": {
+      "errorSyncOllama": "Yerel Ollama modellerinizi Zoo Düğümünüzle senkronize ederken hata oluştu",
+      "removedNote": "Yerel Zoo Düğümünüzün depolama alanı silindi",
+      "runningNode": "Yerel Zoo Düğümünüz çalışıyor",
+      "startingNode": "Yerel Zoo Düğümünüz başlatılıyor",
+      "stopNode": "Yerel Zoo Düğümünüz durduruluyor",
+      "stoppedNode": "Yerel Zoo Düğümünüz durduruldu",
+      "syncedOllama": "Yerel Ollama modelleri Zoo Düğümünüzle senkronize edildi"
+    },
+    "resetNodeWarning": {
+      "description": "Zoo Düğümünüz mevcut anahtarlar tarafından kilitlenmiş durumda. Yeniden bağlanmak için tüm Zoo Düğüm verilerinizi sıfırlayabilirsiniz.",
+      "option2": "<b>Verileri Sıfırla:</b> Tüm Zoo Düğüm verilerinizi kalıcı olarak silin.",
+      "option3": "<b>Tümünü Sıfırla:</b> Şifreleme ve imza anahtarları dahil olmak üzere tüm Zoo Düğüm verilerinizi kalıcı olarak silin."
+    },
+    "restartNode": "Lütfen Zoo Düğümünüzü yeniden başlatın",
+    "unavailable": "Zoo Düğümünüz kullanılamıyor"
+  },
+  "tools": {
+    "create": {
+      "hanzoCodeGenerator": "Zoo Kod Üretici",
+      "hanzoFreeTrial": "Zoo Ücretsiz Deneme"
+    },
+    "visitStore": "İş akışınızı geliştirmek için ek araçlar keşfetmek ve yüklemek üzere Zoo Mağazası'nı ziyaret edin"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "Dosyalarınızı yüklemek, onları AI uyumlu hale getirir ve Zoo'de kullanılabilir hale getirir."
+    },
+    "shareFolderWarning": {
+      "text": "Klasörleri Zoo Ağı üzerinden paylaşabilmek için önce bir Zoo kimliği kaydetmelisiniz."
+    }
+  }
+}

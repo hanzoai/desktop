@@ -1,0 +1,122 @@
+{
+  "analytics": {
+    "title": "帮助我们改进 Zoo"
+  },
+  "chat": {
+    "emptyStateDescription": "对于快速问题，请按 ⌘ + Shift + J 使用 Zoo Spotlight",
+    "emptyStateTitle": "询问 Zoo AI"
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Zoo身份"
+    }
+  },
+  "common": {
+    "logInHanzoHosting": "登录Zoo Hosting",
+    "hanzoPrivate": "Zoo私有（本地）",
+    "signUpHanzoHosting": "注册Zoo Hosting"
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>本地：</b> 使用本地的 Zoo，您可以在安全环境中完全控制您的数据。"
+    },
+    "localAI": "Zoo 本地 AI"
+  },
+  "disconnect": {
+    "modalTitle": "断开 Zoo"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "我们在连接您的 Zoo 节点时遇到问题。您的节点可能离线，或者您的互联网连接可能已断开。"
+    }
+  },
+  "exportConnection": {
+    "restoreText": "使用您的密码短语来恢复与 Zoo 节点的连接"
+  },
+  "extension": {
+    "welcome": "使用 Zoo Visor ✨ 变革您的网页浏览体验"
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "注册Zoo Desktop安装时出错。请确保您的EVM地址之前未用于注册其他安装。"
+    },
+    "success": {
+      "registerDesktopInstallation": "您的Zoo Desktop安装已成功注册。可能需要几个小时才能在Galxe任务中注册。"
+    }
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "连接您的第一个人工智能以开始向Zoo AI提问。尝试连接OpenAI"
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "如果您的客户端不支持SSE，您可以使用以下命令将Zoo MCP服务器作为单独的进程运行："
+  },
+  "mcpPage": {
+    "helpfulLinks": "您可以在 smithery.ai 和 composio.dev 找到用于连接 Zoo 的有用 MCP。"
+  },
+  "mcpServers": {
+    "addDescription": "配置一个新的 MCP 服务器以连接到您的 Zoo 节点",
+    "listDescription": "连接到您的 Zoo 节点的 MCP 服务器列表"
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "使用 Zoo ID 将代理添加到您的集合中。示例：@@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "输入您想要添加的代理的 Zoo ID。"
+  },
+  "onboardingChecklist": {
+    "getStartedText": "开始使用 Zoo",
+    "setupHanzoDesktop": "设置 Zoo 桌面",
+    "setupHanzoDesktopDescription": "设置 Zoo 桌面以开始使用"
+  },
+  "quickAsk": {
+    "emptyStateTitle": "询问 Zoo AI"
+  },
+  "quickConnection": {
+    "connectingToNode": "连接到您的本地Zoo节点"
+  },
+  "settings": {
+    "quickAccessButton": {
+      "label": "显示 Zoo 快速访问按钮"
+    },
+    "remoteAccess": {
+      "description": "使用 ngrok 轻松安全地从任何地方连接到您的 Zoo 节点。无需复杂的设置——只需 <a>创建一个免费的 ngrok 账户</a>，从仪表板复制您的 <b>ngrok 认证令牌</b>，并将其粘贴到下面以启用安全的远程访问。",
+      "success": "已连接！您的 Zoo 节点现在可以通过 ngrok 远程访问"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "验证Zoo身份",
+      "checkIdentityInSyncDescription": "检查您的Zoo身份是否准确同步。",
+      "error": "更新Zoo身份时出错",
+      "goToHanzoIdentity": "前往我的Zoo身份",
+      "label": "Zoo 身份",
+      "registerIdentity": "注册您的Zoo身份",
+      "success": "Zoo身份更新成功",
+      "updatedIdentity": "Zoo 身份更新成功。"
+    },
+    "hanzoVersion": "Zoo Desktop版本："
+  },
+  "hanzoNode": {
+    "manager": "Zoo 节点管理器",
+    "notifications": {
+      "errorSyncOllama": "同步本地 Ollama 模型与您的 Zoo 节点时出错",
+      "removedNote": "您的本地 Zoo 节点存储已移除",
+      "runningNode": "您的本地 Zoo 节点正在运行",
+      "startingNode": "正在启动本地 Zoo 节点",
+      "stopNode": "正在停止本地 Zoo 节点",
+      "stoppedNode": "您的本地 Zoo 节点已停止",
+      "syncedOllama": "本地 Ollama 模型已与您的 Zoo 节点同步"
+    },
+    "resetNodeWarning": {
+      "description": "您的 Zoo 节点当前被现有密钥锁定。要重新连接，您有三个选项："
+    },
+    "restartNode": "请重启您的 Zoo 节点",
+    "unavailable": "您的Zoo节点不可用"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "上传您的文件会使它们变得适用于 AI 并可在 Zoo 中使用。"
+    },
+    "shareFolderWarning": {
+      "text": "您必须在 Zoo 网络上注册 Zoo 身份，然后才能共享文件夹。"
+    }
+  }
+}
