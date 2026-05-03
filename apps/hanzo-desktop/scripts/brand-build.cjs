@@ -24,8 +24,17 @@ const backupPath = path.join(tauriDir, `tauri.conf.json.brand-build-backup`);
 const infoPlistPath = path.join(tauriDir, 'Info.plist');
 const infoPlistBackupPath = path.join(tauriDir, 'Info.plist.brand-build-backup');
 
+// Deep-merge with per-position recursion for arrays. Overlay extending past
+// base length is appended; base entries past overlay length are preserved.
+// This matters for app.windows[] where the overlay typically only patches
+// the first window's title and must not erase the others.
 const deepMerge = (a, b) => {
-  if (Array.isArray(a) && Array.isArray(b)) return b;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const out = [];
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) out.push(deepMerge(a[i], b[i]));
+    return out;
+  }
   if (a && b && typeof a === 'object' && typeof b === 'object') {
     const out = { ...a };
     for (const k of Object.keys(b)) out[k] = deepMerge(a[k], b[k]);
