@@ -25,7 +25,7 @@
         }
       ]
     },
-    "opener:allow-open-url",
+    "opener:default",
     {
       "identifier": "http:default",
       "allow": [{ "url": "https://mcp.composio.dev" }],
