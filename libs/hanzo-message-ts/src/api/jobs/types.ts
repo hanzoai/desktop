@@ -133,6 +133,7 @@ export type LLMProviderInterface = {
   OpenAILegacy?: OpenAILegacy;
   TogetherAI?: TogetherAI;
   Ollama?: Ollama;
+  LMStudio?: LMStudio;
   Gemini?: Gemini;
   Exo?: Exo;
   Groq?: Groq;
@@ -149,6 +150,10 @@ export interface ModelType {
 }
 
 export interface Ollama {
+  model_type: string;
+}
+
+export interface LMStudio {
   model_type: string;
 }
 export interface Gemini {
