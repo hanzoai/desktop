@@ -1,3 +1,4 @@
+import { getBrand } from '@hanzo_network/brand-config';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import { useUpdateAgentInJob } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
@@ -51,9 +52,9 @@ const ollamaDescriptionMap = OLLAMA_MODELS_REPOSITORY.reduce(
 
 const nonOllamaProviderModels = {
   'hanzo-backend:free_text_inference':
-    'Hanzo AI model for text generation.',
+    `${getBrand().name} AI model for text generation.`,
   'hanzo-backend:code_generator':
-    'Hanzo AI model for generating tool code.',
+    `${getBrand().name} AI model for generating tool code.`,
   'openai:gpt-4o':
     'Powerful OpenAI model known for its ability to generate human-like text and handle complex tasks.',
   'openai:gpt-4o-mini':
