@@ -246,7 +246,10 @@ impl Default for HanzoNodeOptions {
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
-            default_embedding_model: Some("snowflake-arctic-embed:xs".to_string()),
+            // 384-dim model that matches hanzo-node's hardcoded DB schema.
+            // The bundled Ollama's `snowflake-arctic-embed:xs` tag actually
+            // points at gemma-300M which returns 768-dim — schema mismatch.
+            default_embedding_model: Some("all-minilm:l6-v2".to_string()),
             supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,all-minilm:l6-v2".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
