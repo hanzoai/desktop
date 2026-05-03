@@ -169,6 +169,21 @@ fn main() {
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
                     let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);
+
+                    // Auto-spawn the local hanzo-node sidecar so the app is
+                    // usable for first-time users without requiring auth.
+                    {
+                        let mut guard = HANZO_NODE_MANAGER_INSTANCE
+                            .get()
+                            .unwrap()
+                            .write()
+                            .await;
+                        if let Err(e) = guard.spawn().await {
+                            log::error!("auto-spawn hanzo-node failed: {}", e);
+                        } else {
+                            log::info!("auto-spawned hanzo-node on app start");
+                        }
+                    }
                 }
             });
 
