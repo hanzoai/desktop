@@ -216,10 +216,12 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            // Use the gateway as the embedding endpoint — embeddings.hanzo.ai
-            // currently has an untrusted cert chain. Gateway proxies to a
-            // valid embedding model. Same gateway is used for inference below.
-            embeddings_server_url: Some("https://gateway.hanzo.ai".to_string()),
+            // Use bundled local Ollama for embeddings. Both embeddings.hanzo.ai
+            // and gateway.hanzo.ai have untrusted cert chains in production
+            // (rustls reqwest rejects them). Local Ollama is shipped with the
+            // app, runs on 11435, and produces 384-dim snowflake-arctic-embed:xs
+            // vectors that match the DB schema — no cert, no dim-mismatch.
+            embeddings_server_url: Some("http://127.0.0.1:11435".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
                 "https://gateway.hanzo.ai,https://gateway.hanzo.ai".to_string(),
