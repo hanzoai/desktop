@@ -54,6 +54,7 @@ import { toast } from 'sonner';
 
 import { ResourcesBanner } from '../../components/hardware-capabilities/resources-banner';
 import { UpdateBanner } from '../../components/hardware-capabilities/update-banner';
+import { MiningStatus } from '../../components/mining-status';
 import OnboardingStepper from '../../components/onboarding-checklist/onboarding';
 import { ResetConnectionDialog } from '../../components/reset-connection-dialog';
 import config from '../../config';
@@ -492,6 +493,7 @@ export function MainNav() {
               </React.Fragment>
             );
           })}
+          <MiningStatus sidebarExpanded={sidebarExpanded} />
         </div>
       </div>
 
