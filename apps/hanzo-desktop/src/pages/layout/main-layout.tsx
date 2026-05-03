@@ -29,13 +29,13 @@ import {
   AIAgentIcon,
   AISearchContentIcon,
   AisIcon,
+  BrandCombinationMarkIcon,
   FilesIcon,
   HomeIcon,
   InboxIcon,
   MCPIcon,
   NetworkAgentIcon,
   ScheduledTasksIcon,
-  HanzoCombinationMarkIcon,
   ToolsIcon,
 } from '@hanzo_network/hanzo-ui/assets';
 import { cn } from '@hanzo_network/hanzo-ui/utils';
@@ -313,7 +313,7 @@ export function MainNav() {
         )}
       >
         {sidebarExpanded && (
-          <HanzoCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
+          <BrandCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
         )}
 
         <Tooltip>

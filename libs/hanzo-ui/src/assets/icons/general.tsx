@@ -1,3 +1,4 @@
+import { getBrand } from '@hanzo_network/brand-config';
 import BoringAvatar from 'boring-avatars';
 import React from 'react';
 
@@ -49,6 +50,41 @@ export const HanzoCombinationMarkIcon = ({
     <path d="M66.7198 67V44.6369H44.5098V67H66.7198Z" fill="currentColor"/>
   </svg>
 );
+
+export const ZooCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => (
+  <svg
+    className={cn('shrink-0', className)}
+    viewBox="241 241 542 542"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <filter height="100%" id="zoo-overlap" width="100%" x="0%" y="0%">
+        <feBlend in2="BackgroundImage" mode="multiply" />
+      </filter>
+    </defs>
+    <circle cx="512" cy="512" fill="none" r="270" stroke="#000" strokeWidth="4" />
+    <circle cx="513" cy="369" fill="#00A652" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
+    <circle cx="365" cy="595" fill="#ED1C24" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
+    <circle cx="643" cy="595" fill="#2E3192" filter="url(#zoo-overlap)" opacity="0.8" r="234" />
+  </svg>
+);
+
+export const BrandCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => {
+  const { brand } = getBrand();
+  return brand === 'zoo' ? (
+    <ZooCombinationMarkIcon className={className} />
+  ) : (
+    <HanzoCombinationMarkIcon className={className} />
+  );
+};
 
 export const SendIcon = ({ className }: { className?: string }) => (
   <svg
