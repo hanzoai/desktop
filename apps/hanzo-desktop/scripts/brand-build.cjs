@@ -21,6 +21,8 @@ const tauriDir = path.join(__dirname, '..', 'src-tauri');
 const baseConfigPath = path.join(tauriDir, 'tauri.conf.json');
 const overlayPath = path.join(tauriDir, `tauri.conf.${brand}.json`);
 const backupPath = path.join(tauriDir, `tauri.conf.json.brand-build-backup`);
+const infoPlistPath = path.join(tauriDir, 'Info.plist');
+const infoPlistBackupPath = path.join(tauriDir, 'Info.plist.brand-build-backup');
 
 const deepMerge = (a, b) => {
   if (Array.isArray(a) && Array.isArray(b)) return b;
@@ -39,10 +41,31 @@ const merged = deepMerge(base, overlay);
 fs.copyFileSync(baseConfigPath, backupPath);
 fs.writeFileSync(baseConfigPath, JSON.stringify(merged, null, 2) + '\n');
 
+// Info.plist override: tauri-bundler merges this *over* the generated plist,
+// so any keys here win regardless of tauri.conf.json. Patch CFBundleIdentifier
+// to match the merged identifier so the bundle's identity is consistent.
+let infoPlistPatched = false;
+if (fs.existsSync(infoPlistPath) && merged.identifier) {
+  const original = fs.readFileSync(infoPlistPath, 'utf8');
+  const patched = original.replace(
+    /(<key>CFBundleIdentifier<\/key>\s*<string>)[^<]*(<\/string>)/,
+    `$1${merged.identifier}$2`,
+  );
+  if (patched !== original) {
+    fs.copyFileSync(infoPlistPath, infoPlistBackupPath);
+    fs.writeFileSync(infoPlistPath, patched);
+    infoPlistPatched = true;
+  }
+}
+
 const restore = () => {
   if (fs.existsSync(backupPath)) {
     fs.copyFileSync(backupPath, baseConfigPath);
     fs.unlinkSync(backupPath);
+  }
+  if (infoPlistPatched && fs.existsSync(infoPlistBackupPath)) {
+    fs.copyFileSync(infoPlistBackupPath, infoPlistPath);
+    fs.unlinkSync(infoPlistBackupPath);
   }
 };
 process.on('SIGINT', () => { restore(); process.exit(130); });
