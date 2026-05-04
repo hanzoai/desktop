@@ -81,9 +81,9 @@ const ZOO: BrandConfig = {
     android: '',
   },
   network: {
-    rpc: 'https://rpc.hanzo.network',
-    chainId: 36900,
-    token: '$AI',
+    rpc: 'https://rpc.zoo.network',
+    chainId: 200200,
+    token: '$ZOO',
   },
   miningEndpoint: 'https://gateway.hanzo.ai',
   iam: {
