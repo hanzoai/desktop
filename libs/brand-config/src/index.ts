@@ -9,8 +9,19 @@ export interface BrandConfig {
   colors: { primary: string; bg: string; fg: string };
   hosts: string[];
   storeUrl: { mac: string; win: string; ios: string; android: string };
-  network: { rpc: string; chainId: number; token: string };
-  miningEndpoint: string;
+  // Native chain identity. RPC submits AI-mining proof to the precompile
+  // (aiMining at 0x0300...0000 on the brand's primary EVM/A-chain).
+  network: {
+    rpc: string;            // e.g. https://rpc.zoo.network
+    chainId: number;        // e.g. 200200
+    token: string;          // gas/native token symbol, e.g. $ZOO
+    aiMiningPrecompile: `0x${string}`; // address of the AI-mining EVM precompile
+    blockExplorer: string;
+  };
+  // Cloud AI inference endpoint (chat completions / embeddings). Distinct
+  // from the chain RPC: this is the user-facing inference gateway, not the
+  // chain mining target.
+  inferenceEndpoint: string;
   // OAuth IAM provider used by "Login with <Brand>" flow.
   // The deep-link scheme must match the brand's tauri.conf.<brand>.json
   // plugins.deep-link.desktop.schemes entry.
@@ -48,8 +59,10 @@ const HANZO: BrandConfig = {
     rpc: 'https://rpc.hanzo.network',
     chainId: 36900,
     token: '$AI',
+    aiMiningPrecompile: '0x0300000000000000000000000000000000000000',
+    blockExplorer: 'https://explorer.hanzo.network',
   },
-  miningEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
     clientId: 'hanzo-app-client-id',
@@ -84,8 +97,10 @@ const ZOO: BrandConfig = {
     rpc: 'https://rpc.zoo.network',
     chainId: 200200,
     token: '$ZOO',
+    aiMiningPrecompile: '0x0300000000000000000000000000000000000000',
+    blockExplorer: 'https://explorer.zoo.network',
   },
-  miningEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://zoolabs.id',
     clientId: 'zoo-app-client-id',
