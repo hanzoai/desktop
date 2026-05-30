@@ -11,6 +11,9 @@
     "preview": "vite preview",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev"
+    "tauri:dev": "WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

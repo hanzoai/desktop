@@ -437,18 +437,18 @@ export const MessageBase = ({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          provider={message.provider?.agent.model.split(':')[0]}
+          provider={(message.provider?.agent?.model ?? '').split(':')[0]}
         />
       );
     }
     if (message.provider?.provider_type === 'Agent') {
-      return <AIAgentIcon name={message.provider?.agent.name} size={'xs'} />;
+      return <AIAgentIcon name={message.provider?.agent?.name} size={'xs'} />;
     }
     return <BotIcon className="mr-1 size-4" />;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    (message as AssistantMessage)?.provider?.agent.name,
-    (message as AssistantMessage)?.provider?.agent.model,
+    (message as AssistantMessage)?.provider?.agent?.name,
+    (message as AssistantMessage)?.provider?.agent?.model,
     (message as AssistantMessage)?.provider?.provider_type,
     message.role,
   ]);
@@ -479,7 +479,7 @@ export const MessageBase = ({
           <div className="mt-2 flex items-center gap-2">
             {selectedIcon}
             <span className="text-em-sm text-text-default font-bold">
-              {formatText(message.provider?.agent.id ?? '')}
+              {formatText(message.provider?.agent?.id ?? '')}
             </span>
           </div>
         ) : null}
