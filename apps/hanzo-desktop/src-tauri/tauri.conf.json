@@ -11,8 +11,7 @@
     "externalBin": [
       "external-binaries/hanzo-node/hanzo-node",
       "external-binaries/hanzo-node/hanzo-tools-runner-resources/deno",
-      "external-binaries/hanzo-node/hanzo-tools-runner-resources/uv",
-      "external-binaries/ollama/ollama"
+      "external-binaries/hanzo-node/hanzo-tools-runner-resources/uv"
     ],
     "icon": [
       "icons/32x32.png",

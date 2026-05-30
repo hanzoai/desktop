@@ -48,7 +48,6 @@ echo "Detected platform: $TARGET"
 
 # Create directories
 mkdir -p "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
-mkdir -p "$BINARIES_DIR/ollama"
 mkdir -p "$LLM_MODELS_DIR"
 
 # Hanzo Node version
@@ -93,50 +92,9 @@ else
     echo "Hanzo Node already downloaded"
 fi
 
-# Download Ollama
-OLLAMA_VERSION="v0.12.9"
-if [[ "$PLATFORM" == "apple-darwin" ]]; then
-    OLLAMA_ARCHIVE="ollama-darwin.tgz"
-elif [[ "$PLATFORM" == "unknown-linux-gnu" ]]; then
-    OLLAMA_ARCHIVE="ollama-linux-${ARCH_NAME}.tgz"
-else
-    OLLAMA_ARCHIVE="ollama-windows-${ARCH_NAME}.zip"
-fi
-
-if [ ! -f "$BINARIES_DIR/ollama/ollama-${TARGET}" ]; then
-    echo "Downloading Ollama ${OLLAMA_VERSION}..."
-
-    url="https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/${OLLAMA_ARCHIVE}"
-    if curl -L -f -o "$BINARIES_DIR/ollama/${OLLAMA_ARCHIVE}" "$url"; then
-        cd "$BINARIES_DIR/ollama"
-
-        if [[ "$OLLAMA_ARCHIVE" == *.tgz ]]; then
-            tar -xzf "$OLLAMA_ARCHIVE"
-            if [ -f "ollama" ]; then
-                mv ollama "ollama-${TARGET}"
-            elif [ -f "bin/ollama" ]; then
-                mv bin/ollama "ollama-${TARGET}"
-                rm -rf bin
-            fi
-        elif [[ "$OLLAMA_ARCHIVE" == *.zip ]]; then
-            unzip -o "$OLLAMA_ARCHIVE"
-            if [ -f "ollama.exe" ]; then
-                mv ollama.exe "ollama-${TARGET}"
-            fi
-        fi
-
-        rm "$OLLAMA_ARCHIVE"
-        chmod +x "ollama-${TARGET}"
-        cd "$SCRIPT_DIR"
-
-        echo "Downloaded Ollama ${OLLAMA_VERSION} successfully"
-    else
-        echo "Failed to download Ollama ${OLLAMA_VERSION}"
-        exit 1
-    fi
-else
-    echo "Ollama already downloaded"
-fi
+# Ollama is NOT bundled as a sidecar. It is an optional, externally-managed
+# engine (like LM Studio): the app connects to a user-run Ollama over HTTP.
+# See the engine-agnostic local-AI design (OllamaEngine / LMStudioEngine).
 
 # Download embedding model from R2
 EMBEDDING_MODEL="embeddinggemma-300M-BF16.gguf"

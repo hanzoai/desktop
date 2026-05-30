@@ -1,8 +1,37 @@
 # Hanzo Engine Integration for Desktop
 
+## Status — INTEGRATED (Option 1, opt-in)
+
+The native engine is wired into the Tauri backend (`src-tauri/src/embedded_engine/`)
+behind the **`native-engine`** Cargo feature, using a path dependency on the
+local fork at `~/work/hanzo/engine` (`../../../../engine` relative to
+`src-tauri/Cargo.toml`). It is **off by default** so the standard build keeps
+using the `hanzo-node` + `ollama` sidecars and skips the heavy inference stack.
+
+Build with the engine embedded:
+
+```bash
+cd apps/hanzo-desktop/src-tauri
+cargo build --release --features "native-engine metal"      # Apple Silicon
+cargo build --release --features "native-engine cuda"       # NVIDIA
+cargo build --release --features "native-engine accelerate" # macOS CPU (BLAS)
+```
+
+When enabled, the backend starts an OpenAI-compatible server on
+`127.0.0.1:36900` (what the frontend engine client targets by default) and
+registers `engine_*` Tauri IPC commands. No model is loaded until requested.
+
+**Model note:** the latest ZenLM model, **Zen5**, is a **Qwen3.5-based Mixture
+of Diverse Experts (MoDE)** — *not* "Qwen3.6". Its building-block architectures
+(Qwen3, Qwen3-MoE, Qwen3-Next/Gated-DeltaNet) are all supported by the engine's
+loaders. See `src-tauri/src/embedded_engine/zen5.rs` for the catalog.
+
+> Requires the `engine` repo checked out as a sibling under `hanzoai/` (it is,
+> in this monorepo). CI that builds with `native-engine` must check it out too.
+
 ## Overview
 
-This document analyzes hanzo-engine (at `/Users/z/work/hanzo/engine`) for embedding directly into hanzo-desktop, eliminating HTTP overhead for local inference.
+This document analyzes hanzo-engine (at `~/work/hanzo/engine`) for embedding directly into hanzo-desktop, eliminating HTTP overhead for local inference.
 
 ---
 
@@ -30,7 +59,7 @@ hanzo-engine/
 ### Key Facts
 
 1. **Language**: Pure Rust with Candle ML framework
-2. **Version**: 0.6.0 (synced with upstream mistral.rs at commit `530463af1`)
+2. **Version**: 0.8.1 (synced with upstream mistral.rs)
 3. **Minimum Rust**: 1.86
 4. **Backends**: Metal (macOS), CUDA (Linux/Windows), CPU (MKL, Accelerate, AVX/NEON)
 5. **Model Formats**: HuggingFace safetensors, GGUF, GGML, GPTQ, AWQ, UQFF

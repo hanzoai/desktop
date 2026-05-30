@@ -19,7 +19,7 @@ serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
 lazy_static = "1.4.0"
-tokio = { version = "1.36.0", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "net", "sync"] }
 chrono = "0.4.38"
 futures-util = "0.3"
 regex = "1.10.4"
@@ -56,7 +56,28 @@ tauri-plugin-http = "2.5"
 
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
+# --- Native Hanzo Engine (embedded mistral.rs fork) -------------------------
+# In-process LLM inference via the Hanzo Engine fork at ~/work/hanzo/engine
+# (../../../../engine relative to this manifest). Optional and OFF by default so
+# the standard build stays light and does not require the engine repo checked
+# out as a sibling. Enable with the `native-engine` feature plus a backend, e.g.
+#   cargo build --release --features "native-engine metal"   (Apple Silicon)
+#   cargo build --release --features "native-engine cuda"    (NVIDIA)
+mistralrs = { path = "../../../../engine/mistralrs", optional = true }
+mistralrs-core = { path = "../../../../engine/mistralrs-core", optional = true }
+axum = { version = "0.8", optional = true }
+
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
+# Embed the native Hanzo Engine for in-process inference (OpenAI-compatible
+# server on 127.0.0.1:36900 + Tauri IPC commands). Pair with a backend feature.
+native-engine = ["dep:mistralrs", "dep:mistralrs-core", "dep:axum"]
+# GPU/CPU backends forwarded to the engine. Weak deps (`pkg?/feat`) so selecting
+# a backend never force-enables the engine unless `native-engine` is also on.
+metal = ["mistralrs?/metal", "mistralrs-core?/metal"]
+cuda = ["mistralrs?/cuda", "mistralrs-core?/cuda"]
+accelerate = ["mistralrs-core?/accelerate"]
+flash-attn = ["mistralrs?/flash-attn"]
