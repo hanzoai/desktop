@@ -52,6 +52,10 @@ pub struct HanzoNodeManager {
     event_broadcaster: broadcast::Sender<HanzoNodeManagerEvent>,
     app_resource_dir: PathBuf,
     llm_models_path: PathBuf,
+    /// Child handle for the daemon-managed inference engine (hanzo-engine /
+    /// mistral.rs). `None` when no engine was spawned by us (e.g. one was
+    /// already running and got reused).
+    engine_child: Option<std::process::Child>,
 }
 
 impl HanzoNodeManager {
@@ -78,6 +82,7 @@ impl HanzoNodeManager {
             event_broadcaster,
             app_resource_dir,
             llm_models_path,
+            engine_child: None,
         }
     }
 
@@ -87,81 +92,75 @@ impl HanzoNodeManager {
     }
 
     pub async fn is_running(&self) -> bool {
-        self.hanzo_node_process.is_running().await && self.ollama_process.is_running().await
+        self.hanzo_node_process.is_running().await
+    }
+
+    /// True if the inference engine's OpenAI API is responding.
+    async fn engine_up(models_url: &str) -> bool {
+        reqwest::Client::new()
+            .get(models_url)
+            .timeout(std::time::Duration::from_secs(2))
+            .send()
+            .await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false)
+    }
+
+    /// Spawn (or reuse) the daemon-managed inference engine — hanzo-engine
+    /// (mistral.rs, CUDA on GPU). Returns the child if we started it, or `None`
+    /// if an engine was already listening on the port (detect-and-reuse).
+    async fn spawn_engine(&self) -> Result<Option<std::process::Child>, String> {
+        let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
+        let models_url = format!("http://127.0.0.1:{}/v1/models", port);
+
+        if Self::engine_up(&models_url).await {
+            log::info!("hanzo-engine already listening on :{}, reusing it", port);
+            return Ok(None);
+        }
+
+        let bin = std::env::var("HANZO_ENGINE_BIN")
+            .unwrap_or_else(|_| "/home/z/src/hanzo/engine/target/release/mistralrs-server".to_string());
+        let model =
+            std::env::var("HANZO_ENGINE_MODEL").unwrap_or_else(|_| "Qwen/Qwen3-0.6B".to_string());
+        log::info!("starting hanzo-engine `{}` (model {}) on :{}", bin, model, port);
+
+        let mut cmd = std::process::Command::new(&bin);
+        cmd.arg("--port").arg(&port);
+        if let Ok(tpl) = std::env::var("HANZO_ENGINE_CHAT_TEMPLATE") {
+            if !tpl.is_empty() {
+                cmd.arg("-c").arg(tpl);
+            }
+        }
+        cmd.arg("run").arg("-m").arg(&model);
+
+        let child = cmd
+            .spawn()
+            .map_err(|e| format!("failed to spawn hanzo-engine ({}): {}", bin, e))?;
+
+        // Non-blocking: don't stall node startup on model load. The engine loads
+        // in the background and the agent starts answering once it's ready.
+        log::info!(
+            "hanzo-engine spawned on :{} (loading model in background)",
+            port
+        );
+        Ok(Some(child))
     }
 
     pub async fn spawn(&mut self) -> Result<(), String> {
+        // Daemon-managed inference engine (hanzo-engine / mistral.rs on the GPU)
+        // replaces Ollama. The node daemon owns the engine lifecycle; if one is
+        // already listening on the engine port we detect and reuse it.
         self.emit_event(HanzoNodeManagerEvent::StartingOllama);
-        match self.ollama_process.spawn(None).await {
-            Ok(_) => {
+        match self.spawn_engine().await {
+            Ok(child) => {
+                self.engine_child = child;
                 self.emit_event(HanzoNodeManagerEvent::OllamaStarted);
             }
             Err(e) => {
-                log::info!("failed spawning ollama process {:?}", e);
-                self.kill().await;
+                log::error!("failed to start hanzo-engine: {}", e);
                 self.emit_event(HanzoNodeManagerEvent::OllamaStartError { error: e.clone() });
-                return Err(e);
-            }
-        }
-
-        let ollama_api_url = self.ollama_process.get_ollama_api_base_url();
-        let ollama_api = OllamaApiClient::new(ollama_api_url);
-
-        let installed_models = match ollama_api.tags().await {
-            Ok(response) => response.models.iter().map(|m| m.model.clone()).collect(),
-            Err(e) => {
-                log::warn!("ollama api tags request failed, fallback asuming there are not local models {:?}", e);
-                vec![]
-            }
-        };
-
-        let default_embedding_model = self
-            .hanzo_node_process
-            .get_options()
-            .default_embedding_model
-            .unwrap();
-        if !installed_models.contains(&default_embedding_model.to_string()) {
-            log::info!(
-                "default embedding model {} not found in local models list [{}], attempting to create it",
-                default_embedding_model,
-                installed_models.join(", ")
-            );
-
-            // Use the embedded GGUF model
-            let gguf_data = embedding_model::get_model_data(&self.llm_models_path);
-
-            // Check if GGUF data is valid (not empty)
-            if gguf_data.is_empty() {
-                log::warn!(
-                    "embedding model GGUF file not found or empty, skipping model creation. \
-                    The model will need to be downloaded manually via Ollama or the UI."
-                );
-                // Don't fail startup - just log warning and continue
-                log::info!("continuing hanzo-node startup without embedding model");
-            } else {
-                self.emit_event(HanzoNodeManagerEvent::CreatingModelStart {
-                    model: default_embedding_model.to_string(),
-                });
-
-                match ollama_api
-                    .create_model_from_gguf(&default_embedding_model, gguf_data)
-                    .await
-                {
-                    Ok(_) => {
-                        self.emit_event(HanzoNodeManagerEvent::CreatingModelDone {
-                            model: default_embedding_model.to_string(),
-                        });
-                    }
-                    Err(e) => {
-                        log::error!("failed to create model from gguf: {}", e);
-                        log::warn!("continuing hanzo-node startup without embedding model");
-                        // Don't kill the whole process - just log error and continue
-                        self.emit_event(HanzoNodeManagerEvent::CreatingModelError {
-                            model: default_embedding_model.to_string(),
-                            error: e.to_string(),
-                        });
-                    }
-                }
+                // Continue starting the node; chat is unavailable until the engine
+                // is reachable, but the node and its API should still come up.
             }
         }
 
@@ -186,6 +185,11 @@ impl HanzoNodeManager {
         self.hanzo_node_process.kill().await;
         self.emit_event(HanzoNodeManagerEvent::HanzoNodeStopped);
         self.emit_event(HanzoNodeManagerEvent::StoppingOllama);
+        // Stop the daemon-managed engine (only if we started it).
+        if let Some(mut child) = self.engine_child.take() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
         self.ollama_process.kill().await;
         self.emit_event(HanzoNodeManagerEvent::OllamaStopped);
     }

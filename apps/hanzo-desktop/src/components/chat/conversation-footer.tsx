@@ -378,7 +378,7 @@ function ConversationChatFooter({
         });
       }
       const agentSelected = agents?.find(
-        (agent) => agent.agent_id === provider?.agent.id,
+        (agent) => agent.agent_id === provider?.agent?.id,
       );
       if (agentSelected && agentSelected.edited === false) {
         captureAnalyticEvent('Chat with Pre-built Agents', {

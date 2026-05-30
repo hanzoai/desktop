@@ -26,7 +26,9 @@ pub struct HanzoNodeProcessHandler {
 
 impl HanzoNodeProcessHandler {
     const HEALTH_REQUEST_TIMEOUT_MS: u64 = 250;
-    const HEALTH_TIMEOUT_MS: u64 = 10000;
+    // Cold node start (DB open + migrations + API bind) can exceed 10s under load
+    // (e.g. concurrent downloads, first-run on slow disk/network); allow more headroom.
+    const HEALTH_TIMEOUT_MS: u64 = 60000;
     const PROCESS_NAME: &'static str = "hanzo-node";
 
     pub fn new(
