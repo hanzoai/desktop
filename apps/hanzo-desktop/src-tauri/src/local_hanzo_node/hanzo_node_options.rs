@@ -230,7 +230,7 @@ impl Default for HanzoNodeOptions {
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
             // Zen lineup, smallest first - baked in for offline out-of-box (zen-embedding-0.6B, 1024-dim).
-            default_embedding_model: Some("snowflake-arctic-embed:xs".to_string()),
+            default_embedding_model: Some("zenlm/zen-embedding-0.6B".to_string()),
             supported_embedding_models: Some("hf.co/zenlm/zen-embedding-0.6B-GGUF,snowflake-arctic-embed:xs,embeddinggemma:300m".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),

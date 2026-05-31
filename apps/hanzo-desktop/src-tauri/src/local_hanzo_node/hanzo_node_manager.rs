@@ -56,6 +56,8 @@ pub struct HanzoNodeManager {
     /// mistral.rs). `None` when no engine was spawned by us (e.g. one was
     /// already running and got reused).
     engine_child: Option<std::process::Child>,
+    /// Child handle for the daemon-managed embedding engine (latest Zen, 1024-dim).
+    embed_child: Option<std::process::Child>,
 }
 
 impl HanzoNodeManager {
@@ -83,6 +85,7 @@ impl HanzoNodeManager {
             app_resource_dir,
             llm_models_path,
             engine_child: None,
+            embed_child: None,
         }
     }
 
@@ -164,6 +167,37 @@ impl HanzoNodeManager {
             }
         }
 
+        // Daemon-managed embedding engine — its own instance, latest Zen
+        // (Qwen-style, 1024-dim). Detect-and-reuse if one's already listening.
+        {
+            let eport = std::env::var("HANZO_EMBED_PORT").unwrap_or_else(|_| "36901".to_string());
+            let emodels = format!("http://127.0.0.1:{}/v1/models", eport);
+            if Self::engine_up(&emodels).await {
+                log::info!("embedding engine already on :{}, reusing it", eport);
+            } else {
+                let ebin = std::env::var("HANZO_ENGINE_BIN")
+                    .unwrap_or_else(|_| "mistralrs-server".to_string());
+                let emodel = std::env::var("HANZO_EMBED_MODEL")
+                    .unwrap_or_else(|_| "zenlm/zen-embedding-0.6B".to_string());
+                let earch = std::env::var("HANZO_EMBED_ARCH")
+                    .unwrap_or_else(|_| "qwen3embedding".to_string());
+                log::info!("starting embedding engine `{}` ({}) on :{}", ebin, emodel, eport);
+                match std::process::Command::new(&ebin)
+                    .arg("--port")
+                    .arg(&eport)
+                    .arg("embedding")
+                    .arg("-m")
+                    .arg(&emodel)
+                    .arg("-a")
+                    .arg(&earch)
+                    .spawn()
+                {
+                    Ok(c) => self.embed_child = Some(c),
+                    Err(e) => log::error!("failed to spawn embedding engine ({}): {}", ebin, e),
+                }
+            }
+        }
+
         self.emit_event(HanzoNodeManagerEvent::StartingHanzoNode);
         match self.hanzo_node_process.spawn().await {
             Ok(_) => {
@@ -187,6 +221,10 @@ impl HanzoNodeManager {
         self.emit_event(HanzoNodeManagerEvent::StoppingOllama);
         // Stop the daemon-managed engine (only if we started it).
         if let Some(mut child) = self.engine_child.take() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+        if let Some(mut child) = self.embed_child.take() {
             let _ = child.kill();
             let _ = child.wait();
         }
