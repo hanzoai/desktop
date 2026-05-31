@@ -85,22 +85,44 @@ fn get_total_vram(adapter: &wgpu::Adapter) -> u64 {
     }
 }
 
+/// Detect NVIDIA accelerators that wgpu may classify as integrated (e.g. the
+/// GB10 in DGX Spark, which uses unified memory) or miss entirely on headless
+/// systems without a usable Vulkan/GL ICD.
+fn has_nvidia_gpu() -> bool {
+    std::path::Path::new("/dev/nvidia0").exists()
+        || std::path::Path::new("/proc/driver/nvidia/gpus").exists()
+}
+
 pub fn hardware_get_summary() -> HardwareSummary {
     let instance = wgpu::Instance::default();
     let adapters = instance.enumerate_adapters(wgpu::Backends::all());
     let adapter = adapters
         .iter()
         .find(|adapter| adapter.get_info().device_type == wgpu::DeviceType::DiscreteGpu)
-        .unwrap_or_else(|| adapters.first().expect("no gpu adapter found"));
+        .or_else(|| adapters.first());
 
-    let discrete_gpu = adapter.get_info().device_type == DeviceType::DiscreteGpu;
+    // Treat NVIDIA accelerators as discrete-class even when reported as
+    // integrated (unified memory, e.g. DGX Spark's GB10) so they aren't flagged
+    // as unsupported. Detect via driver presence or any adapter named "nvidia".
+    let nvidia_gpu = has_nvidia_gpu()
+        || adapters
+            .iter()
+            .any(|a| a.get_info().name.to_lowercase().contains("nvidia"));
+
+    let discrete_gpu = nvidia_gpu
+        || adapter
+            .map(|a| a.get_info().device_type == DeviceType::DiscreteGpu)
+            .unwrap_or(false);
     let is_macos = cfg!(target_os = "macos");
 
     let mut sys = System::new_all();
     sys.refresh_all();
 
     // v memory in GB
-    let memory = get_total_vram(adapter);
+    let memory = match adapter {
+        Some(a) => get_total_vram(a),
+        None => sys.total_memory() / 1024 / 1024 / 1024,
+    };
     let cpus = sys.cpus().len();
 
     let requirement_status;

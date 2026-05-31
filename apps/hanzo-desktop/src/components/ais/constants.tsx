@@ -12,6 +12,7 @@ import {
   MistralIcon,
   OllamaIcon,
   OpenAIIcon,
+  ZenIcon,
   OpenRouterIcon,
   PerplexityIcon,
   QwenIcon,
@@ -55,7 +56,8 @@ export const providerMappings = {
   [ModelProvider.Mistral]: MistralIcon,
   [ModelProvider.Meta]: MetaIcon,
   [ModelProvider.Ollama]: OllamaIcon,
-  [ModelProvider.OpenAI]: OpenAIIcon,
+  // Local Hanzo/Zen engine is exposed as an OpenAI-compatible provider — brand it with the Zen enso ring.
+  [ModelProvider.OpenAI]: ZenIcon,
   'openai-legacy': OpenAIIcon,
   [ModelProvider.OpenRouter]: OpenRouterIcon,
   [ModelProvider.Perplexity]: PerplexityIcon,

@@ -216,22 +216,22 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            embeddings_server_url: Some("https://embeddings.hanzo.ai".to_string()),
+            // Native hanzo-engine embeddings (mistral.rs, CUDA) on :36901 via ollama-compat
+            // /api/embeddings - fully offline, zero wifi, zero ollama. zen-embedding-0.6B (1024-dim).
+            embeddings_server_url: Some("http://localhost:36901".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
-            initial_agent_urls: Some(
-                "https://gateway.hanzo.ai,https://gateway.hanzo.ai".to_string(),
-            ),
-            initial_agent_names: Some("hanzo_free_trial,hanzo_code_gen".to_string()),
-            initial_agent_models: Some(
-                "hanzo-backend:FREE_TEXT_INFERENCE,hanzo-backend:CODE_GENERATOR".to_string(),
-            ),
-            initial_agent_api_keys: Some("'',''".to_string()),
+            // Local hanzo-engine (mistral.rs, GPU) — OpenAI-compatible on :36900. No Ollama, no cloud.
+            initial_agent_urls: Some("http://localhost:36900".to_string()),
+            initial_agent_names: Some("zen_engine".to_string()),
+            initial_agent_models: Some("openai:default".to_string()),
+            initial_agent_api_keys: Some("local".to_string()),
             starting_num_qr_devices: Some("0".to_string()),
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
+            // Zen lineup, smallest first - baked in for offline out-of-box (zen-embedding-0.6B, 1024-dim).
             default_embedding_model: Some("snowflake-arctic-embed:xs".to_string()),
-            supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,all-minilm:l6-v2".to_string()),
+            supported_embedding_models: Some("hf.co/zenlm/zen-embedding-0.6B-GGUF,snowflake-arctic-embed:xs,embeddinggemma:300m".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
             hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),

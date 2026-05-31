@@ -169,15 +169,25 @@ export const useDefaultAgentByDefault = () => {
   });
 
   useEffect(() => {
-    if (isSuccess && llmProviders?.length && !defaultAgentId) {
-      const defaultAgent = llmProviders.find(
-        (provider) =>
-          provider.model.toLowerCase() === defaultModel?.toLowerCase(),
-      );
-      if (defaultAgent) {
-        setDefaultAgentId(defaultAgent.id);
-      } else {
-        setDefaultAgentId(llmProviders[0].id);
+    if (isSuccess && llmProviders?.length) {
+      // Re-pick when there is no default yet OR the cached default no longer
+      // exists in the node's providers. A stale "hanzo_free_trial" left over
+      // from a previous onboarding survives node DB resets in local storage
+      // and would otherwise route every chat to a missing provider →
+      // NoUserProfileFound. Prefer the local engine (zen_engine), then the
+      // node's configured default model, then the first available provider.
+      const cachedValid =
+        !!defaultAgentId &&
+        llmProviders.some((provider) => provider.id === defaultAgentId);
+      if (!cachedValid) {
+        const nextAgent =
+          llmProviders.find((provider) => provider.id === 'zen_engine') ??
+          llmProviders.find(
+            (provider) =>
+              provider.model.toLowerCase() === defaultModel?.toLowerCase(),
+          ) ??
+          llmProviders[0];
+        setDefaultAgentId(nextAgent.id);
       }
     }
   }, [

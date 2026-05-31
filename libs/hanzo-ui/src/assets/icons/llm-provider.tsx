@@ -477,6 +477,21 @@ export const OllamaIcon = ({ className }: { className?: string }) => {
   );
 };
 
+export const ZenIcon = ({ className }: { className?: string }) => {
+  // Zen enso — a perfect ring. Inherits text color (currentColor).
+  return (
+    <svg
+      className={cn('shrink-0', className)}
+      fill="none"
+      height="1em"
+      width="1em"
+      viewBox="0 0 24 24"
+    >
+      <circle cx="12" cy="12" r="8.6" stroke="currentColor" strokeWidth="2.3" />
+    </svg>
+  );
+};
+
 export const OpenAIIcon = ({ className }: { className?: string }) => {
   return (
     <svg
