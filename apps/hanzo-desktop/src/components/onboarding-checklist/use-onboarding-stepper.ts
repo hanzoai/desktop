@@ -2,11 +2,10 @@ import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgen
 import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
 import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
 import { useMap } from '@hanzo_network/hanzo-ui/hooks';
 import { useEffect } from 'react';
 
-import { useOllamaListQuery } from '../../lib/hanzo-node-manager/ollama-client';
-import { useHanzoNodeGetOllamaApiUrlQuery } from '../../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { useAuth } from '../../store/auth';
 import { GetStartedStatus, GetStartedSteps } from './onboarding';
 
@@ -19,9 +18,12 @@ export const useOnboardingSteps = () => {
     { enabled: !!auth },
   );
 
-  const { data: ollamaApiUrl } = useHanzoNodeGetOllamaApiUrlQuery();
-  const ollamaConfig = { host: ollamaApiUrl || 'http://127.0.0.1:11435' };
-  const { data: installedOllamaModels } = useOllamaListQuery(ollamaConfig);
+  // The local engine serves its own models; the "Download first model" step is
+  // satisfied once the engine reports at least one local model.
+  const { data: localModels } = useScanLocalModels(
+    { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
+    { enabled: !!auth },
+  );
 
   const { data: agents } = useGetAgents({
     nodeAddress: auth?.node_address ?? '',
@@ -56,13 +58,13 @@ export const useOnboardingSteps = () => {
   }, [isSuccess]);
 
   useEffect(() => {
-    if (installedOllamaModels?.models && installedOllamaModels.models.length > 0) {
+    if (localModels && localModels.length > 0) {
       currentStepsMap.set(
         GetStartedSteps.DownloadFirstModel,
         GetStartedStatus.Done,
       );
     }
-  }, [installedOllamaModels]);
+  }, [localModels]);
 
   useEffect(() => {
     if ((agents ?? [])?.length > 0) {

@@ -1,13 +1,8 @@
 /**
- * Local model discovery via the Hanzo Engine.
+ * Local model discovery via the local Hanzo Engine.
  *
- * Historically this module talked to Ollama and the node's `/v2/scan_ollama_models`
- * RPC. Ollama is fully retired and the cloud free-tier is gone: the desktop now
- * talks ONLY to the local OpenAI-compatible Hanzo Engine. Model discovery has
- * exactly ONE canonical path: `GET {engineUrl}/v1/models`.
- *
- * The function/type names are kept so existing call sites compile unchanged, but
- * there is no Ollama and no `/api/*` anywhere in here.
+ * The desktop talks ONLY to the local OpenAI-compatible Hanzo Engine. Model
+ * discovery has exactly ONE canonical path: `GET {engineUrl}/v1/engine/models`.
  */
 
 // Default engine endpoint (OpenAI-compatible). Mirrors lib/hanzo-engine/client.ts.
@@ -28,11 +23,11 @@ type OpenAIModel = {
 };
 
 /**
- * Shape preserved from the legacy Ollama scan response so downstream code that
- * reads `.model` / `.name` keeps working. Only `model` and `name` are populated
- * from `/v1/models`; the rest are best-effort/empty.
+ * Normalized local-model entry. Downstream code reads `.model` / `.name`; the
+ * remaining fields are best-effort/empty since `/v1/engine/models` does not provide
+ * them.
  */
-export type ScanOllamaModelsResponse = {
+export type ScanLocalModelsResponse = {
   details: {
     families: string[];
     family: string;
@@ -49,7 +44,7 @@ export type ScanOllamaModelsResponse = {
   size: number;
 }[];
 
-const emptyDetails = (): ScanOllamaModelsResponse[number]['details'] => ({
+const emptyDetails = (): ScanLocalModelsResponse[number]['details'] => ({
   families: [],
   family: '',
   format: '',
@@ -59,15 +54,15 @@ const emptyDetails = (): ScanOllamaModelsResponse[number]['details'] => ({
 });
 
 /**
- * List locally available models from the engine via `GET {engineUrl}/v1/models`.
+ * List locally available models from the engine via `GET {engineUrl}/v1/engine/models`.
  * `nodeAddress`/`bearerToken` are accepted for call-site compatibility but the
  * engine is local + OpenAI-compatible, so they are not used to reach it.
  */
-export const scanOllamaModels = async (
+export const scanLocalModels = async (
   _nodeAddress?: string,
   _bearerToken?: string,
-): Promise<ScanOllamaModelsResponse> => {
-  const response = await fetch(`${ENGINE_BASE_URL}/v1/models`);
+): Promise<ScanLocalModelsResponse> => {
+  const response = await fetch(`${ENGINE_BASE_URL}/v1/engine/models`);
   if (!response.ok) {
     throw new Error(`Failed to list models: ${response.statusText}`);
   }
@@ -82,20 +77,4 @@ export const scanOllamaModels = async (
     port_used: '',
     size: 0,
   }));
-};
-
-export type AddOllamaModelsRequest = {
-  models: string[];
-};
-
-/**
- * No-op. The engine owns its own model lifecycle and auto-discovers what is
- * available via `/v1/models`; there is nothing to "add" from the desktop.
- */
-export const addOllamaModels = async (
-  _nodeAddress?: string,
-  _bearerToken?: string,
-  _payload?: AddOllamaModelsRequest,
-): Promise<{ status: string }> => {
-  return { status: 'success' };
 };

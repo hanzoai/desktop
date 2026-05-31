@@ -6,7 +6,6 @@ import {
   type EditAIModelFormSchema,
   editAIModelSchema,
 } from '@hanzo_network/hanzo-node-state/forms/agents/edit-ai';
-import { Models } from '@hanzo_network/hanzo-node-state/lib/utils/models';
 import { useRemoveLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/removeLLMProvider/useRemoveLLMProvider';
 import { useUpdateLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/updateLLMProvider/useUpdateLLMProvider';
 import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
@@ -47,7 +46,6 @@ import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import ProviderIcon from '../components/ais/provider-icon';
-import { useOllamaRemoveMutation } from '../lib/hanzo-node-manager/ollama-client';
 import { useAuth } from '../store/auth';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import { getModelObject } from './add-ai';
@@ -531,25 +529,7 @@ const RemoveLLMProviderModal = ({
       });
     },
   });
-  const ollamaConfig = { host: 'http://127.0.0.1:11435' };
-  const { mutateAsync: removeOllamaModel } = useOllamaRemoveMutation(
-    ollamaConfig,
-    {
-      onSuccess: () => {
-        console.log('ollama model removed:', llmProviderId);
-      },
-      onError: (error) => {
-        toast.error(t('llmProviders.errors.deleteAgent'), {
-          description: typeof error === 'string' ? error : error.message,
-        });
-      },
-    },
-  );
-  const {
-    llmProviders,
-    isSuccess: isSuccessLLMProviders,
-    isLoading: isLoadingLLMProviders,
-  } = useGetLLMProviders({
+  const { isLoading: isLoadingLLMProviders } = useGetLLMProviders({
     nodeAddress: auth?.node_address ?? '',
     token: auth?.api_v2_key ?? '',
   });
@@ -586,21 +566,6 @@ const RemoveLLMProviderModal = ({
                   llmProviderId: llmProviderId,
                   token: auth?.api_v2_key ?? '',
                 });
-                let llmProviderModel = llmProviders.find(
-                  (provider) => provider.id === llmProviderId,
-                )?.model;
-                const isOllama =
-                  llmProviderModel?.split(':')[0] === Models.Ollama;
-                if (isOllama && llmProviderModel) {
-                  llmProviderModel = llmProviderModel.slice(
-                    llmProviderModel.indexOf(':') + 1,
-                  );
-                  await removeOllamaModel({ model: llmProviderModel });
-                } else
-                  console.warn(
-                    'llmProviderModel not found for llmProviderId:',
-                    llmProviderId,
-                  );
               }}
               size="sm"
               variant="destructive"

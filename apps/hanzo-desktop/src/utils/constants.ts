@@ -1,4 +1,6 @@
-import OLLAMA_MODELS_REPOSITORY from '../lib/hanzo-node-manager/ollama-models-repository.json';
+import { ModelPrefix } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
+
+import MODEL_CATALOG from '../lib/hanzo-node-manager/model-catalog.json';
 
 export const HANZO_DOCS_URL = 'https://docs.hanzo.ai';
 
@@ -14,14 +16,19 @@ export const HANZO_TUTORIALS = {
 } as const;
 
 export const MODELS_WITH_THINKING_SUPPORT = {
-  // Ollama models with thinking support
+  // Local-engine models with thinking support. Keyed by the node's wire model
+  // string, i.e. `<localEnginePrefix>:<model>` (the prefix is the node's serde
+  // tag for the local-engine provider variant).
   ...Object.fromEntries(
-    OLLAMA_MODELS_REPOSITORY.filter((model) => model.thinking)
+    MODEL_CATALOG.filter((model) => model.thinking)
       .map((model) => model.tags)
       .flat()
-      .map((tags) => [`ollama:${tags.name}`, { forceEnabled: true, reasoningLevel: false }])
+      .map((tags) => [
+        `${ModelPrefix.LocalEngine}:${tags.name}`,
+        { forceEnabled: true, reasoningLevel: false },
+      ]),
   ),
-  
+
   // Claude models
   'claude:claude-opus-4-1-20250805': { forceEnabled: false, reasoningLevel: true },
   'claude:claude-opus-4-1': { forceEnabled: false, reasoningLevel: true },

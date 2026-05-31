@@ -63,7 +63,7 @@ export const HanzoNodeRunningOverlay = ({
       <div className="flex size-full flex-col items-center justify-center gap-3 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
         <span className="text-text-secondary text-sm">
-          Checking Hanzo Node Status ...
+          Checking Node Status ...
         </span>
       </div>
     );
@@ -77,7 +77,7 @@ export const HanzoNodeRunningOverlay = ({
           role="alert"
         >
           <div className="space-y-2 text-center text-red-400">
-            <p>Unable to connect to Hanzo Node.</p>
+            <p>Unable to connect to Node.</p>
             <pre className="px-4 whitespace-break-spaces">
               {healthError.message}
             </pre>
@@ -124,10 +124,10 @@ export const HanzoNodeRunningOverlay = ({
       <div className="mx-auto flex max-w-lg flex-col items-center gap-4">
         <span className="text-4xl">⚠️</span>
         <h1 className="text-3xl font-bold">
-          Unable to Connect to Hanzo Node
+          Unable to Connect to Node
         </h1>
         <p className="text-text-secondary text-base">
-          Please make sure the Hanzo Node is running and try again.
+          Please make sure the Node is running and try again.
         </p>
       </div>
       {isInUse && !isHanzoNodeRunning && (
@@ -136,7 +136,7 @@ export const HanzoNodeRunningOverlay = ({
             await openHanzoNodeManagerWindow();
           }}
         >
-          Launch Hanzo Node
+          Launch Node
         </Button>
       )}
     </div>

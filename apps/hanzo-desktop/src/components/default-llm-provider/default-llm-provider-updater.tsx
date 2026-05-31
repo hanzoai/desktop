@@ -28,8 +28,14 @@ export const DefaultLlmProviderUpdater: React.FC<DefaultLlmProviderUpdaterProps>
         auth.api_v2_key
       );
     },
+    // The local node (`/v1/node/set_preferences`) may still be starting up when this
+    // mounts; retry transient network failures instead of surfacing them.
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
     onError: (error) => {
-      console.error('Failed to set default LLM provider:', error);
+      // Transient node-not-ready failures are expected during startup; log
+      // quietly so they don't read as a hard failure in the console.
+      console.warn('Could not set default LLM provider (will retry on next load):', error);
     },
   });
 

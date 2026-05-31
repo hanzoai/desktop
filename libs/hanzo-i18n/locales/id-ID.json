@@ -401,7 +401,7 @@
   },
   "errors": {
     "nodeUnavailable": {
-      "description": "Kami mengalami masalah dalam menghubungkan ke Node Hanzo Anda. Node Anda mungkin offline, atau koneksi internet Anda mungkin terputus.",
+      "description": "Kami mengalami masalah dalam menghubungkan ke Node Anda. Node Anda mungkin offline, atau koneksi internet Anda mungkin terputus.",
       "title": "Node Tidak Tersedia"
     }
   },
@@ -413,7 +413,7 @@
     },
     "generateFile": "Buat berkas koneksi",
     "label": "Ekspor Koneksi",
-    "restoreText": "Gunakan dengan frasa sandi Anda untuk memulihkan koneksi ke Node Hanzo Anda"
+    "restoreText": "Gunakan dengan frasa sandi Anda untuk memulihkan koneksi ke Node Anda"
   },
   "extension": {
     "welcome": "Transformasikan pengalaman menjelajah web Anda menggunakan kecerdasan buatan dengan Hanzo Visor ✨"
@@ -557,7 +557,7 @@
   },
   "mcpServers": {
     "add": "Tambah Server MCP",
-    "addDescription": "Konfigurasikan server MCP baru untuk terhubung dengan Node Hanzo Anda",
+    "addDescription": "Konfigurasikan server MCP baru untuk terhubung dengan Node Anda",
     "addFailed": "Gagal menambahkan server MCP",
     "addFromGitHub": "Tambah dari GitHub",
     "addSuccess": "Server MCP berhasil ditambahkan",
@@ -596,7 +596,7 @@
     "deleteSuccess": "Server MCP berhasil dihapus",
     "environmentVariables": "Variabel Lingkungan",
     "label": "Server MCP",
-    "listDescription": "Daftar server MCP yang terhubung ke Node Hanzo Anda",
+    "listDescription": "Daftar server MCP yang terhubung ke Node Anda",
     "listOfToolsAvailableFromThisMcpServer": "Daftar alat yang tersedia dari server MCP ini.",
     "manualSetup": "Pengaturan Manual",
     "name": "Nama",
@@ -698,9 +698,9 @@
   },
   "ollama": {
     "errors": {
-      "failedToFetch": "Gagal mengambil model Ollama lokal. Pastikan Ollama berjalan dengan benar."
+      "failedToFetch": "Gagal mengambil model lokal. Pastikan server model lokal berjalan dengan benar."
     },
-    "version": "Versi Ollama"
+    "version": "Versi Model"
   },
   "onboardingChecklist": {
     "addAIAgent": "Buat Agen AI Anda",
@@ -751,7 +751,7 @@
     "emptyStateTitle": "Tanya Hanzo AI"
   },
   "quickConnection": {
-    "connectingToNode": "Menghubungkan ke Node Hanzo lokal Anda",
+    "connectingToNode": "Menghubungkan ke Node lokal Anda",
     "form": {
       "connect": "Hubungkan",
       "nodeAddress": "Alamat Node"
@@ -828,7 +828,7 @@
       "promptLibrary": "Perpustakaan Prompt",
       "publicKeys": "Kunci Publik",
       "remoteAccess": "Akses Jarak Jauh",
-      "hanzoNode": "Manajer Node Hanzo"
+      "hanzoNode": "Manajer Node"
     },
     "maxChatIterations": {
       "description": "Jumlah maksimum iterasi untuk memproses pesan obrolan",
@@ -862,7 +862,7 @@
     },
     "remoteAccess": {
       "connected": "Terhubung",
-      "description": "Dengan mudah dan aman terhubung ke node Hanzo Anda dari mana saja menggunakan ngrok. Tidak ada pengaturan yang rumit—cukup <a>buat akun ngrok gratis</a>, salin <b>token otentikasi ngrok</b> Anda dari dasbor, dan tempel di bawah ini untuk mengaktifkan akses jarak jauh yang aman.",
+      "description": "Dengan mudah dan aman terhubung ke node Anda dari mana saja menggunakan ngrok. Tidak ada pengaturan yang rumit—cukup <a>buat akun ngrok gratis</a>, salin <b>token otentikasi ngrok</b> Anda dari dasbor, dan tempel di bawah ini untuk mengaktifkan akses jarak jauh yang aman.",
       "errors": {
         "failedToGetStatus": "Gagal mendapatkan status ngrok.",
         "failedToStart": "Gagal terhubung akses jarak jauh melalui ngrok.",
@@ -878,7 +878,7 @@
       "publicAccessURLDescription": "Gunakan URL ini untuk terhubung ke node Anda dari mana saja.",
       "publicAccessUrl": "URL Akses Publik",
       "stopRemoteAccessSuccess": "Akses jarak jauh telah berhasil dihentikan",
-      "success": "Terhubung! Node Hanzo Anda sekarang dapat diakses dari jarak jauh melalui ngrok",
+      "success": "Terhubung! Node Anda sekarang dapat diakses dari jarak jauh melalui ngrok",
       "title": "Akses Jarak Jauh"
     },
     "hanzoIdentity": {
@@ -912,7 +912,7 @@
     }
   },
   "hanzoNode": {
-    "manager": "Manajer Node Hanzo",
+    "manager": "Manajer Node",
     "models": {
       "errors": {
         "modelInstalled": "Kesalahan saat menginstal model {{modelName}}",
@@ -931,7 +931,7 @@
         "visionCapability": "Gambar ke Teks",
         "cloudCapability": "Awan"
       },
-      "poweredByOllama": "Didukung oleh Ollama",
+      "poweredByOllama": "Didukung oleh model lokal",
       "success": {
         "modelInstalled": "Model {{modelName}} berhasil diinstal",
         "modelRemoved": "Model {{modelName}} berhasil dihapus"
@@ -942,30 +942,30 @@
     "notifications": {
       "downloadedModel": "Model AI {{modelName}} berhasil diunduh",
       "downloadingModel": "Mengunduh model AI {{modelName}} - {{progress}}%",
-      "errorSyncOllama": "Kesalahan saat menyinkronkan model Ollama lokal dengan Node Hanzo Anda",
+      "errorSyncOllama": "Kesalahan saat menyinkronkan model lokal dengan Node Anda",
       "installingModel": "Menginstal {{modelName}} ...",
       "optionsRestored": "Opsi dikembalikan ke nilai default",
-      "removedNote": "Penyimpanan Node Hanzo lokal Anda telah dihapus",
-      "runningNode": "Node Hanzo lokal Anda sedang berjalan",
-      "runningOllama": "Ollama lokal Anda sedang berjalan",
+      "removedNote": "Penyimpanan Node lokal Anda telah dihapus",
+      "runningNode": "Node lokal Anda sedang berjalan",
+      "runningOllama": "Model lokal Anda sedang berjalan",
       "startingDownload": "Memulai unduhan untuk model AI {{modelName}}",
-      "startingNode": "Memulai Node Hanzo lokal Anda",
-      "startingOllama": "Memulai Ollama lokal Anda",
-      "stopNode": "Menghentikan Node Hanzo lokal Anda",
-      "stopOllama": "Menghentikan Ollama lokal Anda",
-      "stoppedNode": "Node Hanzo lokal Anda telah dihentikan",
-      "stoppedOllama": "Ollama lokal Anda telah dihentikan",
-      "syncedOllama": "Model Ollama lokal disinkronkan dengan Node Hanzo Anda"
+      "startingNode": "Memulai Node lokal Anda",
+      "startingOllama": "Memulai model lokal Anda",
+      "stopNode": "Menghentikan Node lokal Anda",
+      "stopOllama": "Menghentikan model lokal Anda",
+      "stoppedNode": "Node lokal Anda telah dihentikan",
+      "stoppedOllama": "Model lokal Anda telah dihentikan",
+      "syncedOllama": "Model lokal disinkronkan dengan Node Anda"
     },
     "resetNodeWarning": {
-      "description": "Node Hanzo Anda saat ini terkunci oleh kunci yang ada. Untuk terhubung kembali, Anda memiliki tiga pilihan:",
+      "description": "Node Anda saat ini terkunci oleh kunci yang ada. Untuk terhubung kembali, Anda memiliki tiga pilihan:",
       "option1": "<b>Pulihkan:</b> Coba pulihkan koneksi Anda menggunakan kunci yang telah dibackup.",
-      "option2": "<b>Reset Data:</b> Hapus secara permanen semua data Node Hanzo Anda.",
-      "option3": "<b>Reset Semua:</b> Hapus secara permanen semua data Node Hanzo Anda termasuk kunci enkripsi dan penandatanganan.",
+      "option2": "<b>Reset Data:</b> Hapus secara permanen semua data Node Anda.",
+      "option3": "<b>Reset Semua:</b> Hapus secara permanen semua data Node Anda termasuk kunci enkripsi dan penandatanganan.",
       "title": "Tidak dapat terhubung"
     },
-    "restartNode": "Harap restart Node Hanzo Anda",
-    "unavailable": "Node Hanzo Anda tidak tersedia"
+    "restartNode": "Harap restart Node Anda",
+    "unavailable": "Node Anda tidak tersedia"
   },
   "tasks": {
     "runNow": "Jalankan Sekarang"

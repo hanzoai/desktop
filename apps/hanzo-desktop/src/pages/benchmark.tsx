@@ -4,8 +4,8 @@ import { useState } from 'react';
 // The local Zen engines (hanzo-engine / mistral.rs). Chat is OpenAI-compatible on
 // :36900; embeddings on :36901. The engine sends `access-control-allow-origin: *`,
 // so the webview can call them directly with native fetch.
-const CHAT_URL = 'http://localhost:36900/v1/chat/completions';
-const EMBED_URL = 'http://localhost:36901/api/embeddings';
+const CHAT_URL = 'http://localhost:36900/v1/engine/chat/completions';
+const EMBED_URL = 'http://localhost:36901/v1/engine/embeddings';
 const DEFAULT_PROMPT =
   'Write a clear, three-sentence explanation of how photosynthesis works.';
 
@@ -69,14 +69,15 @@ const BenchmarkPage = () => {
     for (let i = 0; i < runs; i++) {
       const t0 = performance.now();
       const res = await fetch(EMBED_URL, {
-        body: JSON.stringify({ model: 'default', prompt: `${prompt} #${i}` }),
+        body: JSON.stringify({ model: 'default', input: `${prompt} #${i}` }),
         headers: { 'content-type': 'application/json' },
         method: 'POST',
       });
       if (!res.ok) throw new Error(`embedding engine returned ${res.status}`);
       const data = await res.json();
       total += performance.now() - t0;
-      dim = (data.embedding ?? []).length;
+      // OpenAI /v1/engine/embeddings shape: { data: [{ embedding: number[] }] }
+      dim = (data.data?.[0]?.embedding ?? data.embedding ?? []).length;
     }
     setEmbed({ avgMs: total / runs, dim, runs });
   };

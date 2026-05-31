@@ -49,30 +49,8 @@ export const hanzoNodeStartedToast = () => {
 export const hanzoNodeStartErrorToast = () => {
   toast.error(
     <div>
-      Error starting your local Hanzo Node, see <HanzoNodeLogsLabel /> for
+      Error starting your local Node, see <HanzoNodeLogsLabel /> for
       more information
-    </div>,
-    {
-      ...defaultToastOptions,
-    },
-  );
-};
-
-export const startingOllamaToast = () => {
-  return toast.loading(t('hanzoNode.notifications.startingOllama'), {
-    ...defaultToastOptions,
-  });
-};
-export const ollamaStartedToast = () => {
-  return toast.success(t('hanzoNode.notifications.runningOllama'), {
-    ...defaultToastOptions,
-  });
-};
-export const ollamaStartErrorToast = () => {
-  toast.error(
-    <div>
-      Error starting your local Ollama, see <HanzoNodeLogsLabel /> for more
-      information
     </div>,
     {
       ...defaultToastOptions,
@@ -88,7 +66,7 @@ export const stoppingHanzoNodeToast = () => {
 export const hanzoNodeStopErrorToast = () => {
   toast.error(
     <div>
-      Error stopping your local Hanzo Node, see <HanzoNodeLogsLabel /> for
+      Error stopping your local Node, see <HanzoNodeLogsLabel /> for
       more information
     </div>,
     {
@@ -102,28 +80,6 @@ export const hanzoNodeStoppedToast = () => {
   });
 };
 
-export const stoppingOllamaToast = () => {
-  return toast.loading(t('hanzoNode.notifications.stopOllama'), {
-    ...defaultToastOptions,
-  });
-};
-export const ollamaStopErrorToast = () => {
-  toast.error(
-    <div>
-      Error stopping your local Ollama, see <HanzoNodeLogsLabel /> for more
-      information
-    </div>,
-    {
-      ...defaultToastOptions,
-    },
-  );
-};
-export const ollamaStoppedToast = () => {
-  return toast.success(t('hanzoNode.notifications.stoppedOllama'), {
-    ...defaultToastOptions,
-  });
-};
-
 export const successRemovingHanzoNodeStorageToast = () => {
   return toast.success(t('hanzoNode.notifications.removedNote'), {
     ...defaultToastOptions,
@@ -133,7 +89,7 @@ export const successRemovingHanzoNodeStorageToast = () => {
 export const errorRemovingHanzoNodeStorageToast = () => {
   return toast.error(
     <div>
-      Error removing your local Hanzo Node storage, see{' '}
+      Error removing your local Node storage, see{' '}
       <HanzoNodeLogsLabel /> for more information
     </div>,
     { ...defaultToastOptions },
@@ -142,18 +98,6 @@ export const errorRemovingHanzoNodeStorageToast = () => {
 
 export const successHanzoNodeSetDefaultOptionsToast = () => {
   return toast.success(t('hanzoNode.notifications.optionsRestored'), {
-    ...defaultToastOptions,
-  });
-};
-
-export const successOllamaModelsSyncToast = () => {
-  return toast.success(t('hanzoNode.notifications.syncedOllama'), {
-    ...defaultToastOptions,
-  });
-};
-
-export const errorOllamaModelsSyncToast = () => {
-  return toast.error(t('hanzoNode.notifications.errorSyncOllama'), {
     ...defaultToastOptions,
   });
 };

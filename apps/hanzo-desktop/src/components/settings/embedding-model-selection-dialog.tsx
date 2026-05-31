@@ -1,6 +1,6 @@
 import { useStartEmbeddingMigration } from '@hanzo_network/hanzo-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
 import { useGetEmbeddingMigrationStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
-import { useScanOllamaModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanOllamaModels/useScanOllamaModels';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
 import {
   Badge,
   Button,
@@ -26,7 +26,7 @@ const EmbeddingModelSelectionDialog = () => {
 
   const [selectedEmbeddingModel, setSelectedEmbeddingModel] = useState('');
 
-  const { data: availableOllamaModels } = useScanOllamaModels(
+  const { data: availableLocalModels } = useScanLocalModels(
     { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
     { enabled: !!auth },
   );
@@ -41,15 +41,15 @@ const EmbeddingModelSelectionDialog = () => {
   );
 
   const availableEmbeddingModels = useMemo(() => {
-    if (!availableOllamaModels) return [];
+    if (!availableLocalModels) return [];
 
-    return availableOllamaModels
+    return availableLocalModels
       .filter((model) => supportedEmbeddingModels.includes(model.model))
       .map((model) => ({
         value: model.model,
         label: model.model,
       }));
-  }, [availableOllamaModels, supportedEmbeddingModels]);
+  }, [availableLocalModels, supportedEmbeddingModels]);
 
   const { data: embeddingMigrationStatus } = useGetEmbeddingMigrationStatus(
     { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },

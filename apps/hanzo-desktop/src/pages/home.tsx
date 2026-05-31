@@ -216,7 +216,7 @@ const EmptyMessage = () => {
         }
 
         const response = await axios.get(
-          `${auth.node_address}/v2/check_default_tools_sync`,
+          `${auth.node_address}/v1/node/check_default_tools_sync`,
           {
             headers: {
               Authorization: `Bearer ${auth.api_v2_key}`,

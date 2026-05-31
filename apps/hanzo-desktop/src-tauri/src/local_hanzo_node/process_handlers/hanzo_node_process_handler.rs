@@ -69,7 +69,9 @@ impl HanzoNodeProcessHandler {
     }
 
     async fn health(base_url: &str, timeout: Duration) -> bool {
-        let url = format!("{}/v2/health_check", base_url);
+        // The node serves its HTTP API under `/v1/node` (matching the frontend's
+        // hanzo-message-ts client). Probe the readiness endpoint there.
+        let url = format!("{}/v1/node/health_check", base_url);
         let client = reqwest::Client::new();
         log::info!(
             "checking hanzo-nodehealth of {} with timeout {:?}",

@@ -54,7 +54,7 @@ export class HanzoEngineClient {
    * List available/loaded models
    */
   async listModels(): Promise<ModelsResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/models`);
+    const response = await fetch(`${this.baseUrl}/v1/engine/models`);
     if (!response.ok) {
       throw new Error(`Failed to list models: ${response.statusText}`);
     }
@@ -103,7 +103,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -133,7 +133,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -193,7 +193,7 @@ export class HanzoEngineClient {
   ): Promise<EmbeddingResponse> {
     const request: EmbeddingRequest = { model, input };
 
-    const response = await fetch(`${this.baseUrl}/v1/embeddings`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

@@ -39,16 +39,6 @@ export const useHanzoNodeGetOptionsQuery = (
   });
   return { ...query } as UseQueryResult<HanzoNodeOptions, Error>;
 };
-export const useHanzoNodeGetOllamaApiUrlQuery = (
-  options?: Omit<QueryObserverOptions, 'queryKey'>,
-): UseQueryResult<string, Error> => {
-  const query = useQuery({
-    queryKey: ['hanzo_node_get_ollama_api_url'],
-    queryFn: (): Promise<string> => invoke('hanzo_node_get_ollama_api_url'),
-    ...options,
-  });
-  return { ...query } as UseQueryResult<string, Error>;
-};
 export const useHanzoNodeGetDefaultModel = (
   options?: QueryObserverOptions,
 ): UseQueryResult<string, Error> => {
@@ -59,17 +49,6 @@ export const useHanzoNodeGetDefaultModel = (
   });
   return { ...query } as UseQueryResult<string, Error>;
 };
-export const useHanzoNodeGetOllamaVersionQuery = (
-  options?: Omit<QueryObserverOptions, 'queryKey'>,
-): UseQueryResult<string, Error> => {
-  const query = useQuery({
-    queryKey: ['hanzo_node_get_ollama_version'],
-    queryFn: (): Promise<string> => invoke('hanzo_node_get_ollama_version'),
-    ...options,
-  });
-  return { ...query } as UseQueryResult<string, Error>;
-};
-
 export const useHanzoNodeGetDefaultEmbeddingModelQuery = (
   options?: Omit<QueryObserverOptions, 'queryKey'>,
 ): UseQueryResult<string, Error> => {

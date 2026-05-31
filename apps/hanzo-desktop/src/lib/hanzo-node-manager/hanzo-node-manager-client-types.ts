@@ -3,10 +3,6 @@ export enum HanzoNodeManagerEvent {
   HanzoNodeStarted = 'HanzoNodeStarted',
   HanzoNodeStartError = 'HanzoNodeStartError',
 
-  StartingOllama = 'StartingOllama',
-  OllamaStarted = 'OllamaStarted',
-  OllamaStartError = 'OllamaStartError',
-
   PullingModelStart = 'PullingModelStart',
   PullingModelProgress = 'PullingModelProgress',
   PullingModelDone = 'PullingModelDone',
@@ -15,16 +11,9 @@ export enum HanzoNodeManagerEvent {
   StoppingHanzoNode = 'StoppingHanzoNode',
   HanzoNodeStopped = 'HanzoNodeStopped',
   HanzoNodeStopError = 'HanzoNodeStopError',
-
-  StoppingOllama = 'StoppingOllama',
-  OllamaStopped = 'OllamaStopped',
-  OllamaStopError = 'OllamaStopError',
 }
 
 export interface HanzoNodeStartErrorEvent {
-  error: string;
-}
-export interface OllamaStartErrorEvent {
   error: string;
 }
 
@@ -46,9 +35,6 @@ export interface PullingModelErrorEvent {
 export interface HanzoNodeStopErrorEvent {
   error: string;
 }
-export interface OllamaStopErrorEvent {
-  error: string;
-}
 
 export type HanzoNodeManagerEventMap =
   | { type: HanzoNodeManagerEvent.StartingHanzoNode; payload: never }
@@ -56,12 +42,6 @@ export type HanzoNodeManagerEventMap =
   | {
       type: HanzoNodeManagerEvent.HanzoNodeStartError;
       payload: HanzoNodeStartErrorEvent;
-    }
-  | { type: HanzoNodeManagerEvent.StartingOllama; payload: never }
-  | { type: HanzoNodeManagerEvent.OllamaStarted; payload: never }
-  | {
-      type: HanzoNodeManagerEvent.OllamaStartError;
-      payload: OllamaStartErrorEvent;
     }
   | {
       type: HanzoNodeManagerEvent.PullingModelStart;
@@ -84,12 +64,6 @@ export type HanzoNodeManagerEventMap =
   | {
       type: HanzoNodeManagerEvent.HanzoNodeStopError;
       payload: HanzoNodeStopErrorEvent;
-    }
-  | { type: HanzoNodeManagerEvent.StoppingOllama; payload: never }
-  | { type: HanzoNodeManagerEvent.OllamaStopped; payload: never }
-  | {
-      type: HanzoNodeManagerEvent.OllamaStopError;
-      payload: OllamaStopErrorEvent;
     };
 
 export type HanzoNodeOptions = {

@@ -2,7 +2,6 @@ import './globals.css';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PlayIcon, StopIcon } from '@radix-ui/react-icons';
-import { useSyncOllamaModels } from '@hanzo_network/hanzo-node-state/v2/mutations/syncOllamaModels/useSyncOllamaModels';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,15 +30,14 @@ import {
 import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { info } from '@tauri-apps/plugin-log';
-import { Loader2, RefreshCcwIcon, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import logo from '../../../src-tauri/icons/128x128@2x.png';
-import { OllamaModels } from '../../components/hanzo-node-manager/ollama-models';
-import { ALLOWED_OLLAMA_MODELS } from '../../lib/hanzo-node-manager/ollama-models';
+import { LocalModels } from '../../components/hanzo-node-manager/local-models';
 import {
   hanzoNodeQueryClient,
   useHanzoNodeGetOptionsQuery,
@@ -53,7 +51,6 @@ import {
 import { type HanzoNodeOptions } from '../../lib/hanzo-node-manager/hanzo-node-manager-client-types';
 import { useHanzoNodeEventsToast } from '../../lib/hanzo-node-manager/hanzo-node-manager-hooks';
 import {
-  errorOllamaModelsSyncToast,
   errorRemovingHanzoNodeStorageToast,
   hanzoNodeStartedToast,
   hanzoNodeStartErrorToast,
@@ -61,7 +58,6 @@ import {
   hanzoNodeStoppedToast,
   startingHanzoNodeToast,
   stoppingHanzoNodeToast,
-  successOllamaModelsSyncToast,
   successRemovingHanzoNodeStorageToast,
   successHanzoNodeSetDefaultOptionsToast,
 } from '../../lib/hanzo-node-manager/hanzo-node-manager-toasts-utils';
@@ -75,7 +71,6 @@ const App = () => {
     void info('initializing hanzo-node-manager');
   }, []);
   useSyncStorageSecondary();
-  const auth = useAuth((auth) => auth.auth);
   const setLogout = useAuth((auth) => auth.setLogout);
   const { setHanzoNodeOptions } = useHanzoNodeManager();
   const [isConfirmResetDialogOpened, setIsConfirmResetDialogOpened] =
@@ -145,17 +140,6 @@ const App = () => {
   const hanzoNodeOptionsFormWatch = useWatch({
     control: hanzoNodeOptionsForm.control,
   });
-  const {
-    mutateAsync: syncOllamaModels,
-    isPending: syncOllamaModelsIsPending,
-  } = useSyncOllamaModels({
-    onSuccess: () => {
-      successOllamaModelsSyncToast();
-    },
-    onError: () => {
-      errorOllamaModelsSyncToast();
-    },
-  });
 
   useHanzoNodeEventsToast();
 
@@ -171,14 +155,6 @@ const App = () => {
   const handleReset = (): void => {
     setIsConfirmResetDialogOpened(false);
     void hanzoNodeRemoveStorage({ preserveKeys: true });
-  };
-
-  const startSyncOllamaModels = async () => {
-    await syncOllamaModels({
-      nodeAddress: auth?.node_address ?? '',
-      token: auth?.api_v2_key ?? '',
-      allowedModels: ALLOWED_OLLAMA_MODELS,
-    });
   };
 
   const [hanzoNodeOptionsForUI, setHanzoNodeOptionsForUI] =
@@ -209,7 +185,7 @@ const App = () => {
       <div className="flex flex-row items-center px-4 pt-10 pb-4">
         <img alt="hanzo logo" className="h-8 w-8" src={logo} />
         <div className="ml-3 flex flex-col">
-          <span className="text-base font-medium">Local Hanzo Node</span>
+          <span className="text-base font-medium">Node</span>
           <span className="text-text-secondary text-xs">{`API URL: http://${hanzoNodeOptions?.node_api_ip}:${hanzoNodeOptions?.node_api_port}`}</span>
         </div>
         <div className="flex grow flex-row items-center justify-end space-x-4">
@@ -237,7 +213,7 @@ const App = () => {
             </TooltipTrigger>
             <TooltipPortal>
               <TooltipContent side="bottom">
-                <p>Start Hanzo Node</p>
+                <p>Start Node</p>
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>
@@ -263,7 +239,7 @@ const App = () => {
             </TooltipTrigger>
             <TooltipPortal>
               <TooltipContent side="bottom">
-                <p>Stop Hanzo Node</p>
+                <p>Stop Node</p>
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>
@@ -285,29 +261,7 @@ const App = () => {
             </TooltipTrigger>
             <TooltipPortal>
               <TooltipContent side="bottom">
-                <p>Reset Hanzo Node</p>
-              </TooltipContent>
-            </TooltipPortal>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger>
-              <Button
-                disabled={!hanzoNodeIsRunning}
-                onClick={() => startSyncOllamaModels()}
-                variant={'outline'}
-                size={'icon'}
-              >
-                {syncOllamaModelsIsPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <RefreshCcwIcon className="size-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipPortal>
-              <TooltipContent side="bottom">
-                <p>Sync Ollama Models</p>
+                <p>Reset Node</p>
               </TooltipContent>
             </TooltipPortal>
           </Tooltip>
@@ -399,7 +353,7 @@ const App = () => {
         </TabsContent>
 
         <TabsContent className="h-full overflow-hidden pb-2" value="models">
-          <OllamaModels />
+          <LocalModels />
         </TabsContent>
       </Tabs>
       <AlertDialog
@@ -408,12 +362,12 @@ const App = () => {
       >
         <AlertDialogContent className="w-[75%]">
           <AlertDialogHeader>
-            <AlertDialogTitle>Reset your Hanzo Node</AlertDialogTitle>
+            <AlertDialogTitle>Reset your Node</AlertDialogTitle>
             <AlertDialogDescription>
               <div className="flex flex-col space-y-3 text-left text-white/70">
                 <div className="flex flex-col space-y-1">
                   <span className="text-sm">
-                    Are you sure you want to reset your Hanzo Node? This will
+                    Are you sure you want to reset your Node? This will
                     permanently delete all your data.
                   </span>
                 </div>

@@ -401,7 +401,7 @@
   },
   "errors": {
     "nodeUnavailable": {
-      "description": "Estamos teniendo problemas para conectar con tu Nodo Hanzo. Tu nodo puede estar desconectado o tu conexión a internet puede estar caída.",
+      "description": "Estamos teniendo problemas para conectar con tu Nodo. Tu nodo puede estar desconectado o tu conexión a internet puede estar caída.",
       "title": "Nodo No Disponible"
     }
   },
@@ -413,7 +413,7 @@
     },
     "generateFile": "Generar archivo de conexión",
     "label": "Exportar Conexión",
-    "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo Hanzo"
+    "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo"
   },
   "extension": {
     "welcome": "Transforma tu experiencia de navegación web utilizando IA con Hanzo Visor ✨"
@@ -557,7 +557,7 @@
   },
   "mcpServers": {
     "add": "Agregar Servidor MCP",
-    "addDescription": "Configura un nuevo servidor MCP para conectarte con tu Nodo Hanzo",
+    "addDescription": "Configura un nuevo servidor MCP para conectarte con tu Nodo",
     "addFailed": "Error al agregar el servidor MCP",
     "addFromGitHub": "Agregar desde GitHub",
     "addSuccess": "Servidor MCP agregado con éxito",
@@ -596,7 +596,7 @@
     "deleteSuccess": "Servidor MCP eliminado con éxito",
     "environmentVariables": "Variables de Entorno",
     "label": "Servidores MCP",
-    "listDescription": "Lista de servidores MCP conectados a tu Nodo Hanzo",
+    "listDescription": "Lista de servidores MCP conectados a tu Nodo",
     "listOfToolsAvailableFromThisMcpServer": "Lista de herramientas disponibles desde este servidor MCP.",
     "manualSetup": "Configuración Manual",
     "name": "Nombre",
@@ -698,9 +698,9 @@
   },
   "ollama": {
     "errors": {
-      "failedToFetch": "Error al obtener modelos locales de Ollama. Por favor, asegúrate de que Ollama esté funcionando correctamente."
+      "failedToFetch": "Error al obtener los modelos locales. Por favor, asegúrate de que el servidor de modelos locales esté funcionando correctamente."
     },
-    "version": "Versión de Ollama"
+    "version": "Versión del modelo"
   },
   "onboardingChecklist": {
     "addAIAgent": "Crea tu Agente de IA",
@@ -751,7 +751,7 @@
     "emptyStateTitle": "Pregunta a Hanzo AI"
   },
   "quickConnection": {
-    "connectingToNode": "Conectando a tu Nodo Hanzo local",
+    "connectingToNode": "Conectando a tu Nodo local",
     "form": {
       "connect": "Conectar",
       "nodeAddress": "Dirección del Nodo"
@@ -828,7 +828,7 @@
       "promptLibrary": "Biblioteca de Prompts",
       "publicKeys": "Claves Públicas",
       "remoteAccess": "Acceso Remoto",
-      "hanzoNode": "Administrador de Nodo Hanzo"
+      "hanzoNode": "Administrador de Nodo"
     },
     "maxChatIterations": {
       "description": "El número máximo de iteraciones para procesar un mensaje de chat",
@@ -862,7 +862,7 @@
     },
     "remoteAccess": {
       "connected": "Conectado",
-      "description": "Conéctate de manera fácil y segura a tu nodo Hanzo desde cualquier lugar usando ngrok. Sin configuraciones complejas: solo <a>crea una cuenta gratuita en ngrok</a>, copia tu <b>token de autenticación de ngrok</b> desde el panel de control y pégalo a continuación para habilitar el acceso remoto seguro.",
+      "description": "Conéctate de manera fácil y segura a tu nodo desde cualquier lugar usando ngrok. Sin configuraciones complejas: solo <a>crea una cuenta gratuita en ngrok</a>, copia tu <b>token de autenticación de ngrok</b> desde el panel de control y pégalo a continuación para habilitar el acceso remoto seguro.",
       "errors": {
         "failedToGetStatus": "Error al obtener el estado de ngrok.",
         "failedToStart": "Error al conectar el acceso remoto a través de ngrok.",
@@ -878,7 +878,7 @@
       "publicAccessURLDescription": "Utiliza esta URL para conectarte a tu nodo desde cualquier lugar.",
       "publicAccessUrl": "URL de Acceso Público",
       "stopRemoteAccessSuccess": "El acceso remoto se ha detenido con éxito",
-      "success": "¡Conectado! Tu nodo Hanzo ahora es accesible de forma remota a través de ngrok",
+      "success": "¡Conectado! Tu nodo ahora es accesible de forma remota a través de ngrok",
       "title": "Acceso Remoto"
     },
     "hanzoIdentity": {
@@ -912,7 +912,7 @@
     }
   },
   "hanzoNode": {
-    "manager": "Gestor de Nodos de Hanzo",
+    "manager": "Gestor de Nodos",
     "models": {
       "errors": {
         "modelInstalled": "Error al instalar el modelo {{modelName}}",
@@ -931,7 +931,7 @@
         "visionCapability": "Imagen a Texto",
         "cloudCapability": "Nube"
       },
-      "poweredByOllama": "Desarrollado por Ollama",
+      "poweredByOllama": "Desarrollado con modelos locales",
       "success": {
         "modelInstalled": "Modelo {{modelName}} instalado exitosamente",
         "modelRemoved": "Modelo {{modelName}} eliminado exitosamente"
@@ -942,30 +942,30 @@
     "notifications": {
       "downloadedModel": "Modelo de IA {{modelName}} descargado exitosamente",
       "downloadingModel": "Descargando modelo de IA {{modelName}} - {{progress}}%",
-      "errorSyncOllama": "Error al sincronizar los modelos locales de Ollama con tu Nodo Hanzo",
+      "errorSyncOllama": "Error al sincronizar los modelos locales con tu Nodo",
       "installingModel": "Instalando {{modelName}} ...",
       "optionsRestored": "Opciones restauradas a los valores predeterminados",
-      "removedNote": "Se eliminó el almacenamiento de tu Nodo Hanzo local",
-      "runningNode": "Tu Nodo Hanzo local está en funcionamiento",
-      "runningOllama": "Tu Ollama local está en funcionamiento",
+      "removedNote": "Se eliminó el almacenamiento de tu Nodo local",
+      "runningNode": "Tu Nodo local está en funcionamiento",
+      "runningOllama": "Tu modelo local está en funcionamiento",
       "startingDownload": "Iniciando descarga para el modelo de IA {{modelName}}",
-      "startingNode": "Iniciando tu Nodo Hanzo local",
-      "startingOllama": "Iniciando tu Ollama local",
-      "stopNode": "Deteniendo tu Nodo Hanzo local",
-      "stopOllama": "Deteniendo tu Ollama local",
-      "stoppedNode": "Tu Nodo Hanzo local se detuvo",
-      "stoppedOllama": "Tu Ollama local se detuvo",
-      "syncedOllama": "Los modelos locales de Ollama se han sincronizado con tu Nodo Hanzo"
+      "startingNode": "Iniciando tu Nodo local",
+      "startingOllama": "Iniciando tu modelo local",
+      "stopNode": "Deteniendo tu Nodo local",
+      "stopOllama": "Deteniendo tu modelo local",
+      "stoppedNode": "Tu Nodo local se detuvo",
+      "stoppedOllama": "Tu modelo local se detuvo",
+      "syncedOllama": "Los modelos locales se han sincronizado con tu Nodo"
     },
     "resetNodeWarning": {
-      "description": "Tu nodo Hanzo está actualmente bloqueado por claves existentes. Para volver a conectarte, puedes restablecer todos los datos de tu nodo Hanzo.",
+      "description": "Tu nodo está actualmente bloqueado por claves existentes. Para volver a conectarte, puedes restablecer todos los datos de tu nodo.",
       "option1": "<b>Restaurar:</b> Intente restaurar su conexión utilizando las claves respaldadas.",
-      "option2": "<b>Restablecer datos:</b> Eliminar permanentemente todos los datos de tu Nodo Hanzo.",
-      "option3": "<b>Restablecer todo:</b> Eliminar permanentemente todos los datos de tu Nodo Hanzo, incluyendo las claves de encriptación y firma.",
+      "option2": "<b>Restablecer datos:</b> Eliminar permanentemente todos los datos de tu Nodo.",
+      "option3": "<b>Restablecer todo:</b> Eliminar permanentemente todos los datos de tu Nodo, incluyendo las claves de encriptación y firma.",
       "title": "No se puede conectar"
     },
-    "restartNode": "Por favor, reinicia tu Nodo Hanzo",
-    "unavailable": "Tu Nodo Hanzo no está disponible"
+    "restartNode": "Por favor, reinicia tu Nodo",
+    "unavailable": "Tu Nodo no está disponible"
   },
   "tasks": {
     "runNow": "Ejecutar ahora"

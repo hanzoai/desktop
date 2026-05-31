@@ -2,7 +2,10 @@ import { getLLMProviders as getLLMProvidersAPI } from '@hanzo_network/hanzo-mess
 
 import  { type GetLLMProvidersInput } from './types';
 
-const EMBEDDING_MODEL = 'ollama:embeddinggemma:300m';
+// Wire-protocol value: the node persists the local embedding provider under
+// this exact model string (the `local:` prefix is the node's serde tag for the
+// local-engine variant). It is filtered out of the user-facing provider list.
+const EMBEDDING_MODEL = 'local:embeddinggemma:300m';
 
 export const getLLMProviders = async ({
   nodeAddress,

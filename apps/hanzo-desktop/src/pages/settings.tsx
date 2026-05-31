@@ -58,7 +58,6 @@ import { FeedbackModal } from '../components/feedback/feedback-modal';
 import { OnboardingStep } from '../components/onboarding/constants';
 import EmbeddingModelSelectionDialog from '../components/settings/embedding-model-selection-dialog';
 import HanzoIdentityDialog from '../components/settings/hanzo-identity-dialog';
-import { useHanzoNodeGetOllamaVersionQuery } from '../lib/hanzo-node-manager/hanzo-node-manager-client';
 import {
   useCheckUpdateQuery,
   useDownloadUpdateMutation,
@@ -227,8 +226,6 @@ const SettingsPage = () => {
     nodeAddress: auth?.node_address ?? '',
     token: auth?.api_v2_key ?? '',
   });
-
-  const { data: ollamaVersion } = useHanzoNodeGetOllamaVersionQuery();
 
   const { data: updateState } = useUpdateStateQuery();
   const { refetch: checkForUpdates, isFetching: isCheckingUpdates } =
@@ -443,23 +440,18 @@ const SettingsPage = () => {
               </form>
             </Form>
           </SettingsSection>
-          <SettingsSection title="Hanzo Node Configuration">
+          <SettingsSection title="Node Configuration">
             <div className="divide-divider flex flex-col divide-y">
               {[
                 {
                   label: t('hanzoNode.nodeAddress'),
-                  description: 'The URL of your Hanzo node connection',
+                  description: 'The URL of your Node connection',
                   value: auth?.node_address,
                 },
                 {
                   label: t('hanzoNode.nodeVersion'),
-                  description: 'Current version of your Hanzo node.',
+                  description: 'Current version of your Node.',
                   value: nodeInfo?.version,
-                },
-                {
-                  label: t('ollama.version'),
-                  description: 'Installed version of Ollama running.',
-                  value: ollamaVersion ?? '-',
                 },
               ].map((item) => (
                 <div
