@@ -225,16 +225,23 @@ export const searchVectorFs = async (
   bearerToken: string,
   payload: GetSearchVectorSearchRequest,
 ) => {
-  const response = await httpClient.get(
-    // retrieve_vector_search_simplified_json
-    urlJoin(nodeAddress, '/v1/node/search_vector_fs'),
+  // The node has no `search_vector_fs` route; `search_items` (POST) is the closest
+  // equivalent — it returns Vec<String> of matching paths (no snippets/scores), so we
+  // adapt each path into the [path, textChunks, score] tuple the UI expects.
+  const response = await httpClient.post(
+    urlJoin(nodeAddress, '/v1/node/search_items'),
     {
-      params: payload,
+      path: payload.path ?? '/',
+      search: payload.search,
+      max_results: payload.depth,
+    },
+    {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
     },
   );
-  return response.data;
+  const paths = (response.data as string[]) ?? [];
+  return { data: paths.map((p) => [p, [], 0] as [string, string[], number]) };
 };
 
 export const retrieveFilesForJob = async (

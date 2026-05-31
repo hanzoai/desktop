@@ -40,6 +40,7 @@ import {
   type RemoveJobRequest,
   type RemoveJobsRequest,
   type RemoveJobsResponse,
+  type RemoveJobsFailedItem,
   type RemoveLLMProviderRequest,
   type RetryMessageRequest,
   type StopGeneratingLLMRequest,
@@ -140,14 +141,26 @@ export const getFileNames = async (
   bearerToken: string,
   payload: GetFileNamesRequest,
 ) => {
+  // No `list_files_in_inbox` route on the node; `retrieve_files_for_job` (keyed by
+  // job_id) is the equivalent. Flatten the returned directory tree to file names.
   const response = await httpClient.get(
-    urlJoin(nodeAddress, `/v1/node/list_files_in_inbox/${payload.inboxName}`),
+    urlJoin(nodeAddress, '/v1/node/retrieve_files_for_job'),
     {
+      params: { job_id: payload.inboxName },
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
     },
   );
-  return response.data as GetFileNamesResponse;
+  type Entry = { name: string; is_directory: boolean; children?: Entry[] };
+  const names: string[] = [];
+  const walk = (items: Entry[]) => {
+    for (const item of items ?? []) {
+      if (item.is_directory) walk(item.children ?? []);
+      else names.push(item.name);
+    }
+  };
+  walk((response.data as Entry[]) ?? []);
+  return names as GetFileNamesResponse;
 };
 
 export const createFilesInbox = async (
@@ -570,15 +583,49 @@ export const removeJobs = async (
   bearerToken: string,
   payload: RemoveJobsRequest,
 ) => {
-  const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_jobs'),
-    payload,
-    {
-      headers: { Authorization: `Bearer ${bearerToken}` },
-      responseType: 'json',
-    },
+  // The node has no bulk `remove_jobs` route — only singular `remove_job`. Fan out
+  // singular deletes and synthesize the bulk response shape the UI expects.
+  const results = await Promise.allSettled(
+    payload.job_ids.map((job_id) =>
+      httpClient
+        .post(
+          urlJoin(nodeAddress, '/v1/node/remove_job'),
+          { job_id },
+          {
+            headers: { Authorization: `Bearer ${bearerToken}` },
+            responseType: 'json',
+          },
+        )
+        .then(() => job_id),
+    ),
   );
-  return response.data as RemoveJobsResponse;
+
+  const succeeded: string[] = [];
+  const failed: RemoveJobsFailedItem[] = [];
+  results.forEach((result, index) => {
+    if (result.status === 'fulfilled') {
+      succeeded.push(result.value);
+    } else {
+      const reason = result.reason as
+        | { response?: { data?: { message?: string } }; message?: string }
+        | undefined;
+      failed.push({
+        job_id: payload.job_ids[index],
+        error:
+          reason?.response?.data?.message ?? reason?.message ?? 'Failed to remove job',
+      });
+    }
+  });
+
+  return {
+    status: failed.length === 0 ? 'success' : 'partial',
+    message:
+      failed.length === 0
+        ? `Successfully removed ${succeeded.length} job(s)`
+        : `Removed ${succeeded.length} job(s), ${failed.length} failed`,
+    succeeded,
+    failed,
+  };
 };
 
 export const getProviderFromJob = async (
