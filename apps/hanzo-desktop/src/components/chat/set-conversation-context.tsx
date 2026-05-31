@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { retrieveVectorResource } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
@@ -8,6 +9,8 @@ import {
 } from '@hanzo_network/hanzo-node-state/forms/vector-fs/vector-search';
 import { transformDataToTreeNodes } from '@hanzo_network/hanzo-node-state/lib/utils/files';
 import { useUpdateJobScope } from '@hanzo_network/hanzo-node-state/v2/mutations/updateJobScope/useUpdateJobScope';
+import { useUploadVRFiles } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
+import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
 import { useGetListDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
 import { useGetJobFolderName } from '@hanzo_network/hanzo-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
 import { useGetVRSeachSimplified } from '@hanzo_network/hanzo-node-state/v2/queries/getVRSearchSimplified/useGetSearchVRItems';
@@ -25,11 +28,11 @@ import {
   SheetTitle,
 } from '@hanzo_network/hanzo-ui';
 import { FileTypeIcon } from '@hanzo_network/hanzo-ui/assets';
-import { SearchIcon } from 'lucide-react';
+import { SearchIcon, UploadIcon } from 'lucide-react';
 import { Checkbox } from 'primereact/checkbox';
 import { Tree, type TreeCheckboxSelectionKeys } from 'primereact/tree';
 import { type TreeNode } from 'primereact/treenode';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -60,6 +63,41 @@ export const SetJobScopeDrawer = () => {
   );
   const auth = useAuth((state) => state.auth);
   const [nodes, setNodes] = useState<TreeNode[]>([]);
+
+  const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { mutateAsync: uploadVRFiles, isPending: isUploadingFiles } =
+    useUploadVRFiles({
+      onSuccess: (_, variables) => {
+        toast.success('Files uploaded', {
+          id: 'ctx-upload',
+          description: `${variables.files.length} file(s) added — select them below, then Save.`,
+        });
+        void queryClient.invalidateQueries({
+          queryKey: [FunctionKeyV2.GET_VR_FILES],
+        });
+      },
+      onError: (error) => {
+        toast.error('Failed to upload files', {
+          id: 'ctx-upload',
+          description: error.message,
+        });
+      },
+    });
+
+  const handleUploadFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0 || !auth) return;
+    toast.loading('Uploading files…', {
+      id: 'ctx-upload',
+      description: 'This can take ~1–2 min per file (it gets embedded).',
+    });
+    await uploadVRFiles({
+      nodeAddress: auth.node_address ?? '',
+      destinationPath: '/',
+      files: Array.from(fileList),
+      token: auth.api_v2_key ?? '',
+    });
+  };
 
   // Helper function to find a TreeNode by its key (path) in the tree
   const findNodeByKey = (
@@ -145,6 +183,28 @@ export const SetJobScopeDrawer = () => {
           <p className="text-text-secondary text-sm">
             {t('chat.form.setContextText')}
           </p>
+          <input
+            className="hidden"
+            multiple
+            onChange={(e) => {
+              void handleUploadFiles(e.target.files);
+              e.target.value = '';
+            }}
+            ref={fileInputRef}
+            type="file"
+          />
+          <Button
+            className="mt-1 w-full gap-2"
+            disabled={isUploadingFiles}
+            isLoading={isUploadingFiles}
+            onClick={() => fileInputRef.current?.click()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            <UploadIcon className="size-4" />
+            Upload files
+          </Button>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-200px)] flex-1">
           <Tree
