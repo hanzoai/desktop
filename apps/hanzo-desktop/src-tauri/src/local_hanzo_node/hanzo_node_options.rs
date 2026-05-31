@@ -210,7 +210,10 @@ impl Default for HanzoNodeOptions {
         HanzoNodeOptions {
             node_api_ip: Some("127.0.0.1".to_string()),
             node_api_port: Some("3690".to_string()),
-            node_ws_port: Some("3694".to_string()),
+            // The frontend's chat WebSocket connects to apiPort+1 (see
+        // websocket-message.tsx). API port is 3690, so the WS server MUST be 3691
+        // or chat streams never connect and every chat hangs forever.
+        node_ws_port: Some("3691".to_string()),
             node_ip: Some("127.0.0.1".to_string()),
             node_port: Some("3692".to_string()),
             node_https_port: Some("3693".to_string()),
