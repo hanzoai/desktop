@@ -121,16 +121,33 @@ impl HanzoNodeManager {
             .unwrap_or_else(|_| "/home/z/src/hanzo/engine/target/release/mistralrs-server".to_string());
         let model =
             std::env::var("HANZO_ENGINE_MODEL").unwrap_or_else(|_| "Qwen/Qwen3-0.6B".to_string());
-        log::info!("starting hanzo-engine `{}` (model {}) on :{}", bin, model, port);
+        // Chat model. Default to the real zen chat model `zen-eco-3b-agent` (a GGUF;
+        // agent-tuned, a great fit for this agent app). When a GGUF file is configured the
+        // engine loads it with its EMBEDDED chat template — do NOT pass a template override
+        // (`-c`/`-j`), which yields garbage. Set HANZO_ENGINE_GGUF_FILE="" to fall back to
+        // the safetensors `run -m HANZO_ENGINE_MODEL` path (e.g. Qwen3-0.6B).
+        let gguf_repo = std::env::var("HANZO_ENGINE_GGUF_REPO")
+            .unwrap_or_else(|_| "zenlm/zen-eco-4b-agent-gguf".to_string());
+        let gguf_file = std::env::var("HANZO_ENGINE_GGUF_FILE")
+            .unwrap_or_else(|_| "zen-eco-3b-agent-q4_k_m.gguf".to_string());
 
         let mut cmd = std::process::Command::new(&bin);
         cmd.arg("--port").arg(&port);
-        if let Ok(tpl) = std::env::var("HANZO_ENGINE_CHAT_TEMPLATE") {
-            if !tpl.is_empty() {
-                cmd.arg("-c").arg(tpl);
+        if !gguf_file.is_empty() {
+            log::info!(
+                "starting hanzo-engine `{}` (gguf {}/{}) on :{}",
+                bin, gguf_repo, gguf_file, port
+            );
+            cmd.arg("gguf").arg("-m").arg(&gguf_repo).arg("-f").arg(&gguf_file);
+        } else {
+            log::info!("starting hanzo-engine `{}` (model {}) on :{}", bin, model, port);
+            if let Ok(tpl) = std::env::var("HANZO_ENGINE_CHAT_TEMPLATE") {
+                if !tpl.is_empty() {
+                    cmd.arg("-c").arg(tpl);
+                }
             }
+            cmd.arg("run").arg("-m").arg(&model);
         }
-        cmd.arg("run").arg("-m").arg(&model);
 
         let child = cmd
             .spawn()
