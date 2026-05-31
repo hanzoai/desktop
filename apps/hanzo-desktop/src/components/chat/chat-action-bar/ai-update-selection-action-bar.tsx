@@ -38,6 +38,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../../store/auth';
 import { useHanzoNodeManager } from '../../../store/hanzo-node-manager';
 import MODEL_CATALOG from '../../../lib/hanzo-node-manager/model-catalog.json';
+import { getProviderModelLabel } from '../../../lib/hanzo-node-manager/local-model-names';
 import ProviderIcon from '../../ais/provider-icon';
 import { CODE_GENERATOR_MODEL_ID } from '../../tools/constants';
 import { actionButtonClassnames } from '../conversation-footer';
@@ -172,7 +173,10 @@ export function AIModelSelectorBase({
       (llmProvider) => llmProvider.id === value,
     );
     if (selectedLlmProvider) {
-      return formatText(selectedLlmProvider.name || selectedLlmProvider.id);
+      return getProviderModelLabel(
+        selectedLlmProvider.model,
+        formatText(selectedLlmProvider.name || selectedLlmProvider.id),
+      );
     }
     return '';
   }, [agents, llmProviders, value]);
@@ -384,7 +388,10 @@ export function AIModelSelectorBase({
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-base font-medium capitalize">
-                        {formatText(llmProvider?.name || llmProvider.id || '')}
+                        {getProviderModelLabel(
+                          llmProvider.model,
+                          formatText(llmProvider?.name || llmProvider.id || ''),
+                        )}
                         {location.pathname.includes('tools') &&
                           llmProvider.model.toLowerCase() ===
                             CODE_GENERATOR_MODEL_ID.toLowerCase() && (

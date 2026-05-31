@@ -6,6 +6,7 @@ import {
 } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import { type MessageTrace } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { getProviderModelLabel } from '../../../lib/hanzo-node-manager/local-model-names';
 import {
   type AssistantMessage,
   type FormattedMessage,
@@ -479,7 +480,10 @@ export const MessageBase = ({
           <div className="mt-2 flex items-center gap-2">
             {selectedIcon}
             <span className="text-em-sm text-text-default font-bold">
-              {formatText(message.provider?.agent?.id ?? '')}
+              {getProviderModelLabel(
+                message.provider?.agent?.model,
+                formatText(message.provider?.agent?.id ?? ''),
+              )}
             </span>
           </div>
         ) : null}
