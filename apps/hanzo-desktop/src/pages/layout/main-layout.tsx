@@ -46,6 +46,7 @@ import {
   ArrowLeftToLine,
   ArrowRightToLine,
   Ellipsis,
+  Gauge,
   HelpCircleIcon,
 } from 'lucide-react';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -268,6 +269,11 @@ export function MainNav() {
       title: t('layout.menuItems.scheduledTasks'),
       href: '/tasks',
       icon: <ScheduledTasksIcon className="size-[18px]" />,
+    },
+    {
+      title: 'Benchmark',
+      href: '/benchmark',
+      icon: <Gauge className="size-[18px]" />,
     },
   ];
   const footerNavigationLinks = [

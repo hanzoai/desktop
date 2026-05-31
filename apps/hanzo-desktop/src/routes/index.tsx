@@ -47,6 +47,7 @@ import AgentsPage from '../pages/agents';
 import AIModelInstallation from '../pages/ai-model-installation';
 import AIsPage from '../pages/ais';
 import AnalyticsPage from '../pages/analytics';
+import BenchmarkPage from '../pages/benchmark';
 import AnalyticsSettingsPage from '../pages/analytics-settings';
 import AppearancePage from '../pages/appearance';
 import ChatConversation from '../pages/chat/chat-conversation';
@@ -337,6 +338,7 @@ const AppRoutes = () => {
             }
           >
             <Route element={<HomePage />} path={'home'} />
+            <Route element={<BenchmarkPage />} path={'benchmark'} />
           </Route>
           <Route
             element={
