@@ -56,15 +56,17 @@ tauri-plugin-http = "2.5"
 
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
-# --- Native Hanzo Engine (embedded mistral.rs fork) -------------------------
+# --- Native Hanzo Engine (embedded, in-process) -----------------------------
 # In-process LLM inference via the Hanzo Engine fork at ~/work/hanzo/engine
-# (../../../../engine relative to this manifest). Optional and OFF by default so
-# the standard build stays light and does not require the engine repo checked
-# out as a sibling. Enable with the `native-engine` feature plus a backend, e.g.
+# (../../../../engine relative to this manifest). The engine workspace was
+# rebranded mistralrs-* -> hanzo-*: `hanzo` is the high-level SDK, `hanzo-engine`
+# is the core. Optional and OFF by default so the standard build stays light and
+# does not require the engine repo checked out as a sibling. Enable with the
+# `native-engine` feature plus a backend, e.g.
 #   cargo build --release --features "native-engine metal"   (Apple Silicon)
 #   cargo build --release --features "native-engine cuda"    (NVIDIA)
-mistralrs = { path = "../../../../engine/mistralrs", optional = true }
-mistralrs-core = { path = "../../../../engine/mistralrs-core", optional = true }
+hanzo = { path = "../../../../engine/hanzo", optional = true }
+hanzo-engine = { path = "../../../../engine/hanzo-engine", optional = true }
 axum = { version = "0.8", optional = true }
 
 [features]
@@ -74,10 +76,10 @@ custom-protocol = ["tauri/custom-protocol"]
 
 # Embed the native Hanzo Engine for in-process inference (OpenAI-compatible
 # server on 127.0.0.1:36900 + Tauri IPC commands). Pair with a backend feature.
-native-engine = ["dep:mistralrs", "dep:mistralrs-core", "dep:axum"]
+native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:axum"]
 # GPU/CPU backends forwarded to the engine. Weak deps (`pkg?/feat`) so selecting
 # a backend never force-enables the engine unless `native-engine` is also on.
-metal = ["mistralrs?/metal", "mistralrs-core?/metal"]
-cuda = ["mistralrs?/cuda", "mistralrs-core?/cuda"]
-accelerate = ["mistralrs-core?/accelerate"]
-flash-attn = ["mistralrs?/flash-attn"]
+metal = ["hanzo?/metal", "hanzo-engine?/metal"]
+cuda = ["hanzo?/cuda", "hanzo-engine?/cuda"]
+accelerate = ["hanzo-engine?/accelerate"]
+flash-attn = ["hanzo?/flash-attn"]
