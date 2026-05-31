@@ -1,9 +1,10 @@
-use std::fs;
 use std::path::PathBuf;
 
-use super::ollama_api::ollama_api_client::OllamaApiClient;
-use super::ollama_api::ollama_api_types::OllamaApiPullResponse;
-use super::process_handlers::ollama_process_handler::OllamaProcessHandler;
+// Ollama has been fully retired. Chat is served by the native hanzo-engine on
+// :36900 and embeddings by the native engine on :36901. The desktop must never
+// spawn, kill, or otherwise manage an `ollama` process. The ollama_api /
+// ollama_process_handler modules are intentionally NOT imported here so no
+// ollama lifecycle code can run during startup/shutdown/restart.
 use super::process_handlers::hanzo_node_process_handler::HanzoNodeProcessHandler;
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
 use crate::models::embedding_model;
@@ -47,7 +48,6 @@ pub enum HanzoNodeManagerEvent {
 }
 
 pub struct HanzoNodeManager {
-    ollama_process: OllamaProcessHandler,
     hanzo_node_process: HanzoNodeProcessHandler,
     event_broadcaster: broadcast::Sender<HanzoNodeManagerEvent>,
     app_resource_dir: PathBuf,
@@ -62,19 +62,15 @@ pub struct HanzoNodeManager {
 
 impl HanzoNodeManager {
     pub(crate) fn new(app: AppHandle, app_resource_dir: PathBuf, app_data_dir: PathBuf) -> Self {
-        let (ollama_sender, _ollama_receiver) = channel(100);
         let (hanzo_node_sender, _hanzo_node_receiver) = channel(100);
         let (event_broadcaster, _) = broadcast::channel(10);
         let llm_models_path = app
             .path()
             .resolve("llm-models", BaseDirectory::Resource)
             .unwrap();
+        // No OllamaProcessHandler is constructed: ollama is retired and the
+        // desktop never starts or kills it.
         HanzoNodeManager {
-            ollama_process: OllamaProcessHandler::new(
-                app.clone(),
-                ollama_sender,
-                app_resource_dir.clone(),
-            ),
             hanzo_node_process: HanzoNodeProcessHandler::new(
                 app,
                 hanzo_node_sender,
@@ -228,7 +224,10 @@ impl HanzoNodeManager {
             let _ = child.kill();
             let _ = child.wait();
         }
-        self.ollama_process.kill().await;
+        // Ollama retired: nothing to kill. We do NOT pkill `ollama`/
+        // `ollama_llama_server` nor sweep port 11435 — that machinery is what
+        // produced the startup churn ("[ollama] no process is running to kill",
+        // "failed to terminate process 'ollama_llama_se'").
         self.emit_event(HanzoNodeManagerEvent::OllamaStopped);
     }
 
@@ -277,11 +276,18 @@ impl HanzoNodeManager {
         self.event_broadcaster.subscribe()
     }
 
+    /// Retained for the legacy `hanzo_node_get_ollama_api_url` Tauri command.
+    /// Ollama is retired; we report the native engine's OpenAI-compatible URL so
+    /// any remaining frontend caller talks to hanzo-engine, never to ollama.
     pub fn get_ollama_api_url(&self) -> String {
-        self.ollama_process.get_ollama_api_base_url()
+        let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
+        format!("http://127.0.0.1:{}", port)
     }
 
-    pub async fn get_ollama_version(app: AppHandle) -> Result<String> {
-        OllamaProcessHandler::version(app).await
+    /// Retained for the legacy `hanzo_node_get_ollama_version` Tauri command.
+    /// Ollama is retired; never spawn the ollama sidecar. Return empty so the
+    /// frontend treats it as "not present" without triggering any process.
+    pub async fn get_ollama_version(_app: AppHandle) -> Result<String> {
+        Ok(String::new())
     }
 }

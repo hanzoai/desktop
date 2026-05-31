@@ -70,21 +70,14 @@ export const useEmbeddingStartupCheck = () => {
 
     const currentModel = embeddingMigrationStatus.current_embedding_model;
 
-    // Check if current model is different from default and migration is not in progress
-    if (
-      currentModel !== defaultEmbeddingModel &&
-      !embeddingMigrationStatus.migration_in_progress &&
-      embeddingMigrationStatus.status === 'ready'
-    ) {
-      embeddingModelMismatchToast({
-        currentModel,
-        defaultModel: defaultEmbeddingModel,
-        onMigrateToDefault: handleMigrateToDefault,
-        onDismiss: () => setPromptDismissed(true),
-      });
-
-      hasShownToastRef.current = true;
-    }
+    // Embedding-update popup intentionally suppressed. The local Hanzo engine
+    // probes its live vector dimension at runtime (set_active_vector_dimensions),
+    // so the node adapts to whatever embedder is configured (zen 1024, gemma
+    // 768, ...) and boots on the right defaults without prompting the user.
+    void currentModel;
+    void handleMigrateToDefault;
+    void setPromptDismissed;
+    hasShownToastRef.current = true;
 
     isInitialCheckRef.current = false;
   }, [

@@ -18,7 +18,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router';
-import useWebSocket from 'react-use-websocket';
+import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { create } from 'zustand';
 
 import { useAuth } from '../../store/auth';
@@ -29,12 +29,29 @@ type UseWebSocketMessage = {
   inboxId: string;
 };
 
+// Robust reconnect options shared by every node WebSocket consumer.
+// `react-use-websocket` does NOT reconnect by default (it only retries when
+// `shouldReconnect` is provided and returns true). Without this, a node
+// restart / re-pair silently kills the socket and the chat spinner hangs
+// forever because streamed tokens and the "done" event never arrive.
+// We always attempt to reconnect (including on error) with an exponential
+// backoff capped at 10s, effectively forever, so the live stream survives
+// node restarts and re-auth.
+const WS_RECONNECT_OPTIONS = {
+  share: true,
+  shouldReconnect: () => true,
+  retryOnError: true,
+  reconnectAttempts: Number.MAX_SAFE_INTEGER,
+  reconnectInterval: (attempt: number) =>
+    Math.min(1000 * 2 ** attempt, 10_000),
+} as const;
+
 export const useWebSocketMessage = ({
   enabled,
   inboxId: defaultInboxId,
 }: UseWebSocketMessage) => {
   const auth = useAuth((state) => state.auth);
-  const nodeAddressUrl = new URL(auth?.node_address ?? 'http://localhost:9850');
+  const nodeAddressUrl = new URL(auth?.node_address ?? 'http://localhost:3690');
   const socketUrl = ['localhost', '0.0.0.0', '127.0.0.1'].includes(
     nodeAddressUrl.hostname,
   )
@@ -45,7 +62,7 @@ export const useWebSocketMessage = ({
 
   const { sendMessage, lastMessage, readyState } = useWebSocket(
     socketUrl,
-    { share: true },
+    WS_RECONNECT_OPTIONS,
     enabled,
   );
   const { inboxId: encodedInboxId = '' } = useParams();
@@ -208,6 +225,11 @@ export const useWebSocketMessage = ({
 
   useEffect(() => {
     if (!enabled) return;
+    // Only (re)subscribe once the socket is actually OPEN. Re-running this on
+    // `readyState` ensures we re-subscribe after every reconnect (node restart
+    // / re-pair) with the current api_v2_key, instead of subscribing once on a
+    // socket that may not be open yet and never recovering.
+    if (readyState !== ReadyState.OPEN) return;
     const wsMessage = {
       bearer_auth: auth?.api_v2_key ?? '',
       message: {
@@ -217,7 +239,14 @@ export const useWebSocketMessage = ({
     };
     const wsMessageString = JSON.stringify(wsMessage);
     sendMessage(wsMessageString);
-  }, [auth?.api_v2_key, auth?.hanzo_identity, enabled, inboxId, sendMessage]);
+  }, [
+    auth?.api_v2_key,
+    auth?.hanzo_identity,
+    enabled,
+    inboxId,
+    readyState,
+    sendMessage,
+  ]);
 
   return {
     readyState,
@@ -229,7 +258,7 @@ export const useWebSocketTools = ({
   inboxId: defaultInboxId,
 }: UseWebSocketMessage) => {
   const auth = useAuth((state) => state.auth);
-  const nodeAddressUrl = new URL(auth?.node_address ?? 'http://localhost:9850');
+  const nodeAddressUrl = new URL(auth?.node_address ?? 'http://localhost:3690');
   const socketUrl = ['localhost', '0.0.0.0', '127.0.0.1'].includes(
     nodeAddressUrl.hostname,
   )
@@ -237,7 +266,7 @@ export const useWebSocketTools = ({
     : `ws://${nodeAddressUrl.hostname}${Number(nodeAddressUrl.port) !== 0 ? `:${Number(nodeAddressUrl.port)}` : ''}/ws`;
   const { sendMessage, lastMessage, readyState } = useWebSocket(
     socketUrl,
-    { share: true },
+    WS_RECONNECT_OPTIONS,
     enabled,
   );
   const { inboxId: encodedInboxId = '' } = useParams();
@@ -315,6 +344,9 @@ export const useWebSocketTools = ({
 
   useEffect(() => {
     if (!enabled) return;
+    // Re-subscribe to the widget topic on every (re)connect once OPEN, with the
+    // current api_v2_key, so tool/widget streams survive node restarts.
+    if (readyState !== ReadyState.OPEN) return;
     const wsMessage = {
       bearer_auth: auth?.api_v2_key ?? '',
       message: {
@@ -324,7 +356,14 @@ export const useWebSocketTools = ({
     };
     const wsMessageString = JSON.stringify(wsMessage);
     sendMessage(wsMessageString);
-  }, [auth?.api_v2_key, auth?.hanzo_identity, enabled, inboxId, sendMessage]);
+  }, [
+    auth?.api_v2_key,
+    auth?.hanzo_identity,
+    enabled,
+    inboxId,
+    readyState,
+    sendMessage,
+  ]);
 
   return { readyState };
 };

@@ -62,7 +62,11 @@ const ConnectionOptionButton = ({
     </Button>
   );
 };
-const LOCAL_NODE_ADDRESS = 'http://127.0.0.1:9850';
+// Must match the local node's actual API port (3690). The chat WebSocket URL
+// is derived as apiPort+1 (=> 3691) in websocket-message.tsx, which is exactly
+// where the node's WS server listens. Using a wrong port here (e.g. 9850)
+// makes the WS target a dead port (9851) so chat streams never connect.
+const LOCAL_NODE_ADDRESS = 'http://127.0.0.1:3690';
 
 const QuickConnectionPage = () => {
   const navigate = useNavigate();
