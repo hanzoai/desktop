@@ -110,7 +110,7 @@ impl HanzoNodeManager {
     /// if an engine was already listening on the port (detect-and-reuse).
     async fn spawn_engine(&self) -> Result<Option<std::process::Child>, String> {
         let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
-        let models_url = format!("http://127.0.0.1:{}/v1/models", port);
+        let models_url = format!("http://127.0.0.1:{}/health", port);
 
         if Self::engine_up(&models_url).await {
             log::info!("hanzo-engine already listening on :{}, reusing it", port);
@@ -167,7 +167,7 @@ impl HanzoNodeManager {
         // (Qwen-style, 1024-dim). Detect-and-reuse if one's already listening.
         {
             let eport = std::env::var("HANZO_EMBED_PORT").unwrap_or_else(|_| "36901".to_string());
-            let emodels = format!("http://127.0.0.1:{}/v1/models", eport);
+            let emodels = format!("http://127.0.0.1:{}/health", eport);
             if Self::engine_up(&emodels).await {
                 log::info!("embedding engine already on :{}, reusing it", eport);
             } else {
