@@ -216,12 +216,28 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            embeddings_server_url: Some("https://embeddings.hanzo.ai".to_string()),
+            // Ollama dropped per zoo/universe architecture: AI inference and
+            // embedding go through the brand inference endpoint (cloud or
+            // hanzo-engine), chain mining checkpoints go through the native
+            // RPC. Default to gateway.hanzo.ai which serves both LLM and
+            // embedding under one origin (cert chain must be valid).
+            embeddings_server_url: Some("https://gateway.hanzo.ai".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
                 "https://gateway.hanzo.ai,https://gateway.hanzo.ai".to_string(),
             ),
-            initial_agent_names: Some("hanzo_free_trial,hanzo_code_gen".to_string()),
+            // Brand-aware agent names: "zoo_free_trial,zoo_code_gen" when
+            // compiled with BRAND=zoo, "hanzo_free_trial,hanzo_code_gen"
+            // otherwise. The agent ID is what surfaces as the display name
+            // (formatText("zoo_free_trial") -> "Zoo Free Trial").
+            // option_env! reads the env at *compile time* and bakes it in.
+            initial_agent_names: Some(
+                if option_env!("BRAND") == Some("zoo") {
+                    "zoo_free_trial,zoo_code_gen".to_string()
+                } else {
+                    "hanzo_free_trial,hanzo_code_gen".to_string()
+                },
+            ),
             initial_agent_models: Some(
                 "hanzo-backend:FREE_TEXT_INFERENCE,hanzo-backend:CODE_GENERATOR".to_string(),
             ),
@@ -230,7 +246,10 @@ impl Default for HanzoNodeOptions {
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
-            default_embedding_model: Some("snowflake-arctic-embed:xs".to_string()),
+            // 384-dim model that matches hanzo-node's hardcoded DB schema.
+            // The bundled Ollama's `snowflake-arctic-embed:xs` tag actually
+            // points at gemma-300M which returns 768-dim — schema mismatch.
+            default_embedding_model: Some("all-minilm:l6-v2".to_string()),
             supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,all-minilm:l6-v2".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),

@@ -29,13 +29,13 @@ import {
   AIAgentIcon,
   AISearchContentIcon,
   AisIcon,
+  BrandCombinationMarkIcon,
   FilesIcon,
   HomeIcon,
   InboxIcon,
   MCPIcon,
   NetworkAgentIcon,
   ScheduledTasksIcon,
-  HanzoCombinationMarkIcon,
   ToolsIcon,
 } from '@hanzo_network/hanzo-ui/assets';
 import { cn } from '@hanzo_network/hanzo-ui/utils';
@@ -45,8 +45,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeftToLine,
   ArrowRightToLine,
+  Box,
+  Boxes,
+  Coins,
   Ellipsis,
   HelpCircleIcon,
+  Server,
 } from 'lucide-react';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
@@ -54,6 +58,7 @@ import { toast } from 'sonner';
 
 import { ResourcesBanner } from '../../components/hardware-capabilities/resources-banner';
 import { UpdateBanner } from '../../components/hardware-capabilities/update-banner';
+import { MiningStatus } from '../../components/mining-status';
 import OnboardingStepper from '../../components/onboarding-checklist/onboarding';
 import { ResetConnectionDialog } from '../../components/reset-connection-dialog';
 import config from '../../config';
@@ -269,6 +274,26 @@ export function MainNav() {
       href: '/tasks',
       icon: <ScheduledTasksIcon className="size-[18px]" />,
     },
+    {
+      title: 'Machines',
+      href: '/machines',
+      icon: <Server className="size-[18px]" />,
+    },
+    {
+      title: 'Containers',
+      href: '/containers',
+      icon: <Box className="size-[18px]" />,
+    },
+    {
+      title: 'Kubernetes',
+      href: '/kubernetes',
+      icon: <Boxes className="size-[18px]" />,
+    },
+    {
+      title: 'Mining',
+      href: '/mining',
+      icon: <Coins className="size-[18px]" />,
+    },
   ];
   const footerNavigationLinks = [
     {
@@ -313,7 +338,7 @@ export function MainNav() {
         )}
       >
         {sidebarExpanded && (
-          <HanzoCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
+          <BrandCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
         )}
 
         <Tooltip>
@@ -492,6 +517,7 @@ export function MainNav() {
               </React.Fragment>
             );
           })}
+          <MiningStatus sidebarExpanded={sidebarExpanded} />
         </div>
       </div>
 

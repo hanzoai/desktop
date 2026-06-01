@@ -4,4 +4,6 @@ pub mod hardware;
 pub mod logs;
 pub mod hanzo_node_manager_commands;
 pub mod mcp_clients_install;
+pub mod mining;
+pub mod secure_storage;
 pub mod spotlight_commands;

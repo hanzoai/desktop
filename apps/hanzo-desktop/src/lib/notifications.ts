@@ -1,3 +1,4 @@
+import { getBrand } from '@hanzo_network/brand-config';
 import {} from '@tauri-apps/api';
 import { debug } from '@tauri-apps/plugin-log';
 import * as notification from '@tauri-apps/plugin-notification';
@@ -35,7 +36,7 @@ export const handleSendNotification = async (title?: string, body?: string) => {
     const icon = getPlatformIcon(await platform());
 
     const options: notification.Options = {
-      title: title ?? 'Hanzo Desktop',
+      title: title ?? getBrand().productName,
       body: body ?? '',
       icon: icon,
     };

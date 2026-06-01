@@ -1,0 +1,109 @@
+{
+  "analytics": {
+    "title": "Zooの改善にご協力ください"
+  },
+  "chat": {
+    "emptyStateTitle": "Zoo AIに質問してみてください"
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Zoo Identity"
+    }
+  },
+  "common": {
+    "logInHanzoHosting": "Zoo Hostingにログイン",
+    "hanzoPrivate": "Zooプライベート（ローカル）",
+    "signUpHanzoHosting": "Zoo Hostingにサインアップ"
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>ローカル:</b> ローカルのZooを使用すると、データを安全な環境で完全にコントロールできます。"
+    },
+    "localAI": "Zoo ローカルAI"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Zooノードに接続できません。ノードがオフラインになっているか、インターネット接続が切断されている可能性があります"
+    }
+  },
+  "exportConnection": {
+    "restoreText": "パスフレーズと一緒に使用して、接続をZooノードに復元します"
+  },
+  "extension": {
+    "welcome": "Zoo Visorを使用してAIでWebブラウジング体験を変えましょう ✨"
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Zoo Desktopのインストールを登録する際にエラーが発生しました。以前に使用されたEVMアドレスを確認してください。"
+    },
+    "success": {
+      "registerDesktopInstallation": "Zoo Desktopのインストールが正常に登録されました。Galxeクエストに登録されるまで数時間かかる場合があります。"
+    }
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "最初のAIを接続して、Zoo AIに質問を始めてください。OpenAIを接続してみてください。"
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "クライアントがSSEをサポートしていない場合は、次のコマンドを使用してZoo MCPサーバーを別のプロセスとして実行できます："
+  },
+  "mcpPage": {
+    "helpfulLinks": "Zooと接続するための便利なMCPは smithery.ai と composio.dev にあります。"
+  },
+  "mcpServers": {
+    "addDescription": "Zooノードに接続する新しいMCPサーバーを設定します",
+    "listDescription": "あなたのZooノードに接続されているMCPサーバーのリスト"
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "Zoo IDを使用してコレクションにエージェントを追加します。例: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "追加したいエージェントのZoo IDを入力してください。"
+  },
+  "onboardingChecklist": {
+    "getStartedText": "Zooを始めましょう",
+    "setupHanzoDesktop": "Zooデスクトップのセットアップ",
+    "setupHanzoDesktopDescription": "Zooデスクトップのセットアップを行いましょう"
+  },
+  "quickConnection": {
+    "connectingToNode": "ローカルZooノードに接続中"
+  },
+  "settings": {
+    "layout": {
+      "hanzoNode": "Zooノードマネージャー"
+    },
+    "quickAccessButton": {
+      "label": "Zooクイックアクセスボタンを表示"
+    },
+    "remoteAccess": {
+      "description": "ngrokを使用して、どこからでもあなたのZooノードに簡単かつ安全に接続できます。複雑な設定は不要です—ただ<a>無料のngrokアカウントを作成</a>し、ダッシュボードから<b>ngrok認証トークン</b>をコピーして、下に貼り付けて安全なリモートアクセスを有効にしてください。",
+      "success": "接続されました！あなたのZooノードはngrokを介してリモートでアクセス可能です"
+    },
+    "hanzoIdentity": {
+      "error": "Zoo Identityの更新中にエラーが発生しました",
+      "goToHanzoIdentity": "私のZoo Identityに移動",
+      "label": "Zooアイデンティティ",
+      "registerIdentity": "Zoo Identityを登録",
+      "success": "Zoo Identityが正常に更新されました",
+      "updatedIdentity": "Zooアイデンティティが正常に更新されました"
+    },
+    "hanzoVersion": "Zoo Desktopバージョン："
+  },
+  "hanzoNode": {
+    "manager": "Zooノードマネージャー",
+    "resetNodeWarning": {
+      "description": "あなたのZooノードは現在、既存のキーによってロックされています。再接続するには3つの選択肢があります：",
+      "option2": "<b>データのリセット：</b> Zooノードのすべてのデータを永久に削除します。",
+      "option3": "<b>すべてをリセット：</b> 暗号化キーと署名キーを含むZooノードのすべてのデータを永久に削除します。"
+    },
+    "restartNode": "Zooノードを再起動してください",
+    "unavailable": "Zooノードが利用できません"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "ファイルをアップロードすると、AIで使用できるように変換され、Zooで利用可能になります。"
+    },
+    "shareFolderWarning": {
+      "text": "Zooネットワークを介してフォルダを共有する前に、Zooアイデンティティを登録する必要があります。"
+    }
+  }
+}

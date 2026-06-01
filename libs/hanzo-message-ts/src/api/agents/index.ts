@@ -8,6 +8,8 @@ import {
   type GetAgentResponse,
   type GetAgentsResponse,
   type ImportAgentResponse,
+  type PublishAgentRequest,
+  type PublishAgentResponse,
   type RemoveAgentRequest,
   type RemoveAgentResponse,
   type UpdateAgentRequest,
@@ -146,4 +148,20 @@ export const importAgentFromUrl = async (
     },
   );
   return response.data as ImportAgentResponse;
+};
+
+export const publishAgent = async (
+  nodeAddress: string,
+  bearerToken: string,
+  payload: PublishAgentRequest,
+) => {
+  const response = await httpClient.post(
+    urlJoin(nodeAddress, '/v2/publish_agent'),
+    payload,
+    {
+      headers: { Authorization: `Bearer ${bearerToken}` },
+      responseType: 'json',
+    },
+  );
+  return response.data as PublishAgentResponse;
 };

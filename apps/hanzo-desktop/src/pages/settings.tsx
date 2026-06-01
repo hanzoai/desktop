@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getBrand } from '@hanzo_network/brand-config';
 import {
   type LocaleMode,
   localeOptions,
@@ -443,7 +444,7 @@ const SettingsPage = () => {
               </form>
             </Form>
           </SettingsSection>
-          <SettingsSection title="Hanzo Node Configuration">
+          <SettingsSection title={`${getBrand().name} Node Configuration`}>
             <div className="divide-divider flex flex-col divide-y">
               {[
                 {

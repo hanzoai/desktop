@@ -1,3 +1,4 @@
+import { getBrand } from '@hanzo_network/brand-config';
 import BoringAvatar from 'boring-avatars';
 import React from 'react';
 
@@ -49,6 +50,46 @@ export const HanzoCombinationMarkIcon = ({
     <path d="M66.7198 67V44.6369H44.5098V67H66.7198Z" fill="currentColor"/>
   </svg>
 );
+
+// Source: ~/work/zoo/logo/dist/zoo-logo-white.svg — three intersecting rings
+// clipped to a circle. Uses currentColor so it inherits text color (matches
+// hanzo's same convention) and works on light + dark.
+export const ZooCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => (
+  <svg
+    className={cn('shrink-0', className)}
+    viewBox="0 0 1024 1024"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <clipPath id="zoo-outer-clip">
+        <circle cx="508" cy="510" r="283" />
+      </clipPath>
+    </defs>
+    <g clipPath="url(#zoo-outer-clip)" stroke="currentColor" fill="none">
+      <circle cx="513" cy="369" r="234" strokeWidth="33" />
+      <circle cx="365" cy="595" r="234" strokeWidth="33" />
+      <circle cx="643" cy="595" r="234" strokeWidth="33" />
+      <circle cx="508" cy="510" r="265" strokeWidth="36" />
+    </g>
+  </svg>
+);
+
+export const BrandCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => {
+  const { brand } = getBrand();
+  return brand === 'zoo' ? (
+    <ZooCombinationMarkIcon className={className} />
+  ) : (
+    <HanzoCombinationMarkIcon className={className} />
+  );
+};
 
 export const SendIcon = ({ className }: { className?: string }) => (
   <svg

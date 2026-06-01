@@ -27,7 +27,15 @@ use crate::commands::mcp_clients_install::{
     register_sse_server_in_cursor,
 };
 use crate::commands::logs::{download_logs, retrieve_logs};
+use crate::commands::mining::{
+    mining_get_balance, mining_get_history, mining_get_local_pending, mining_get_state,
+    mining_get_wallet_address, mining_set_privacy, mining_start, mining_stop,
+};
+use crate::commands::secure_storage::{
+    init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
+};
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::mining::MiningManager;
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
 use globals::HANZO_NODE_MANAGER_INSTANCE;
@@ -44,6 +52,9 @@ mod global_shortcuts;
 mod globals;
 mod hardware;
 mod local_hanzo_node;
+#[cfg(feature = "machine")]
+mod machine;
+mod mining;
 mod models;
 mod tray;
 mod windows;
@@ -138,6 +149,35 @@ fn main() {
             register_sse_server_in_cursor,
             get_cursor_command_config_help,
             get_cursor_sse_config_help,
+            mining_get_state,
+            mining_start,
+            mining_stop,
+            mining_get_balance,
+            mining_get_wallet_address,
+            mining_get_history,
+            mining_get_local_pending,
+            mining_set_privacy,
+            secure_storage_set,
+            secure_storage_get,
+            secure_storage_delete,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_health,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_list,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_get,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_create,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_start,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_stop,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_delete,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_exec,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_events_subscribe,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -146,9 +186,20 @@ fn main() {
 
             {
                 let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
-                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
+                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir.clone()),
                 )));
             }
+
+            // Initialize Phase 1 mining manager. Storage dir holds per-wallet
+            // history.json; one subdir per wallet address.
+            let mining_storage_dir = app_data_dir.join("mining");
+            let _ = std::fs::create_dir_all(&mining_storage_dir);
+            let mining_manager = Arc::new(MiningManager::new(mining_storage_dir));
+            app.manage(mining_manager.clone());
+
+            // Initialize secure storage (OS keyring with in-memory fallback)
+            let secure_store = init_secure_storage();
+            app.manage(secure_store);
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
@@ -169,6 +220,25 @@ fn main() {
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
                     let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);
+
+                    // Auto-spawn the local hanzo-node sidecar so the app is
+                    // usable for first-time users without requiring auth.
+                    {
+                        let mut guard = HANZO_NODE_MANAGER_INSTANCE
+                            .get()
+                            .unwrap()
+                            .write()
+                            .await;
+                        if let Err(e) = guard.spawn().await {
+                            log::error!("auto-spawn hanzo-node failed: {}", e);
+                        } else {
+                            log::info!("auto-spawned hanzo-node on app start");
+                        }
+                    }
+
+                    // Phase 1: do not auto-start mining at boot. The frontend
+                    // calls mining_start once the wallet+brand are resolved
+                    // so chain_id and wallet address are known together.
                 }
             });
 

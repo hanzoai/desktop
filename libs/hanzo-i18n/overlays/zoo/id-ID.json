@@ -1,0 +1,140 @@
+{
+  "analytics": {
+    "title": "Bantu kami meningkatkan Zoo"
+  },
+  "chat": {
+    "emptyStateDescription": "Untuk pertanyaan cepat, tekan ⌘ + Shift + J untuk menggunakan Zoo Spotlight",
+    "emptyStateTitle": "Tanyakan kepada Zoo AI"
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Identitas Zoo"
+    }
+  },
+  "common": {
+    "logInHanzoHosting": "Masuk ke Hosting Zoo",
+    "hanzoPrivate": "Zoo Pribadi (Lokal)",
+    "signUpHanzoHosting": "Daftar untuk Hosting Zoo"
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>Lokal:</b> Dengan Zoo lokal, Anda mendapatkan kontrol penuh atas data Anda dalam lingkungan yang aman."
+    },
+    "localAI": "Kecerdasan Buatan Lokal Zoo",
+    "welcome": "Selamat datang di Zoo"
+  },
+  "disconnect": {
+    "modalTitle": "Putuskan Koneksi Zoo"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Kami mengalami masalah dalam menghubungkan ke Node Zoo Anda. Node Anda mungkin offline, atau koneksi internet Anda mungkin terputus."
+    }
+  },
+  "exportConnection": {
+    "restoreText": "Gunakan dengan frasa sandi Anda untuk memulihkan koneksi ke Node Zoo Anda"
+  },
+  "extension": {
+    "welcome": "Transformasikan pengalaman menjelajah web Anda menggunakan kecerdasan buatan dengan Zoo Visor ✨"
+  },
+  "feedback": {
+    "description": "Kami menghargai umpan balik Anda! Silakan beri tahu kami pendapat Anda tentang Zoo dan bagaimana kami dapat meningkatkan pengalaman Anda."
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Kesalahan saat mendaftarkan instalasi Desktop Zoo Anda. Pastikan Alamat EVM Anda tidak pernah digunakan sebelumnya untuk mendaftar instalasi yang berbeda."
+    },
+    "success": {
+      "registerDesktopInstallation": "Instalasi Desktop Zoo Anda berhasil terdaftar. Mungkin memerlukan beberapa jam untuk terdaftar dalam quest Galxe."
+    }
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "Sambungkan AI pertama Anda untuk mulai bertanya kepada Zoo AI. Coba sambungkan OpenAI"
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "Jika klien Anda tidak mendukung SSE, Anda dapat menjalankan server Zoo MCP sebagai proses terpisah menggunakan perintah ini:"
+  },
+  "mcpPage": {
+    "helpfulLinks": "Anda dapat menemukan MCP bermanfaat untuk terhubung dengan Zoo di smithery.ai dan composio.dev."
+  },
+  "mcpServers": {
+    "addDescription": "Konfigurasikan server MCP baru untuk terhubung dengan Node Zoo Anda",
+    "listDescription": "Daftar server MCP yang terhubung ke Node Zoo Anda"
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "Tambahkan agen ke koleksi Anda menggunakan ID Zoo. Contoh: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Masukkan ID Zoo dari agen yang ingin Anda tambahkan.",
+    "registerHanzoIdentity": "Daftar Identitas Zoo",
+    "registerHanzoIdentityDescription": "Buat identitas unik Anda di jaringan Zoo untuk menggunakan dan menerbitkan agen"
+  },
+  "onboardingChecklist": {
+    "getStartedText": "Memulai dengan Zoo",
+    "setupHanzoDesktop": "Atur Desktop Zoo",
+    "setupHanzoDesktopDescription": "Atur Desktop Zoo untuk memulai"
+  },
+  "quickAsk": {
+    "emptyStateTitle": "Tanya Zoo AI"
+  },
+  "quickConnection": {
+    "connectingToNode": "Menghubungkan ke Node Zoo lokal Anda"
+  },
+  "settings": {
+    "layout": {
+      "hanzoNode": "Manajer Node Zoo"
+    },
+    "quickAccessButton": {
+      "label": "Tampilkan Tombol Akses Cepat Zoo"
+    },
+    "remoteAccess": {
+      "description": "Dengan mudah dan aman terhubung ke node Zoo Anda dari mana saja menggunakan ngrok. Tidak ada pengaturan yang rumit—cukup <a>buat akun ngrok gratis</a>, salin <b>token otentikasi ngrok</b> Anda dari dasbor, dan tempel di bawah ini untuk mengaktifkan akses jarak jauh yang aman.",
+      "success": "Terhubung! Node Zoo Anda sekarang dapat diakses dari jarak jauh melalui ngrok"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "Verifikasi Identitas Zoo",
+      "checkIdentityInSyncDescription": "Periksa apakah identitas Zoo Anda secara akurat disinkronkan.",
+      "error": "Kesalahan saat memperbarui Identitas Zoo",
+      "goToHanzoIdentity": "Pergi ke Identitas Zoo Saya",
+      "label": "Identitas Zoo",
+      "registerIdentity": "Daftarkan Identitas Zoo Anda",
+      "success": "Identitas Zoo berhasil diperbarui",
+      "updatedIdentity": "Identitas Zoo berhasil diperbarui."
+    },
+    "hanzoVersion": "Versi Desktop Zoo:"
+  },
+  "hanzoNode": {
+    "manager": "Manajer Node Zoo",
+    "notifications": {
+      "errorSyncOllama": "Kesalahan saat menyinkronkan model Ollama lokal dengan Node Zoo Anda",
+      "removedNote": "Penyimpanan Node Zoo lokal Anda telah dihapus",
+      "runningNode": "Node Zoo lokal Anda sedang berjalan",
+      "startingNode": "Memulai Node Zoo lokal Anda",
+      "stopNode": "Menghentikan Node Zoo lokal Anda",
+      "stoppedNode": "Node Zoo lokal Anda telah dihentikan",
+      "syncedOllama": "Model Ollama lokal disinkronkan dengan Node Zoo Anda"
+    },
+    "resetNodeWarning": {
+      "description": "Node Zoo Anda saat ini terkunci oleh kunci yang ada. Untuk terhubung kembali, Anda memiliki tiga pilihan:",
+      "option2": "<b>Reset Data:</b> Hapus secara permanen semua data Node Zoo Anda.",
+      "option3": "<b>Reset Semua:</b> Hapus secara permanen semua data Node Zoo Anda termasuk kunci enkripsi dan penandatanganan."
+    },
+    "restartNode": "Harap restart Node Zoo Anda",
+    "unavailable": "Node Zoo Anda tidak tersedia"
+  },
+  "tools": {
+    "create": {
+      "hanzoCodeGenerator": "Generator Kode Zoo",
+      "hanzoFreeTrial": "Uji Coba Gratis Zoo"
+    },
+    "visitStore": "Kunjungi Toko Zoo untuk menemukan dan menginstal alat tambahan yang dapat meningkatkan alur kerja Anda"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "Mengunggah file Anda mengubahnya menjadi siap AI dan tersedia untuk digunakan di Zoo."
+    },
+    "shareFolderWarning": {
+      "text": "Anda harus mendaftarkan identitas Zoo sebelum Anda dapat berbagi folder melalui Jaringan Zoo."
+    }
+  }
+}

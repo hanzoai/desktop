@@ -1,7 +1,125 @@
 [
   {
+    "name": "zen-eco-4b-agent",
+    "description": "Zen Eco 4B Agent \u2014 frontier 4B model from zenlm.org tuned for agentic tool use. Best small zen model for daily desktop use. Pull via HuggingFace zenlm/zen-eco-4b-agent-gguf.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-eco-4b-agent-gguf:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-eco-4b-agent-gguf:Q4_K_M",
+        "hash": "",
+        "size": "~2.5GB",
+        "isDefault": true
+      },
+      {
+        "name": "hf.co/zenlm/zen-eco-4b-agent-gguf:Q8_0",
+        "hash": "",
+        "size": "~4.5GB",
+        "isDefault": false
+      }
+    ]
+  },
+  {
+    "name": "zen-eco-4b-thinking",
+    "description": "Zen Eco 4B Thinking \u2014 reasoning-tuned variant for chain-of-thought workflows.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-eco-4b-thinking:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-eco-4b-thinking:Q4_K_M",
+        "hash": "",
+        "size": "~2.5GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-eco-4b-instruct",
+    "description": "Zen Eco 4B Instruct \u2014 general-purpose instruction-tuned 4B.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-eco-4b-instruct:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-eco-4b-instruct:Q4_K_M",
+        "hash": "",
+        "size": "~2.5GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-nano",
+    "description": "Zen Nano 0.6B \u2014 ultra-small model for fast local inference on constrained hardware.",
+    "supportTools": false,
+    "defaultTag": "hf.co/zenlm/zen-nano-0.6b:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-nano-0.6b:Q4_K_M",
+        "hash": "",
+        "size": "~400MB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-omni-30b-instruct",
+    "description": "Zen Omni 30B Instruct \u2014 multimodal frontier model for vision+text+audio. Heavy.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-omni-30b-instruct:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-omni-30b-instruct:Q4_K_M",
+        "hash": "",
+        "size": "~18GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-coder-480b-instruct",
+    "description": "Zen Coder 480B \u2014 code-tuned MoE flagship from zenlm.org. Cloud/heavy hardware only.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-coder-480b-instruct:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-coder-480b-instruct:Q4_K_M",
+        "hash": "",
+        "size": "~280GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-next-80b-instruct",
+    "description": "Zen Next 80B Instruct \u2014 next-gen 80B from zenlm.org for high-quality instruction following.",
+    "supportTools": true,
+    "defaultTag": "hf.co/zenlm/zen-next-80b-instruct:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-next-80b-instruct:Q4_K_M",
+        "hash": "",
+        "size": "~50GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "name": "zen-guard-stream-4b",
+    "description": "Zen Guard Stream 4B \u2014 content safety + moderation classifier from zenlm.org.",
+    "supportTools": false,
+    "defaultTag": "hf.co/zenlm/zen-guard-stream-4b:Q4_K_M",
+    "tags": [
+      {
+        "name": "hf.co/zenlm/zen-guard-stream-4b:Q4_K_M",
+        "hash": "",
+        "size": "~2.5GB",
+        "isDefault": true
+      }
+    ]
+  },
+  {
     "name": "gpt-oss",
-    "description": "OpenAI’s open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases.",
+    "description": "OpenAI\u2019s open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases.",
     "supportTools": true,
     "defaultTag": "gpt-oss:20b",
     "tags": [
@@ -5083,7 +5201,7 @@
   },
   {
     "name": "llava",
-    "description": "🌋 LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
+    "description": "\ud83c\udf0b LLaVA is a novel end-to-end trained large multimodal model that combines a vision encoder and Vicuna for general-purpose visual and language understanding. Updated to version 1.6.",
     "supportTools": false,
     "defaultTag": "llava:7b",
     "tags": [
@@ -6967,7 +7085,7 @@
   },
   {
     "name": "gpt-oss",
-    "description": "OpenAI’s open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases.",
+    "description": "OpenAI\u2019s open-weight models designed for powerful reasoning, agentic tasks, and versatile developer use cases.",
     "supportTools": true,
     "defaultTag": "gpt-oss:20b",
     "tags": [
@@ -12457,7 +12575,7 @@
   },
   {
     "name": "dolphin3",
-    "description": "Dolphin 3.0 Llama 3.1 8B 🐬 is the next generation of the Dolphin series of instruct-tuned models designed to be the ultimate general purpose local model, enabling coding, math, agentic, function calling, and general use cases.",
+    "description": "Dolphin 3.0 Llama 3.1 8B \ud83d\udc2c is the next generation of the Dolphin series of instruct-tuned models designed to be the ultimate general purpose local model, enabling coding, math, agentic, function calling, and general use cases.",
     "supportTools": false,
     "defaultTag": "dolphin3:8b",
     "tags": [
@@ -14077,7 +14195,7 @@
   },
   {
     "name": "mistral-small",
-    "description": "Mistral Small 3 sets a new benchmark in the “small” Large Language Models category below 70B.",
+    "description": "Mistral Small 3 sets a new benchmark in the \u201csmall\u201d Large Language Models category below 70B.",
     "supportTools": true,
     "defaultTag": "mistral-small:24b",
     "tags": [
@@ -18343,7 +18461,7 @@
   },
   {
     "name": "deepscaler",
-    "description": "A fine-tuned version of Deepseek-R1-Distilled-Qwen-1.5B that surpasses the performance of OpenAI’s o1-preview with just 1.5B parameters on popular math evaluations.",
+    "description": "A fine-tuned version of Deepseek-R1-Distilled-Qwen-1.5B that surpasses the performance of OpenAI\u2019s o1-preview with just 1.5B parameters on popular math evaluations.",
     "supportTools": false,
     "defaultTag": "deepscaler:1.5b",
     "tags": [
@@ -19483,7 +19601,7 @@
   },
   {
     "name": "smollm",
-    "description": "🪐 A family of small models with 135M, 360M, and 1.7B parameters, trained on a new high-quality dataset.",
+    "description": "\ud83e\ude90 A family of small models with 135M, 360M, and 1.7B parameters, trained on a new high-quality dataset.",
     "supportTools": false,
     "defaultTag": "smollm:1.7b",
     "tags": [
@@ -20101,7 +20219,7 @@
   },
   {
     "name": "codestral",
-    "description": "Codestral is Mistral AI’s first-ever code model designed for code generation tasks.",
+    "description": "Codestral is Mistral AI\u2019s first-ever code model designed for code generation tasks.",
     "supportTools": false,
     "defaultTag": "codestral:22b",
     "tags": [
@@ -32749,7 +32867,7 @@
   },
   {
     "name": "granite3.1-dense",
-    "description": "The IBM Granite 2B and 8B models are text-only dense LLMs trained on over 12 trillion tokens of data, demonstrated significant improvements over their predecessors in performance and speed in IBM’s initial testing.",
+    "description": "The IBM Granite 2B and 8B models are text-only dense LLMs trained on over 12 trillion tokens of data, demonstrated significant improvements over their predecessors in performance and speed in IBM\u2019s initial testing.",
     "supportTools": true,
     "defaultTag": "granite3.1-dense:8b",
     "tags": [
@@ -41053,7 +41171,7 @@
   },
   {
     "name": "tulu3",
-    "description": "Tülu 3 is a leading instruction following model family, offering fully open-source data, code, and recipes by the The Allen Institute for AI.",
+    "description": "T\u00fclu 3 is a leading instruction following model family, offering fully open-source data, code, and recipes by the The Allen Institute for AI.",
     "supportTools": false,
     "defaultTag": "tulu3:8b",
     "tags": [
@@ -41419,7 +41537,7 @@
   },
   {
     "name": "mathstral",
-    "description": "MathΣtral: a 7B model designed for math reasoning and scientific discovery by Mistral AI.",
+    "description": "Math\u03a3tral: a 7B model designed for math reasoning and scientific discovery by Mistral AI.",
     "supportTools": false,
     "defaultTag": "mathstral:7b",
     "tags": [
@@ -41881,7 +41999,7 @@
   },
   {
     "name": "magicoder",
-    "description": "🎩 Magicoder is a family of 7B parameter models trained on 75K synthetic instruction data using OSS-Instruct, a novel approach to enlightening LLMs with open-source code snippets.",
+    "description": "\ud83c\udfa9 Magicoder is a family of 7B parameter models trained on 75K synthetic instruction data using OSS-Instruct, a novel approach to enlightening LLMs with open-source code snippets.",
     "supportTools": false,
     "defaultTag": "magicoder:7b",
     "tags": [

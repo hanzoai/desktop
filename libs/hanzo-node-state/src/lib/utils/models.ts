@@ -3,6 +3,7 @@ export enum Models {
   OpenAILegacy = 'open-ai-legacy',
   TogetherComputer = 'togethercomputer',
   Ollama = 'ollama',
+  LMStudio = 'lmstudio',
   Gemini = 'gemini',
   Exo = 'exo',
   Groq = 'groq',
@@ -399,6 +400,47 @@ export const modelsConfig = {
       {
         name: 'Grok 2 Vision',
         value: 'grok-2-vision',
+      },
+    ],
+  },
+  [Models.LMStudio]: {
+    apiUrl: 'http://localhost:1234/v1',
+    modelTypes: [
+      {
+        name: 'Loaded Model',
+        value: 'loaded-model',
+      },
+      {
+        name: 'Custom Model',
+        value: 'custom',
+      },
+      {
+        name: 'Llama 3.2 3B',
+        value: 'llama-3.2-3b',
+      },
+      {
+        name: 'Llama 3.2 1B',
+        value: 'llama-3.2-1b',
+      },
+      {
+        name: 'Mistral 7B',
+        value: 'mistral-7b-instruct-v0.2',
+      },
+      {
+        name: 'Qwen 2.5 7B',
+        value: 'qwen2.5-7b-instruct',
+      },
+      {
+        name: 'Phi 3 Mini',
+        value: 'phi-3-mini-4k-instruct',
+      },
+      {
+        name: 'DeepSeek Coder 6.7B',
+        value: 'deepseek-coder-6.7b-instruct',
+      },
+      {
+        name: 'Gemma 2B',
+        value: 'gemma-2b-it',
       },
     ],
   },

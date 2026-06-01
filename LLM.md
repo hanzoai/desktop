@@ -74,6 +74,37 @@ Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
 - Ensure package.json version matches git tag
 - Update check failures are handled gracefully (no user-facing errors)
 
+## Machines (Docker Desktop replacement)
+
+Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the
+`hanzod` daemon in `hanzoai/node/machine/`. Hanzo Desktop is a drop-in
+all-in-one Docker Desktop replacement: containers, Kubernetes, and Linux
+machines from one app, one binary backend.
+
+```
+apps/hanzo-desktop/
+  src-tauri/src/machine/    # Tauri commands -> unix socket client
+    socket.rs               # ~/.hanzo/run/machined.sock resolver
+    types.rs                # mirrors machine/proto.go (Machine, ExecFrame, ...)
+  src/pages/machines/       # React UI (list, create dialog, exec stream)
+```
+
+- Tauri commands: `machine_health`, `machine_list`, `machine_create`,
+  `machine_start`, `machine_stop`, `machine_delete`, `machine_exec` (streaming).
+- Wire format is JSON over the daemon's UNIX socket - see
+  `hanzoai/node/machine/proto.go` for the authoritative contract.
+- Brand gating: the Machines / Containers / K8s pages are Hanzo-only by
+  default. Other brands (zoo, liquidity) must set `VITE_ENABLE_MACHINES=true`
+  (or the equivalent runtime flag in `libs/brand-config`) to reveal them.
+  See `libs/brand-config/src/index.ts::isMachinesEnabled`.
+
+### e2e
+
+`e2e-tests/machine-flow.spec.ts` runs against `pnpm dev`, mocks
+`window.__TAURI_INTERNALS__.invoke` for the `machine_*` commands, and asserts
+the create dialog round-trip. CI must pass `VITE_BRAND=hanzo` so the
+Machines route renders.
+
 ## GRPO Status
 
 Desktop does NOT implement GRPO or training-free learning. Current gaps:
