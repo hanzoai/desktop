@@ -45,8 +45,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeftToLine,
   ArrowRightToLine,
+  Box,
+  Boxes,
+  Coins,
   Ellipsis,
   HelpCircleIcon,
+  Server,
 } from 'lucide-react';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
@@ -269,6 +273,26 @@ export function MainNav() {
       title: t('layout.menuItems.scheduledTasks'),
       href: '/tasks',
       icon: <ScheduledTasksIcon className="size-[18px]" />,
+    },
+    {
+      title: 'Machines',
+      href: '/machines',
+      icon: <Server className="size-[18px]" />,
+    },
+    {
+      title: 'Containers',
+      href: '/containers',
+      icon: <Box className="size-[18px]" />,
+    },
+    {
+      title: 'Kubernetes',
+      href: '/kubernetes',
+      icon: <Boxes className="size-[18px]" />,
+    },
+    {
+      title: 'Mining',
+      href: '/mining',
+      icon: <Coins className="size-[18px]" />,
     },
   ];
   const footerNavigationLinks = [

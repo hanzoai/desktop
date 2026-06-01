@@ -19,7 +19,7 @@ serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
 lazy_static = "1.4.0"
-tokio = { version = "1.36.0", features = ["macros"] }
+tokio = { version = "1.36.0", features = ["macros", "net", "rt", "sync", "io-util"] }
 chrono = "0.4.38"
 futures-util = "0.3"
 regex = "1.10.4"
@@ -35,12 +35,19 @@ time = "^0.3.36"
 listeners = "0.2"
 log = "0.4"
 anyhow = "1.0.89"
-uuid = "1.10.0"
+uuid = { version = "1.10.0", features = ["v4"] }
 kill_tree = { version = "0.2", features = ["tokio"] }
 semver = "1.0"
 sha2 = "0.10"
 rand = "0.8"
 keyring = "3.6"
+
+# hanzo-machined client (UNIX-socket HTTP/JSON)
+hyper = { version = "1.4", features = ["client", "http1"] }
+http-body-util = "0.1"
+bytes = "1"
+thiserror = "1.0"
+dirs = "6.0"
 
 tauri-plugin-global-shortcut = "2.3"
 tauri-plugin-shell = "2.3"
@@ -56,9 +63,22 @@ tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-http = "2.5"
 
+# Phase 1 AI mining: FFI to libluxprecompile + pure-Rust ML-DSA-65 (FIPS 204).
+# luxprecompile-sys is dev-only via absolute path; CI follow-up: publish to
+# crates.io or add a workspace-level [patch.crates-io] block.
+luxprecompile-sys = { path = "/Users/z/work/lux/precompile/bindings/rust" }
+fips204 = "0.4"
+
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
+[dev-dependencies]
+tempfile = "3"
+
 [features]
+default = ["machine"]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+# hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
+# Brand-specific configs (zoo, liquidity) can opt out by disabling default-features.
+machine = []

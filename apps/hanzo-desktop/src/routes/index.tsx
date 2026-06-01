@@ -48,6 +48,7 @@ import AIModelInstallation from '../pages/ai-model-installation';
 import AIsPage from '../pages/ais';
 import AnalyticsPage from '../pages/analytics';
 import AnalyticsSettingsPage from '../pages/analytics-settings';
+import LabPage from '../pages/lab';
 import AppearancePage from '../pages/appearance';
 import ChatConversation from '../pages/chat/chat-conversation';
 import ChatLayout from '../pages/chat/layout';
@@ -60,6 +61,11 @@ import { ExportConnection } from '../pages/export-connection';
 import { GalxeValidation } from '../pages/galxe-validation';
 import HomePage from '../pages/home';
 import InternetAccessPage from '../pages/internet-access';
+import ContainersPage from '../pages/containers';
+import KubernetesPage from '../pages/kubernetes';
+import MiningPage from '../pages/mining';
+import MachineDetailPage from '../pages/machines/[name]';
+import MachinesPage from '../pages/machines';
 import MainLayout from '../pages/layout/main-layout';
 import OnboardingLayout from '../pages/layout/onboarding-layout';
 import SettingsLayout from '../pages/layout/settings-layout';
@@ -380,6 +386,7 @@ const AppRoutes = () => {
             <Route element={<AIsPage />} path="ais" />
             <Route element={<AgentsPage />} path="agents" />
             <Route element={<AddAIPage />} path="add-ai" />
+            <Route element={<LabPage />} path="lab" />
             <Route
               element={
                 <VectorFsProvider>
@@ -449,6 +456,11 @@ const AppRoutes = () => {
           >
             <Route element={<McpRegistryPage />} path={'mcp'} />
             <Route element={<NetworkAgentPage />} path={'network-ai-agents'} />
+            <Route element={<MachinesPage />} path={'machines'} />
+            <Route element={<MachineDetailPage />} path={'machines/:name'} />
+            <Route element={<ContainersPage />} path={'containers'} />
+            <Route element={<KubernetesPage />} path={'kubernetes'} />
+            <Route element={<MiningPage />} path={'mining'} />
           </Route>
           <Route
             element={

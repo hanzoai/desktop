@@ -5,15 +5,16 @@
 // `identifier` into `tauri::generate_context!()` — so we swap the base config
 // for the duration of the build, then restore it.
 //
-// Usage: node ./scripts/brand-build.cjs <hanzo|zoo>
+// Usage: node ./scripts/brand-build.cjs <hanzo|zoo|lux>
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
+const SUPPORTED = ['hanzo', 'zoo', 'lux'];
 const brand = process.argv[2];
-if (!brand || (brand !== 'hanzo' && brand !== 'zoo')) {
-  console.error('usage: brand-build.cjs <hanzo|zoo>');
+if (!brand || !SUPPORTED.includes(brand)) {
+  console.error('usage: brand-build.cjs <' + SUPPORTED.join('|') + '>');
   process.exit(2);
 }
 

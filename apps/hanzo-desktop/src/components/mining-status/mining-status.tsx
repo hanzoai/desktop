@@ -47,9 +47,24 @@ interface MiningStatusProps {
 
 interface MiningState {
   wallet_address: string;
-  balance: number;
   is_mining: boolean;
   last_updated: number;
+  local_pending_wei: string;
+  history_count: number;
+}
+
+// Convert wei (decimal string) to a token-unit number for sidebar display.
+// 4 decimal places is plenty for the small "+x AI" pulse animation.
+function weiToTokenNumber(wei: string | undefined): number {
+  if (!wei) return 0;
+  try {
+    const n = BigInt(wei);
+    const whole = n / 10n ** 18n;
+    const frac = n % 10n ** 18n;
+    return Number(whole) + Number(frac) / 1e18;
+  } catch {
+    return 0;
+  }
 }
 
 export const MiningStatus: React.FC<MiningStatusProps> = ({
@@ -88,7 +103,7 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
 
       const state = await safeInvoke<MiningState>('mining_get_state');
       if (state) {
-        setBalance(state.balance);
+        setBalance(weiToTokenNumber(state.local_pending_wei));
         setWalletAddress(wallet?.address || state.wallet_address);
         setIsMining(state.is_mining);
       } else {
@@ -106,9 +121,10 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
 
     void safeListen<MiningState>('mining-update', (event) => {
       const state = event.payload;
+      const next = weiToTokenNumber(state.local_pending_wei);
       setBalance((prev) => {
-        if (state.balance > prev) handleBalanceIncrease(state.balance - prev);
-        return state.balance;
+        if (next > prev) handleBalanceIncrease(next - prev);
+        return next;
       });
       setWalletAddress(state.wallet_address);
       setIsMining(state.is_mining);

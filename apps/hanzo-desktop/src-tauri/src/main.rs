@@ -28,7 +28,8 @@ use crate::commands::mcp_clients_install::{
 };
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::mining::{
-    mining_get_balance, mining_get_state, mining_get_wallet_address, mining_start, mining_stop,
+    mining_get_balance, mining_get_history, mining_get_local_pending, mining_get_state,
+    mining_get_wallet_address, mining_set_privacy, mining_start, mining_stop,
 };
 use crate::commands::secure_storage::{
     init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
@@ -51,6 +52,8 @@ mod global_shortcuts;
 mod globals;
 mod hardware;
 mod local_hanzo_node;
+#[cfg(feature = "machine")]
+mod machine;
 mod mining;
 mod models;
 mod tray;
@@ -151,9 +154,30 @@ fn main() {
             mining_stop,
             mining_get_balance,
             mining_get_wallet_address,
+            mining_get_history,
+            mining_get_local_pending,
+            mining_set_privacy,
             secure_storage_set,
             secure_storage_get,
             secure_storage_delete,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_health,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_list,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_get,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_create,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_start,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_stop,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_delete,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_exec,
+            #[cfg(feature = "machine")]
+            machine::commands::machine_events_subscribe,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -166,9 +190,11 @@ fn main() {
                 )));
             }
 
-            // Initialize mining manager
-            let mining_storage_path = app_data_dir.join("mining_state.json");
-            let mining_manager = Arc::new(MiningManager::new(mining_storage_path));
+            // Initialize Phase 1 mining manager. Storage dir holds per-wallet
+            // history.json; one subdir per wallet address.
+            let mining_storage_dir = app_data_dir.join("mining");
+            let _ = std::fs::create_dir_all(&mining_storage_dir);
+            let mining_manager = Arc::new(MiningManager::new(mining_storage_dir));
             app.manage(mining_manager.clone());
 
             // Initialize secure storage (OS keyring with in-memory fallback)
@@ -210,11 +236,9 @@ fn main() {
                         }
                     }
 
-                    // Auto-start mining. Empty wallet address means MiningManager
-                    // will use the persisted address or generate a new one.
-                    let mining_manager = app_handle.state::<Arc<MiningManager>>();
-                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                    mining_manager.start_mining(app_handle.clone(), String::new()).await;
+                    // Phase 1: do not auto-start mining at boot. The frontend
+                    // calls mining_start once the wallet+brand are resolved
+                    // so chain_id and wallet address are known together.
                 }
             });
 
