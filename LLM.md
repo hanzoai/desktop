@@ -74,14 +74,28 @@ Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
 - Ensure package.json version matches git tag
 - Update check failures are handled gracefully (no user-facing errors)
 
+## Model Tools (hanzo-ml integration)
+
+The Node Manager window has a **Model Tools** tab (`components/hanzo-node-manager/model-tools.tsx`)
+that drives the `hanzoai/ml` features via the Tauri backend (`src-tauri/src/model_tools`):
+
+- **Model soups + BitDelta** — fully wired. Shells out to the `hanzo-ml` `soup`
+  CLI (`hanzo_ml::model_delta`): `average` (uniform/weighted soup), `delta`
+  (base + mean fine-tune delta), `bitdelta-encode` / `bitdelta-apply` (1-bit
+  delta compress/restore). Binary resolved via `HANZO_SOUP_BIN`, a bundled
+  `soup-<arch>` next to the app, or `soup` on PATH. The UI gates on availability.
+- Frontend: `lib/model-tools/model-tools-client.ts` (invoke wrappers + React
+  Query hooks). Tauri commands: `model_tools_soup_*`, `model_tools_bitdelta_*`.
+
 ## GRPO Status
 
-Desktop does NOT implement GRPO or training-free learning. Current gaps:
-- No experience/trajectory storage
-- No agent versioning or A/B testing
-- No learning pipeline or training jobs
-- Feedback system is generic text only
-- No ML metrics/observability
+Trainer-free GRPO lives in `hanzo_training::grpo` (a Rust **library** + a runnable
+`grpo_toy` example) — there is no GRPO server/daemon yet. The desktop exposes a
+**developer-preview** entry (`model_tools_grpo_run`, surfaced in the Model Tools
+tab) that runs `cargo run -p hanzo-training --example grpo_toy` from a local
+checkout (`HANZO_ML_DIR`). This is plumbing/demo only.
 
-Foundation exists (agent CRUD, message history with tool metadata, Zustand state, React Query).
-Estimated 6-8 weeks to add full GRPO: experience infra, versioning, algorithm, UI.
+Productizing GRPO in-app still needs: experience/trajectory storage, agent
+versioning / A/B testing, a real training job pipeline (driving the `Policy`
+trait on a packaged model), feedback→reward mapping, and ML metrics. Foundation
+exists (agent CRUD, message history with tool metadata, Zustand, React Query).

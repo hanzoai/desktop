@@ -38,6 +38,7 @@ import { z } from 'zod';
 
 import logo from '../../../src-tauri/icons/128x128@2x.png';
 import { LocalModels } from '../../components/hanzo-node-manager/local-models';
+import { ModelTools } from '../../components/hanzo-node-manager/model-tools';
 import {
   hanzoNodeQueryClient,
   useHanzoNodeGetOptionsQuery,
@@ -306,6 +307,17 @@ const App = () => {
           >
             Models
           </TabsTrigger>
+          <TabsTrigger
+            className={cn(
+              'flex flex-col rounded-full px-4 py-1.5 text-base font-medium transition-colors',
+              'data-[state=active]:bg-bg-quaternary data-[state=active]:text-text-default',
+              'data-[state=inactive]:text-text-tertiary data-[state=inactive]:bg-transparent',
+              'focus-visible:outline-hidden',
+            )}
+            value="model-tools"
+          >
+            Model Tools
+          </TabsTrigger>
         </TabsList>
         <TabsContent className="h-full overflow-hidden" value="app-logs">
           <Logs />
@@ -354,6 +366,13 @@ const App = () => {
 
         <TabsContent className="h-full overflow-hidden pb-2" value="models">
           <LocalModels />
+        </TabsContent>
+
+        <TabsContent
+          className="h-full overflow-hidden pb-2"
+          value="model-tools"
+        >
+          <ModelTools />
         </TabsContent>
       </Tabs>
       <AlertDialog
