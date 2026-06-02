@@ -96,7 +96,7 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-unknown-linux-gnu
-            os: [self-hosted, Linux, spark]
+            os: [self-hosted, Linux, ARM64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz.sig
@@ -114,7 +114,7 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
-            os: [self-hosted, Windows, evo]
+            os: [self-hosted, Windows, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip.sig
