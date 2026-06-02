@@ -82,6 +82,7 @@ jobs:
     name: Release Hanzo Desktop
     environment: production
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
@@ -93,6 +94,15 @@ jobs:
             distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage
             distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
+
+          - arch: aarch64-unknown-linux-gnu
+            os: [self-hosted, Linux, spark]
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz.sig
+            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage
+            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz
+            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
             os: [self-hosted, macOS, ARM64]
@@ -116,6 +126,9 @@ jobs:
       signature-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-x86_64-unknown-linux-gnu }}
       update-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-x86_64-unknown-linux-gnu }}
       app-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-x86_64-unknown-linux-gnu }}
+      signature-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-aarch64-unknown-linux-gnu }}
+      update-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-aarch64-unknown-linux-gnu }}
+      app-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-aarch64-unknown-linux-gnu }}
       signature-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.signature-aarch64-apple-darwin }}
       update-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.update-url-aarch64-apple-darwin }}
       app-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.app-url-aarch64-apple-darwin }}
@@ -152,7 +165,7 @@ jobs:
           mv .\nsis-binary-7423-3\* C:\Users\runneradmin\AppData\Local\tauri\NSIS\
 
       - name: (Linux) Install build dependencies
-        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        if: ${{ contains(matrix.arch, 'linux') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev libsoup-3.0-dev
@@ -226,7 +239,7 @@ jobs:
           npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
 
       - name: (Linux) Build hanzo-desktop
-        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        if: ${{ contains(matrix.arch, 'linux') }}
         working-directory: apps/hanzo-desktop
         run: npx tauri build
         env:
@@ -378,6 +391,8 @@ jobs:
           NOTES: Automatic update to ${{ needs.prebuild.outputs.version }}.${{ github.run_number }}
           LINUX_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-unknown-linux-gnu }}
           LINUX_x86_64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-x86_64-unknown-linux-gnu }}
+          LINUX_AARCH64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-aarch64-unknown-linux-gnu }}
+          LINUX_AARCH64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-aarch64-unknown-linux-gnu }}
           DARWIN_AARCH64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-aarch64-apple-darwin }}
           DARWIN_AARCH64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-aarch64-apple-darwin }}
           WINDOWS_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-pc-windows-msvc }}
