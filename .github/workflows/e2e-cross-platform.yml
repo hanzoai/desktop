@@ -26,7 +26,7 @@ env:
 jobs:
   e2e-tests:
     name: E2E Tests - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
 
     strategy:
@@ -34,12 +34,15 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            runner: [self-hosted, Linux, X64]
             platform: linux
             arch: x86_64-unknown-linux-gnu
           - os: macos-latest
+            runner: [self-hosted, macOS, ARM64]
             platform: macos
             arch: aarch64-apple-darwin
           - os: windows-latest
+            runner: [self-hosted, Windows, X64]
             platform: windows
             arch: x86_64-pc-windows-msvc
 
@@ -424,7 +427,7 @@ jobs:
   e2e-summary:
     name: E2E Tests Summary
     needs: e2e-tests
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     if: always()
 
     steps:

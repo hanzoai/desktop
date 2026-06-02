@@ -11,7 +11,7 @@ defaults:
 
 jobs:
   prebuild:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       version: ${{ steps.package-version.outputs.version }}
     steps:
@@ -360,7 +360,7 @@ jobs:
       - prebuild
       - release-hanzo-desktop
     name: Generate & Update updates.json
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       updates-next-json-url: ${{ steps.generate-updates-next-json.outputs.updates-next-json-url }}
 
@@ -419,7 +419,7 @@ jobs:
       - release-hanzo-desktop
       - rollout-hanzo-desktop
     name: Notify Slack
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Post Hanzo Desktop to a Slack channel
         id: slack

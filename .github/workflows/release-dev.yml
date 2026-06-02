@@ -9,7 +9,7 @@ defaults:
 
 jobs:
   prebuild:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     outputs:
       version: ${{ steps.package-version.outputs.version }}
     steps:
@@ -78,10 +78,11 @@ jobs:
     name: Release Hanzo Desktop
     environment: development
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
-            os: ubuntu-22.04
+            os: [self-hosted, Linux, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz.sig
@@ -90,7 +91,7 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
-            os: macos-14
+            os: [self-hosted, macOS, ARM64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/dmg/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_aarch64.dmg
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Hanzo Desktop Dev.app.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Hanzo Desktop Dev.app.tar.gz.sig
@@ -99,7 +100,7 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
-            os: windows-2022
+            os: [self-hosted, Windows, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.exe
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip.sig
@@ -292,7 +293,7 @@ jobs:
       - prebuild
       - release-hanzo-desktop
     name: Generate & Update updates.json
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -344,7 +345,7 @@ jobs:
       - release-hanzo-desktop
       - rollout-hanzo-desktop
     name: Notify Slack
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Post Hanzo Desktop to a Slack channel
         uses: slackapi/slack-github-action@v1.26.0
