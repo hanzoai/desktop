@@ -16,7 +16,7 @@ export const useRemoveJobs = (options?: Options) => {
   return useMutation({
     mutationFn: removeJobs,
     ...options,
-    onSuccess: async (response, variables, context, mutationContext) => {
+    onSuccess: async (response, variables, context) => {
       await queryClient.invalidateQueries({
         queryKey: [
           FunctionKeyV2.GET_INBOXES_WITH_PAGINATION,
@@ -28,7 +28,7 @@ export const useRemoveJobs = (options?: Options) => {
       });
 
       if (options?.onSuccess) {
-        options.onSuccess(response, variables, context, mutationContext);
+        options.onSuccess(response, variables, context);
       }
     },
   });

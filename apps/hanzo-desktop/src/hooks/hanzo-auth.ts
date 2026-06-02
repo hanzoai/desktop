@@ -1,14 +1,10 @@
 import { listen } from '@tauri-apps/api/event';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { getBrand } from '@hanzo_network/brand-config';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Brand-aware IAM endpoint. Hanzo brand → hanzo.id, zoo brand → zoolabs.id.
-const { iam } = getBrand();
-const IAM_BASE_URL = iam.baseUrl;
-const IAM_CLIENT_ID = iam.clientId;
-const IAM_REDIRECT_URI = iam.redirectUri;
-const IAM_CALLBACK_EVENT = iam.callbackEvent;
+const IAM_BASE_URL = 'https://hanzo.id';
+const IAM_CLIENT_ID = 'app-hanzo-desktop';
+const IAM_REDIRECT_URI = 'hanzo://oauth/hanzo';
 const IAM_SCOPE = 'openid profile email';
 
 function generateRandomBytes(length: number): Uint8Array {
@@ -78,7 +74,7 @@ export const useHanzoLogin = () => {
 
   useEffect(() => {
     const unlisten = listen<{ state: string; code: string }>(
-      IAM_CALLBACK_EVENT,
+      'hanzo-iam-callback',
       async (event) => {
         const { state: callbackState, code } = event.payload;
 
@@ -95,7 +91,7 @@ export const useHanzoLogin = () => {
 
         try {
           const tokenResponse = await fetch(
-            `${IAM_BASE_URL}/oauth/token`,
+            `${IAM_BASE_URL}/api/login/oauth/access_token`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
