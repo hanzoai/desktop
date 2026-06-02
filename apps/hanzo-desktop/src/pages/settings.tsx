@@ -57,9 +57,9 @@ import { z } from 'zod';
 
 import { FeedbackModal } from '../components/feedback/feedback-modal';
 import { OnboardingStep } from '../components/onboarding/constants';
+import { BRAND } from '../config/brand';
 import EmbeddingModelSelectionDialog from '../components/settings/embedding-model-selection-dialog';
 import HanzoIdentityDialog from '../components/settings/hanzo-identity-dialog';
-import { useHanzoNodeGetOllamaVersionQuery } from '../lib/hanzo-node-manager/hanzo-node-manager-client';
 import {
   useCheckUpdateQuery,
   useDownloadUpdateMutation,
@@ -229,8 +229,6 @@ const SettingsPage = () => {
     token: auth?.api_v2_key ?? '',
   });
 
-  const { data: ollamaVersion } = useHanzoNodeGetOllamaVersionQuery();
-
   const { data: updateState } = useUpdateStateQuery();
   const { refetch: checkForUpdates, isFetching: isCheckingUpdates } =
     useCheckUpdateQuery({
@@ -279,7 +277,7 @@ const SettingsPage = () => {
                 <CardContent className="space-y-2 px-4 py-3">
                   <div className="flex justify-between text-sm">
                     <h3 className="text-base font-semibold">
-                      Free Hanzo AI Usage
+                      Free {BRAND.company} Usage
                     </h3>
 
                     <div className="flex items-center gap-1">
@@ -449,18 +447,13 @@ const SettingsPage = () => {
               {[
                 {
                   label: t('hanzoNode.nodeAddress'),
-                  description: 'The URL of your Hanzo node connection',
+                  description: `The URL of your ${BRAND.name} node connection`,
                   value: auth?.node_address,
                 },
                 {
                   label: t('hanzoNode.nodeVersion'),
-                  description: 'Current version of your Hanzo node.',
+                  description: `Current version of your ${BRAND.name} node.`,
                   value: nodeInfo?.version,
-                },
-                {
-                  label: t('ollama.version'),
-                  description: 'Installed version of Ollama running.',
-                  value: ollamaVersion ?? '-',
                 },
               ].map((item) => (
                 <div
@@ -485,11 +478,11 @@ const SettingsPage = () => {
                 <div className="flex flex-1 flex-col gap-1">
                   <div className="flex flex-col gap-1">
                     <h3 className="text-text-default text-sm">
-                      Hanzo Identity
+                      {BRAND.name} Identity
                     </h3>
                     <p className="text-text-secondary text-xs">
-                      Connects your app to the Hanzo Network with peer-to-peer
-                      access.
+                      Connects your app to the {BRAND.name} Network with
+                      peer-to-peer access.
                     </p>
                   </div>
                 </div>
@@ -625,7 +618,7 @@ const SettingsPage = () => {
             <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
               <div className="flex items-center justify-between gap-1 px-4 py-3">
                 <span className="text-text-default text-sm">
-                  Current Hanzo App Version
+                  Current {BRAND.productName} App Version
                 </span>
                 <div className="flex items-center gap-6">
                   <span className="text-text-default font-mono text-sm">

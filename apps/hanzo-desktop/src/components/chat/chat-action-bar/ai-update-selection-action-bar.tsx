@@ -1,5 +1,6 @@
 import { getBrand } from '@hanzo_network/brand-config';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { ModelPrefix } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import { useUpdateAgentInJob } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
 import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
@@ -35,14 +36,17 @@ import { memo, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { toast } from 'sonner';
 
-import OLLAMA_MODELS_REPOSITORY from '../../../lib/hanzo-node-manager/ollama-models-repository.json';
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { useHanzoNodeManager } from '../../../store/hanzo-node-manager';
+import MODEL_CATALOG from '../../../lib/hanzo-node-manager/model-catalog.json';
+import { getProviderModelLabel } from '../../../lib/hanzo-node-manager/local-model-names';
 import ProviderIcon from '../../ais/provider-icon';
 import { CODE_GENERATOR_MODEL_ID } from '../../tools/constants';
 import { actionButtonClassnames } from '../conversation-footer';
 
-const ollamaDescriptionMap = OLLAMA_MODELS_REPOSITORY.reduce(
+// Local-engine model descriptions, keyed by bare model name (no provider prefix).
+const localModelDescriptionMap = MODEL_CATALOG.reduce(
   (acc, model) => {
     acc[model.name] = model.description;
     return acc;
@@ -77,6 +81,8 @@ const nonOllamaProviderModels = {
   'openai:o3-mini': 'Mini version of OpenAI o3 model.',
 } as Record<string, string>;
 
+const localEnginePrefix = `${ModelPrefix.LocalEngine}:`;
+
 export function AIModelSelectorBase({
   value,
   onValueChange,
@@ -103,14 +109,14 @@ export function AIModelSelectorBase({
           .map((provider) => {
             let description =
               'A versatile AI model for text generation and understanding.';
-            if (provider.model.includes('ollama')) {
+            if (provider.model.startsWith(localEnginePrefix)) {
               const model = provider.model.split(':');
-              description = ollamaDescriptionMap[model[1]] || '';
+              description = localModelDescriptionMap[model[1]] || '';
             } else if (provider.model.includes('claude')) {
               description =
                 'Safe and thoughtful Anthropic AI model with advanced coding capabilities';
             } else {
-              description = nonOllamaProviderModels[provider.model] || '';
+              description = remoteProviderModelDescriptions[provider.model] || '';
             }
 
             return {
@@ -169,7 +175,10 @@ export function AIModelSelectorBase({
       (llmProvider) => llmProvider.id === value,
     );
     if (selectedLlmProvider) {
-      return formatText(selectedLlmProvider.name || selectedLlmProvider.id);
+      return getProviderModelLabel(
+        selectedLlmProvider.model,
+        formatText(selectedLlmProvider.name || selectedLlmProvider.id),
+      );
     }
     return '';
   }, [agents, llmProviders, value]);
@@ -381,7 +390,10 @@ export function AIModelSelectorBase({
                     </div>
                     <div className="flex flex-col gap-0.5">
                       <span className="text-base font-medium capitalize">
-                        {formatText(llmProvider?.name || llmProvider.id || '')}
+                        {getProviderModelLabel(
+                          llmProvider.model,
+                          formatText(llmProvider?.name || llmProvider.id || ''),
+                        )}
                         {location.pathname.includes('tools') &&
                           llmProvider.model.toLowerCase() ===
                             CODE_GENERATOR_MODEL_ID.toLowerCase() && (

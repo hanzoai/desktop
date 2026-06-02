@@ -1,8 +1,10 @@
 /**
- * Hanzo Engine Client
+ * Engine Client
  *
- * HTTP client for the embedded Hanzo Engine API.
- * The engine exposes an OpenAI-compatible API on localhost:36900
+ * HTTP client for the local inference engine.
+ * Defaults to hanzo-engine on 36900 (OpenAI / Anthropic compatible).
+ * Override with VITE_ENGINE_BASE_URL=… to point at zen5-server (8000)
+ * or a remote endpoint.
  */
 
 import type {
@@ -16,16 +18,24 @@ import type {
   EmbeddingResponse,
 } from './types';
 
-// Default engine endpoint
-export const HANZO_ENGINE_BASE_URL = 'http://127.0.0.1:36900';
+// Default engine endpoint. Brand-neutral name (was HANZO_ENGINE_BASE_URL).
+// Re-exported as the legacy name for back-compat with existing call sites.
+export const ENGINE_BASE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ENGINE_BASE_URL) ||
+  'http://127.0.0.1:36900';
+
+/** @deprecated Use ENGINE_BASE_URL. Kept for one release. */
+export const HANZO_ENGINE_BASE_URL = ENGINE_BASE_URL;
 
 /**
- * Hanzo Engine API Client
+ * Engine API client. Class name preserved for now to avoid sweeping
+ * call-site renames; introduce `EngineClient` alias before deprecating
+ * the `Hanzo`-prefixed name.
  */
 export class HanzoEngineClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = HANZO_ENGINE_BASE_URL) {
+  constructor(baseUrl: string = ENGINE_BASE_URL) {
     this.baseUrl = baseUrl;
   }
 
@@ -44,7 +54,7 @@ export class HanzoEngineClient {
    * List available/loaded models
    */
   async listModels(): Promise<ModelsResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/models`);
+    const response = await fetch(`${this.baseUrl}/v1/engine/models`);
     if (!response.ok) {
       throw new Error(`Failed to list models: ${response.statusText}`);
     }
@@ -93,7 +103,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -123,7 +133,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -183,7 +193,7 @@ export class HanzoEngineClient {
   ): Promise<EmbeddingResponse> {
     const request: EmbeddingRequest = { model, input };
 
-    const response = await fetch(`${this.baseUrl}/v1/embeddings`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

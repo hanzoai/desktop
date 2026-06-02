@@ -11,6 +11,8 @@ const envSchema = z.object({
   DARWIN_AARCH64_URL: z.string().url(),
   LINUX_x86_64_SIGNATURE: z.string().min(1),
   LINUX_x86_64_URL: z.string().url(),
+  LINUX_AARCH64_SIGNATURE: z.string().optional(),
+  LINUX_AARCH64_URL: z.string().url().optional(),
   WINDOWS_x86_64_SIGNATURE: z.string().min(1),
   WINDOWS_x86_64_URL: z.string().url(),
 });
@@ -32,6 +34,14 @@ const updatesJson = {
       signature: env.LINUX_x86_64_SIGNATURE,
       url: env.LINUX_x86_64_URL,
     },
+    ...(env.LINUX_AARCH64_SIGNATURE && env.LINUX_AARCH64_URL
+      ? {
+          'linux-aarch64': {
+            signature: env.LINUX_AARCH64_SIGNATURE,
+            url: env.LINUX_AARCH64_URL,
+          },
+        }
+      : {}),
     'windows-x86_64': {
       signature: env.WINDOWS_x86_64_SIGNATURE,
       url: env.WINDOWS_x86_64_URL,

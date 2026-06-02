@@ -235,35 +235,35 @@
     "inboxName": "Name"
   },
   "hanzoNode": {
-    "restartNode": "Please restart your Hanzo Node",
+    "restartNode": "Please restart your Node",
     "nodeAddress": "Node Address",
     "nodeVersion": "Node Version",
-    "unavailable": "Your Hanzo Node is unavailable",
+    "unavailable": "Your Node is unavailable",
     "notifications": {
-      "startingNode": "Starting your local Hanzo Node",
-      "runningNode": "Your local Hanzo Node is running",
-      "stoppedNode": "Your local Hanzo Node was stopped",
-      "stopNode": "Stopping your local Hanzo Node",
-      "removedNote": "Your local Hanzo Node storage was removed",
-      "startingOllama": "Starting your Ollama",
-      "runningOllama": "Your Ollama is running",
-      "stoppedOllama": "Your local Ollama was stopped",
-      "stopOllama": "Stopping your local Ollama",
-      "syncedOllama": "Local Ollama models synchronized with your Hanzo Node",
-      "errorSyncOllama": "Error synchronizing your local Ollama models with your Hanzo Node",
+      "startingNode": "Starting your local Node",
+      "runningNode": "Your local Node is running",
+      "stoppedNode": "Your local Node was stopped",
+      "stopNode": "Stopping your local Node",
+      "removedNote": "Your local Node storage was removed",
+      "startingOllama": "Starting your local model",
+      "runningOllama": "Your local model is running",
+      "stoppedOllama": "Your local model was stopped",
+      "stopOllama": "Stopping your local model",
+      "syncedOllama": "Local models synchronized with your Node",
+      "errorSyncOllama": "Error synchronizing your local models with your Node",
       "optionsRestored": "Options restored to default values",
       "startingDownload": "Starting downloading {{modelName}}",
       "downloadingModel": "Downloading AI model {{modelName}} - {{progress}}%",
       "downloadedModel": "AI model {{modelName}} downloaded successfully",
       "installingModel": "Installing {{modelName}} ..."
     },
-    "manager": "Hanzo Node Manager",
+    "manager": "Node Manager",
     "resetNodeWarning": {
       "title": "Unable to connect",
-      "description": "Your Hanzo Node is currently locked by existing keys. To connect again, you can reset all your Hanzo Node data.",
+      "description": "Your Node is currently locked by existing keys. To connect again, you can reset all your Node data.",
       "option1": "<b>Restore:</b> Try to restore your connection using a backed up keys.",
-      "option2": "<b>Reset Data:</b> Permanently delete all your Hanzo Node data.",
-      "option3": "<b>Reset All:</b> Permanently delete all your Hanzo Node data including the encryption and signing keys."
+      "option2": "<b>Reset Data:</b> Permanently delete all your Node data.",
+      "option3": "<b>Reset All:</b> Permanently delete all your Node data including the encryption and signing keys."
     },
     "models": {
       "labels": {
@@ -287,7 +287,7 @@
         "modelRemoved": "Error removing model {{modelName}}",
         "modelInstalled": "Error installing model {{modelName}}"
       },
-      "poweredByOllama": "Powered by Ollama"
+      "poweredByOllama": "Powered by local models"
     }
   },
   "onboardingChecklist": {
@@ -318,7 +318,7 @@
       "general": "General",
       "appearance": "Appearance",
       "remoteAccess": "Remote Access",
-      "hanzoNode": "Hanzo Node Manager",
+      "hanzoNode": "Node Manager",
       "exportConnection": "Export Connection",
       "createRegistrationCode": "Create Registration Code",
       "analytics": "Analytics",
@@ -430,7 +430,7 @@
     },
     "remoteAccess": {
       "title": "Remote Access",
-      "description": "Easily and securely connect to your Hanzo node from anywhere using ngrok. No complex setup—just  <a>create a free ngrok account</a>, copy your <b>ngrok auth token</b> from the dashboard, and paste it below to enable secure remote access.",
+      "description": "Easily and securely connect to your Node from anywhere using ngrok. No complex setup—just  <a>create a free ngrok account</a>, copy your <b>ngrok auth token</b> from the dashboard, and paste it below to enable secure remote access.",
       "connected": "Connected",
       "publicAccessUrl": "Public Access URL",
       "publicAccessURLDescription": "Use this URL to connect to your node from anywhere.",
@@ -441,7 +441,7 @@
         "enableRemoteAccess": "Enable Remote Access",
         "stopRemoteAccess": "Stop Remote Access"
       },
-      "success": "Connected! Your Hanzo node is now accessible remotely via ngrok",
+      "success": "Connected! Your Node is now accessible remotely via ngrok",
       "stopRemoteAccessSuccess": "Remote access has been stopped successfully",
       "errors": {
         "failedToStart": "Failed to connect remote access via ngrok.",
@@ -454,7 +454,7 @@
     "label": "Export Connection",
     "generateFile": "Generate connection file",
     "downloadText": "Download and keep this connection file in a safe place",
-    "restoreText": "Use it with your passphrase to restore the connection to your Hanzo Node",
+    "restoreText": "Use it with your passphrase to restore the connection to your Node",
     "form": {
       "passphrase": "Passphrase",
       "repeatPassphrase": "Repeat Passphrase"
@@ -577,7 +577,7 @@
       "nodeAddress": "Node Address",
       "connect": "Connect"
     },
-    "connectingToNode": "Connecting to your local Hanzo Node"
+    "connectingToNode": "Connecting to your local Node"
   },
   "analytics": {
     "label": "Analytics",
@@ -640,9 +640,9 @@
     "runNow": "Run Now"
   },
   "ollama": {
-    "version": "Ollama Version",
+    "version": "Model Version",
     "errors": {
-      "failedToFetch": "Failed to fetch local Ollama models. Please ensure Ollama is running correctly."
+      "failedToFetch": "Failed to fetch local models. Please ensure the local model server is running correctly."
     }
   },
   "galxe": {
@@ -684,7 +684,7 @@
     "deleteFailed": "Failed to delete MCP server",
     "addSuccess": "MCP server added successfully",
     "addFailed": "Failed to add MCP server",
-    "addDescription": "Configure a new MCP server to connect with your Hanzo Node",
+    "addDescription": "Configure a new MCP server to connect with your Node",
     "updateSuccess": "MCP server updated successfully",
     "updateFailed": "Failed to update MCP server",
     "toolMustBeEnabled": "Tool must be enabled before changing MCP server mode",
@@ -698,7 +698,7 @@
     "noToolsAvailableForThisServer": "No tools available for this server.",
     "noServersFound": "No MCP servers found. Add a new server to get started.",
     "title": "MCP Servers",
-    "listDescription": "List of MCP servers connected to your Hanzo Node",
+    "listDescription": "List of MCP servers connected to your Node",
     "composio": {
       "title": "Composio MCP Servers",
       "details": "Details",
@@ -841,7 +841,7 @@
   "errors": {
     "nodeUnavailable": {
       "title": "Node Unavailable",
-      "description": "We're having trouble connecting to your Hanzo Node. Your node may be offline, or your internet connection may be down."
+      "description": "We're having trouble connecting to your Node. Your node may be offline, or your internet connection may be down."
     }
   },
   "notifications": {

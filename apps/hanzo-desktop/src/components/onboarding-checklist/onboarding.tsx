@@ -21,6 +21,7 @@ import { ChevronDown, PlusIcon, Sparkles, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { BRAND } from '../../config/brand';
 import { showAnimation } from '../../pages/layout/main-layout';
 import { useSettings } from '../../store/settings';
 import { useOnboardingSteps } from './use-onboarding-stepper';
@@ -63,7 +64,8 @@ export default function OnboardingStepper() {
           body: (
             <div className="flex flex-col items-start gap-2">
               <span>
-                Download a local AI model to start using Hanzo Desktop. We recommend qwen3-vl:8b for vision + text capabilities.
+                Download a local AI model to start using {BRAND.productName}.
+                We recommend qwen3-vl:8b for vision + text capabilities.
               </span>
               <Button
                 className="h-auto gap-1 px-3 py-2"

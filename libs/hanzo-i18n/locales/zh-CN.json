@@ -401,7 +401,7 @@
   },
   "errors": {
     "nodeUnavailable": {
-      "description": "我们在连接您的 Hanzo 节点时遇到问题。您的节点可能离线，或者您的互联网连接可能已断开。",
+      "description": "我们在连接您的 节点时遇到问题。您的节点可能离线，或者您的互联网连接可能已断开。",
       "title": "节点不可用"
     }
   },
@@ -413,7 +413,7 @@
     },
     "generateFile": "生成连接文件",
     "label": "导出连接",
-    "restoreText": "使用您的密码短语来恢复与 Hanzo 节点的连接"
+    "restoreText": "使用您的密码短语来恢复与 节点的连接"
   },
   "extension": {
     "welcome": "使用 Hanzo Visor ✨ 变革您的网页浏览体验"
@@ -557,7 +557,7 @@
   },
   "mcpServers": {
     "add": "添加 MCP 服务器",
-    "addDescription": "配置一个新的 MCP 服务器以连接到您的 Hanzo 节点",
+    "addDescription": "配置一个新的 MCP 服务器以连接到您的 节点",
     "addFailed": "添加 MCP 服务器失败",
     "addFromGitHub": "从 GitHub 添加",
     "addSuccess": "MCP 服务器添加成功",
@@ -596,7 +596,7 @@
     "deleteSuccess": "MCP 服务器删除成功",
     "environmentVariables": "环境变量",
     "label": "MCP 服务器",
-    "listDescription": "连接到您的 Hanzo 节点的 MCP 服务器列表",
+    "listDescription": "连接到您的 节点的 MCP 服务器列表",
     "listOfToolsAvailableFromThisMcpServer": "此 MCP 服务器可用工具列表。",
     "manualSetup": "手动设置",
     "name": "名称",
@@ -698,9 +698,9 @@
   },
   "ollama": {
     "errors": {
-      "failedToFetch": "无法获取本地Ollama模型。请确保Ollama正常运行。"
+      "failedToFetch": "无法获取本地模型。请确保本地模型服务正常运行。"
     },
-    "version": "Ollama 版本"
+    "version": "模型版本"
   },
   "onboardingChecklist": {
     "addAIAgent": "创建您的 AI 代理",
@@ -751,7 +751,7 @@
     "emptyStateTitle": "询问 Hanzo AI"
   },
   "quickConnection": {
-    "connectingToNode": "连接到您的本地Hanzo节点",
+    "connectingToNode": "连接到您的本地节点",
     "form": {
       "connect": "连接",
       "nodeAddress": "节点地址"
@@ -828,7 +828,7 @@
       "promptLibrary": "提示库",
       "publicKeys": "公钥",
       "remoteAccess": "远程访问",
-      "hanzoNode": "深海节点管理器"
+      "hanzoNode": "节点管理器"
     },
     "maxChatIterations": {
       "description": "处理聊天消息的最大迭代次数",
@@ -862,7 +862,7 @@
     },
     "remoteAccess": {
       "connected": "已连接",
-      "description": "使用 ngrok 轻松安全地从任何地方连接到您的 Hanzo 节点。无需复杂的设置——只需 <a>创建一个免费的 ngrok 账户</a>，从仪表板复制您的 <b>ngrok 认证令牌</b>，并将其粘贴到下面以启用安全的远程访问。",
+      "description": "使用 ngrok 轻松安全地从任何地方连接到您的 节点。无需复杂的设置——只需 <a>创建一个免费的 ngrok 账户</a>，从仪表板复制您的 <b>ngrok 认证令牌</b>，并将其粘贴到下面以启用安全的远程访问。",
       "errors": {
         "failedToGetStatus": "获取 ngrok 状态失败。",
         "failedToStart": "通过 ngrok 连接远程访问失败。",
@@ -878,7 +878,7 @@
       "publicAccessURLDescription": "使用此 URL 从任何地方连接到您的节点。",
       "publicAccessUrl": "公共访问 URL",
       "stopRemoteAccessSuccess": "远程访问已成功停止",
-      "success": "已连接！您的 Hanzo 节点现在可以通过 ngrok 远程访问",
+      "success": "已连接！您的 节点现在可以通过 ngrok 远程访问",
       "title": "远程访问"
     },
     "hanzoIdentity": {
@@ -912,7 +912,7 @@
     }
   },
   "hanzoNode": {
-    "manager": "Hanzo 节点管理器",
+    "manager": "节点管理器",
     "models": {
       "errors": {
         "modelInstalled": "安装模型 {{modelName}} 时出错",
@@ -931,7 +931,7 @@
         "visionCapability": "图像转文本",
         "cloudCapability": "云端"
       },
-      "poweredByOllama": "由 Ollama 提供支持",
+      "poweredByOllama": "由本地模型提供支持",
       "success": {
         "modelInstalled": "成功安装模型 {{modelName}}",
         "modelRemoved": "成功移除模型 {{modelName}}"
@@ -942,30 +942,30 @@
     "notifications": {
       "downloadedModel": "AI 模型 {{modelName}} 下载成功",
       "downloadingModel": "正在下载 AI 模型 {{modelName}} - {{progress}}%",
-      "errorSyncOllama": "同步本地 Ollama 模型与您的 Hanzo 节点时出错",
+      "errorSyncOllama": "同步本地模型与您的节点时出错",
       "installingModel": "正在安装 {{modelName}} ...",
       "optionsRestored": "选项已恢复为默认值",
-      "removedNote": "您的本地 Hanzo 节点存储已移除",
-      "runningNode": "您的本地 Hanzo 节点正在运行",
-      "runningOllama": "您的本地 Ollama 正在运行",
+      "removedNote": "您的本地 节点存储已移除",
+      "runningNode": "您的本地 节点正在运行",
+      "runningOllama": "您的本地模型正在运行",
       "startingDownload": "开始下载 AI 模型 {{modelName}}",
-      "startingNode": "正在启动本地 Hanzo 节点",
-      "startingOllama": "正在启动本地 Ollama",
-      "stopNode": "正在停止本地 Hanzo 节点",
-      "stopOllama": "正在停止本地 Ollama",
-      "stoppedNode": "您的本地 Hanzo 节点已停止",
-      "stoppedOllama": "您的本地 Ollama 已停止",
-      "syncedOllama": "本地 Ollama 模型已与您的 Hanzo 节点同步"
+      "startingNode": "正在启动本地 节点",
+      "startingOllama": "正在启动本地模型",
+      "stopNode": "正在停止本地 节点",
+      "stopOllama": "正在停止本地模型",
+      "stoppedNode": "您的本地 节点已停止",
+      "stoppedOllama": "您的本地模型已停止",
+      "syncedOllama": "本地模型已与您的节点同步"
     },
     "resetNodeWarning": {
-      "description": "您的 Hanzo 节点当前被现有密钥锁定。要重新连接，您有三个选项：",
+      "description": "您的 节点当前被现有密钥锁定。要重新连接，您有三个选项：",
       "option1": "<b>恢复：</b> 尝试使用备份密钥恢复连接。",
-      "option2": "<b>重置数据：</b>永久删除您所有的深海节点数据。",
-      "option3": "<b>全部重置：</b>永久删除您所有的深海节点数据，包括加密和签名密钥。",
+      "option2": "<b>重置数据：</b>永久删除您所有的节点数据。",
+      "option3": "<b>全部重置：</b>永久删除您所有的节点数据，包括加密和签名密钥。",
       "title": "无法连接"
     },
-    "restartNode": "请重启您的 Hanzo 节点",
-    "unavailable": "您的Hanzo节点不可用"
+    "restartNode": "请重启您的 节点",
+    "unavailable": "您的节点不可用"
   },
   "tasks": {
     "runNow": "立即运行"

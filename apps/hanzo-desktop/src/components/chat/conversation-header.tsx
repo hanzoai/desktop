@@ -5,6 +5,7 @@ import { useExportMessagesFromInbox } from '@hanzo_network/hanzo-node-state/v2/m
 import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
 import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
 import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { getProviderModelLabel } from '../../lib/hanzo-node-manager/local-model-names';
 import {
   Accordion,
   AccordionContent,
@@ -239,7 +240,10 @@ const ConversationHeaderWithInboxId = () => {
                               />
                             </div>
                             <p className="text-sm">
-                              {selectedModel?.name || selectedModel?.id}
+                              {getProviderModelLabel(
+                                selectedModel?.model,
+                                selectedModel?.name || selectedModel?.id || '',
+                              )}
                             </p>
                           </div>
                         </div>

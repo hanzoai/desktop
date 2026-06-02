@@ -12,6 +12,7 @@ import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
+import { toast } from 'sonner';
 
 import { OnboardingStep } from '../components/onboarding/constants';
 import { ResetStorageBeforeConnectConfirmationPrompt } from '../components/reset-storage-before-connect-confirmation-prompt';
@@ -138,6 +139,14 @@ const TermsAndConditionsPage = () => {
     onSuccess: () => {
       void onSubmit(setupDataForm.getValues());
     },
+    onError: (error) => {
+      // Previously a failed local-node spawn was swallowed silently, so the
+      // "Get Started Free" button appeared to do nothing. Surface the reason.
+      toast.error('Failed to start the local Hanzo node', {
+        description: error instanceof Error ? error.message : String(error),
+        position: 'bottom-center',
+      });
+    },
   });
   const { isPending: hanzoNodeKillIsPending } = useHanzoNodeKillMutation();
 
@@ -188,7 +197,13 @@ const TermsAndConditionsPage = () => {
   };
 
   async function onSubmit(currentValues: QuickConnectFormSchema) {
-    if (!encryptionKeys) return;
+    if (!encryptionKeys) {
+      // Don't silently no-op: tell the user why nothing advanced.
+      toast.error('Encryption keys are not ready yet — please try again in a moment', {
+        position: 'bottom-center',
+      });
+      return;
+    }
     await submitRegistrationNoCode({
       nodeAddress: currentValues.node_address,
       profileEncryptionPk: encryptionKeys.profile_encryption_pk,

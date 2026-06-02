@@ -75,6 +75,7 @@ import {
 } from '../components/crypto-wallet/utils';
 import RemoveNetworkAgentButton from '../components/network/remove-network-agent-button';
 import RemoveToolOfferingButton from '../components/network/remove-tool-offering-button';
+import { BRAND } from '../config/brand';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 
@@ -383,7 +384,7 @@ const DiscoverNetworkAgents = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Providers</SelectItem>
-              <SelectItem value="hanzo">Hanzo</SelectItem>
+              <SelectItem value="hanzo">{BRAND.name}</SelectItem>
               <SelectItem value="community">Community</SelectItem>
             </SelectContent>
           </Select>
@@ -1088,8 +1089,8 @@ function Disclaimer() {
             Community Agents
           </p>
           <p className="text-text-secondary text-sm">
-            Community agents are not verified by Hanzo. We may remove agents
-            that violate our terms. Use at your own risk.
+            Community agents are not verified by {BRAND.name}. We may remove
+            agents that violate our terms. Use at your own risk.
           </p>
         </div>
       </div>

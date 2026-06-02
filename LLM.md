@@ -107,12 +107,13 @@ Machines route renders.
 
 ## GRPO Status
 
-Desktop does NOT implement GRPO or training-free learning. Current gaps:
-- No experience/trajectory storage
-- No agent versioning or A/B testing
-- No learning pipeline or training jobs
-- Feedback system is generic text only
-- No ML metrics/observability
+Trainer-free GRPO lives in `hanzo_training::grpo` (a Rust **library** + a runnable
+`grpo_toy` example) — there is no GRPO server/daemon yet. The desktop exposes a
+**developer-preview** entry (`model_tools_grpo_run`, surfaced in the Model Tools
+tab) that runs `cargo run -p hanzo-training --example grpo_toy` from a local
+checkout (`HANZO_ML_DIR`). This is plumbing/demo only.
 
-Foundation exists (agent CRUD, message history with tool metadata, Zustand state, React Query).
-Estimated 6-8 weeks to add full GRPO: experience infra, versioning, algorithm, UI.
+Productizing GRPO in-app still needs: experience/trajectory storage, agent
+versioning / A/B testing, a real training job pipeline (driving the `Policy`
+trait on a packaged model), feedback→reward mapping, and ML metrics. Foundation
+exists (agent CRUD, message history with tool metadata, Zustand, React Query).

@@ -10,7 +10,8 @@ on:
 
 jobs:
   check-tag:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
     outputs:
       version: ${{ steps.check-tag.outputs.version }}
     steps:
@@ -34,7 +35,8 @@ jobs:
 
   rollout:
     needs: check-tag
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
     environment: production
     steps:
       - name: Check out repository

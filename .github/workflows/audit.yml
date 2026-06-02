@@ -12,7 +12,8 @@ on:
 
 jobs:
   node-npm:
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
 
     steps:
       - name: Checkout

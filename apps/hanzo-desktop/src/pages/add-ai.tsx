@@ -11,7 +11,6 @@ import {
   modelsConfig,
 } from '@hanzo_network/hanzo-node-state/lib/utils/models';
 import { useAddLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/addLLMProvider/useAddLLMProvider';
-import { useScanOllamaModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanOllamaModels/useScanOllamaModels';
 import {
   Button,
   buttonVariants,
@@ -54,10 +53,6 @@ const modelOptions: { value: Models; label: string }[] = [
     label: 'Together AI',
   },
   {
-    value: Models.Ollama,
-    label: 'Ollama',
-  },
-  {
     value: Models.Gemini,
     label: 'Gemini',
   },
@@ -97,7 +92,6 @@ const getGuideUrl = (model: Models) => {
     [Models.OpenAILegacy]: 'https://docs.hanzo.ai/advanced/models/gpt',
     [Models.TogetherComputer]:
       'https://docs.hanzo.ai/advanced/models/together-ai',
-    [Models.Ollama]: 'https://docs.hanzo.ai/advanced/models/ollama',
     [Models.Gemini]: 'https://docs.hanzo.ai/advanced/models/gemini',
     [Models.Groq]: 'https://docs.hanzo.ai/advanced/models/groq',
     [Models.OpenRouter]: 'https://docs.hanzo.ai/advanced/models/openrouter',
@@ -121,8 +115,6 @@ export const getModelObject = (
       return { OpenAILegacy: { model_type: modelType } };
     case Models.TogetherComputer:
       return { TogetherAI: { model_type: modelType } };
-    case Models.Ollama:
-      return { Ollama: { model_type: modelType } };
     case Models.Gemini:
       return { Gemini: { model_type: modelType } };
     case Models.Exo:
@@ -185,27 +177,6 @@ const AddAIPage = () => {
     name: 'modelType',
   });
 
-  const {
-    data: ollamaModels,
-    isError: isOllamaModelsError,
-    error: ollamaModelsError,
-  } = useScanOllamaModels(
-    { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
-    {
-      enabled: !isCustomModelMode && currentModel === Models.Ollama,
-      retry: 1,
-      staleTime: 0,
-    },
-  );
-
-  useEffect(() => {
-    if (isOllamaModelsError) {
-      toast.error(t('ollama.errors.failedToFetch'), {
-        description: ollamaModelsError?.message,
-      });
-    }
-  }, [isOllamaModelsError, ollamaModelsError?.message]);
-
   const [modelTypeOptions, setModelTypeOptions] = useState<
     { label: string; value: string }[]
   >([]);
@@ -214,18 +185,6 @@ const AddAIPage = () => {
   useEffect(() => {
     if (isCustomModelMode) {
       addAgentForm.setValue('externalUrl', '');
-      return;
-    }
-    if (currentModel === Models.Ollama) {
-      addAgentForm.setValue('externalUrl', modelsConfig[Models.Ollama].apiUrl);
-      setModelTypeOptions(
-        (ollamaModels ?? [])
-          .map((model) => ({
-            label: model.model,
-            value: model.model,
-          }))
-          .concat({ label: 'Custom Model', value: 'custom' }),
-      );
       return;
     }
 
@@ -241,7 +200,7 @@ const AddAIPage = () => {
           .concat({ label: 'Custom Model', value: 'custom' }),
       );
     }
-  }, [currentModel, addAgentForm, isCustomModelMode, ollamaModels]);
+  }, [currentModel, addAgentForm, isCustomModelMode]);
 
   useEffect(() => {
     if (!modelTypeOptions?.length) {

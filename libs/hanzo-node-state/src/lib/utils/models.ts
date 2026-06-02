@@ -181,23 +181,6 @@ export const modelsConfig = {
       },
     ],
   },
-  [Models.Ollama]: {
-    apiUrl: 'http://localhost:11434',
-    modelTypes: [
-      {
-        name: 'Llama 2',
-        value: 'llama2',
-      },
-      {
-        name: 'Mistral',
-        value: 'mistral',
-      },
-      {
-        name: 'Mixtral',
-        value: 'mixtral',
-      },
-    ],
-  },
   [Models.Gemini]: {
     apiUrl: 'https://generativelanguage.googleapis.com/v1beta/models',
     modelTypes: [

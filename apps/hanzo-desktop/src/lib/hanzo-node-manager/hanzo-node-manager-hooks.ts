@@ -7,10 +7,6 @@ import {
   type HanzoNodeManagerEventMap,
 } from './hanzo-node-manager-client-types';
 import {
-  // ollamaStartedToast,
-  ollamaStartErrorToast,
-  ollamaStopErrorToast,
-  ollamaStoppedToast,
   // pullingModelDoneToast,
   pullingModelErrorToast,
   hanzoNodeStartedToast,
@@ -20,9 +16,7 @@ import {
   hanzoNodeStartErrorToast,
   hanzoNodeStopErrorToast,
   hanzoNodeStoppedToast,
-  // startingOllamaToast,
   // startingHanzoNodeToast,
-  stoppingOllamaToast,
   stoppingHanzoNodeToast,
 } from './hanzo-node-manager-toasts-utils';
 
@@ -94,26 +88,6 @@ export const useHanzoNodeEventsToast = () => {
         break;
       case HanzoNodeManagerEvent.HanzoNodeStopError:
         hanzoNodeStopErrorToast();
-        break;
-
-      // case HanzoNodeManagerEvent.StartingOllama:
-      //   startingOllamaToast();
-      //   break;
-      // case HanzoNodeManagerEvent.OllamaStarted:
-      //   ollamaStartedToast();
-      //   break;
-      case HanzoNodeManagerEvent.OllamaStartError:
-        ollamaStartErrorToast();
-        break;
-
-      case HanzoNodeManagerEvent.StoppingOllama:
-        stoppingOllamaToast();
-        break;
-      case HanzoNodeManagerEvent.OllamaStopped:
-        ollamaStoppedToast();
-        break;
-      case HanzoNodeManagerEvent.OllamaStopError:
-        ollamaStopErrorToast();
         break;
 
       // case HanzoNodeManagerEvent.PullingModelStart:

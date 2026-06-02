@@ -6,6 +6,7 @@ import {
 } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import { type MessageTrace } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { getProviderModelLabel } from '../../../lib/hanzo-node-manager/local-model-names';
 import {
   type AssistantMessage,
   type FormattedMessage,
@@ -80,6 +81,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
 import { z } from 'zod';
 
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { useOAuth } from '../../../store/oauth';
 import { useSettings } from '../../../store/settings';
@@ -437,18 +439,18 @@ export const MessageBase = ({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          provider={message.provider?.agent.model.split(':')[0]}
+          provider={(message.provider?.agent?.model ?? '').split(':')[0]}
         />
       );
     }
     if (message.provider?.provider_type === 'Agent') {
-      return <AIAgentIcon name={message.provider?.agent.name} size={'xs'} />;
+      return <AIAgentIcon name={message.provider?.agent?.name} size={'xs'} />;
     }
     return <BotIcon className="mr-1 size-4" />;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    (message as AssistantMessage)?.provider?.agent.name,
-    (message as AssistantMessage)?.provider?.agent.model,
+    (message as AssistantMessage)?.provider?.agent?.name,
+    (message as AssistantMessage)?.provider?.agent?.model,
     (message as AssistantMessage)?.provider?.provider_type,
     message.role,
   ]);
@@ -479,7 +481,10 @@ export const MessageBase = ({
           <div className="mt-2 flex items-center gap-2">
             {selectedIcon}
             <span className="text-em-sm text-text-default font-bold">
-              {formatText(message.provider?.agent.id ?? '')}
+              {getProviderModelLabel(
+                message.provider?.agent?.model,
+                formatText(message.provider?.agent?.id ?? ''),
+              )}
             </span>
           </div>
         ) : null}
@@ -804,7 +809,7 @@ export const MessageBase = ({
                       onClick={handleAskHanzo}
                       size="xs"
                       variant="outline"
-                      aria-label="Ask Hanzo about selection"
+                      aria-label={`Ask ${BRAND.name} about selection`}
                       title={truncatedSelection ?? undefined}
                     >
                       <CornerDownRight className="size-4" />

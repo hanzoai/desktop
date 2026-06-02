@@ -26,7 +26,9 @@ pub struct HanzoNodeProcessHandler {
 
 impl HanzoNodeProcessHandler {
     const HEALTH_REQUEST_TIMEOUT_MS: u64 = 250;
-    const HEALTH_TIMEOUT_MS: u64 = 10000;
+    // Cold node start (DB open + migrations + API bind) can exceed 10s under load
+    // (e.g. concurrent downloads, first-run on slow disk/network); allow more headroom.
+    const HEALTH_TIMEOUT_MS: u64 = 60000;
     const PROCESS_NAME: &'static str = "hanzo-node";
 
     pub fn new(
@@ -67,7 +69,9 @@ impl HanzoNodeProcessHandler {
     }
 
     async fn health(base_url: &str, timeout: Duration) -> bool {
-        let url = format!("{}/v2/health_check", base_url);
+        // The node serves its HTTP API under `/v1/node` (matching the frontend's
+        // hanzo-message-ts client). Probe the readiness endpoint there.
+        let url = format!("{}/v1/node/health_check", base_url);
         let client = reqwest::Client::new();
         log::info!(
             "checking hanzo-nodehealth of {} with timeout {:?}",

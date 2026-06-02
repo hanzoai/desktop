@@ -13,23 +13,18 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Tooltip,
-  TooltipContent,
-  TooltipPortal,
-  TooltipTrigger,
 } from '@hanzo_network/hanzo-ui';
 
 import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Plus, PlusIcon, Sparkles } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { ModelProvider } from '../components/ais/constants';
 import ProviderIcon from '../components/ais/provider-icon';
 import { ResourcesBanner } from '../components/hardware-capabilities/resources-banner';
-import { OllamaModels } from '../components/hanzo-node-manager/ollama-models';
-import { CustomModelInput } from '../components/hanzo-node-manager/components/custom-model-input';
+import { LocalModels } from '../components/hanzo-node-manager/local-models';
 import { useURLQueryParams } from '../hooks/use-url-query-params';
 import { hanzoNodeQueryClient } from '../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { useAuth } from '../store/auth';
@@ -128,7 +123,6 @@ const AIModelInstallation = () => {
 
   const { t } = useTranslation();
   const auth = useAuth((state) => state.auth);
-  const [showAllOllamaModels, setShowAllOllamaModels] = useState(false);
 
   const query = useURLQueryParams();
 
@@ -150,7 +144,7 @@ const AIModelInstallation = () => {
     return llmProviders.reduce(
       (acc, provider) => {
         const [providerName] = provider.model.split(':');
-        if (providerName === ModelPrefix.Ollama) {
+        if (providerName === ModelPrefix.LocalEngine) {
           return acc;
         }
         if (!acc[providerName]) {
@@ -243,51 +237,9 @@ const AIModelInstallation = () => {
                   access anywhere.
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  className={cn('shrink-0')}
-                  onClick={() => setShowAllOllamaModels(!showAllOllamaModels)}
-                  size="sm"
-                  variant="outline"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  <span className="capitalize">
-                    {showAllOllamaModels
-                      ? t('hanzoNode.models.labels.showRecommended')
-                      : t('hanzoNode.models.labels.showAll')}
-                  </span>
-                </Button>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className={cn('shrink-0')}
-                      onClick={() => navigate('/add-ai?aiProvider=ollama')}
-                      size="sm"
-                      variant="outline"
-                    >
-                      <PlusIcon className="h-4 w-4" />
-                      Add Ollama Model
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipPortal>
-                    <TooltipContent align="end" side="bottom">
-                      Already installed a model with Ollama on your machine?
-                      Connect it here without reinstalling.
-                    </TooltipContent>
-                  </TooltipPortal>
-                </Tooltip>
-              </div>
             </div>
 
-            {/* Custom Model Input */}
-            <div className="mb-6">
-              <CustomModelInput />
-            </div>
-
-            <OllamaModels
-              parentSetShowAllOllamaModels={setShowAllOllamaModels}
-              parentShowAllOllamaModels={showAllOllamaModels}
-            />
+            <LocalModels />
           </TabsContent>
           <TabsContent className="h-full" value="cloud">
             <div className="flex items-center justify-between gap-10 space-y-2 pb-4">

@@ -401,7 +401,7 @@
   },
   "errors": {
     "nodeUnavailable": {
-      "description": "Hanzo Düğümünüze bağlanmakta zorluk yaşıyoruz. Düğümünüz çevrimdışı olabilir veya internet bağlantınızda bir sorun olabilir.",
+      "description": "Düğümünüze bağlanmakta zorluk yaşıyoruz. Düğümünüz çevrimdışı olabilir veya internet bağlantınızda bir sorun olabilir.",
       "title": "Düğüm Kullanılamıyor"
     }
   },
@@ -413,7 +413,7 @@
     },
     "generateFile": "Bağlantı dosyasını oluştur",
     "label": "Bağlantıyı Dışa Aktar",
-    "restoreText": "Bağlantıyı Hanzo Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
+    "restoreText": "Bağlantıyı Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
   },
   "extension": {
     "welcome": "Hanzo Visor ile web tarayıcı deneyiminizi AI ile dönüştürün ✨"
@@ -557,7 +557,7 @@
   },
   "mcpServers": {
     "add": "MCP Sunucusu Ekle",
-    "addDescription": "Hanzo Düğümünüzle bağlantı kurmak için yeni bir MCP sunucusu yapılandırın",
+    "addDescription": "Düğümünüzle bağlantı kurmak için yeni bir MCP sunucusu yapılandırın",
     "addFailed": "MCP sunucusu eklenemedi",
     "addFromGitHub": "GitHub'dan Ekle",
     "addSuccess": "MCP sunucusu başarıyla eklendi",
@@ -596,7 +596,7 @@
     "deleteSuccess": "MCP sunucusu başarıyla silindi",
     "environmentVariables": "Ortam Değişkenleri",
     "label": "MCP Sunucuları",
-    "listDescription": "Hanzo Düğümünüze bağlı MCP sunucularının listesi",
+    "listDescription": "Düğümünüze bağlı MCP sunucularının listesi",
     "listOfToolsAvailableFromThisMcpServer": "Bu MCP sunucusundan mevcut olan araçların listesi.",
     "manualSetup": "Manuel Kurulum",
     "name": "İsim",
@@ -698,9 +698,9 @@
   },
   "ollama": {
     "errors": {
-      "failedToFetch": "Yerel Ollama modelleri alınamadı. Lütfen Ollama'nın doğru çalıştığından emin olun."
+      "failedToFetch": "Yerel modeller alınamadı. Lütfen yerel model sunucusunun doğru çalıştığından emin olun."
     },
-    "version": "Ollama Sürümü"
+    "version": "Model Sürümü"
   },
   "onboardingChecklist": {
     "addAIAgent": "AI Ajanınızı Oluşturun",
@@ -751,7 +751,7 @@
     "emptyStateTitle": "Hanzo AI'ye Sor"
   },
   "quickConnection": {
-    "connectingToNode": "Yerel Hanzo Düğümünüze Bağlanıyor",
+    "connectingToNode": "Yerel Düğümünüze Bağlanıyor",
     "form": {
       "connect": "Bağlan",
       "nodeAddress": "Düğüm Adresi"
@@ -828,7 +828,7 @@
       "promptLibrary": "İpucu Kütüphanesi",
       "publicKeys": "Açık Anahtarlar",
       "remoteAccess": "Uzaktan Erişim",
-      "hanzoNode": "Hanzo Düğüm Yöneticisi"
+      "hanzoNode": "Düğüm Yöneticisi"
     },
     "maxChatIterations": {
       "description": "Bir sohbet mesajının işlenmesi için maksimum iterasyon sayısı",
@@ -862,7 +862,7 @@
     },
     "remoteAccess": {
       "connected": "Bağlandı",
-      "description": "Ngrok kullanarak Hanzo düğümünüze her yerden kolayca ve güvenli bir şekilde bağlanın. Karmaşık bir kurulum yok—sadece <a>ücretsiz bir ngrok hesabı oluşturun</a>, kontrol panelinden <b>ngrok kimlik doğrulama tokeninizi</b> kopyalayın ve güvenli uzaktan erişimi etkinleştirmek için aşağıya yapıştırın.",
+      "description": "Ngrok kullanarak düğümünüze her yerden kolayca ve güvenli bir şekilde bağlanın. Karmaşık bir kurulum yok—sadece <a>ücretsiz bir ngrok hesabı oluşturun</a>, kontrol panelinden <b>ngrok kimlik doğrulama tokeninizi</b> kopyalayın ve güvenli uzaktan erişimi etkinleştirmek için aşağıya yapıştırın.",
       "errors": {
         "failedToGetStatus": "Ngrok durumu alınamadı.",
         "failedToStart": "Ngrok üzerinden uzaktan erişim bağlantısı kurulamadı.",
@@ -878,7 +878,7 @@
       "publicAccessURLDescription": "Bu URL'yi kullanarak düğümünüze her yerden bağlanabilirsiniz.",
       "publicAccessUrl": "Herkese Açık Erişim URL'si",
       "stopRemoteAccessSuccess": "Uzaktan erişim başarıyla durduruldu",
-      "success": "Bağlandı! Hanzo düğümünüz artık ngrok üzerinden uzaktan erişilebilir",
+      "success": "Bağlandı! düğümünüz artık ngrok üzerinden uzaktan erişilebilir",
       "title": "Uzaktan Erişim"
     },
     "hanzoIdentity": {
@@ -912,7 +912,7 @@
     }
   },
   "hanzoNode": {
-    "manager": "Hanzo Düğüm Yöneticisi",
+    "manager": "Düğüm Yöneticisi",
     "models": {
       "errors": {
         "modelInstalled": "Model {{modelName}} kurulumunda hata oluştu",
@@ -931,7 +931,7 @@
         "visionCapability": "Görüntüden Metne",
         "cloudCapability": "Bulut"
       },
-      "poweredByOllama": "Ollama tarafından desteklenmektedir",
+      "poweredByOllama": "Yerel modellerle desteklenmektedir",
       "success": {
         "modelInstalled": "Model {{modelName}} başarıyla kuruldu",
         "modelRemoved": "Model {{modelName}} başarıyla silindi"
@@ -942,30 +942,30 @@
     "notifications": {
       "downloadedModel": "AI modeli {{modelName}} başarıyla indirildi",
       "downloadingModel": "AI modeli {{modelName}} indiriliyor - {{progress}}%",
-      "errorSyncOllama": "Yerel Ollama modellerinizi Hanzo Düğümünüzle senkronize ederken hata oluştu",
+      "errorSyncOllama": "Yerel modellerinizi Düğümünüzle senkronize ederken hata oluştu",
       "installingModel": "{{modelName}} kuruluyor ...",
       "optionsRestored": "Seçenekler varsayılan değerlere geri yüklendi",
-      "removedNote": "Yerel Hanzo Düğümünüzün depolama alanı silindi",
-      "runningNode": "Yerel Hanzo Düğümünüz çalışıyor",
-      "runningOllama": "Ollama'nız çalışıyor",
+      "removedNote": "Yerel Düğümünüzün depolama alanı silindi",
+      "runningNode": "Yerel Düğümünüz çalışıyor",
+      "runningOllama": "Yerel modeliniz çalışıyor",
       "startingDownload": "{{modelName}} indirmeye başlıyor",
-      "startingNode": "Yerel Hanzo Düğümünüz başlatılıyor",
-      "startingOllama": "Ollama'nız başlatılıyor",
-      "stopNode": "Yerel Hanzo Düğümünüz durduruluyor",
-      "stopOllama": "Yerel Ollama'nız durduruluyor",
-      "stoppedNode": "Yerel Hanzo Düğümünüz durduruldu",
-      "stoppedOllama": "Yerel Ollama'nız durduruldu",
-      "syncedOllama": "Yerel Ollama modelleri Hanzo Düğümünüzle senkronize edildi"
+      "startingNode": "Yerel Düğümünüz başlatılıyor",
+      "startingOllama": "Yerel modeliniz başlatılıyor",
+      "stopNode": "Yerel Düğümünüz durduruluyor",
+      "stopOllama": "Yerel modeliniz durduruluyor",
+      "stoppedNode": "Yerel Düğümünüz durduruldu",
+      "stoppedOllama": "Yerel modeliniz durduruldu",
+      "syncedOllama": "Yerel modeller Düğümünüzle senkronize edildi"
     },
     "resetNodeWarning": {
-      "description": "Hanzo Düğümünüz mevcut anahtarlar tarafından kilitlenmiş durumda. Yeniden bağlanmak için tüm Hanzo Düğüm verilerinizi sıfırlayabilirsiniz.",
+      "description": "Düğümünüz mevcut anahtarlar tarafından kilitlenmiş durumda. Yeniden bağlanmak için tüm Düğüm verilerinizi sıfırlayabilirsiniz.",
       "option1": "<b>Geri Yükle:</b> Yedeklenmiş anahtarları kullanarak bağlantınızı geri yüklemeyi deneyin.",
-      "option2": "<b>Verileri Sıfırla:</b> Tüm Hanzo Düğüm verilerinizi kalıcı olarak silin.",
-      "option3": "<b>Tümünü Sıfırla:</b> Şifreleme ve imza anahtarları dahil olmak üzere tüm Hanzo Düğüm verilerinizi kalıcı olarak silin.",
+      "option2": "<b>Verileri Sıfırla:</b> Tüm Düğüm verilerinizi kalıcı olarak silin.",
+      "option3": "<b>Tümünü Sıfırla:</b> Şifreleme ve imza anahtarları dahil olmak üzere tüm Düğüm verilerinizi kalıcı olarak silin.",
       "title": "Bağlantı sağlanamıyor"
     },
-    "restartNode": "Lütfen Hanzo Düğümünüzü yeniden başlatın",
-    "unavailable": "Hanzo Düğümünüz kullanılamıyor"
+    "restartNode": "Lütfen Düğümünüzü yeniden başlatın",
+    "unavailable": "Düğümünüz kullanılamıyor"
   },
   "tasks": {
     "runNow": "Şimdi Çalıştır"

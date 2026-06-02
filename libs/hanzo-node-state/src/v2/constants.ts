@@ -24,7 +24,7 @@ export enum FunctionKeyV2 {
   GET_VR_FILES = 'GET_VR_FILES',
   GET_VR_FILES_SEARCH = 'GET_VR_FILES_SEARCH',
   GET_VR_SEARCH_SIMPLIFIED = 'GET_VR_SEARCH_SIMPLIFIED',
-  SCAN_OLLAMA_MODELS = 'SCAN_OLLAMA_MODELS',
+  SCAN_LOCAL_MODELS = 'SCAN_LOCAL_MODELS',
   GET_USER_SHEETS = 'GET_USER_SHEETS',
   GET_SHEET = 'GET_SHEET',
   GET_LIST_TOOLS = 'GET_LIST_TOOLS',
@@ -71,10 +71,10 @@ export const DEFAULT_CHAT_CONFIG = {
   top_k: 40,
   top_p: 0.9,
   stream: true,
-  use_tools: true,
-  thinking: true,
+  use_tools: false,
+  thinking: false,
   reasoning_effort: 'medium',
-  web_search_enabled: true,
+  web_search_enabled: false,
 } as const;
 
 export const OPTIMISTIC_USER_MESSAGE_ID = 'OPTIMISTIC_USER_MESSAGE_ID';

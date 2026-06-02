@@ -1,6 +1,6 @@
 import { useStartEmbeddingMigration } from '@hanzo_network/hanzo-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
 import { useGetEmbeddingMigrationStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
-import { useScanOllamaModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanOllamaModels/useScanOllamaModels';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
 import {
   Badge,
   Button,
@@ -26,30 +26,33 @@ const EmbeddingModelSelectionDialog = () => {
 
   const [selectedEmbeddingModel, setSelectedEmbeddingModel] = useState('');
 
-  const { data: availableOllamaModels } = useScanOllamaModels(
+  const { data: availableLocalModels } = useScanLocalModels(
     { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
     { enabled: !!auth },
   );
 
   const supportedEmbeddingModels = useMemo(
     () => [
+      // The local hanzo-engine serves zen-embedding (1024-dim) — the default.
+      'zenlm/zen-embedding-0.6B',
       'snowflake-arctic-embed:xs',
       'embeddinggemma:300m',
-      'jina/jina-embeddings-v2-base-es:latest',
     ],
     [],
   );
 
   const availableEmbeddingModels = useMemo(() => {
-    if (!availableOllamaModels) return [];
-
-    return availableOllamaModels
-      .filter((model) => supportedEmbeddingModels.includes(model.model))
-      .map((model) => ({
-        value: model.model,
-        label: model.model,
-      }));
-  }, [availableOllamaModels, supportedEmbeddingModels]);
+    // The local-model scan hits the chat engine (:36900); the embedding model runs on
+    // a separate engine port it doesn't see. So always offer the supported embedding
+    // models (making the embedding configurable from Settings), plus any the scan does
+    // surface.
+    const scannedSupported = (availableLocalModels ?? [])
+      .map((model) => model.model)
+      .filter((model) => supportedEmbeddingModels.includes(model));
+    return Array.from(
+      new Set([...supportedEmbeddingModels, ...scannedSupported]),
+    ).map((model) => ({ value: model, label: model }));
+  }, [availableLocalModels, supportedEmbeddingModels]);
 
   const { data: embeddingMigrationStatus } = useGetEmbeddingMigrationStatus(
     { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },

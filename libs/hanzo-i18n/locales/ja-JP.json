@@ -401,7 +401,7 @@
   },
   "errors": {
     "nodeUnavailable": {
-      "description": "Hanzoノードに接続できません。ノードがオフラインになっているか、インターネット接続が切断されている可能性があります",
+      "description": "ノードに接続できません。ノードがオフラインになっているか、インターネット接続が切断されている可能性があります",
       "title": "ノードが利用できません"
     }
   },
@@ -413,7 +413,7 @@
     },
     "generateFile": "接続ファイルを生成",
     "label": "接続をエクスポート",
-    "restoreText": "パスフレーズと一緒に使用して、接続をHanzoノードに復元します"
+    "restoreText": "パスフレーズと一緒に使用して、接続をノードに復元します"
   },
   "extension": {
     "welcome": "Hanzo Visorを使用してAIでWebブラウジング体験を変えましょう ✨"
@@ -557,7 +557,7 @@
   },
   "mcpServers": {
     "add": "MCPサーバーを追加",
-    "addDescription": "Hanzoノードに接続する新しいMCPサーバーを設定します",
+    "addDescription": "ノードに接続する新しいMCPサーバーを設定します",
     "addFailed": "MCPサーバーの追加に失敗しました",
     "addFromGitHub": "GitHubから追加",
     "addSuccess": "MCPサーバーが正常に追加されました",
@@ -596,7 +596,7 @@
     "deleteSuccess": "MCPサーバーが正常に削除されました",
     "environmentVariables": "環境変数",
     "label": "MCPサーバー",
-    "listDescription": "あなたのHanzoノードに接続されているMCPサーバーのリスト",
+    "listDescription": "あなたのノードに接続されているMCPサーバーのリスト",
     "listOfToolsAvailableFromThisMcpServer": "このMCPサーバーから利用可能なツールのリスト。",
     "manualSetup": "手動設定",
     "name": "名前",
@@ -698,9 +698,9 @@
   },
   "ollama": {
     "errors": {
-      "failedToFetch": "ローカルのOllamaモデルの取得に失敗しました。Ollamaが正常に動作していることを確認してください。"
+      "failedToFetch": "ローカルモデルの取得に失敗しました。ローカルモデルサーバーが正常に動作していることを確認してください。"
     },
-    "version": "Ollamaバージョン"
+    "version": "モデルバージョン"
   },
   "onboardingChecklist": {
     "addAIAgent": "AIエージェントを作成する",
@@ -751,7 +751,7 @@
     "emptyStateTitle": "新海AIに質問する"
   },
   "quickConnection": {
-    "connectingToNode": "ローカルHanzoノードに接続中",
+    "connectingToNode": "ローカルノードに接続中",
     "form": {
       "connect": "接続",
       "nodeAddress": "ノードアドレス"
@@ -828,7 +828,7 @@
       "promptLibrary": "プロンプトライブラリ",
       "publicKeys": "公開鍵",
       "remoteAccess": "リモートアクセス",
-      "hanzoNode": "Hanzoノードマネージャー"
+      "hanzoNode": "ノードマネージャー"
     },
     "maxChatIterations": {
       "description": "チャットメッセージを処理するための最大反復回数",
@@ -862,7 +862,7 @@
     },
     "remoteAccess": {
       "connected": "接続されました",
-      "description": "ngrokを使用して、どこからでもあなたのHanzoノードに簡単かつ安全に接続できます。複雑な設定は不要です—ただ<a>無料のngrokアカウントを作成</a>し、ダッシュボードから<b>ngrok認証トークン</b>をコピーして、下に貼り付けて安全なリモートアクセスを有効にしてください。",
+      "description": "ngrokを使用して、どこからでもあなたのノードに簡単かつ安全に接続できます。複雑な設定は不要です—ただ<a>無料のngrokアカウントを作成</a>し、ダッシュボードから<b>ngrok認証トークン</b>をコピーして、下に貼り付けて安全なリモートアクセスを有効にしてください。",
       "errors": {
         "failedToGetStatus": "ngrokのステータスを取得するのに失敗しました。",
         "failedToStart": "ngrokを介してリモートアクセスの接続に失敗しました。",
@@ -878,7 +878,7 @@
       "publicAccessURLDescription": "このURLを使用して、どこからでもノードに接続できます。",
       "publicAccessUrl": "公開アクセスURL",
       "stopRemoteAccessSuccess": "リモートアクセスは正常に停止されました",
-      "success": "接続されました！あなたのHanzoノードはngrokを介してリモートでアクセス可能です",
+      "success": "接続されました！あなたのノードはngrokを介してリモートでアクセス可能です",
       "title": "リモートアクセス"
     },
     "hanzoIdentity": {
@@ -912,7 +912,7 @@
     }
   },
   "hanzoNode": {
-    "manager": "Hanzoノードマネージャー",
+    "manager": "ノードマネージャー",
     "models": {
       "errors": {
         "modelInstalled": "モデル {{modelName}} のインストール中にエラーが発生しました",
@@ -931,7 +931,7 @@
         "visionCapability": "画像からテキストへ",
         "cloudCapability": "クラウド"
       },
-      "poweredByOllama": "Ollamaの提供",
+      "poweredByOllama": "ローカルモデルによる提供",
       "success": {
         "modelInstalled": "モデル {{modelName}} が正常にインストールされました",
         "modelRemoved": "モデル {{modelName}} が正常に削除されました"
@@ -942,30 +942,30 @@
     "notifications": {
       "downloadedModel": "AIモデル {{modelName}} のダウンロードが完了しました",
       "downloadingModel": "AIモデル {{modelName}} をダウンロード中 - {{progress}}%",
-      "errorSyncOllama": "ローカルオラマモデルをシンカイノードと同期する際にエラーが発生しました",
+      "errorSyncOllama": "ローカルモデルをノードと同期する際にエラーが発生しました",
       "installingModel": "インストール中 {{modelName}} ...",
       "optionsRestored": "オプションがデフォルト値に復元されました",
-      "removedNote": "ローカルシンカイノードのストレージが削除されました",
-      "runningNode": "ローカルシンカイノードが稼働中です",
-      "runningOllama": "ローカルオラマが稼働中です",
+      "removedNote": "ローカルノードのストレージが削除されました",
+      "runningNode": "ローカルノードが稼働中です",
+      "runningOllama": "ローカルモデルが稼働中です",
       "startingDownload": "AIモデル {{modelName}} のダウンロードを開始しています",
-      "startingNode": "ローカルシンカイノードを起動しています",
-      "startingOllama": "ローカルオラマを起動しています",
-      "stopNode": "ローカルシンカイノードを停止しています",
-      "stopOllama": "ローカルオラマを停止しています",
-      "stoppedNode": "ローカルシンカイノードが停止されました",
-      "stoppedOllama": "ローカルオラマが停止されました",
-      "syncedOllama": "ローカルオラマモデルがシンカイノードと同期されました"
+      "startingNode": "ローカルノードを起動しています",
+      "startingOllama": "ローカルモデルを起動しています",
+      "stopNode": "ローカルノードを停止しています",
+      "stopOllama": "ローカルモデルを停止しています",
+      "stoppedNode": "ローカルノードが停止されました",
+      "stoppedOllama": "ローカルモデルが停止されました",
+      "syncedOllama": "ローカルモデルがノードと同期されました"
     },
     "resetNodeWarning": {
-      "description": "あなたのHanzoノードは現在、既存のキーによってロックされています。再接続するには3つの選択肢があります：",
+      "description": "あなたのノードは現在、既存のキーによってロックされています。再接続するには3つの選択肢があります：",
       "option1": "<b>復元：</b> バックアップされたキーを使用して接続を復元しようとします。",
-      "option2": "<b>データのリセット：</b> Hanzoノードのすべてのデータを永久に削除します。",
-      "option3": "<b>すべてをリセット：</b> 暗号化キーと署名キーを含むHanzoノードのすべてのデータを永久に削除します。",
+      "option2": "<b>データのリセット：</b> ノードのすべてのデータを永久に削除します。",
+      "option3": "<b>すべてをリセット：</b> 暗号化キーと署名キーを含むノードのすべてのデータを永久に削除します。",
       "title": "接続できません"
     },
-    "restartNode": "Hanzoノードを再起動してください",
-    "unavailable": "Hanzoノードが利用できません"
+    "restartNode": "ノードを再起動してください",
+    "unavailable": "ノードが利用できません"
   },
   "tasks": {
     "runNow": "今すぐ実行"

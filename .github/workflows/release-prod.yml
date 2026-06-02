@@ -11,7 +11,8 @@ defaults:
 
 jobs:
   prebuild:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
     outputs:
       version: ${{ steps.package-version.outputs.version }}
     steps:
@@ -82,11 +83,12 @@ jobs:
     name: Release Hanzo Desktop
     environment: production
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
             # os: ubuntu-22.04
-            os: linux-amd64-4vcpu-16gb
+            os: [self-hosted, Linux, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
@@ -94,8 +96,17 @@ jobs:
             distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
+          - arch: aarch64-unknown-linux-gnu
+            os: [self-hosted, Linux, ARM64]
+            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage
+            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz
+            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz.sig
+            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage
+            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz
+            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz.sig
+
           - arch: aarch64-apple-darwin
-            os: macos-14
+            os: [self-hosted, macOS, ARM64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/dmg/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.dmg
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Hanzo Desktop.app.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Hanzo Desktop.app.tar.gz.sig
@@ -104,7 +115,7 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
-            os: windows-2022
+            os: [self-hosted, Windows, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip.sig
@@ -112,10 +123,14 @@ jobs:
             distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip.sig
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     outputs:
       signature-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-x86_64-unknown-linux-gnu }}
       update-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-x86_64-unknown-linux-gnu }}
       app-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-x86_64-unknown-linux-gnu }}
+      signature-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-aarch64-unknown-linux-gnu }}
+      update-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-aarch64-unknown-linux-gnu }}
+      app-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-aarch64-unknown-linux-gnu }}
       signature-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.signature-aarch64-apple-darwin }}
       update-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.update-url-aarch64-apple-darwin }}
       app-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.app-url-aarch64-apple-darwin }}
@@ -152,7 +167,7 @@ jobs:
           mv .\nsis-binary-7423-3\* C:\Users\runneradmin\AppData\Local\tauri\NSIS\
 
       - name: (Linux) Install build dependencies
-        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        if: ${{ contains(matrix.arch, 'linux') }}
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential wget libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev libsoup-3.0-dev
@@ -226,7 +241,7 @@ jobs:
           npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
 
       - name: (Linux) Build hanzo-desktop
-        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        if: ${{ contains(matrix.arch, 'linux') }}
         working-directory: apps/hanzo-desktop
         run: npx tauri build
         env:
@@ -347,7 +362,8 @@ jobs:
       - prebuild
       - release-hanzo-desktop
     name: Generate & Update updates.json
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 20
     outputs:
       updates-next-json-url: ${{ steps.generate-updates-next-json.outputs.updates-next-json-url }}
 
@@ -378,6 +394,8 @@ jobs:
           NOTES: Automatic update to ${{ needs.prebuild.outputs.version }}.${{ github.run_number }}
           LINUX_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-unknown-linux-gnu }}
           LINUX_x86_64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-x86_64-unknown-linux-gnu }}
+          LINUX_AARCH64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-aarch64-unknown-linux-gnu }}
+          LINUX_AARCH64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-aarch64-unknown-linux-gnu }}
           DARWIN_AARCH64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-aarch64-apple-darwin }}
           DARWIN_AARCH64_URL: ${{ needs.release-hanzo-desktop.outputs.update-url-aarch64-apple-darwin }}
           WINDOWS_x86_64_SIGNATURE: ${{ needs.release-hanzo-desktop.outputs.signature-x86_64-pc-windows-msvc }}
@@ -404,7 +422,8 @@ jobs:
       - release-hanzo-desktop
       - rollout-hanzo-desktop
     name: Notify Slack
-    runs-on: ubuntu-22.04
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
     steps:
       - name: Post Hanzo Desktop to a Slack channel
         id: slack

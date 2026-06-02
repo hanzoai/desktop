@@ -149,7 +149,8 @@ export interface ModelType {
   model_type: string;
 }
 
-export interface Ollama {
+/** Wire-protocol payload for the local-engine provider variant. */
+export interface LocalEngine {
   model_type: string;
 }
 

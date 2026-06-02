@@ -32,6 +32,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRightIcon, PlusIcon } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
+import { BRAND } from '../../config/brand';
 import { useAuth } from '../../store/auth';
 type WizardStep = 'select' | 'configure' | 'publishing' | 'success';
 
@@ -471,8 +472,8 @@ export default function PublishAgentDialog() {
                     htmlFor="terms"
                     className="cursor-pointer text-sm leading-relaxed"
                   >
-                    I understand that Hanzo reserves the right to remove any
-                    agent that violates our content policy.
+                    I understand that {BRAND.name} reserves the right to remove
+                    any agent that violates our content policy.
                   </Label>
                 </div>
               </div>

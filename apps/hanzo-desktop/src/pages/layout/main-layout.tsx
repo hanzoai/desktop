@@ -47,6 +47,7 @@ import {
   ArrowRightToLine,
   Bot,
   Ellipsis,
+  Gauge,
   HelpCircleIcon,
   Server,
 } from 'lucide-react';

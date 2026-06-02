@@ -49,6 +49,10 @@ bytes = "1"
 thiserror = "1.0"
 dirs = "6.0"
 
+# Shared AI-chain mining crate (canonical hanzo core), pinned to latest.
+# Same crate Zoo & Lux use so all three mine off the same network protocol.
+hanzo-mining = "1.1.21"
+
 tauri-plugin-global-shortcut = "2.3"
 tauri-plugin-shell = "2.3"
 tauri-plugin-single-instance = { version = "2.3", features = ["deep-link"] }

@@ -31,7 +31,7 @@ export const getListDirectoryContents = async (
   payload: GetListDirectoryContentsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/retrieve_path_simplified'),
+    urlJoin(nodeAddress, '/v1/node/retrieve_path_simplified'),
     {
       params: payload,
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -47,7 +47,7 @@ export const getSearchDirectoryContents = async (
   payload: GetSearchDirectoryContentsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/search_files_by_name'),
+    urlJoin(nodeAddress, '/v1/node/search_files_by_name'),
     {
       params: payload,
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -63,7 +63,7 @@ export const createFolder = async (
   payload: CreateFolderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/create_folder'),
+    urlJoin(nodeAddress, '/v1/node/create_folder'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -78,7 +78,7 @@ export const copyFolder = async (
   payload: CopyFolderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/copy_folder'),
+    urlJoin(nodeAddress, '/v1/node/copy_folder'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -94,7 +94,7 @@ export const moveFolder = async (
   payload: MoveFolderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/move_folder'),
+    urlJoin(nodeAddress, '/v1/node/move_folder'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -110,7 +110,7 @@ export const removeFolder = async (
   payload: RemoveFolderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/delete_folder'),
+    urlJoin(nodeAddress, '/v1/node/delete_folder'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -126,7 +126,7 @@ export const copyFsItem = async (
   payload: CopyFsItemRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/copy_item'),
+    urlJoin(nodeAddress, '/v1/node/copy_item'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -142,7 +142,7 @@ export const moveFsItem = async (
   payload: MoveFsItemRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/move_item'),
+    urlJoin(nodeAddress, '/v1/node/move_item'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -158,7 +158,7 @@ export const removeFsItem = async (
   payload: RemoveFsItemRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/delete_item'),
+    urlJoin(nodeAddress, '/v1/node/delete_item'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -174,7 +174,7 @@ export const retrieveVectorResource = async (
   payload: RetrieveVectorResourceRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/retrieve_vector_resource'),
+    urlJoin(nodeAddress, '/v1/node/retrieve_vector_resource'),
     {
       params: { path: payload.path },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -198,7 +198,7 @@ export const uploadFilesToVR = async (
       formData.append('path', destinationPath);
 
       const response = await httpClient.post(
-        urlJoin(nodeAddress, '/v2/upload_file_to_folder'),
+        urlJoin(nodeAddress, '/v1/node/upload_file_to_folder'),
         formData,
         {
           headers: {
@@ -225,16 +225,23 @@ export const searchVectorFs = async (
   bearerToken: string,
   payload: GetSearchVectorSearchRequest,
 ) => {
-  const response = await httpClient.get(
-    // retrieve_vector_search_simplified_json
-    urlJoin(nodeAddress, '/v2/search_vector_fs'),
+  // The node has no `search_vector_fs` route; `search_items` (POST) is the closest
+  // equivalent — it returns Vec<String> of matching paths (no snippets/scores), so we
+  // adapt each path into the [path, textChunks, score] tuple the UI expects.
+  const response = await httpClient.post(
+    urlJoin(nodeAddress, '/v1/node/search_items'),
     {
-      params: payload,
+      path: payload.path ?? '/',
+      search: payload.search,
+      max_results: payload.depth,
+    },
+    {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
     },
   );
-  return response.data;
+  const paths = (response.data as string[]) ?? [];
+  return { data: paths.map((p) => [p, [], 0] as [string, string[], number]) };
 };
 
 export const retrieveFilesForJob = async (
@@ -243,7 +250,7 @@ export const retrieveFilesForJob = async (
   payload: RetrieveFilesForJobRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/retrieve_files_for_job'),
+    urlJoin(nodeAddress, '/v1/node/retrieve_files_for_job'),
     {
       params: payload,
       headers: { Authorization: `Bearer ${bearerToken}` },

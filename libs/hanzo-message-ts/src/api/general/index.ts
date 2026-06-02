@@ -17,7 +17,7 @@ import {
 
 export const checkHealth = async (nodeAddress: string) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/health_check'),
+    urlJoin(nodeAddress, '/v1/node/health_check'),
     { responseType: 'json' },
   );
   return response.data as CheckHealthResponse;
@@ -25,7 +25,7 @@ export const checkHealth = async (nodeAddress: string) => {
 
 export const getDockerStatus = async (nodeAddress: string) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/docker_status'),
+    urlJoin(nodeAddress, '/v1/node/docker_status'),
     { responseType: 'json' },
   );
   return response.data as DockerStatusResponse;
@@ -36,7 +36,7 @@ export const getNodeStorageLocation = async (
   token: string,
 ): Promise<GetNodeStorageLocationResponse> => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/storage_location'),
+    urlJoin(nodeAddress, '/v1/node/storage_location'),
     { responseType: 'json', headers: { Authorization: `Bearer ${token}` } },
   );
   return response.data;
@@ -48,7 +48,7 @@ export const updateNodeName = async (
   newNodeName: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/change_node_name'),
+    urlJoin(nodeAddress, '/v1/node/change_node_name'),
     { new_name: newNodeName },
     { headers: { Authorization: `Bearer ${token}` } },
   );
@@ -69,7 +69,7 @@ export const initialRegistration = async (
   }
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/initial_registration'),
+    urlJoin(nodeAddress, '/v1/node/initial_registration'),
     payload,
     { responseType: 'json' },
   );
@@ -77,22 +77,20 @@ export const initialRegistration = async (
   return { status: 'success', data };
 };
 
-export const getHanzoFreeModelQuota = async (
-  nodeAddress: string,
-  bearerToken: string,
-) => {
-  const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/hanzo_backend_quota'),
-    {
-      headers: { Authorization: `Bearer ${bearerToken}` },
-      params: {
-        model: 'FREE_TEXT_INFERENCE',
-      },
-      responseType: 'json',
-    },
-  );
-  return response.data as GetHanzoFreeModelQuotaResponse;
-};
+/**
+ * Cloud free-tier quota is retired. The desktop is local-only and no longer
+ * calls the cloud `/v2/hanzo_backend_quota` endpoint. Returns a zeroed,
+ * no-quota response without any network request.
+ */
+export const getHanzoFreeModelQuota =
+  async (): Promise<GetHanzoFreeModelQuotaResponse> => {
+    return {
+      has_quota: false,
+      tokens_quota: 0,
+      used_tokens: 0,
+      reset_time: 0,
+    };
+  };
 
 export const setPreferences = async (
   nodeAddress: string,
@@ -100,7 +98,7 @@ export const setPreferences = async (
   payload: SetPreferencesRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/set_preferences'),
+    urlJoin(nodeAddress, '/v1/node/set_preferences'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -115,7 +113,7 @@ export const getPreferences = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/get_preferences'),
+    urlJoin(nodeAddress, '/v1/node/get_preferences'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -130,7 +128,7 @@ export const startEmbeddingMigration = async (
   payload: EmbeddingMigrationRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/embedding_migration'),
+    urlJoin(nodeAddress, '/v1/node/embedding_migration'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -145,7 +143,7 @@ export const getEmbeddingMigrationStatus = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/embedding_migration'),
+    urlJoin(nodeAddress, '/v1/node/embedding_migration'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
