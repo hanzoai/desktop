@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { toast } from 'sonner';
 
 import { ResetConnectionDialog } from '../components/reset-connection-dialog';
+import { BRAND } from '../config/brand';
 import { useAuth } from '../store/auth';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import { useDownloadTauriLogsMutation } from './hanzo-logs/logs-client';
@@ -63,7 +64,7 @@ export const HanzoNodeRunningOverlay = ({
       <div className="flex size-full flex-col items-center justify-center gap-3 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
         <span className="text-text-secondary text-sm">
-          Checking Hanzo Node Status ...
+          Checking {BRAND.name} Node Status ...
         </span>
       </div>
     );
@@ -77,7 +78,7 @@ export const HanzoNodeRunningOverlay = ({
           role="alert"
         >
           <div className="space-y-2 text-center text-red-400">
-            <p>Unable to connect to Hanzo Node.</p>
+            <p>Unable to connect to {BRAND.name} Node.</p>
             <pre className="px-4 whitespace-break-spaces">
               {healthError.message}
             </pre>

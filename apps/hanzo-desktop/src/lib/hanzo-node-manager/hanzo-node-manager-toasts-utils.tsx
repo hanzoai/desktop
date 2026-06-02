@@ -3,6 +3,7 @@ import { cn } from '@hanzo_network/hanzo-ui/utils';
 import React from 'react';
 import { type ExternalToast, toast } from 'sonner';
 
+import { BRAND } from '../../config/brand';
 import { openHanzoNodeManagerWindow } from './hanzo-node-manager-windows-utils';
 
 export const modelNameMap: Record<string, string> = {
@@ -133,7 +134,7 @@ export const successRemovingHanzoNodeStorageToast = () => {
 export const errorRemovingHanzoNodeStorageToast = () => {
   return toast.error(
     <div>
-      Error removing your local Hanzo Node storage, see{' '}
+      Error removing your local {BRAND.name} Node storage, see{' '}
       <HanzoNodeLogsLabel /> for more information
     </div>,
     { ...defaultToastOptions },

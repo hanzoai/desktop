@@ -39,6 +39,7 @@ import { Link } from 'react-router';
 import { toast } from 'sonner';
 
 import { McpServers } from '../components/mcp-servers/mcp-servers';
+import { BRAND } from '../config/brand';
 import { handleConfigureClaude } from '../lib/external-clients/claude-desktop';
 import { getDenoBinPath, ConfigError } from '../lib/external-clients/common';
 import { handleConfigureCursor } from '../lib/external-clients/cursor';
@@ -85,7 +86,7 @@ export const McpRegistryPage = () => {
                 >
                   {t('mcpServers.label')}
                   <span className="text-text-secondary inline-flex items-center gap-1 text-xs">
-                    MCP <MoveRightIcon className="size-2.5" /> Hanzo
+                    MCP <MoveRightIcon className="size-2.5" /> {BRAND.name}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger

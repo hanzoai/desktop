@@ -28,7 +28,7 @@
   },
   "productName": "Hanzo",
   "version": "../../../package.json",
-  "identifier": "com.hanzo.desktop",
+  "identifier": "ai.hanzo.desktop",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4OURBNzhCM0Q2RTMwMzIKUldReU1HNDlpNmVkR01uQXpJaS9Dd2gvRlpsbDVYQmg0MlJSUnNib2tSOW5qRG5zSVdsMW0zZm8K",

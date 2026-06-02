@@ -16,6 +16,7 @@ import {
 import { Check, CircleIcon, Info, RefreshCw } from 'lucide-react';
 import { useMemo } from 'react';
 
+import { BRAND } from '../config/brand';
 import { useAuth } from '../store/auth';
 import { SimpleLayout } from './layout/simple-layout';
 
@@ -24,71 +25,60 @@ const questStatusInfoMap: Record<
   { name: string; description: string }
 > = {
   [QuestNames.InstalledApp]: {
-    name: 'Try Hanzo Desktop',
-    description: 'Download and Install Hanzo Desktop.',
+    name: `Try ${BRAND.productName}`,
+    description: `Download and Install ${BRAND.productName}.`,
   },
   [QuestNames.CreateIdentity]: {
-    name: 'Create Your Hanzo Identity',
-    description:
-      'Create an on-chain Hanzo Identity! This is require to participate in the decentralized peer to peer network.',
+    name: `Create Your ${BRAND.name} Identity`,
+    description: `Create an on-chain ${BRAND.name} Identity! This is require to participate in the decentralized peer to peer network.`,
   },
   [QuestNames.DownloadFromStore]: {
     name: 'Download Your First Tool',
-    description: 'Download your first tool from the Hanzo AI store.',
+    description: `Download your first tool from the ${BRAND.company} store.`,
   },
   [QuestNames.ComeBack2Days]: {
-    name: 'Return to Hanzo in 2 different days',
-    description:
-      'Return to Hanzo in 2 different days. Remember to create new chats each day!',
+    name: `Return to ${BRAND.name} in 2 different days`,
+    description: `Return to ${BRAND.name} in 2 different days. Remember to create new chats each day!`,
   },
   [QuestNames.ComeBack4Days]: {
-    name: 'Return to Hanzo in 4 different days',
-    description:
-      'Return to Hanzo in 4 different days. Remember to create new chats each day!',
+    name: `Return to ${BRAND.name} in 4 different days`,
+    description: `Return to ${BRAND.name} in 4 different days. Remember to create new chats each day!`,
   },
   [QuestNames.ComeBack7Days]: {
-    name: 'Return to Hanzo in 7 different days',
-    description:
-      'Return to Hanzo in 7 different days. Remember to create new chats each day!',
+    name: `Return to ${BRAND.name} in 7 different days`,
+    description: `Return to ${BRAND.name} in 7 different days. Remember to create new chats each day!`,
   },
   [QuestNames.CreateTool]: {
     name: 'Create Your First Tool',
-    description:
-      'Create and publish your first tool on Hanzo. Share your creativity with the community.',
+    description: `Create and publish your first tool on ${BRAND.name}. Share your creativity with the community.`,
   },
   [QuestNames.SubmitAndGetApprovalForTool]: {
     name: 'Submit and Get Approval for 1 Tool',
-    description:
-      'Submit your tool for review and get it approved by the Hanzo team.',
+    description: `Submit your tool for review and get it approved by the ${BRAND.name} team.`,
   },
   [QuestNames.SubmitAndGetApprovalFor2Tool]: {
     name: 'Submit and Get Approval for 2 Tools',
-    description:
-      'Submit your tool for review and get it approved by the Hanzo team.',
+    description: `Submit your tool for review and get it approved by the ${BRAND.name} team.`,
   },
   [QuestNames.SubmitAndGetApprovalFor3Tool]: {
     name: 'Submit and Get Approval for 3 Tools',
-    description:
-      'Submit your tool for review and get it approved by the Hanzo team.',
+    description: `Submit your tool for review and get it approved by the ${BRAND.name} team.`,
   },
   [QuestNames.FeaturedInRanking]: {
     name: 'Featured in Ranking',
-    description: 'Get featured in the Hanzo AI Store',
+    description: `Get featured in the ${BRAND.company} Store`,
   },
   [QuestNames.WriteHonestReview]: {
     name: 'Write a Review',
-    description:
-      'Go to Hanzo Store and write a detailed and honest review about your experience with a Hanzo tool.',
+    description: `Go to ${BRAND.name} Store and write a detailed and honest review about your experience with a ${BRAND.name} tool.`,
   },
   [QuestNames.Write5HonestReview]: {
     name: 'Write 5 Reviews',
-    description:
-      'Go to Hanzo Store and write 5 detailed and honest reviews about your experience with Hanzo tools.',
+    description: `Go to ${BRAND.name} Store and write 5 detailed and honest reviews about your experience with ${BRAND.name} tools.`,
   },
   [QuestNames.Write10HonestReview]: {
     name: 'Write 10 Reviews',
-    description:
-      'Go to Hanzo Store and write 10 detailed and honest reviews about your experience with Hanzo tools.',
+    description: `Go to ${BRAND.name} Store and write 10 detailed and honest reviews about your experience with ${BRAND.name} tools.`,
   },
   [QuestNames.UseRAG3Days]: {
     name: 'Chat with files 3 different days',
@@ -143,11 +133,11 @@ export const GalxeValidation = () => {
         <Alert className="rounded-xs border-none bg-cyan-900/20 p-3.5 shadow-none">
           <Info className="mt-1 size-4 text-cyan-400" />
           <AlertTitle className="text-sm">
-            Setup Your Hanzo Identity
+            Setup Your {BRAND.name} Identity
           </AlertTitle>
           <AlertDescription className="text-text-secondary text-xs">
             Before you can sync and track your quest progress, you&apos;ll need
-            to set up your Hanzo identity.
+            to set up your {BRAND.name} identity.
           </AlertDescription>
         </Alert>
         {isPending &&

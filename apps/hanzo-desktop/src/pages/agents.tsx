@@ -55,6 +55,7 @@ import { toast } from 'sonner';
 
 import ImportAgentModal from '../components/agent/import-agent-modal';
 import { useGetStoreAgents } from '../components/store/store-client';
+import { BRAND } from '../config/brand';
 
 import { useAuth } from '../store/auth';
 
@@ -506,7 +507,7 @@ export function AuthorAvatarLink({ author }: { author: string }) {
     >
       <Avatar className={cn('h-5 w-5')}>
         {author === '@@official.hanzo' ? (
-          <img alt="Hanzo" src={appIcon} />
+          <img alt={BRAND.name} src={appIcon} />
         ) : (
           <AvatarFallback className="bg-bg-tertiary text-text-tertiary">
             {formattedAuthor.charAt(0)}

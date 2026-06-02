@@ -28,6 +28,8 @@ use crate::commands::mcp_clients_install::{
 };
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::commands::mining::{mining_get_stats, mining_network_info, mining_start, mining_stop, new_mining_manager};
+use hanzo_mining::NetworkType;
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
 use globals::HANZO_NODE_MANAGER_INSTANCE;
@@ -143,6 +145,11 @@ fn main() {
             register_sse_server_in_cursor,
             get_cursor_command_config_help,
             get_cursor_sse_config_help,
+            // Shared AI-chain mining (hanzo-mining crate) — Hanzo mines HAI.
+            mining_get_stats,
+            mining_start,
+            mining_stop,
+            mining_network_info,
             // Native Hanzo Engine IPC commands (only when `native-engine` is on).
             #[cfg(feature = "native-engine")]
             embedded_engine::engine_get_status,
@@ -173,6 +180,11 @@ fn main() {
                     HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
                 )));
             }
+
+            // Canonical AI-chain mining manager (hanzo-mining crate). Hanzo mines
+            // on the Hanzo network (HAI); Zoo/Lux instantiate the same manager with
+            // their own NetworkType. Started on demand via the `mining_start` command.
+            app.manage(new_mining_manager(NetworkType::HanzoMainnet));
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;

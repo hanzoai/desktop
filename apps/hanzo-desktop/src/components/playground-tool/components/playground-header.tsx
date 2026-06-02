@@ -29,6 +29,7 @@ import { useFormContext } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router';
 import { toast } from 'sonner';
 
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { HANZO_STORE_URL } from '../../../utils/store';
 import { DockerStatus } from '../../tools/components/docker-status';
@@ -332,7 +333,7 @@ function PlaygroundHeaderBase({
                     rel="noreferrer"
                     target="_blank"
                   >
-                    Hanzo AI Store
+                    {BRAND.company} Store
                   </a>{' '}
                   . Please ensure it works as expected.
                 </p>

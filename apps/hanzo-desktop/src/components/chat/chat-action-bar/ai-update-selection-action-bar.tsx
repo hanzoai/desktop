@@ -34,6 +34,7 @@ import { memo, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
 import { toast } from 'sonner';
 
+import { BRAND } from '../../../config/brand';
 import OLLAMA_MODELS_REPOSITORY from '../../../lib/hanzo-node-manager/ollama-models-repository.json';
 import { useAuth } from '../../../store/auth';
 import { useHanzoNodeManager } from '../../../store/hanzo-node-manager';
@@ -50,10 +51,8 @@ const ollamaDescriptionMap = OLLAMA_MODELS_REPOSITORY.reduce(
 );
 
 const nonOllamaProviderModels = {
-  'hanzo-backend:free_text_inference':
-    'Hanzo AI model for text generation.',
-  'hanzo-backend:code_generator':
-    'Hanzo AI model for generating tool code.',
+  'hanzo-backend:free_text_inference': `${BRAND.company} model for text generation.`,
+  'hanzo-backend:code_generator': `${BRAND.company} model for generating tool code.`,
   'openai:gpt-4o':
     'Powerful OpenAI model known for its ability to generate human-like text and handle complex tasks.',
   'openai:gpt-4o-mini':

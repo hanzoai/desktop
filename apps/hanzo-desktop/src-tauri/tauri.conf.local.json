@@ -1,6 +1,6 @@
 {
   "productName": "Hanzo",
-  "identifier": "com.hanzo.desktop.local",
+  "identifier": "ai.hanzo.desktop.local",
   "plugins": {
     "updater": {
       "endpoints": [

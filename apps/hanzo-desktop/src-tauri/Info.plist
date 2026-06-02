@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.hanzo.desktop</string>
+	<string>ai.hanzo.desktop</string>
 </dict>
 </plist>
