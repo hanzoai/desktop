@@ -18,6 +18,7 @@ import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Edit3Icon, ExternalLinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { BRAND } from '../../config/brand';
 import { useHanzoNodeRespawnMutation } from '../../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { isHostingHanzoNode } from '../../lib/hanzo-node-manager/hanzo-node-manager-windows-utils';
 import { type Auth, useAuth } from '../../store/auth';
@@ -104,11 +105,11 @@ const HanzoIdentityDialog = () => {
       <DialogContent className="max-w-xl" showCloseButton>
         <DialogHeader>
           <DialogTitle className="font-semibold">
-            Update Hanzo Identity
+            Update {BRAND.name} Identity
           </DialogTitle>
           <DialogDescription className="text-text-secondary text-sm">
-            Connect your identity so you can take part in the Hanzo Network
-            and use p2p capabilities
+            Connect your identity so you can take part in the {BRAND.name}{' '}
+            Network and use p2p capabilities
           </DialogDescription>
         </DialogHeader>
 

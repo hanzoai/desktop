@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback } from 'react';
 
 // import { useFormContext } from 'react-hook-form';
+import { BRAND } from '../../../config/brand';
 import { usePlaygroundStore } from '../context/playground-context';
 // import { useAutoSaveTool } from '../hooks/use-create-tool-and-save';
 // import { CreateToolCodeFormSchema } from '../hooks/use-tool-code';
@@ -101,7 +102,7 @@ function CodePanelBase({
       return (
         <p className="text-text-secondary pt-6 text-center text-xs">
           No code generated yet. <br />
-          Ask Hanzo AI to generate your tool code.
+          Ask {BRAND.company} to generate your tool code.
         </p>
       );
     }

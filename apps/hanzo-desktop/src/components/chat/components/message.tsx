@@ -81,6 +81,7 @@ import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
 import { z } from 'zod';
 
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { useOAuth } from '../../../store/oauth';
 import { useSettings } from '../../../store/settings';
@@ -808,7 +809,7 @@ export const MessageBase = ({
                       onClick={handleAskHanzo}
                       size="xs"
                       variant="outline"
-                      aria-label="Ask Hanzo about selection"
+                      aria-label={`Ask ${BRAND.name} about selection`}
                       title={truncatedSelection ?? undefined}
                     >
                       <CornerDownRight className="size-4" />

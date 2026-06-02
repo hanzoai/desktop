@@ -58,6 +58,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { useSettings } from '../../../store/settings';
 import { HANZO_STORE_URL } from '../../../utils/store';
@@ -1339,9 +1340,9 @@ export default function ToolDetailsCard({
                         rel="noreferrer"
                         target="_blank"
                       >
-                        Hanzo AI Store
+                        {BRAND.company} Store
                       </a>{' '}
-                      to make it available to all Hanzo users.
+                      to make it available to all {BRAND.name} users.
                     </p>
                   </div>
 

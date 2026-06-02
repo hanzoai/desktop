@@ -32,6 +32,8 @@ use crate::model_tools::{
     model_tools_bitdelta_apply, model_tools_bitdelta_encode, model_tools_grpo_run,
     model_tools_soup_average, model_tools_soup_available, model_tools_soup_delta,
 };
+use crate::commands::mining::{mining_get_stats, mining_network_info, mining_start, mining_stop, new_mining_manager};
+use hanzo_mining::NetworkType;
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
 use globals::HANZO_NODE_MANAGER_INSTANCE;
@@ -149,6 +151,30 @@ fn main() {
             model_tools_bitdelta_encode,
             model_tools_bitdelta_apply,
             model_tools_grpo_run,
+            // Shared AI-chain mining (hanzo-mining crate) — Hanzo mines HAI.
+            mining_get_stats,
+            mining_start,
+            mining_stop,
+            mining_network_info,
+            // Native Hanzo Engine IPC commands (only when `native-engine` is on).
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_get_status,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_load_gguf,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_load_model,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_unload_model,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_chat,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_stream_chat,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_is_model_loaded,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_get_model_id,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_list_zen5_models,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -160,6 +186,11 @@ fn main() {
                     HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir),
                 )));
             }
+
+            // Canonical AI-chain mining manager (hanzo-mining crate). Hanzo mines
+            // on the Hanzo network (HAI); Zoo/Lux instantiate the same manager with
+            // their own NetworkType. Started on demand via the `mining_start` command.
+            app.manage(new_mining_manager(NetworkType::HanzoMainnet));
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
