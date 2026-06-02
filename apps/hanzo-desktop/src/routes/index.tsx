@@ -84,6 +84,7 @@ import TermsAndConditionsPage, {
 } from '../pages/terms-conditions';
 import ToolFeedbackPrompt from '../pages/tool-feedback';
 import { ToolsPage } from '../pages/tools-homepage';
+import BotPage from '../pages/bot';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
@@ -93,6 +94,7 @@ const skipOnboardingRoutes = ['/quick-connection', '/restore', '/connect-qr'];
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const auth = useAuth((state) => state.auth);
+  const isCloudMode = !!auth?.hanzo_token;
   const hanzoNodeOptions = useHanzoNodeManager(
     (state) => state.hanzoNodeOptions,
   );
@@ -100,7 +102,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isInUse = useHanzoNodeManager((state) => state.isInUse);
   const autoStartHanzoNodeTried = useRef<boolean>(false);
   const { data: hanzoNodeIsRunning } = useHanzoNodeIsRunningQuery({
-    refetchInterval: 1000,
+    refetchInterval: isCloudMode ? false : 1000,
   });
   const { mutateAsync: hanzoNodeSetOptions } =
     useHanzoNodeSetOptionsMutation();
@@ -115,8 +117,10 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   /*
     All this auto start code is a workaround while we implement a way to synchronize the app state between browser and tauri
     Node auto start process probably should be in rust side
+    Skip entirely in cloud mode (hanzo_token present) — no local node needed
   */
   useEffect(() => {
+    if (isCloudMode) return;
     void debug(
       `initializing autoStartHanzoNodeTried.current:${autoStartHanzoNodeTried.current} isInUse:${isInUse} hanzoNodeIsRunning:${hanzoNodeIsRunning}`,
     );
@@ -135,6 +139,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     }
   }, [
     auth,
+    isCloudMode,
     hanzoNodeSpawn,
     autoStartHanzoNodeTried,
     hanzoNodeIsRunning,
@@ -145,6 +150,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   if (!auth && !isConnectionRoute) {
     return <Navigate replace to={'/terms-conditions'} />;
+  }
+
+  // Cloud mode: skip local node health checks entirely
+  if (isCloudMode) {
+    return <>{children}</>;
   }
 
   return <HanzoNodeRunningOverlay>{children}</HanzoNodeRunningOverlay>;
@@ -456,11 +466,7 @@ const AppRoutes = () => {
           >
             <Route element={<McpRegistryPage />} path={'mcp'} />
             <Route element={<NetworkAgentPage />} path={'network-ai-agents'} />
-            <Route element={<MachinesPage />} path={'machines'} />
-            <Route element={<MachineDetailPage />} path={'machines/:name'} />
-            <Route element={<ContainersPage />} path={'containers'} />
-            <Route element={<KubernetesPage />} path={'kubernetes'} />
-            <Route element={<MiningPage />} path={'mining'} />
+            <Route element={<BotPage />} path={'bot'} />
           </Route>
           <Route
             element={

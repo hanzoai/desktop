@@ -161,7 +161,31 @@ const TermsAndConditionsPage = () => {
     hanzoNodeRemoveStorageIsPending ||
     submitRegistrationNodeCodeIsPending;
 
-  const isLoginButtonLoading = hanzoLoginIsLoading || (hanzoTokens != null && isStartLocalButtonLoading);
+  const { login: hanzoLogin } = useHanzoLogin();
+  const [hanzoLoginPending, setHanzoLoginPending] = useState(false);
+
+  const handleHanzoLogin = async () => {
+    setHanzoLoginPending(true);
+    try {
+      const tokens = await hanzoLogin();
+      setAuth({
+        api_v2_key: '',
+        node_address: '',
+        profile: 'main',
+        hanzo_identity: '',
+        encryption_pk: '',
+        identity_pk: '',
+        hanzo_token: tokens.access_token,
+        hanzo_refresh_token: tokens.refresh_token,
+      });
+      // Cloud login — skip local node, complete onboarding directly
+      completeStep(OnboardingStep.TERMS_CONDITIONS, true);
+    } catch (err) {
+      console.error('Hanzo login failed:', err);
+    } finally {
+      setHanzoLoginPending(false);
+    }
+  };
 
   async function onSubmit(currentValues: QuickConnectFormSchema) {
     if (!encryptionKeys) return;
@@ -246,17 +270,12 @@ const TermsAndConditionsPage = () => {
               size: 'lg',
             }),
           )}
-          disabled={!termsAndConditionsAccepted || isLoginButtonLoading}
-          isLoading={isLoginButtonLoading}
-          onClick={() => void startHanzoLogin()}
+          disabled={!termsAndConditionsAccepted || hanzoLoginPending}
+          isLoading={hanzoLoginPending}
+          onClick={() => void handleHanzoLogin()}
         >
           {t('common.login')}
         </Button>
-
-        {hanzoLoginError && (
-          <p className="text-center text-sm text-red-400">{hanzoLoginError}</p>
-        )}
-
         <Button
           className={cn(
             buttonVariants({
@@ -268,7 +287,7 @@ const TermsAndConditionsPage = () => {
           isLoading={isStartLocalButtonLoading}
           onClick={() => hanzoNodeSpawn()}
         >
-          {t('common.getStarted')}
+          {t('common.skip')}
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (

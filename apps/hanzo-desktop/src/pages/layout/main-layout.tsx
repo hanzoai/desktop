@@ -45,9 +45,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeftToLine,
   ArrowRightToLine,
-  Box,
-  Boxes,
-  Coins,
+  Bot,
   Ellipsis,
   HelpCircleIcon,
   Server,
@@ -248,6 +246,11 @@ export function MainNav() {
   ].filter(Boolean) as NavigationLink[];
 
   const secondaryNavigationLinks = [
+    {
+      title: 'Bot',
+      href: '/bot',
+      icon: <Bot className="size-[18px]" />,
+    },
     {
       title: t('layout.menuItems.tools'),
       href: '/tools',

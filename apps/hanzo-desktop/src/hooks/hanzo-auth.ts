@@ -1,149 +1,94 @@
 import { listen } from '@tauri-apps/api/event';
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { open } from '@tauri-apps/plugin-shell';
+import { useCallback, useRef } from 'react';
 
-const IAM_BASE_URL = 'https://hanzo.id';
-const IAM_CLIENT_ID = 'app-hanzo-desktop';
-const IAM_REDIRECT_URI = 'hanzo://oauth/hanzo';
-const IAM_SCOPE = 'openid profile email';
+const HANZO_CLIENT_ID = 'hanzo-app-client-id';
+const HANZO_CLIENT_SECRET = '3c7c4d9817bf0993681f6da2605e07ba5949da87a32862ed';
+const HANZO_AUTH_URL = 'https://hanzo.id/login/oauth/authorize';
+const HANZO_TOKEN_URL = 'https://hanzo.id/oauth/token';
+const REDIRECT_URI = 'hanzo://oauth/hanzo';
 
-function generateRandomBytes(length: number): Uint8Array {
-  const array = new Uint8Array(length);
-  crypto.getRandomValues(array);
-  return array;
-}
-
-function base64UrlEncode(bytes: Uint8Array): string {
-  let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-}
-
-async function computeS256Challenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const hash = await crypto.subtle.digest('SHA-256', data);
-  return base64UrlEncode(new Uint8Array(hash));
-}
-
-export type HanzoLoginState = {
-  isLoading: boolean;
-  error: string | null;
-  tokens: { access_token: string; refresh_token: string } | null;
+export type HanzoTokens = {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
 };
 
-export const useHanzoLogin = () => {
-  const [state, setState] = useState<HanzoLoginState>({
-    isLoading: false,
-    error: null,
-    tokens: null,
+function generateState(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function exchangeCodeForTokens(code: string): Promise<HanzoTokens> {
+  const params = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: HANZO_CLIENT_ID,
+    client_secret: HANZO_CLIENT_SECRET,
+    code,
+    redirect_uri: REDIRECT_URI,
   });
 
-  const pkceRef = useRef<{ verifier: string; state: string } | null>(null);
+  const response = await fetch(HANZO_TOKEN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
 
-  const startLogin = useCallback(async () => {
-    setState({ isLoading: true, error: null, tokens: null });
+  if (!response.ok) {
+    throw new Error(`Token exchange failed: ${response.statusText}`);
+  }
 
-    const verifier = base64UrlEncode(generateRandomBytes(48));
-    const challenge = await computeS256Challenge(verifier);
-    const oauthState = base64UrlEncode(generateRandomBytes(24));
+  return response.json() as Promise<HanzoTokens>;
+}
 
-    pkceRef.current = { verifier, state: oauthState };
+export function useHanzoLogin() {
+  const pendingState = useRef<string | null>(null);
 
-    const params = new URLSearchParams({
-      client_id: IAM_CLIENT_ID,
-      response_type: 'code',
-      redirect_uri: IAM_REDIRECT_URI,
-      scope: IAM_SCOPE,
-      state: oauthState,
-      code_challenge: challenge,
-      code_challenge_method: 'S256',
-    });
+  const login = useCallback(async (): Promise<HanzoTokens> => {
+    const state = generateState();
+    pendingState.current = state;
 
-    const authorizeUrl = `${IAM_BASE_URL}/login/oauth/authorize?${params.toString()}`;
+    const authUrl = new URL(HANZO_AUTH_URL);
+    authUrl.searchParams.set('client_id', HANZO_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', REDIRECT_URI);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'openid profile email');
+    authUrl.searchParams.set('state', state);
 
-    try {
-      await openUrl(authorizeUrl);
-    } catch (e) {
-      console.error('Failed to open IAM login URL:', e);
-      setState({ isLoading: false, error: 'Failed to open login page', tokens: null });
-    }
-  }, []);
+    await open(authUrl.toString());
 
-  useEffect(() => {
-    const unlisten = listen<{ state: string; code: string }>(
-      'hanzo-iam-callback',
-      async (event) => {
-        const { state: callbackState, code } = event.payload;
+    return new Promise<HanzoTokens>((resolve, reject) => {
+      let settled = false;
+      const unlistenPromise = listen('oauth-deep-link', async (event) => {
+        const payload = event.payload as { state: string; code: string };
 
-        if (!pkceRef.current) {
-          console.warn('Received IAM callback but no login was initiated');
-          return;
-        }
+        if (payload.state !== pendingState.current) return;
+        if (settled) return;
+        settled = true;
 
-        if (callbackState !== pkceRef.current.state) {
-          console.warn('OAuth state mismatch');
-          setState({ isLoading: false, error: 'Login state mismatch', tokens: null });
-          return;
-        }
+        clearTimeout(timeout);
+        pendingState.current = null;
+        void unlistenPromise.then((fn) => fn());
 
         try {
-          const tokenResponse = await fetch(
-            `${IAM_BASE_URL}/api/login/oauth/access_token`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: new URLSearchParams({
-                grant_type: 'authorization_code',
-                client_id: IAM_CLIENT_ID,
-                code,
-                redirect_uri: IAM_REDIRECT_URI,
-                code_verifier: pkceRef.current.verifier,
-              }).toString(),
-            },
-          );
-
-          if (!tokenResponse.ok) {
-            const errorText = await tokenResponse.text();
-            console.error('Token exchange failed:', errorText);
-            setState({
-              isLoading: false,
-              error: 'Failed to exchange authorization code',
-              tokens: null,
-            });
-            return;
-          }
-
-          const tokenData = await tokenResponse.json();
-          const tokens = {
-            access_token: tokenData.access_token,
-            refresh_token: tokenData.refresh_token ?? '',
-          };
-
-          setState({ isLoading: false, error: null, tokens });
-          pkceRef.current = null;
-        } catch (e) {
-          console.error('Token exchange error:', e);
-          setState({
-            isLoading: false,
-            error: 'Token exchange failed',
-            tokens: null,
-          });
+          const tokens = await exchangeCodeForTokens(payload.code);
+          resolve(tokens);
+        } catch (err) {
+          reject(err);
         }
-      },
-    );
+      });
 
-    return () => {
-      void unlisten.then((fn) => fn());
-    };
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        pendingState.current = null;
+        void unlistenPromise.then((fn) => fn());
+        reject(new Error('OAuth login timed out'));
+      }, 300_000); // 5 min timeout
+    });
   }, []);
 
-  const resetState = useCallback(() => {
-    setState({ isLoading: false, error: null, tokens: null });
-    pkceRef.current = null;
-  }, []);
-
-  return { ...state, startLogin, resetState };
-};
+  return { login };
+}
