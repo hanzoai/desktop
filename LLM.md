@@ -1,4 +1,4 @@
-# LLM.md - Hanzo Desktop
+# Hanzo Desktop
 
 ## Project
 
