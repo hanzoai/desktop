@@ -198,10 +198,6 @@ fn main() {
             #[cfg(feature = "native-engine")]
             embedded_engine::engine_unload_model,
             #[cfg(feature = "native-engine")]
-            embedded_engine::engine_chat,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_stream_chat,
-            #[cfg(feature = "native-engine")]
             embedded_engine::engine_is_model_loaded,
             #[cfg(feature = "native-engine")]
             embedded_engine::engine_get_model_id,
@@ -240,31 +236,24 @@ fn main() {
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
 
-            // Native Hanzo Engine: manage the shared engine state for IPC
-            // commands and start the OpenAI-compatible HTTP server on
-            // 127.0.0.1:36900 (what the frontend engine client targets by
-            // default). Both share the same engine instance. No model is loaded
-            // until requested via `engine_load_model` / `/v1/engine/load`.
+            // Native Hanzo Engine: manage the one shared orchestrator for both
+            // the Tauri IPC commands and the `/v1/engine/*` HTTP management
+            // routes. The canonical server (chat/responses/messages on
+            // 127.0.0.1:36900, what the frontend client targets) is bound lazily
+            // by the orchestrator on the first model load -- building an
+            // `Arc<Hanzo>` requires a model, so there is nothing to serve until
+            // one is loaded via `engine_load_model` / `/v1/engine/load`.
             #[cfg(feature = "native-engine")]
             {
+                // `new_state` already wired the orchestrator's self-handle so the
+                // merged `/v1/engine/*` management routes drive this same
+                // instance.
                 let engine_state = embedded_engine::new_state();
-                app.manage(engine_state.clone());
-                tauri::async_runtime::spawn(async move {
-                    let mut server = embedded_engine::EmbeddedEngineServer::new(engine_state);
-                    match server.start().await {
-                        Ok(()) => {
-                            log::info!(
-                                "Hanzo Engine (native) listening on 127.0.0.1:{}",
-                                server.port()
-                            );
-                            // Keep the server — and thus its shutdown channel —
-                            // alive for the app's lifetime; dropping it would
-                            // trigger graceful shutdown and stop the listener.
-                            std::mem::forget(server);
-                        }
-                        Err(e) => log::error!("Hanzo Engine failed to start: {e}"),
-                    }
-                });
+                app.manage(engine_state);
+                log::info!(
+                    "Hanzo Engine (native) ready; canonical server binds on 127.0.0.1:{} at first model load",
+                    embedded_engine::DEFAULT_PORT
+                );
             }
 
             /*

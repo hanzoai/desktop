@@ -1,16 +1,28 @@
-//! Tauri commands for the embedded Hanzo Engine
+//! Tauri IPC commands for the embedded Hanzo Engine.
+//!
+//! These drive the SAME [`EmbeddedEngine`] orchestrator as the `/v1/engine/*`
+//! HTTP routes -- there is exactly one model-load path. Unlike the HTTP
+//! handlers, IPC commands run off the axum server, so loading/unloading (which
+//! rebinds the canonical listener) can be awaited inline without deadlocking on
+//! the server's graceful shutdown.
+//!
+//! Inference is NOT exposed over IPC: chat / responses / messages / embeddings
+//! are served by the canonical `hanzo-server-core` router over HTTP on
+//! `127.0.0.1:36900`, identical to `hanzo serve`. The previous `engine_chat`
+//! and `engine_stream_chat` IPC commands (a parallel inference path) are gone.
 
 use std::sync::Arc;
-use tauri::{AppHandle, Emitter, State};
+
+use tauri::State;
 use tokio::sync::RwLock;
 
 use super::engine::EmbeddedEngine;
 use super::types::*;
 
-/// Managed state for the embedded engine
+/// Managed state for the embedded engine.
 pub type EmbeddedEngineState = Arc<RwLock<EmbeddedEngine>>;
 
-/// Get engine status
+/// Get engine status (loaded model, device, ...).
 #[tauri::command]
 pub async fn engine_get_status(
     state: State<'_, EmbeddedEngineState>,
@@ -19,33 +31,30 @@ pub async fn engine_get_status(
     Ok(engine.get_status().await)
 }
 
-/// Load a GGUF model into the engine
+/// Load a GGUF model into the engine (builds canonical state + starts server).
 #[tauri::command]
 pub async fn engine_load_gguf(
     state: State<'_, EmbeddedEngineState>,
     options: LoadModelOptions,
 ) -> Result<(), String> {
     let mut engine = state.write().await;
-    engine.load_gguf_model(options).await.map_err(|e| e.to_string())
+    engine
+        .load_gguf_model(options)
+        .await
+        .map_err(|e| e.to_string())
 }
 
-/// Load a HuggingFace model (with ISQ quantization)
+/// Load a model (format auto-detected from the id; GGUF vs safetensors/auto).
 #[tauri::command]
 pub async fn engine_load_model(
     state: State<'_, EmbeddedEngineState>,
     options: LoadModelOptions,
 ) -> Result<(), String> {
     let mut engine = state.write().await;
-
-    // Determine if it's a GGUF file based on extension
-    if options.model_id.ends_with(".gguf") || options.model_id.contains("GGUF") {
-        engine.load_gguf_model(options).await.map_err(|e| e.to_string())
-    } else {
-        engine.load_hf_model(options).await.map_err(|e| e.to_string())
-    }
+    engine.load_model(options).await.map_err(|e| e.to_string())
 }
 
-/// Unload the current model
+/// Unload the current model (stops the canonical server).
 #[tauri::command]
 pub async fn engine_unload_model(
     state: State<'_, EmbeddedEngineState>,
@@ -54,46 +63,7 @@ pub async fn engine_unload_model(
     engine.unload_model().await.map_err(|e| e.to_string())
 }
 
-/// Send a chat completion request (non-streaming)
-#[tauri::command]
-pub async fn engine_chat(
-    state: State<'_, EmbeddedEngineState>,
-    messages: Vec<ChatMessage>,
-    options: Option<ChatOptions>,
-) -> Result<ChatCompletionResponse, String> {
-    let engine = state.read().await;
-    engine.chat(messages, options.unwrap_or_default()).await.map_err(|e| e.to_string())
-}
-
-/// Send a streaming chat completion request
-/// Emits "engine-stream-chunk" events to the frontend
-#[tauri::command]
-pub async fn engine_stream_chat(
-    app: AppHandle,
-    state: State<'_, EmbeddedEngineState>,
-    messages: Vec<ChatMessage>,
-    options: Option<ChatOptions>,
-) -> Result<String, String> {
-    let engine = state.read().await;
-    let request_id = uuid::Uuid::new_v4().to_string();
-    let request_id_clone = request_id.clone();
-    let app_clone = app.clone();
-
-    // Stream chunks via Tauri events
-    engine.stream_chat(messages, options.unwrap_or_default(), move |chunk| {
-        if let Err(e) = app_clone.emit("engine-stream-chunk", &chunk) {
-            log::error!("Failed to emit stream chunk: {}", e);
-        }
-    }).await.map_err(|e| e.to_string())?;
-
-    // Emit completion event
-    app.emit("engine-stream-done", &request_id_clone)
-        .map_err(|e| e.to_string())?;
-
-    Ok(request_id)
-}
-
-/// Check if a model is loaded
+/// Whether a model is currently loaded.
 #[tauri::command]
 pub async fn engine_is_model_loaded(
     state: State<'_, EmbeddedEngineState>,
@@ -102,7 +72,7 @@ pub async fn engine_is_model_loaded(
     Ok(engine.is_model_loaded())
 }
 
-/// Get the current model ID
+/// The currently loaded model id, if any.
 #[tauri::command]
 pub async fn engine_get_model_id(
     state: State<'_, EmbeddedEngineState>,
@@ -111,7 +81,7 @@ pub async fn engine_get_model_id(
     Ok(engine.get_model_id().map(|s| s.to_string()))
 }
 
-/// Generate all command handlers for registration
+/// Register all embedded-engine IPC command handlers.
 #[macro_export]
 macro_rules! embedded_engine_commands {
     () => {
@@ -119,8 +89,6 @@ macro_rules! embedded_engine_commands {
         engine_load_gguf,
         engine_load_model,
         engine_unload_model,
-        engine_chat,
-        engine_stream_chat,
         engine_is_model_loaded,
         engine_get_model_id,
     };
