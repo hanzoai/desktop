@@ -87,8 +87,9 @@ jobs:
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
-            # os: ubuntu-22.04
-            os: [self-hosted, Linux, X64]
+            # Canonical Hanzo fleet: linux-x64 -> ARC scale-set "hanzoai-amd64" (native, no cross-compile).
+            # runsOn is a STRING here because ARC matches scale-sets by name (see hanzoai/arc build-matrix.yml).
+            os: hanzoai-amd64
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
@@ -97,7 +98,9 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-unknown-linux-gnu
-            os: [self-hosted, Linux, ARM64]
+            # Canonical Hanzo fleet: linux-arm64 -> ARC scale-set "hanzoai-arm64", running NATIVELY on spark.
+            # This is the change that kills the cross-compile; runsOn is a STRING (ARC scale-set name).
+            os: hanzoai-arm64
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz.sig
@@ -106,6 +109,8 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
+            # Canonical Hanzo fleet: macos-arm64 -> ["self-hosted","macOS","ARM64"] (dbc) — already aligned.
+            # ARC can't host macOS, so this stays a standalone label set (array).
             os: [self-hosted, macOS, ARM64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/dmg/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.dmg
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Hanzo Desktop.app.tar.gz
@@ -115,6 +120,8 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
+            # Canonical Hanzo fleet: windows-x64 -> ["self-hosted","Windows","X64"] (evo) — already aligned.
+            # ARC can't host Windows, so this stays a standalone label set (array).
             os: [self-hosted, Windows, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
@@ -340,6 +347,40 @@ jobs:
           echo "update-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
           echo "app-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
 
+      # --- cosign signing for Linux artifacts (canonical, keyless GitHub OIDC) ---
+      # macOS keeps Apple notarize and Windows keeps EV/GCP-KMS jsign (both above, AS-IS).
+      # Linux .AppImage had no publisher signature, so we add cosign here — matching the
+      # canonical hanzoai/arc build-matrix.yml signing (sigstore/cosign-installer + sign-blob).
+      # Keyless: identity comes from the job's GitHub OIDC token (this job already grants
+      # `id-token: write`). Runs BEFORE the R2 + GitHub Release uploads so those downstream
+      # steps publish the now-signed .sig/.pem and the signed checksums alongside the AppImage.
+      - name: (Linux) Install cosign
+        if: ${{ contains(matrix.arch, 'linux') }}
+        uses: sigstore/cosign-installer@v3
+
+      - name: (Linux) Cosign-sign AppImage + signed checksums
+        if: ${{ contains(matrix.arch, 'linux') }}
+        shell: bash
+        working-directory: files-to-r2
+        env:
+          COSIGN_YES: 'true'
+        run: |
+          set -euo pipefail
+          APPIMAGE="${{ matrix.distributable_file_name }}"
+          # Detached cosign signature + Sigstore cert for the AppImage itself.
+          cosign sign-blob --yes \
+            --output-signature "${APPIMAGE}.cosign.sig" \
+            --output-certificate "${APPIMAGE}.cosign.pem" \
+            "${APPIMAGE}"
+          # Signed checksums file covering every artifact in this dir (AppImage + update bundle + sigs).
+          CHECKSUMS="${APPIMAGE}.checksums.txt"
+          sha256sum * > "${CHECKSUMS}"
+          cosign sign-blob --yes \
+            --output-signature "${CHECKSUMS}.cosign.sig" \
+            --output-certificate "${CHECKSUMS}.cosign.pem" \
+            "${CHECKSUMS}"
+          echo "Signed ${APPIMAGE} and ${CHECKSUMS} with cosign (keyless OIDC)."
+
       - name: Upload binaries to R2 bucket
         uses: shallwefootball/s3-upload-action@master
         with:
@@ -354,7 +395,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prebuild.outputs.version }}
-          files: files-to-r2/${{ matrix.distributable_file_name }}
+          # The installer for every platform, plus (Linux only) the cosign signature,
+          # Sigstore cert, and signed checksums. action-gh-release skips glob patterns
+          # that match nothing, so macOS/Windows runs just upload their single installer.
+          files: |
+            files-to-r2/${{ matrix.distributable_file_name }}
+            files-to-r2/${{ matrix.distributable_file_name }}.cosign.sig
+            files-to-r2/${{ matrix.distributable_file_name }}.cosign.pem
+            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt
+            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt.cosign.sig
+            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt.cosign.pem
 
   rollout-hanzo-desktop:
     environment: production

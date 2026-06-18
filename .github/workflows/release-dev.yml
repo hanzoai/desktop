@@ -77,13 +77,21 @@ jobs:
   release-hanzo-desktop:
     needs: prebuild
     name: Release Hanzo Desktop
+    permissions:
+      # contents: write is unused here (dev publishes only to R2, no GitHub Release) but
+      # mirrors prod; id-token: write is REQUIRED for cosign keyless (Sigstore / GitHub OIDC)
+      # so dev Linux builds get signed too.
+      contents: 'write'
+      id-token: 'write'
     environment: development
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
-            os: [self-hosted, Linux, X64]
+            # Canonical Hanzo fleet: linux-x64 -> ARC scale-set "hanzoai-amd64" (native, no cross-compile).
+            # runsOn is a STRING because ARC matches scale-sets by name (see hanzoai/arc build-matrix.yml).
+            os: hanzoai-amd64
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/appimage/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_amd64.AppImage.tar.gz.sig
@@ -92,6 +100,8 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
 
           - arch: aarch64-apple-darwin
+            # Canonical Hanzo fleet: macos-arm64 -> ["self-hosted","macOS","ARM64"] (dbc) — already aligned.
+            # ARC can't host macOS, so this stays a standalone label set (array).
             os: [self-hosted, macOS, ARM64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/dmg/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_aarch64.dmg
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/macos/Hanzo Desktop Dev.app.tar.gz
@@ -101,6 +111,8 @@ jobs:
             distributable_update_signature_file_name: Hanzo-Desktop-Dev-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
 
           - arch: x86_64-pc-windows-msvc
+            # Canonical Hanzo fleet: windows-x64 -> ["self-hosted","Windows","X64"] (evo) — already aligned.
+            # ARC can't host Windows, so this stays a standalone label set (array).
             os: [self-hosted, Windows, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.exe
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/debug/bundle/nsis/Hanzo Desktop Dev_${{ needs.prebuild.outputs.version }}${{ github.run_number }}_x64-setup.nsis.zip
@@ -278,6 +290,37 @@ jobs:
           echo "signature-${{ matrix.arch }}=$(cat files-to-r2/${{ matrix.distributable_update_signature_file_name }})" >> "$GITHUB_OUTPUT"
           echo "update-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/development/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
           echo "app-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/development/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
+
+      # --- cosign signing for Linux artifacts (canonical, keyless GitHub OIDC) ---
+      # "ensure dev builds get signed too": macOS keeps Apple notarize and Windows keeps
+      # EV/GCP-KMS jsign AS-IS; the Linux .AppImage gets a cosign signature + signed
+      # checksums here, matching hanzoai/arc build-matrix.yml. Keyless identity comes from
+      # this job's GitHub OIDC token (id-token: write granted above). Runs BEFORE the R2
+      # upload, which publishes the whole files-to-r2/ dir, so the .sig/.pem + checksums ship.
+      - name: (Linux) Install cosign
+        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        uses: sigstore/cosign-installer@v3
+
+      - name: (Linux) Cosign-sign AppImage + signed checksums
+        if: ${{ matrix.arch == 'x86_64-unknown-linux-gnu' }}
+        shell: bash
+        working-directory: files-to-r2
+        env:
+          COSIGN_YES: 'true'
+        run: |
+          set -euo pipefail
+          APPIMAGE="${{ matrix.distributable_file_name }}"
+          cosign sign-blob --yes \
+            --output-signature "${APPIMAGE}.cosign.sig" \
+            --output-certificate "${APPIMAGE}.cosign.pem" \
+            "${APPIMAGE}"
+          CHECKSUMS="${APPIMAGE}.checksums.txt"
+          sha256sum * > "${CHECKSUMS}"
+          cosign sign-blob --yes \
+            --output-signature "${CHECKSUMS}.cosign.sig" \
+            --output-certificate "${CHECKSUMS}.cosign.pem" \
+            "${CHECKSUMS}"
+          echo "Signed ${APPIMAGE} and ${CHECKSUMS} with cosign (keyless OIDC)."
 
       - name: Upload binaries to R2 bucket
         uses: shallwefootball/s3-upload-action@master
