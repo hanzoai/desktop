@@ -19,7 +19,7 @@ serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
 lazy_static = "1.4.0"
-tokio = { version = "1.36.0", features = ["macros", "net", "rt", "sync", "io-util"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "rt", "net", "sync", "io-util"] }
 chrono = "0.4.38"
 futures-util = "0.3"
 regex = "1.10.4"
@@ -75,6 +75,19 @@ fips204 = "0.4"
 
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
+# --- Native Hanzo Engine (embedded, in-process) -----------------------------
+# In-process LLM inference via the Hanzo Engine fork at ~/work/hanzo/engine
+# (../../../../engine relative to this manifest). The engine workspace was
+# rebranded mistralrs-* -> hanzo-*: `hanzo` is the high-level SDK, `hanzo-engine`
+# is the core. Optional and OFF by default so the standard build stays light and
+# does not require the engine repo checked out as a sibling. Enable with the
+# `native-engine` feature plus a backend, e.g.
+#   cargo build --release --features "native-engine metal"   (Apple Silicon)
+#   cargo build --release --features "native-engine cuda"    (NVIDIA)
+hanzo = { path = "../../../../engine/hanzo", optional = true }
+hanzo-engine = { path = "../../../../engine/hanzo-engine", optional = true }
+axum = { version = "0.8", optional = true }
+
 [dev-dependencies]
 tempfile = "3"
 
@@ -83,6 +96,17 @@ default = ["machine"]
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
+
 # hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
 # Brand-specific configs (zoo, liquidity) can opt out by disabling default-features.
 machine = []
+
+# Embed the native Hanzo Engine for in-process inference (OpenAI-compatible
+# server on 127.0.0.1:36900 + Tauri IPC commands). Pair with a backend feature.
+native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:axum"]
+# GPU/CPU backends forwarded to the engine. Weak deps (`pkg?/feat`) so selecting
+# a backend never force-enables the engine unless `native-engine` is also on.
+metal = ["hanzo?/metal", "hanzo-engine?/metal"]
+cuda = ["hanzo?/cuda", "hanzo-engine?/cuda"]
+accelerate = ["hanzo-engine?/accelerate"]
+flash-attn = ["hanzo?/flash-attn"]

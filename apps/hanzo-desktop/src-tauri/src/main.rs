@@ -58,6 +58,11 @@ mod mining;
 mod models;
 mod tray;
 mod windows;
+// Native Hanzo Engine (in-process mistral.rs fork). Compiled only with the
+// `native-engine` feature; the default build keeps using the node/ollama
+// sidecars and skips the heavy inference stack entirely.
+#[cfg(feature = "native-engine")]
+mod embedded_engine;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -178,6 +183,25 @@ fn main() {
             machine::commands::machine_exec,
             #[cfg(feature = "machine")]
             machine::commands::machine_events_subscribe,
+            // Native Hanzo Engine IPC commands (only when `native-engine` is on).
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_get_status,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_load_gguf,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_load_model,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_unload_model,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_chat,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_stream_chat,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_is_model_loaded,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_get_model_id,
+            #[cfg(feature = "native-engine")]
+            embedded_engine::engine_list_zen5_models,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -203,6 +227,33 @@ fn main() {
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
+
+            // Native Hanzo Engine: manage the shared engine state for IPC
+            // commands and start the OpenAI-compatible HTTP server on
+            // 127.0.0.1:36900 (what the frontend engine client targets by
+            // default). Both share the same engine instance. No model is loaded
+            // until requested via `engine_load_model` / `/v1/engine/load`.
+            #[cfg(feature = "native-engine")]
+            {
+                let engine_state = embedded_engine::new_state();
+                app.manage(engine_state.clone());
+                tauri::async_runtime::spawn(async move {
+                    let mut server = embedded_engine::EmbeddedEngineServer::new(engine_state);
+                    match server.start().await {
+                        Ok(()) => {
+                            log::info!(
+                                "Hanzo Engine (native) listening on 127.0.0.1:{}",
+                                server.port()
+                            );
+                            // Keep the server — and thus its shutdown channel —
+                            // alive for the app's lifetime; dropping it would
+                            // trigger graceful shutdown and stop the listener.
+                            std::mem::forget(server);
+                        }
+                        Err(e) => log::error!("Hanzo Engine failed to start: {e}"),
+                    }
+                });
+            }
 
             /*
                 This is the initialization pipeline

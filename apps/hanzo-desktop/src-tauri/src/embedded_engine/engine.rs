@@ -10,13 +10,13 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use anyhow::{Result, anyhow};
 
-// Hanzo Engine is built on top of the mistralrs inference library
-// but we expose it as "hanzo-engine" branding
-use mistralrs::{
+// Backed by the native Hanzo Engine fork: `hanzo` is the high-level SDK,
+// `hanzo_engine` is the core (formerly mistralrs / mistralrs-core).
+use hanzo::{
     GgufModelBuilder, TextModelBuilder, TextMessages, TextMessageRole,
     Model, IsqType, PagedAttentionMetaBuilder, Response,
 };
-use mistralrs_core::{ChatCompletionChunkResponse, ChunkChoice, Delta};
+use hanzo_engine::{ChatCompletionChunkResponse, ChunkChoice, Delta};
 
 use super::types::*;
 
@@ -50,6 +50,7 @@ impl EmbeddedEngine {
     }
 
     /// Detect the best available device
+    #[allow(unreachable_code)] // the cpu fallback is unreachable once a gpu backend is enabled
     fn detect_device() -> String {
         #[cfg(all(target_os = "macos", feature = "metal"))]
         {
@@ -112,9 +113,10 @@ impl EmbeddedEngine {
             vec![options.model_id.clone()], // GGUF files
         );
 
-        // Enable paged attention if requested
+        // Enable paged attention if requested. hanzo-engine takes a built
+        // PagedAttentionConfig by value (no-op on backends without PA support).
         if options.paged_attention.unwrap_or(true) {
-            builder = builder.with_paged_attn(|| PagedAttentionMetaBuilder::default().build())?;
+            builder = builder.with_paged_attn(PagedAttentionMetaBuilder::default().build()?);
         }
 
         // Enable logging
@@ -146,9 +148,10 @@ impl EmbeddedEngine {
             builder = builder.with_isq(isq_type);
         }
 
-        // Enable paged attention if requested
+        // Enable paged attention if requested. hanzo-engine takes a built
+        // PagedAttentionConfig by value (no-op on backends without PA support).
         if options.paged_attention.unwrap_or(true) {
-            builder = builder.with_paged_attn(|| PagedAttentionMetaBuilder::default().build())?;
+            builder = builder.with_paged_attn(PagedAttentionMetaBuilder::default().build()?);
         }
 
         // Enable logging
@@ -180,9 +183,10 @@ impl EmbeddedEngine {
         // Don't apply additional ISQ - MLX models are already quantized
         // builder = builder.with_isq(...) - skipped for MLX
 
-        // Enable paged attention if requested
+        // Enable paged attention if requested. hanzo-engine takes a built
+        // PagedAttentionConfig by value (no-op on backends without PA support).
         if options.paged_attention.unwrap_or(true) {
-            builder = builder.with_paged_attn(|| PagedAttentionMetaBuilder::default().build())?;
+            builder = builder.with_paged_attn(PagedAttentionMetaBuilder::default().build()?);
         }
 
         // Enable logging
@@ -210,9 +214,10 @@ impl EmbeddedEngine {
         // The engine auto-detects UQFF format from file extension/metadata
         let mut builder = TextModelBuilder::new(options.model_id.clone());
 
-        // Enable paged attention if requested
+        // Enable paged attention if requested. hanzo-engine takes a built
+        // PagedAttentionConfig by value (no-op on backends without PA support).
         if options.paged_attention.unwrap_or(true) {
-            builder = builder.with_paged_attn(|| PagedAttentionMetaBuilder::default().build())?;
+            builder = builder.with_paged_attn(PagedAttentionMetaBuilder::default().build()?);
         }
 
         // Enable logging
