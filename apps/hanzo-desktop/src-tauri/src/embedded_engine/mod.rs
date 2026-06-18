@@ -1,63 +1,69 @@
-//! Embedded Hanzo Engine - High-performance AI inference
+//! Embedded Hanzo Engine - in-process AI inference.
 //!
-//! This module provides in-process AI inference using the native Hanzo Engine
-//! (the mistral.rs fork at `~/work/hanzo/engine`). It is compiled only when the
-//! `native-engine` Cargo feature is enabled; pair it with a backend feature
-//! (`metal`, `cuda`, `accelerate`).
+//! The desktop's embedded engine IS the canonical `hanzo-server-core` server.
+//! Loading a model builds the same `SharedHanzoState` that `hanzo serve` builds
+//! (via `HanzoForServerBuilder`) and serves the same axum `Router` (via
+//! `HanzoServerRouterBuilder`) on `127.0.0.1:36900`. The node therefore speaks
+//! every protocol at once -- OpenAI `/v1/chat/completions`, codex/hanzo-dev
+//! `/v1/responses`, and Anthropic/Claude-Code `/v1/messages` -- with zero
+//! duplicated route logic. A thin `/v1/engine/*` management surface (status /
+//! models / load / unload) is merged on top for the desktop frontend.
+//!
+//! Compiled only under the `native-engine` Cargo feature; pair it with a
+//! backend feature (`metal`, `cuda`, `accelerate`).
 //!
 //! ## Architecture
 //!
-//! The embedded engine exposes an OpenAI-compatible HTTP API on localhost:
-//! - Same API as Ollama, LM Studio, OpenAI - frontend code works with any
-//! - Default port: 36900 (configurable)
-//! - Endpoints: /v1/chat/completions, /v1/embeddings, /v1/models
-//! - Streaming via SSE (Server-Sent Events)
+//! - [`EmbeddedEngine`] (engine.rs) -- the single orchestrator. Owns the
+//!   canonical state + the whole server lifecycle (build, bind, swap, stop).
+//!   One model-load path.
+//! - server.rs -- just the `DEFAULT_PORT` the canonical server binds on.
+//! - management.rs -- the `/v1/engine/*` lifecycle routes (no inference).
+//! - commands.rs -- Tauri IPC mirror of the lifecycle routes.
+//! - zen5.rs -- the Zen model catalog for the picker.
 //!
-//! This approach provides:
-//! - **Unified frontend code** - same HTTP client for all engines
-//! - **Standard OpenAI SDK compatibility** - use `openai` npm package
-//! - **Easy testing** - curl, Postman, any HTTP client works
-//! - **No Tauri IPC overhead** for streaming responses
-//!
-//! ## Model Storage
-//!
-//! Models are stored in platform-specific locations:
-//! - macOS: ~/Library/Application Support/hanzo-desktop/models/
-//! - Linux: ~/.local/share/hanzo-desktop/models/
-//! - Windows: %APPDATA%/hanzo-desktop/models/
-//!
-//! ## Build Options
+//! ## Build
 //!
 //! ```bash
-//! cargo build --features metal  # macOS with Apple Silicon (recommended)
-//! cargo build --features cuda   # Linux/Windows with NVIDIA GPU
-//! cargo build                   # CPU only (slower but works everywhere)
+//! cargo build --features "native-engine metal"   # Apple Silicon
+//! cargo build --features "native-engine cuda"     # NVIDIA
+//! cargo build --features native-engine            # CPU only
 //! ```
 
-// This module carries more API surface than the desktop currently wires up
-// (alternate loaders, embeddings types, server lifecycle helpers) so it can grow
-// without churn. Silence dead-code/unused warnings for the not-yet-wired surface;
-// the whole module only compiles under the `native-engine` feature.
-#![allow(dead_code, unused_imports)]
+// zen5.rs carries a catalog whose fields aren't all read yet; silence dead-code
+// for the not-yet-wired surface. The module only compiles under `native-engine`.
+#![allow(dead_code)]
 
-mod engine;
-mod server;
 mod commands;
+mod engine;
+mod management;
+mod server;
 mod types;
 mod zen5;
 
 use std::sync::Arc;
 use tokio::sync::RwLock;
 
-pub use engine::EmbeddedEngine;
-pub use server::{EmbeddedEngineServer, DEFAULT_PORT};
 pub use commands::*;
+pub use engine::EmbeddedEngine;
+pub use server::DEFAULT_PORT;
 pub use types::*;
 pub use zen5::*;
 
-/// Build a fresh, shared engine state. The same `Arc` is handed to Tauri's
-/// `.manage()` (for IPC commands) and to the HTTP server, so both reach the
-/// one engine instance.
+/// Build a fresh, shared engine orchestrator. The same `Arc` is handed to
+/// Tauri's `.manage()` (for IPC commands) and to the `/v1/engine/*` management
+/// router (via [`EmbeddedEngine::set_management_state`]), so both reach the one
+/// engine instance and its one model-load path.
+///
+/// The orchestrator keeps a clone of this `Arc` so the management routes it
+/// builds at server (re)start can call back into it. The write lock is taken
+/// synchronously here: the `Arc` has no other holders yet, so `try_write`
+/// cannot fail (and we avoid blocking on a runtime inside Tauri's `setup`).
 pub fn new_state() -> EmbeddedEngineState {
-    Arc::new(RwLock::new(EmbeddedEngine::new()))
+    let state = Arc::new(RwLock::new(EmbeddedEngine::new()));
+    state
+        .try_write()
+        .expect("freshly created engine lock is uncontended")
+        .set_management_state(state.clone());
+    state
 }

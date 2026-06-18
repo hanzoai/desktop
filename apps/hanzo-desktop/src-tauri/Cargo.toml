@@ -86,6 +86,13 @@ fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 #   cargo build --release --features "native-engine cuda"    (NVIDIA)
 hanzo = { path = "../../../../engine/hanzo", optional = true }
 hanzo-engine = { path = "../../../../engine/hanzo-engine", optional = true }
+# The canonical server: the SAME crate `hanzo serve` builds on. The desktop's
+# embedded engine reuses its `HanzoForServerBuilder` (state) +
+# `HanzoServerRouterBuilder` (axum Router) instead of a hand-rolled server, so
+# the node serves /v1/chat/completions, /v1/responses and /v1/messages
+# identically. `default-features = false` drops the bundled swagger-ui (the
+# inference routes don't need it; the builder gates docs behind that feature).
+hanzo-server-core = { path = "../../../../engine/hanzo-server-core", optional = true, default-features = false }
 axum = { version = "0.8", optional = true }
 
 [dev-dependencies]
@@ -101,12 +108,15 @@ custom-protocol = ["tauri/custom-protocol"]
 # Brand-specific configs (zoo, liquidity) can opt out by disabling default-features.
 machine = []
 
-# Embed the native Hanzo Engine for in-process inference (OpenAI-compatible
-# server on 127.0.0.1:36900 + Tauri IPC commands). Pair with a backend feature.
-native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:axum"]
-# GPU/CPU backends forwarded to the engine. Weak deps (`pkg?/feat`) so selecting
+# Embed the native Hanzo Engine for in-process inference. This runs the canonical
+# `hanzo-server-core` server (all protocols: chat/responses/messages) on
+# 127.0.0.1:36900 plus a thin /v1/engine/* management surface and Tauri IPC
+# commands. Pair with a backend feature.
+native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:hanzo-server-core", "dep:axum"]
+# GPU/CPU backends forwarded to the engine AND the server crate so their shared
+# `hanzo-engine` resolves to one feature set. Weak deps (`pkg?/feat`) so selecting
 # a backend never force-enables the engine unless `native-engine` is also on.
-metal = ["hanzo?/metal", "hanzo-engine?/metal"]
-cuda = ["hanzo?/cuda", "hanzo-engine?/cuda"]
-accelerate = ["hanzo-engine?/accelerate"]
-flash-attn = ["hanzo?/flash-attn"]
+metal = ["hanzo?/metal", "hanzo-engine?/metal", "hanzo-server-core?/metal"]
+cuda = ["hanzo?/cuda", "hanzo-engine?/cuda", "hanzo-server-core?/cuda"]
+accelerate = ["hanzo-engine?/accelerate", "hanzo-server-core?/accelerate"]
+flash-attn = ["hanzo?/flash-attn", "hanzo-server-core?/flash-attn"]
