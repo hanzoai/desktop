@@ -56,3 +56,5 @@ vitest.config.*.timestamp*
 
 CLAUDE.md
 tsconfig.node.tsbuildinfo
+
+.claude/
