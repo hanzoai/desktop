@@ -55,13 +55,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout hanzo-node repository
-        uses: actions/checkout@v4
-        with:
-          repository: hanzoai/node
-          path: hanzo-node
-          fetch-depth: 0
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -77,7 +70,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "hanzo-node -> target"
+          workspaces: "apps/hanzo-desktop/src-tauri -> target"
           key: ${{ matrix.os }}-rust-e2e
 
       - name: Cache HuggingFace models
@@ -119,24 +112,54 @@ jobs:
           brew install --quiet coreutils
 
       # ============================================
-      # Build Hanzo Node with Embedded Engine
+      # Fetch prebuilt Hanzo Node binary
       # ============================================
-      - name: Build hanzo-node (Rust backend)
-        working-directory: hanzo-node
+      # NOTE: We download the published hanzo-node binary from the Hanzo CDN
+      # (the same artifact ci-scripts/download-side-binaries.ts uses for the
+      # release / PR health-check workflows) instead of building hanzoai/node
+      # from source. The hanzoai/node `main` workspace lists ~35 hanzo-libs/*
+      # path-members that are not vendored in that repo's tree (only
+      # hanzo-brain/hanzo-pqc exist), so `cargo build` there fails with
+      # "failed to load manifest for workspace member .../hanzo-libs/hanzo-api".
+      # The published binary is also named `hanzo-node` (the source bin target
+      # is `hanzod`), matching what the steps below expect.
+      - name: Download prebuilt hanzo-node binary
         run: |
-          echo "Building hanzo-node for ${{ matrix.arch }}..."
-          cargo build --release --bin hanzo-node --target ${{ matrix.arch }}
+          ARCH="${{ matrix.arch }}"
+          BASE="https://download.hanzo.ai/hanzo-node/binaries/production/${ARCH}"
 
-          # Copy binary to known location
-          mkdir -p ./dist
-          if [ "${{ matrix.platform }}" = "windows" ]; then
-            cp target/${{ matrix.arch }}/release/hanzo-node.exe ./dist/
-          else
-            cp target/${{ matrix.arch }}/release/hanzo-node ./dist/
-            chmod +x ./dist/hanzo-node
+          # The hanzo-node/ directory used to come from an actions/checkout of
+          # hanzoai/node; we now create it locally to hold the prebuilt binary.
+          mkdir -p hanzo-node/dist
+
+          # Prefer the pinned version; fall back to the published `latest`.
+          PINNED_URL="${BASE}/${{ env.HANZO_NODE_VERSION }}.zip"
+          LATEST_URL="${BASE}/latest.zip"
+
+          DL_URL="$PINNED_URL"
+          if ! curl -sfI "$PINNED_URL" >/dev/null 2>&1; then
+            echo "::warning::${{ env.HANZO_NODE_VERSION }} not published for ${ARCH}; falling back to latest.zip"
+            DL_URL="$LATEST_URL"
           fi
 
-          echo "✅ Hanzo node built successfully"
+          echo "Downloading hanzo-node from ${DL_URL}..."
+          curl -fSL "$DL_URL" -o hanzo-node/hanzo-node.zip
+
+          # Extract into hanzo-node/dist, matching the layout the start step
+          # expects:
+          #   dist/hanzo-node[.exe]
+          #   dist/hanzo-tools-runner-resources/{deno,uv}[.exe]
+          unzip -o hanzo-node/hanzo-node.zip -d hanzo-node/dist
+
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            test -f hanzo-node/dist/hanzo-node.exe
+          else
+            chmod +x hanzo-node/dist/hanzo-node
+            test -f hanzo-node/dist/hanzo-node
+          fi
+
+          echo "Prebuilt hanzo-node ready"
+          ls -la hanzo-node/dist
         shell: bash
 
       - name: Verify hanzo-node binary

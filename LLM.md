@@ -74,6 +74,19 @@ Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
 - Ensure package.json version matches git tag
 - Update check failures are handled gracefully (no user-facing errors)
 
+## Model Tools (hanzo-ml integration)
+
+The Node Manager window has a **Model Tools** tab (`components/hanzo-node-manager/model-tools.tsx`)
+that drives the `hanzoai/ml` features via the Tauri backend (`src-tauri/src/model_tools`):
+
+- **Model soups + BitDelta** — fully wired. Shells out to the `hanzo-ml` `soup`
+  CLI (`hanzo_ml::model_delta`): `average` (uniform/weighted soup), `delta`
+  (base + mean fine-tune delta), `bitdelta-encode` / `bitdelta-apply` (1-bit
+  delta compress/restore). Binary resolved via `HANZO_SOUP_BIN`, a bundled
+  `soup-<arch>` next to the app, or `soup` on PATH. The UI gates on availability.
+- Frontend: `lib/model-tools/model-tools-client.ts` (invoke wrappers + React
+  Query hooks). Tauri commands: `model_tools_soup_*`, `model_tools_bitdelta_*`.
+
 ## Machines (Docker Desktop replacement)
 
 Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the

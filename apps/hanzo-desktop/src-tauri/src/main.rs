@@ -36,6 +36,10 @@ use crate::commands::secure_storage::{
 };
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
 use crate::mining::MiningManager;
+use crate::model_tools::{
+    model_tools_bitdelta_apply, model_tools_bitdelta_encode, model_tools_grpo_run,
+    model_tools_soup_average, model_tools_soup_available, model_tools_soup_delta,
+};
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
 use globals::HANZO_NODE_MANAGER_INSTANCE;
@@ -55,6 +59,7 @@ mod local_hanzo_node;
 #[cfg(feature = "machine")]
 mod machine;
 mod mining;
+mod model_tools;
 mod models;
 mod tray;
 mod windows;
@@ -202,6 +207,13 @@ fn main() {
             embedded_engine::engine_get_model_id,
             #[cfg(feature = "native-engine")]
             embedded_engine::engine_list_zen5_models,
+            // hanzo-ml Model Tools (soup / BitDelta / GRPO) IPC commands.
+            model_tools_soup_available,
+            model_tools_soup_average,
+            model_tools_soup_delta,
+            model_tools_bitdelta_encode,
+            model_tools_bitdelta_apply,
+            model_tools_grpo_run,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));

@@ -48,6 +48,7 @@ echo "Detected platform: $TARGET"
 
 # Create directories
 mkdir -p "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
+mkdir -p "$BINARIES_DIR/hanzo-engine"
 mkdir -p "$LLM_MODELS_DIR"
 
 # Hanzo Node version
