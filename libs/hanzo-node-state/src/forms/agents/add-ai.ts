@@ -2,7 +2,12 @@ import { z } from 'zod';
 
 import { Models, modelsConfig } from '../../lib/utils/models';
 
-const modelsWithoutApiKey = [Models.Exo];
+const modelsWithoutApiKey = [
+  Models.Hanzo,
+  Models.Ollama,
+  Models.LMStudio,
+  Models.Exo,
+];
 
 export const addAiModelSchema = z
   .object({

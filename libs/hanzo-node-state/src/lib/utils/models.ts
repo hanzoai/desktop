@@ -1,4 +1,7 @@
 export enum Models {
+  // Native first-party engine (downloads Zen models from HF, runs locally).
+  // First so it's the default; Ollama / LM Studio are alternative local engines.
+  Hanzo = 'hanzo',
   OpenAI = 'open-ai',
   OpenAILegacy = 'open-ai-legacy',
   TogetherComputer = 'togethercomputer',
@@ -14,6 +17,22 @@ export enum Models {
 }
 
 export const modelsConfig = {
+  // Native Hanzo engine — first-party Zen models from huggingface.co/zenlm, served
+  // locally over the OpenAI-compatible API. `value` is the HF repo id so the engine
+  // downloads it natively; apps point apiUrl at their own engine port.
+  [Models.Hanzo]: {
+    apiUrl: 'http://localhost:36900',
+    modelTypes: [
+      { name: 'Zen Nano 0.6B', value: 'zenlm/zen-nano-0.6b', file: 'gguf/zen-nano-0.6b-Q8_0.gguf', format: 'gguf', size: '~0.7 GB' },
+      { name: 'Zen Eco 4B', value: 'zenlm/zen-eco-4b-instruct', size: '~8 GB' },
+      { name: 'Zen Eco 4B Thinking', value: 'zenlm/zen-eco-4b-thinking', size: '~8 GB' },
+      { name: 'Zen 3 Nano', value: 'zenlm/zen3-nano', size: '~1.2 GB' },
+      { name: 'Zen Embedding', value: 'zenlm/zen-embedding', embedding: true, size: '~1.2 GB' },
+      { name: 'Zen Embedding 0.6B', value: 'zenlm/zen-embedding-0.6B', embedding: true, size: '~1.2 GB' },
+      { name: 'Zen Embedding 8B (GGUF)', value: 'zenlm/zen-embedding-8B-GGUF', embedding: true, format: 'gguf', size: '~8 GB' },
+      { name: 'Zen Reranker', value: 'zenlm/zen-reranker', reranker: true, size: '~1.2 GB' },
+    ],
+  },
   [Models.OpenAI]: {
     apiUrl: 'https://api.openai.com',
     modelTypes: [

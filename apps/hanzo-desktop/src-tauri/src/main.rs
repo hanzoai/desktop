@@ -267,6 +267,12 @@ fn main() {
                     let mut hanzo_node_manager_guard =
                         HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
                     hanzo_node_manager_guard.kill().await;
+                    // Cold-boot start (bug #18): the kill above only clears a stale
+                    // process — start this app's own node now so it is up without
+                    // relying on a frontend effect that cannot fire before the node runs.
+                    if let Err(e) = hanzo_node_manager_guard.spawn().await {
+                        log::error!("[hanzo-node] cold-boot spawn failed: {}", e);
+                    }
                     drop(hanzo_node_manager_guard);
 
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
