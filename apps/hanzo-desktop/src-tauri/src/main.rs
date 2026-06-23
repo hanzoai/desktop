@@ -294,9 +294,21 @@ fn main() {
                         }
                     }
 
-                    // Phase 1: do not auto-start mining at boot. The frontend
-                    // calls mining_start once the wallet+brand are resolved
-                    // so chain_id and wallet address are known together.
+                    // The AI-mining precompile is now native Rust
+                    // (mining/precompile.rs — no Go FFI), so start Phase-1
+                    // mining at boot with a stable per-install dev wallet, with
+                    // no frontend/auth dependency. The frontend re-homes rewards
+                    // to the user's connected wallet when it resolves. chain_id
+                    // 96369 is the precompile's brand-agnostic default.
+                    {
+                        let mining_manager =
+                            app_handle.state::<std::sync::Arc<MiningManager>>();
+                        let wallet = mining_manager.ensure_dev_wallet();
+                        mining_manager
+                            .start_mining(app_handle.clone(), wallet, 96369)
+                            .await;
+                        log::info!("auto-started Phase-1 mining (native precompile)");
+                    }
                 }
             });
 

@@ -96,6 +96,30 @@ impl MiningManager {
         self.state.write().await.privacy = privacy;
     }
 
+    /// Phase-1 dev mining wallet: a stable, per-install EVM-style address
+    /// persisted under the mining storage dir so accrued rewards survive
+    /// restarts. The frontend re-homes rewards to the user's connected wallet
+    /// once it resolves (the boot auto-start needs an address before then).
+    pub fn ensure_dev_wallet(&self) -> String {
+        let path = self.storage_dir.join("wallet.addr");
+        if let Ok(addr) = std::fs::read_to_string(&path) {
+            let addr = addr.trim().to_string();
+            if !addr.is_empty() {
+                return addr;
+            }
+        }
+        use rand::RngCore;
+        let mut bytes = [0u8; 20];
+        rand::thread_rng().fill_bytes(&mut bytes);
+        let addr = format!(
+            "0x{}",
+            bytes.iter().map(|b| format!("{b:02x}")).collect::<String>()
+        );
+        let _ = std::fs::create_dir_all(&self.storage_dir);
+        let _ = std::fs::write(&path, &addr);
+        addr
+    }
+
     pub async fn start_mining(&self, app: AppHandle, wallet_address: String, chain_id: u64) {
         {
             let mut s = self.state.write().await;
