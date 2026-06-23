@@ -7,4 +7,3 @@ pub mod mcp_clients_install;
 pub mod mining;
 pub mod secure_storage;
 pub mod spotlight_commands;
-pub mod mining;

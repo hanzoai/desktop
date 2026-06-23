@@ -67,10 +67,10 @@ tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-http = "2.5"
 
-# Phase 1 AI mining: FFI to libluxprecompile + pure-Rust ML-DSA-65 (FIPS 204).
-# luxprecompile-sys is dev-only via absolute path; CI follow-up: publish to
-# crates.io or add a workspace-level [patch.crates-io] block.
-luxprecompile-sys = { path = "/Users/z/work/lux/precompile/bindings/rust" }
+# Phase 1 AI mining — native-Rust precompile (`mining/precompile.rs`), a pure
+# port of lux/precompile/ai/ai_mining.go. No Go FFI / libluxprecompile shared
+# library: the crypto is FIPS 204 ML-DSA (`fips204`) + BLAKE3 (`blake3`), so
+# hanzo mines with no Go build chain and is identical on every platform.
 fips204 = "0.4"
 
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
