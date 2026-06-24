@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   NetworkIdentifier,
@@ -11,6 +10,7 @@ import { useRestoreLocalWallet } from '@hanzo_network/hanzo-node-state/v2/mutati
 import { useGetWalletBalance } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletBalance/useGetWalletBalance';
 import { useGetWalletList } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletList/useGetWalletList';
 import {
+  DialogClose,
   Alert,
   AlertDescription,
   AlertTitle,

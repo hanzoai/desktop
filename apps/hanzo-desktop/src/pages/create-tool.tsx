@@ -1,10 +1,10 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { type CodeLanguage } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import { useOpenToolInCodeEditor } from '@hanzo_network/hanzo-node-state/v2/mutations/openToolnCodeEditor/useOpenToolInCodeEditor';
 import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
 import { useGetToolProtocols } from '@hanzo_network/hanzo-node-state/v2/queries/getToolProtocols/useGetToolProtocols';
 import {
+  DialogClose,
   Button,
   buttonVariants,
   Card,

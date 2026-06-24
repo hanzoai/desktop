@@ -1,12 +1,12 @@
 /** biome-ignore-all lint/a11y/useSemanticElements: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
 import { useRemoveJob } from '@hanzo_network/hanzo-node-state/v2/mutations/removeJob/useRemoveJob';
 import { useRemoveJobs } from '@hanzo_network/hanzo-node-state/v2/mutations/removeMultipleJobs/useRemoveMultipleJobs';
 import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import {
+  DialogClose,
   Button,
   Checkbox,
   Dialog,

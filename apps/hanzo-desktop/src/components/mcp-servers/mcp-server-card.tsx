@@ -1,9 +1,9 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { type McpServer } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
 import { useDeleteMcpServer } from '@hanzo_network/hanzo-node-state/v2/mutations/deleteMcpServer/useDeleteMcpServer';
 import { useGetMCPServerTools } from '@hanzo_network/hanzo-node-state/v2/queries/getMCPServerTools/useGetMCPServerTool';
 import {
+  DialogClose,
   Badge,
   Button,
   buttonVariants,

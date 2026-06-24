@@ -1,9 +1,9 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { useRemoveAssetTool } from '@hanzo_network/hanzo-node-state/v2/mutations/removeAssetTool/useRemoveAssetTool';
 import { useUploadAssetsTool } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadAssetsTool/useUploadAssetsTool';
 import { useGetAllToolAssets } from '@hanzo_network/hanzo-node-state/v2/queries/getAllToolAssets/useGetAllToolAssets';
 import {
+  DialogClose,
   Badge,
   Button,
   Separator,

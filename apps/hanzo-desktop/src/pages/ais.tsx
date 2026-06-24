@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { DotsVerticalIcon } from '@radix-ui/react-icons';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
@@ -10,6 +9,7 @@ import { useRemoveLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutatio
 import { useUpdateLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/updateLLMProvider/useUpdateLLMProvider';
 import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
 import {
+  DialogClose,
   Badge,
   Button,
   buttonVariants,

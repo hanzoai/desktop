@@ -37,7 +37,7 @@ export const BRAND: Brand = {
   network: 'HanzoMainnet',
   nativeToken: 'HAI',
   chainId: 36963,
-  rpcUrl: 'https://rpc.hanzo.network',
+  rpcUrl: 'https://api.web3.hanzo.ai',
   explorerUrl: 'https://explorer.hanzo.network',
 };
 

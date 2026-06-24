@@ -1,4 +1,3 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { DotsVerticalIcon } from '@radix-ui/react-icons';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { type JobConfig } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
@@ -8,6 +7,7 @@ import { useUpdateRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutat
 import { useGetRecurringTaskNextExecutionTime } from '@hanzo_network/hanzo-node-state/v2/queries/getRecurringTaskNextExecutionTime/useGetRecurringTaskNextExecutionTime';
 import { useGetRecurringTasks } from '@hanzo_network/hanzo-node-state/v2/queries/getRecurringTasks/useGetRecurringTasks';
 import {
+  DialogClose,
   Button,
   buttonVariants,
   Dialog,

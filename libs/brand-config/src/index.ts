@@ -45,7 +45,7 @@ const HANZO: BrandConfig = {
     favicon: 'libs/hanzo-logo/assets/hanzo/hanzo-icon.svg',
   },
   colors: { primary: '#000000', bg: '#000000', fg: '#ffffff' },
-  hosts: ['hanzo.ai', 'hanzo.network'],
+  hosts: ['hanzo.ai', 'web3.hanzo.ai'],
   storeUrl: {
     mac: 'https://github.com/hanzoai/desktop/releases/latest',
     win: 'https://github.com/hanzoai/desktop/releases/latest',
@@ -53,13 +53,13 @@ const HANZO: BrandConfig = {
     android: '',
   },
   network: {
-    rpc: 'https://rpc.hanzo.network',
-    chainId: 36900,
+    rpc: 'https://api.web3.hanzo.ai',
+    chainId: 36963,
     token: '$AI',
     aiMiningPrecompile: '0x0300000000000000000000000000000000000000',
     blockExplorer: 'https://explorer.hanzo.network',
   },
-  overlayController: 'https://edge.hanzo.network',
+  overlayController: 'https://edge.web3.hanzo.ai',
   inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',

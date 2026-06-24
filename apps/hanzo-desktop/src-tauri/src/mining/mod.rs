@@ -5,6 +5,7 @@
 //! On-chain submission is Phase 2 and intentionally out of scope here.
 
 pub mod backend;
+pub mod claim;
 pub mod error;
 pub mod precompile;
 pub mod proof;
@@ -261,7 +262,7 @@ async fn tick_once(
     Ok(record)
 }
 
-fn sum_pending(history: &[ProofRecord]) -> u128 {
+pub(crate) fn sum_pending(history: &[ProofRecord]) -> u128 {
     history
         .iter()
         .filter(|r| r.status == "locally_verified")
@@ -273,7 +274,7 @@ fn history_path(dir: &PathBuf, wallet: &str) -> PathBuf {
     dir.join(wallet).join("history.json")
 }
 
-fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecord>, MiningError> {
+pub(crate) fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecord>, MiningError> {
     let path = history_path(dir, wallet);
     if !path.exists() {
         return Ok(vec![]);
@@ -283,7 +284,7 @@ fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecord>, MiningE
     Ok(history)
 }
 
-fn write_history(
+pub(crate) fn write_history(
     dir: &PathBuf,
     wallet: &str,
     history: &[ProofRecord],

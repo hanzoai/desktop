@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { PlusIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select'; // <-- Import SelectPrimitive
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
@@ -38,6 +37,7 @@ import { useGetTool } from '@hanzo_network/hanzo-node-state/v2/queries/getTool/u
 import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import { useGetSearchTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
 import {
+  DialogClose,
   Badge,
   Button,
   buttonVariants,

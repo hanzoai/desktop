@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { t, useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   extractJobIdFromInbox,
@@ -16,6 +15,7 @@ import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgen
 import { useGetAgentInboxes } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetAgentInboxes';
 import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import {
+  DialogClose,
   Button,
   buttonVariants,
   Dialog,

@@ -28,6 +28,14 @@ wgpu = "0.20.0"
 sysinfo = "0.30.12"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 blake3 = "1.5.1"
+# Phase-2 on-chain claim signer (mining/claim.rs) — lean secp256k1 stack (not
+# alloy/ethers): BIP-39 mnemonic → BIP-44 (m/44'/60'/0'/0/0) → k256 ECDSA, with
+# EIP-1559 RLP via `rlp` and keccak via `tiny-keccak`. Derives the SAME address
+# as the frontend ethers wallet, so the mining wallet == the user's wallet.
+coins-bip39 = { version = "0.8.7", default-features = false, features = ["english"] }
+k256 = "0.13"
+rlp = "0.5"
+tiny-keccak = { version = "2.0", features = ["keccak"] }
 opener = "0.7.2"
 hex = "0.4.3"
 base64 = "0.22.1"

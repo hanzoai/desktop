@@ -1,8 +1,8 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
 import { useRemoveTool } from '@hanzo_network/hanzo-node-state/v2/mutations/removeTool/useRemoveTool';
 import {
+  DialogClose,
   Button,
   buttonVariants,
   Dialog,

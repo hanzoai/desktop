@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DialogClose } from '@radix-ui/react-dialog';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { useSubmitFeedback } from '@hanzo_network/hanzo-node-state/v2/mutations/submitFeedback/useSubmitFeedback';
 import {
+  DialogClose,
   Button,
   type ButtonProps,
   DialogTrigger,

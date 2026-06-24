@@ -1,4 +1,3 @@
-import { DialogClose } from '@radix-ui/react-dialog';
 import { DotsVerticalIcon } from '@radix-ui/react-icons';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { type RecurringTask } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/types';
@@ -6,6 +5,7 @@ import { useExportAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/exp
 import { useRemoveAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/removeAgent/useRemoveAgent';
 import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
 import {
+  DialogClose,
   Badge,
   Button,
   buttonVariants,

@@ -40,15 +40,15 @@ export interface NetworkConfig {
 export const NETWORKS: Record<NetworkType, NetworkConfig> = {
   [NetworkType.HanzoMainnet]: {
     name: 'Hanzo Mainnet',
-    chainId: 36900,
-    rpcUrl: 'https://rpc.hanzo.network',
+    chainId: 36963,
+    rpcUrl: 'https://api.web3.hanzo.ai',
     blockExplorer: 'https://explorer.hanzo.network',
     nativeCurrency: { name: 'AI Token', symbol: 'AI', decimals: 18 },
     isMiningEnabled: true,
   },
   [NetworkType.HanzoTestnet]: {
     name: 'Hanzo Testnet',
-    chainId: 36901,
+    chainId: 36962,
     rpcUrl: 'https://rpc.hanzo-test.network',
     blockExplorer: 'https://explorer.hanzo-test.network',
     nativeCurrency: { name: 'Test AI', symbol: 'tAI', decimals: 18 },

@@ -76,6 +76,13 @@ struct Payload {
 }
 
 fn main() {
+    // NVIDIA/Linux + WebKitGTK render a blank window with the default DMABUF
+    // renderer on many driver combos; fall back to the non-DMABUF path unless
+    // the user already configured it. Must run before any webview is created.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
     let _ = fix_path_env::fix();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
