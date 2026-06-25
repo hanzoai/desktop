@@ -78,9 +78,7 @@ const TermsAndConditionsPage = () => {
   const termsAndConditionsAcceptedLegacy = useSettings((state) =>
     state.getTermsAndConditionsAccepted(),
   );
-  const isLocalHanzoNodeInUse = useHanzoNodeManager(
-    (state) => state.isInUse,
-  );
+  const isLocalHanzoNodeInUse = useHanzoNodeManager((state) => state.isInUse);
   useEffect(() => {
     if (
       termsAndConditionsAcceptedLegacy !== undefined &&
@@ -104,12 +102,26 @@ const TermsAndConditionsPage = () => {
     },
   });
 
+  // IAM login hook is read BEFORE useInitialRegistration so its values are in
+  // scope for the registration onSuccess closure below. `hanzoTokensRef` is the
+  // closure-safe mirror of the reactive tokens: the mutation's onSuccess is a
+  // long-lived closure, so reading the ref (not the render-captured `tokens`)
+  // guarantees a token obtained mid-flow is actually persisted.
+  const {
+    login: hanzoLogin,
+    tokensRef: hanzoTokensRef,
+    isLoading: hanzoLoginIsLoading,
+    error: hanzoLoginError,
+    resetState: resetHanzoLogin,
+  } = useHanzoLogin();
+
   const {
     mutateAsync: submitRegistrationNoCode,
     isPending: submitRegistrationNodeCodeIsPending,
   } = useInitialRegistration({
     onSuccess: (response, setupPayload) => {
       if (response.status === 'success' && encryptionKeys) {
+        const hanzoTokens = hanzoTokensRef.current;
         setAuth({
           api_v2_key: response.data?.api_v2_key ?? '',
           node_address: setupPayload.nodeAddress,
@@ -117,10 +129,12 @@ const TermsAndConditionsPage = () => {
           hanzo_identity: response.data?.node_name ?? '',
           encryption_pk: response.data?.encryption_public_key ?? '',
           identity_pk: response.data?.identity_public_key ?? '',
-          ...(hanzoTokens ? {
-            hanzo_token: hanzoTokens.access_token,
-            hanzo_refresh_token: hanzoTokens.refresh_token,
-          } : {}),
+          ...(hanzoTokens
+            ? {
+                hanzo_token: hanzoTokens.access_token,
+                hanzo_refresh_token: hanzoTokens.refresh_token,
+              }
+            : {}),
         });
         completeStep(OnboardingStep.TERMS_CONDITIONS, true);
       } else if (response.status === 'non-pristine') {
@@ -132,37 +146,21 @@ const TermsAndConditionsPage = () => {
   });
   const { isPending: hanzoNodeRemoveStorageIsPending } =
     useHanzoNodeRemoveStorageMutation();
-  const {
-    isPending: hanzoNodeSpawnIsPending,
-    mutateAsync: hanzoNodeSpawn,
-  } = useHanzoNodeSpawnMutation({
-    onSuccess: () => {
-      void onSubmit(setupDataForm.getValues());
-    },
-    onError: (error) => {
-      // Previously a failed local-node spawn was swallowed silently, so the
-      // "Get Started Free" button appeared to do nothing. Surface the reason.
-      toast.error('Failed to start the local Hanzo node', {
-        description: error instanceof Error ? error.message : String(error),
-        position: 'bottom-center',
-      });
-    },
-  });
+  const { isPending: hanzoNodeSpawnIsPending, mutateAsync: hanzoNodeSpawn } =
+    useHanzoNodeSpawnMutation({
+      onSuccess: () => {
+        void onSubmit(setupDataForm.getValues());
+      },
+      onError: (error) => {
+        // Previously a failed local-node spawn was swallowed silently, so the
+        // "Get Started Free" button appeared to do nothing. Surface the reason.
+        toast.error('Failed to start the local Hanzo node', {
+          description: error instanceof Error ? error.message : String(error),
+          position: 'bottom-center',
+        });
+      },
+    });
   const { isPending: hanzoNodeKillIsPending } = useHanzoNodeKillMutation();
-
-  const {
-    isLoading: hanzoLoginIsLoading,
-    error: hanzoLoginError,
-    tokens: hanzoTokens,
-    startLogin: startHanzoLogin,
-  } = useHanzoLogin();
-
-  // When IAM tokens arrive, spawn node and register
-  useEffect(() => {
-    if (hanzoTokens) {
-      void hanzoNodeSpawn();
-    }
-  }, [hanzoTokens, hanzoNodeSpawn]);
 
   const isStartLocalButtonLoading =
     hanzoNodeSpawnIsPending ||
@@ -170,12 +168,10 @@ const TermsAndConditionsPage = () => {
     hanzoNodeRemoveStorageIsPending ||
     submitRegistrationNodeCodeIsPending;
 
-  const { login: hanzoLogin } = useHanzoLogin();
-  const [hanzoLoginPending, setHanzoLoginPending] = useState(false);
-
   const handleHanzoLogin = async () => {
-    setHanzoLoginPending(true);
     try {
+      // `login()` drives the hook's reactive isLoading/error/tokens state, so a
+      // failure surfaces in the inline error UI below with a retry.
       const tokens = await hanzoLogin();
       setAuth({
         api_v2_key: '',
@@ -187,21 +183,28 @@ const TermsAndConditionsPage = () => {
         hanzo_token: tokens.access_token,
         hanzo_refresh_token: tokens.refresh_token,
       });
-      // Cloud login — skip local node, complete onboarding directly
+      // Cloud login — skip local node, complete onboarding directly.
       completeStep(OnboardingStep.TERMS_CONDITIONS, true);
     } catch (err) {
+      // Error is already captured in `hanzoLoginError`; log for diagnostics.
       console.error('Hanzo login failed:', err);
-    } finally {
-      setHanzoLoginPending(false);
     }
+  };
+
+  const retryHanzoLogin = () => {
+    resetHanzoLogin();
+    void handleHanzoLogin();
   };
 
   async function onSubmit(currentValues: QuickConnectFormSchema) {
     if (!encryptionKeys) {
       // Don't silently no-op: tell the user why nothing advanced.
-      toast.error('Encryption keys are not ready yet — please try again in a moment', {
-        position: 'bottom-center',
-      });
+      toast.error(
+        'Encryption keys are not ready yet — please try again in a moment',
+        {
+          position: 'bottom-center',
+        },
+      );
       return;
     }
     await submitRegistrationNoCode({
@@ -230,10 +233,10 @@ const TermsAndConditionsPage = () => {
         <h1 className="font-inter text-4xl font-semibold text-white">
           {t('desktop.welcome')}
         </h1>
-        <p className="text-white text-base">
+        <p className="text-base text-white">
           <Trans
             components={{
-              b: <span className={'text-white font-semibold'} />,
+              b: <span className={'font-semibold text-white'} />,
             }}
             i18nKey="desktop.welcomeDescription"
           />
@@ -248,7 +251,7 @@ const TermsAndConditionsPage = () => {
           }
         />
         <label
-          className="inline-block cursor-pointer text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-white"
+          className="inline-block cursor-pointer text-sm leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
           htmlFor="terms"
         >
           <span className={'leading-4 tracking-wide'}>
@@ -278,6 +281,22 @@ const TermsAndConditionsPage = () => {
       </div>
 
       <div className="flex flex-1 flex-col justify-end gap-4">
+        {hanzoLoginError && (
+          <div
+            className="flex items-center justify-between gap-3 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200"
+            role="alert"
+          >
+            <span>{hanzoLoginError.message}</span>
+            <button
+              className="shrink-0 font-semibold underline"
+              disabled={hanzoLoginIsLoading}
+              onClick={() => retryHanzoLogin()}
+              type="button"
+            >
+              {t('common.retry')}
+            </button>
+          </div>
+        )}
         <Button
           className={cn(
             buttonVariants({
@@ -285,8 +304,8 @@ const TermsAndConditionsPage = () => {
               size: 'lg',
             }),
           )}
-          disabled={!termsAndConditionsAccepted || hanzoLoginPending}
-          isLoading={hanzoLoginPending}
+          disabled={!termsAndConditionsAccepted || hanzoLoginIsLoading}
+          isLoading={hanzoLoginIsLoading}
           onClick={() => void handleHanzoLogin()}
         >
           {t('common.login')}
@@ -306,10 +325,10 @@ const TermsAndConditionsPage = () => {
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (
-          <div className="text-white items-center space-x-2 text-center text-sm">
+          <div className="items-center space-x-2 text-center text-sm text-white">
             <span>{t('common.alreadyHaveNode')}</span>
             <Link
-              className="text-white font-semibold underline"
+              className="font-semibold text-white underline"
               to="/quick-connection"
             >
               {t('common.quickConnect')}

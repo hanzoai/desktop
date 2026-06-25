@@ -1,4 +1,4 @@
-use std::path::{self, PathBuf};
+use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 use tauri::Manager;
@@ -61,17 +61,59 @@ pub fn retrieve_logs(app_handle: tauri::AppHandle) -> Result<Vec<LogEntry>, Stri
     Ok(log_entries)
 }
 
+/// Defense-in-depth for `download_logs`: confine the destination to the user's
+/// home directory so a caller can't write the log dump to an arbitrary location
+/// (path traversal / symlink escape). The target file does not exist yet, so we
+/// canonicalize its parent directory (which must exist) — that resolves `..` and
+/// symlinks — and require the result to stay under the canonicalized home dir.
+/// Returns the validated absolute destination path.
+fn validate_save_path(app_handle: &tauri::AppHandle, save_path: &str) -> Result<PathBuf, String> {
+    let requested = Path::new(save_path);
+
+    let file_name = requested
+        .file_name()
+        .ok_or_else(|| "invalid save path: missing file name".to_string())?;
+
+    let parent = requested
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .ok_or_else(|| "invalid save path: missing parent directory".to_string())?;
+
+    // Canonicalize the (existing) parent dir to collapse `..`/symlinks.
+    let canonical_parent = parent
+        .canonicalize()
+        .map_err(|_| "invalid save path: parent directory is not accessible".to_string())?;
+
+    let home_dir = app_handle
+        .path()
+        .home_dir()
+        .map_err(|e| e.to_string())?
+        .canonicalize()
+        .map_err(|e| e.to_string())?;
+
+    if !canonical_parent.starts_with(&home_dir) {
+        log::error!(
+            "rejected logs download outside home dir: {}",
+            canonical_parent.display()
+        );
+        return Err("save path must be inside your home directory".to_string());
+    }
+
+    Ok(canonical_parent.join(file_name))
+}
+
 #[tauri::command]
 pub fn download_logs(app_handle: tauri::AppHandle, save_path: String) -> Result<String, String> {
     let log_file = get_log_file_path(&app_handle)?;
-    match std::fs::copy(log_file.clone(), save_path.clone()) {
-        Ok(_) => Ok(save_path),
+    let dest = validate_save_path(&app_handle, &save_path)?;
+
+    match std::fs::copy(&log_file, &dest) {
+        Ok(_) => Ok(dest.to_string_lossy().into_owned()),
         Err(e) => {
-            let log_file_str = log_file.to_string_lossy();
             log::error!(
                 "failed to copy log file from {} to {}: {}",
-                log_file_str,
-                save_path.clone(),
+                log_file.to_string_lossy(),
+                dest.to_string_lossy(),
                 e
             );
             return Err("failed to copy log file".to_string());

@@ -1,6 +1,6 @@
 import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-shell';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 // Hanzo IAM login — native (desktop) OAuth 2.0 Authorization Code + PKCE.
 //
@@ -74,11 +74,52 @@ async function exchangeCodeForTokens(
   return response.json() as Promise<HanzoTokens>;
 }
 
-export function useHanzoLogin() {
+export type UseHanzoLogin = {
+  /**
+   * Imperative login: opens the IAM authorize page, resolves with the tokens
+   * once the deep-link round-trips. Also mirrors the result into the reactive
+   * `tokens` / `isLoading` / `error` state so callers can either await the
+   * promise or observe state — both stay in sync.
+   */
+  login: () => Promise<HanzoTokens>;
+  /**
+   * Fire-and-forget trigger for state-driven callers: runs `login()` and lets
+   * the resulting `tokens` / `error` drive effects. Swallows the rejection
+   * (it is surfaced via `error`) so there is no unhandled promise.
+   */
+  startLogin: () => void;
+  /** Latest tokens, or null before a successful login. */
+  tokens: HanzoTokens | null;
+  /**
+   * Ref mirror of `tokens`. Lets long-lived closures (e.g. a mutation's
+   * `onSuccess`) read the freshest tokens without capturing a stale render
+   * value — `tokens` (reactive) and `tokensRef.current` (closure-safe) are
+   * written together.
+   */
+  tokensRef: React.RefObject<HanzoTokens | null>;
+  /** True while an authorize→token round-trip is in flight. */
+  isLoading: boolean;
+  /** Last login error, or null. */
+  error: Error | null;
+  /** Clear `tokens` and `error` so the flow can be retried cleanly. */
+  resetState: () => void;
+};
+
+export function useHanzoLogin(): UseHanzoLogin {
   const pendingState = useRef<string | null>(null);
   const pendingVerifier = useRef<string | null>(null);
 
+  const [tokens, setTokens] = useState<HanzoTokens | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  // Ref mirror so closures that outlive a render (mutation onSuccess) read the
+  // latest tokens instead of a value captured at first render.
+  const tokensRef = useRef<HanzoTokens | null>(null);
+
   const login = useCallback(async (): Promise<HanzoTokens> => {
+    setIsLoading(true);
+    setError(null);
+
     const state = randomUrlSafe(32);
     const codeVerifier = randomUrlSafe(64);
     const codeChallenge = await deriveCodeChallenge(codeVerifier);
@@ -98,6 +139,18 @@ export function useHanzoLogin() {
 
     return new Promise<HanzoTokens>((resolve, reject) => {
       let settled = false;
+      const finish = (result: HanzoTokens | Error) => {
+        setIsLoading(false);
+        if (result instanceof Error) {
+          setError(result);
+          reject(result);
+        } else {
+          tokensRef.current = result;
+          setTokens(result);
+          resolve(result);
+        }
+      };
+
       const unlistenPromise = listen('oauth-deep-link', async (event) => {
         const payload = event.payload as { state: string; code: string };
 
@@ -112,10 +165,9 @@ export function useHanzoLogin() {
         void unlistenPromise.then((fn) => fn());
 
         try {
-          const tokens = await exchangeCodeForTokens(payload.code, verifier);
-          resolve(tokens);
+          finish(await exchangeCodeForTokens(payload.code, verifier));
         } catch (err) {
-          reject(err);
+          finish(err instanceof Error ? err : new Error(String(err)));
         }
       });
 
@@ -125,10 +177,23 @@ export function useHanzoLogin() {
         pendingState.current = null;
         pendingVerifier.current = null;
         void unlistenPromise.then((fn) => fn());
-        reject(new Error('OAuth login timed out'));
+        finish(new Error('OAuth login timed out'));
       }, 300_000); // 5 min timeout
     });
   }, []);
 
-  return { login };
+  const startLogin = useCallback(() => {
+    // State-driven entry point: errors surface via `error`, not a throw.
+    void login().catch(() => {
+      /* handled via error state */
+    });
+  }, [login]);
+
+  const resetState = useCallback(() => {
+    tokensRef.current = null;
+    setTokens(null);
+    setError(null);
+  }, []);
+
+  return { login, startLogin, tokens, tokensRef, isLoading, error, resetState };
 }
