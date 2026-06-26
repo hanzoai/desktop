@@ -112,13 +112,10 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
-                .with_shortcuts([
-                    "super+shift+i",
-                    "control+shift+i",
-                    "super+shift+j",
-                    "control+shift+j",
-                ])
-                .unwrap()
+                // Shortcuts are registered NON-FATALLY in setup() instead of via
+                // with_shortcuts(), which registers at plugin init and PANICS if
+                // another running brand (same app, different brand) already holds
+                // the system-wide hotkey. A conflict must not crash the app.
                 .with_handler(
                     |app: &tauri::AppHandle,
                      shortcut: &tauri_plugin_global_shortcut::Shortcut,
@@ -222,6 +219,21 @@ fn main() {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
             let app_resource_dir = app.path().resource_dir()?;
             let app_data_dir = app.path().app_data_dir()?;
+
+            {
+                use tauri_plugin_global_shortcut::GlobalShortcutExt;
+                let gs = app.global_shortcut();
+                for s in [
+                    "super+shift+i",
+                    "control+shift+i",
+                    "super+shift+j",
+                    "control+shift+j",
+                ] {
+                    if let Err(e) = gs.register(s) {
+                        log::warn!("global shortcut '{}' not registered (already held by another app?): {}", s, e);
+                    }
+                }
+            }
 
             {
                 let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
