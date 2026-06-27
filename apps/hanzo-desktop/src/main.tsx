@@ -1,26 +1,16 @@
- 
-// import { scan } from 'react-scan'; // import this BEFORE react
-import './globals.css';
+// hanzo-desktop — converged onto the shared @hanzo/ai SDK (same surface as
+// zoo/lux). The Tauri backend exposes the brand-agnostic node_* commands the
+// SDK invokes. Brand is passed explicitly; the SDK bundles no brands.
+import HanzoAI from '@hanzo/ai/desktop';
+import { createRoot } from 'react-dom/client';
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { brandConfig } from './brand.config';
 
-import App from './App';
+import '@hanzo/ai/ai.css';
 
-/*
- Enable react scan for performance monitoring
-  */
-
-// if (typeof window !== 'undefined') {
-//   scan({
-//     enabled: true,
-//     trackUnnecessaryRenders: true,
-//     // log: true, // logs render info to console (default: false)
-//   });
-// }
-
-ReactDOM.createRoot(document.querySelector('#root') as HTMLElement).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+createRoot(document.querySelector('#root') as HTMLElement).render(
+  <HanzoAI
+    {...brandConfig}
+    features={{ chat: true, tools: true, agents: true }}
+  />,
 );
