@@ -1,3 +1,5 @@
+<p align="center"><img src=".github/hero.svg" alt="desktop" width="880"></p>
+
 <h1 align="center">
 <img width="36" height="36" src="assets/icon.png"/>
   Hanzo
