@@ -36,10 +36,15 @@ export const brandConfig = {
     blockExplorer: 'https://explorer.hanzo.network',
   },
   overlayController: 'https://edge.hanzo.cloud',
-  inferenceEndpoint: 'https://gateway.hanzo.ai',
+  // Hanzo Cloud gateway — the same unified OpenAI-compatible surface hanzo.chat
+  // uses (api.hanzo.ai/v1). Authenticated cloud AI calls carry the user's IAM
+  // access token and the gateway debits their org (org==tenant). Verified live:
+  // GET https://api.hanzo.ai/v1/models -> 200 (gateway.hanzo.ai 404s).
+  inferenceEndpoint: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
-    clientId: 'hanzo-app-client-id',
+    // Registered public OIDC client (<org>-<app>). PKCE S256, no secret.
+    clientId: 'hanzo-desktop',
     redirectUri: 'hanzo://oauth/hanzo',
     callbackEvent: 'hanzo-iam-callback',
   },

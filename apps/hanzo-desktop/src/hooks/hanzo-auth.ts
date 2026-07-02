@@ -2,6 +2,8 @@ import { listen } from '@tauri-apps/api/event';
 import { open } from '@tauri-apps/plugin-shell';
 import { useCallback, useRef, useState } from 'react';
 
+import { brandConfig } from '../brand.config';
+
 // Hanzo IAM login — native (desktop) OAuth 2.0 Authorization Code + PKCE.
 //
 // This is a PUBLIC client: it ships NO client_secret. PKCE (S256) is what
@@ -9,10 +11,13 @@ import { useCallback, useRef, useState } from 'react';
 // Endpoints are IAM's canonical paths — authorize is the interactive login
 // page (/login/oauth/authorize); the token endpoint is /v1/iam/oauth/token
 // (see https://hanzo.id/.well-known/openid-configuration).
-const HANZO_CLIENT_ID = 'hanzo-app-client-id';
-const HANZO_AUTHORIZE_URL = 'https://hanzo.id/login/oauth/authorize';
-const HANZO_TOKEN_URL = 'https://hanzo.id/v1/iam/oauth/token';
-const REDIRECT_URI = 'hanzo://oauth/hanzo';
+//
+// Identity is a VALUE, not a place: client id / issuer / redirect all come from
+// the single brand config (brand.config.ts) — never duplicated here.
+const HANZO_CLIENT_ID = brandConfig.iam.clientId;
+const HANZO_AUTHORIZE_URL = `${brandConfig.iam.baseUrl}/login/oauth/authorize`;
+const HANZO_TOKEN_URL = `${brandConfig.iam.baseUrl}/v1/iam/oauth/token`;
+const REDIRECT_URI = brandConfig.iam.redirectUri;
 
 export type HanzoTokens = {
   access_token: string;
