@@ -60,7 +60,7 @@ const HANZO: BrandConfig = {
     blockExplorer: 'https://explorer.hanzo.network',
   },
   overlayController: 'https://edge.web3.hanzo.ai',
-  inferenceEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
     clientId: 'hanzo-app-client-id',
@@ -95,7 +95,7 @@ const ZOO: BrandConfig = {
     blockExplorer: 'https://explorer.zoo.network',
   },
   overlayController: 'https://edge.zoo.cloud',
-  inferenceEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://zoolabs.id',
     clientId: 'zoo-app-client-id',
@@ -130,7 +130,7 @@ const LUX: BrandConfig = {
     blockExplorer: 'https://explorer.lux.network',
   },
   overlayController: 'https://edge.lux.cloud',
-  inferenceEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://lux.id',
     clientId: 'lux-app-client-id',

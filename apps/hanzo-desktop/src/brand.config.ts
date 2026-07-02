@@ -36,7 +36,7 @@ export const brandConfig = {
     blockExplorer: 'https://explorer.hanzo.network',
   },
   overlayController: 'https://edge.hanzo.cloud',
-  inferenceEndpoint: 'https://gateway.hanzo.ai',
+  inferenceEndpoint: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
     clientId: 'hanzo-app-client-id',
