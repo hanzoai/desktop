@@ -43,12 +43,12 @@ import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-  ArrowLeftToLine,
-  ArrowRightToLine,
   Bot,
   Ellipsis,
   Gauge,
   HelpCircleIcon,
+  PanelLeft,
+  PanelLeftClose,
   Server,
 } from 'lucide-react';
 import React, { Fragment, useEffect, useState } from 'react';
@@ -355,9 +355,9 @@ export function MainNav() {
               variant="outline"
             >
               {sidebarExpanded ? (
-                <ArrowLeftToLine className="h-3 w-3" />
+                <PanelLeftClose className="h-3 w-3" />
               ) : (
-                <ArrowRightToLine className="h-3 w-3" />
+                <PanelLeft className="h-3 w-3" />
               )}
             </Button>
           </TooltipTrigger>
