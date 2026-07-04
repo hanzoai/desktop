@@ -65,6 +65,7 @@ import {
   useDownloadUpdateMutation,
   useUpdateStateQuery,
 } from '../lib/updater/updater-client';
+import { useGpuConnect } from '../hooks/useGpuConnect';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 import { SimpleLayout } from './layout/simple-layout';
@@ -102,6 +103,7 @@ const SettingsSection = ({
 const SettingsPage = () => {
   const { t } = useTranslation();
   const auth = useAuth((authStore) => authStore.auth);
+  const gpu = useGpuConnect();
 
   const userLanguage = useSettings((state) => state.userLanguage);
   const setUserLanguage = useSettings((state) => state.setUserLanguage);
@@ -613,6 +615,31 @@ const SettingsPage = () => {
                 </div>
               </form>
             </Form>
+          </SettingsSection>
+          <SettingsSection title="Cloud GPU">
+            <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
+              <div className="flex items-center justify-between gap-1 px-4 py-3">
+                <div className="flex flex-col gap-1 pr-4">
+                  <span className="text-text-default text-sm">
+                    Connect this device&apos;s GPU to Hanzo Cloud
+                  </span>
+                  <span className="text-text-secondary text-xs">
+                    {gpu.connected
+                      ? 'Connected — this machine appears in the Hanzo console (Machines & GPUs) and can run cloud jobs.'
+                      : gpu.signedIn
+                        ? 'Share this device’s GPU with your Hanzo org to run cloud jobs.'
+                        : 'Sign in to your Hanzo account to connect this device’s GPU.'}
+                    {gpu.error ? ` ${gpu.error}` : ''}
+                  </span>
+                </div>
+                <Switch
+                  checked={gpu.connected}
+                  disabled={!gpu.signedIn}
+                  onCheckedChange={(checked) => void gpu.toggle(checked)}
+                  className="data-[state=unchecked]:bg-gray-400"
+                />
+              </div>
+            </div>
           </SettingsSection>
           <SettingsSection title="Updates">
             <div className="divide-divider flex flex-col gap-1 divide-y text-sm">

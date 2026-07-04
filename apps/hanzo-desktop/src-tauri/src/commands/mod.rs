@@ -1,5 +1,6 @@
 pub mod fetch;
 pub mod galxe;
+pub mod gpu;
 pub mod hardware;
 pub mod logs;
 pub mod hanzo_node_manager_commands;

@@ -30,6 +30,9 @@ use crate::commands::mcp_clients_install::{
     register_command_server_in_cursor,
     register_sse_server_in_cursor,
 };
+use crate::commands::gpu::{
+    gpu_connect_get_state, gpu_connect_start, gpu_connect_stop, GpuConnectManager,
+};
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::mining::{
     mining_get_balance, mining_get_history, mining_get_local_pending, mining_get_state,
@@ -186,6 +189,9 @@ fn main() {
             mining_get_history,
             mining_get_local_pending,
             mining_set_privacy,
+            gpu_connect_get_state,
+            gpu_connect_start,
+            gpu_connect_stop,
             secure_storage_set,
             secure_storage_get,
             secure_storage_delete,
@@ -262,6 +268,10 @@ fn main() {
             let _ = std::fs::create_dir_all(&mining_storage_dir);
             let mining_manager = Arc::new(MiningManager::new(mining_storage_dir));
             app.manage(mining_manager.clone());
+
+            // "Bring your GPU to Hanzo Cloud" toggle: an Arc-managed manager that
+            // spawns/stops the `hanzo gpu connect` CLI (commands/gpu.rs).
+            app.manage(Arc::new(GpuConnectManager::new()));
 
             // Initialize secure storage (OS keyring with in-memory fallback)
             let secure_store = init_secure_storage();
