@@ -84,6 +84,7 @@ import TermsAndConditionsPage, {
   LogoTapProvider,
 } from '../pages/terms-conditions';
 import ToolFeedbackPrompt from '../pages/tool-feedback';
+import UsagePage from '../pages/usage';
 import { ToolsPage } from '../pages/tools-homepage';
 import BotPage from '../pages/bot';
 import { useAuth } from '../store/auth';
@@ -405,6 +406,7 @@ const AppRoutes = () => {
             }
           >
             <Route element={<AIModelInstallation />} path="install-ai-models" />
+            <Route element={<UsagePage />} path="usage" />
             <Route element={<AIsPage />} path="ais" />
             <Route element={<AgentsPage />} path="agents" />
             <Route element={<AddAIPage />} path="add-ai" />

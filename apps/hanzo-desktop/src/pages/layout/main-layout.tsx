@@ -251,6 +251,11 @@ export function MainNav() {
 
   const secondaryNavigationLinks = [
     {
+      title: 'Usage',
+      href: '/usage',
+      icon: <Gauge className="size-[18px]" />,
+    },
+    {
       title: 'Bot',
       href: '/bot',
       icon: <Bot className="size-[18px]" />,

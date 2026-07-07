@@ -8,6 +8,9 @@ import tailwindcss from '@tailwindcss/vite';
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   resolve: {
+    // @hanzo/usage ships its own react devDep; force a single React instance
+    // so its useUsage hook shares the app's React runtime.
+    dedupe: ['react', 'react-dom'],
     alias: {
       // libsodium-wrappers-sumo ESM entry imports ./libsodium-sumo.mjs which
       // lives in the separate libsodium-sumo package
