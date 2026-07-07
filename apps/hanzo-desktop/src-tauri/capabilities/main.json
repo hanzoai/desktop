@@ -28,8 +28,33 @@
     "opener:default",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://mcp.composio.dev" }],
+      "allow": [
+        { "url": "https://mcp.composio.dev" },
+        { "url": "https://chatgpt.com/*" },
+        { "url": "https://api.anthropic.com/*" },
+        { "url": "https://claude.ai/*" },
+        { "url": "https://api.hanzo.ai/*" }
+      ],
       "deny": []
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [
+        { "path": "$HOME/.codex" },
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
     }
   ],
   "commands.allow": [
