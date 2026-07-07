@@ -1,10 +1,13 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import {
+  providerCatalog,
+  type ProviderCatalogEntry,
+} from '@hanzo/usage';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type EditAIModelFormSchema,
   editAIModelSchema,
 } from '@hanzo_network/hanzo-node-state/forms/agents/edit-ai';
+import { Models } from '@hanzo_network/hanzo-node-state/lib/utils/models';
 import { useRemoveLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/removeLLMProvider/useRemoveLLMProvider';
 import { useUpdateLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/updateLLMProvider/useUpdateLLMProvider';
 import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
@@ -39,16 +42,38 @@ import {
 } from '@hanzo_network/hanzo-ui';
 import { CreateAIIcon } from '@hanzo_network/hanzo-ui/assets';
 import { cn } from '@hanzo_network/hanzo-ui/utils';
-import { Edit, Plus, TrashIcon } from 'lucide-react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { open } from '@tauri-apps/plugin-shell';
+import { Edit, ExternalLink, Plus, TrashIcon } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import { providerIconSvgs } from '../components/ais/provider-catalog-icons';
 import ProviderIcon from '../components/ais/provider-icon';
 import { useAuth } from '../store/auth';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import { getModelObject } from './add-ai';
+
+// Console page where cloud-only providers are connected server-side.
+const HANZO_CLOUD_ACCOUNTS_URL = 'https://console.hanzo.ai/ai-accounts';
+
+// Catalog provider id → the desktop's native LLMProvider type. Entries here are
+// added in-app via the add-AI flow (prefilled); everything else is tracked via
+// Hanzo Cloud.
+const nativeProviderModels: Record<string, Models> = {
+  openai: Models.OpenAI,
+  claude: Models.Claude,
+  gemini: Models.Gemini,
+  groq: Models.Groq,
+  openrouter: Models.OpenRouter,
+  deepseek: Models.DeepSeek,
+  grok: Models.Grok,
+  ollama: Models.Ollama,
+  hanzo: Models.Hanzo,
+};
 
 const AIsPage = () => {
   const { t } = useTranslation();
@@ -168,12 +193,105 @@ const AIsPage = () => {
             </div>
           )}
         </div>
+
+        <ProviderCatalogSection />
       </div>
     </div>
   );
 };
 
 export default AIsPage;
+
+function CatalogIcon({ entry }: { entry: ProviderCatalogEntry }) {
+  const svg = providerIconSvgs[entry.id];
+  return (
+    <div
+      className="text-text-default flex size-8 shrink-0 items-center justify-center rounded-lg [&>svg]:size-5"
+      style={entry.color ? { backgroundColor: entry.color, color: '#fff' } : undefined}
+    >
+      {svg ? (
+        <span
+          className="flex size-5 items-center justify-center [&>svg]:size-full"
+          // Icons ship as trusted static assets from @hanzo/usage.
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      ) : (
+        <span className="text-sm font-semibold uppercase">
+          {entry.name.charAt(0)}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ProviderCatalogSection() {
+  const navigate = useNavigate();
+
+  const connect = (entry: ProviderCatalogEntry) => {
+    const native = nativeProviderModels[entry.id];
+    if (native) {
+      void navigate(`/add-ai?aiProvider=${native}`);
+      return;
+    }
+    void open(HANZO_CLOUD_ACCOUNTS_URL);
+  };
+
+  return (
+    <div className="flex flex-col gap-3 border-t border-divider pt-6 pb-10">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-lg font-medium">All providers</h2>
+        <p className="text-text-secondary text-sm">
+          Connect any AI provider. Providers marked{' '}
+          <span className="font-medium">In-app</span> run through your node;
+          the rest are tracked via Hanzo Cloud.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {providerCatalog.map((entry) => {
+          const isNative = Boolean(nativeProviderModels[entry.id]);
+          return (
+            <div
+              className="border-divider bg-bg-secondary flex items-center justify-between gap-3 rounded-lg border p-3"
+              key={entry.id}
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <CatalogIcon entry={entry} />
+                <div className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-medium">
+                    {entry.name}
+                  </span>
+                  <Badge
+                    className={cn(
+                      'w-fit border-0 px-1.5 py-0 text-xs font-normal shadow-none',
+                      isNative
+                        ? 'bg-emerald-900/40 text-emerald-400'
+                        : 'bg-bg-quaternary text-text-secondary',
+                    )}
+                  >
+                    {isNative ? 'In-app' : 'Hanzo Cloud'}
+                  </Badge>
+                </div>
+              </div>
+              <Button
+                className="shrink-0"
+                onClick={() => connect(entry)}
+                size="xs"
+                variant="outline"
+              >
+                {isNative ? (
+                  <Plus className="size-3.5" />
+                ) : (
+                  <ExternalLink className="size-3.5" />
+                )}
+                <span>Connect</span>
+              </Button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function LLMProviderCard({
   llmProviderId,
@@ -205,6 +323,7 @@ function LLMProviderCard({
           <div className="flex size-6 items-center justify-center rounded-lg">
             <ProviderIcon
               className="size-full"
+              model={model}
               provider={model.split(':')[0]}
             />
           </div>

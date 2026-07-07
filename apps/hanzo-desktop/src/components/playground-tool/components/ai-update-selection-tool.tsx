@@ -71,6 +71,7 @@ export function AIModelSelectorToolsBase({
       return (
         <ProviderIcon
           className="mx-1 size-4"
+          model={selectedProvider.model}
           provider={selectedProvider.model.split(':')[0]}
         />
       );
@@ -192,6 +193,7 @@ export function AIModelSelectorToolsBase({
                 <div className="bg-bg-secondary border-divider flex size-5 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                   <ProviderIcon
                     className="mt-0.5 size-3 shrink-0"
+                    model={llmProvider.model}
                     provider={llmProvider.model.split(':')[0]}
                   />
                 </div>
@@ -228,6 +230,7 @@ export function AIModelSelectorToolsBase({
               <div className="bg-bg-secondary border-divider flex size-5 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                 <ProviderIcon
                   className="mt-0.5 size-4 shrink-0"
+                  model={llmProvider.model}
                   provider={llmProvider.model.split(':')[0]}
                 />
               </div>
