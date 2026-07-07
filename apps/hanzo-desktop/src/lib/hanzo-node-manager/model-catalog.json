@@ -1,5 +1,59 @@
 [
   {
+    "name": "zen-nano",
+    "description": "Zen Nano by Zen LM & Hanzo AI - 0.6B private, on-device foundation model. Runs fully local out of the box; ideal for fast, offline chat on any machine.",
+    "supportTools": true,
+    "defaultTag": "zen-nano:0.6b",
+    "tags": [
+      {
+        "name": "zen-nano:0.6b",
+        "hash": "0a6b0a6b0a6b",
+        "size": "0.6GB",
+        "isDefault": true
+      }
+    ],
+    "embedding": false,
+    "vision": false,
+    "thinking": false,
+    "cloud": false
+  },
+  {
+    "name": "zen-agent",
+    "description": "Zen Agent by Zen LM & Hanzo AI - 4B private, on-device agentic model tuned for tool use and multi-step tasks. Runs fully local out of the box.",
+    "supportTools": true,
+    "defaultTag": "zen-agent:4b",
+    "tags": [
+      {
+        "name": "zen-agent:4b",
+        "hash": "4b04b04b04b0",
+        "size": "2.5GB",
+        "isDefault": true
+      }
+    ],
+    "embedding": false,
+    "vision": false,
+    "thinking": true,
+    "cloud": false
+  },
+  {
+    "name": "zen-coder",
+    "description": "Zen Coder by Zen LM & Hanzo AI - private, on-device coding model for agentic programming. Runs fully local out of the box.",
+    "supportTools": true,
+    "defaultTag": "zen-coder:24b",
+    "tags": [
+      {
+        "name": "zen-coder:24b",
+        "hash": "24b024b024b0",
+        "size": "14GB",
+        "isDefault": true
+      }
+    ],
+    "embedding": false,
+    "vision": false,
+    "thinking": true,
+    "cloud": false
+  },
+  {
     "name": "zen4",
     "description": "Zen4 by Zen LM & Hanzo AI - Open, uncensored foundation models built on abliterated Qwen3 weights. From 4B edge to 80B MoE flagship.",
     "supportTools": true,

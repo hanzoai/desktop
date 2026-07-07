@@ -439,6 +439,7 @@ export const MessageBase = ({
       return (
         <ProviderIcon
           className="mx-1 size-4"
+          model={message.provider?.agent?.model}
           provider={(message.provider?.agent?.model ?? '').split(':')[0]}
         />
       );

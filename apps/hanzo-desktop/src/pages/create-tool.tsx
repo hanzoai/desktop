@@ -368,6 +368,7 @@ function AIModelSelectorBase({
                 >
                   <ProviderIcon
                     className="mx-1 size-4"
+                    model={model?.model}
                     provider={model?.model?.split(':')[0] ?? ''}
                   />
                 </div>
@@ -405,6 +406,7 @@ function AIModelSelectorBase({
                       <div className="line-clamp-1 flex items-center gap-2">
                         <ProviderIcon
                           className="size-4"
+                          model={selectedModel?.model}
                           provider={selectedModel?.model?.split(':')[0] ?? ''}
                         />
                         {selectedModel
@@ -441,6 +443,7 @@ function AIModelSelectorBase({
                               />
                               <ProviderIcon
                                 className="size-4"
+                                model={option.model}
                                 provider={option.model?.split(':')[0] ?? ''}
                               />
                               {option.name ?? option.id}

@@ -236,6 +236,7 @@ const ConversationHeaderWithInboxId = () => {
                             <div className="flex size-4 items-center justify-center rounded-lg">
                               <ProviderIcon
                                 className="size-full"
+                                model={selectedModel?.model}
                                 provider={selectedModel?.id.split(':')[0]}
                               />
                             </div>
