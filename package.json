@@ -9,6 +9,8 @@
     "postinstall": "npx patch-package && ln -sf ../libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs node_modules/libsodium-wrappers-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs 2>/dev/null || true"
   },
   "dependencies": {
+    "@hanzo/ai": "^0.2.0",
+    "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
     "@hanzo/usage": "file:../usage/packages/core",
     "@hookform/resolvers": "^5.4.0",
     "@noble/ed25519": "^2.1.0",

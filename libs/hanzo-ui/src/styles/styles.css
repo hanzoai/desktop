@@ -7,6 +7,11 @@
 
 @config '../../tailwind.config.js';
 
+/* Shared @hanzo/ui components (network switcher / wallet menu) live in
+   node_modules — point Tailwind's scanner at them. */
+@source '../../../../node_modules/@hanzo/ui/dist/network';
+@source '../../../../node_modules/@hanzo/ui/dist/wallet';
+
 /* Basel Grotesk — canonical Hanzo UI/body/display/heading face (self-hosted). */
 @font-face {
   font-family: 'Basel';
@@ -36,6 +41,21 @@
   --color-brand: hsla(0, 0%, 100%, 1);
   --color-brand-500: hsla(0, 0%, 80%, 1);
   --color-red: hsla(0, 0%, 60%, 1);
+
+  /* Semantic aliases consumed by shared @hanzo/ui components, mapped onto
+     the desktop palette (one theme, two vocabularies). */
+  --color-background: var(--color-bg-default);
+  --color-foreground: var(--color-text-default);
+  --color-popover: var(--color-bg-secondary);
+  --color-popover-foreground: var(--color-text-default);
+  --color-accent: var(--color-bg-tertiary);
+  --color-accent-foreground: var(--color-text-default);
+  --color-muted-foreground: var(--color-text-secondary);
+  --color-border: var(--color-divider);
+  --color-primary: var(--color-brand);
+  --color-primary-foreground: #000000;
+  --color-ring: var(--color-divider);
+  --color-destructive: var(--color-red);
 
   /* Generic tokens */
   --height-input: 59px;

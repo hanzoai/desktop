@@ -39,7 +39,7 @@ export const brandConfig = {
   inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
-    clientId: 'hanzo-app-client-id',
+    clientId: 'hanzo-app',
     redirectUri: 'hanzo://oauth/hanzo',
     callbackEvent: 'hanzo-iam-callback',
   },
@@ -48,6 +48,12 @@ export const brandConfig = {
   node: {
     apiPort: NODE_API_PORT,
     enginePort: ENGINE_PORT,
+  },
+  // External links the SDK renders inside the app (docs site, app store).
+  // Brand-driven; any field left unset falls back to the SDK's default.
+  links: {
+    docs: 'https://docs.hanzo.ai',
+    store: 'https://store.hanzo.ai',
   },
   machinesEnabled: true,
 } as BrandConfig;

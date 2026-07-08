@@ -19,7 +19,6 @@ import EditAgentPage from '../components/agent/edit-agent';
 import { ChatProvider } from '../components/chat/context/chat-context';
 import { SetJobScopeProvider } from '../components/chat/context/set-job-scope-context';
 import { ToolsProvider as ToolsProviderChat } from '../components/chat/context/tools-context';
-import { WalletsProvider } from '../components/crypto-wallet/context/wallets-context';
 import DefaultLlmProviderUpdater from '../components/default-llm-provider/default-llm-provider-updater';
 import {
   COMPLETION_DESTINATION,
@@ -92,7 +91,12 @@ import { useSettings } from '../store/settings';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import useAppHotkeys from '../utils/use-app-hotkeys';
 
-const skipOnboardingRoutes = ['/quick-connection', '/restore', '/connect-qr'];
+const skipOnboardingRoutes = [
+  '/quick-connection',
+  '/restore',
+  '/connect-qr',
+  '/wallet',
+];
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const auth = useAuth((state) => state.auth);
@@ -337,6 +341,10 @@ const AppRoutes = () => {
             <Route element={<RestoreConnectionPage />} path={'restore'} />
             {/* <Route element={<ConnectMethodQrCodePage />} path={'connect-qr'} /> */}
           </Route>
+          {/* Native Lux Wallet — node-independent. Reachable before a node is
+              connected so a fresh user can create a wallet and Sign in with
+              Wallet without onboarding a local node first. */}
+          <Route element={<CryptoWalletPage />} path={'wallet'} />
           <Route
             element={
               <ProtectedRoute>
@@ -513,14 +521,7 @@ const AppRoutes = () => {
             <Route element={<AppearancePage />} path={'appearance'} />
             <Route element={<PromptLibrary />} path={'prompt-library'} />
             <Route element={<GalxeValidation />} path={'galxe-validation'} />
-            <Route
-              element={
-                <WalletsProvider>
-                  <CryptoWalletPage />
-                </WalletsProvider>
-              }
-              path={'crypto-wallet'}
-            />
+            <Route element={<CryptoWalletPage />} path={'crypto-wallet'} />
             <Route element={<InternetAccessPage />} path={'remote-access'} />
             <Route element={<ShortcutsPage />} path={'shortcuts'} />
           </Route>

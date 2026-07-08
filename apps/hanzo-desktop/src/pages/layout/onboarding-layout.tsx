@@ -10,16 +10,16 @@ export type OnboardingLayoutProps = React.PropsWithChildren<
   React.HTMLAttributes<HTMLDivElement>
 >;
 
-const logoSrc =
-  getBrand().brand === 'zoo' ? './zoo-logo.svg' : './visor.svg';
-// TODO: zoo-onboarding.png is currently the rounded app icon as a stand-in.
-// Replace with a proper Zoo onboarding hero image when art is available.
-const heroSrc =
-  getBrand().brand === 'zoo' ? './zoo-onboarding.png' : './onboarding.png';
 
 const OnboardingLayout = ({ className, ...props }: OnboardingLayoutProps) => {
   const { tapCount, setTapCount, setShowLocalNodeOption } =
     useContext(LogoTapContext);
+
+  // Brand-driven (read at render, after <AI> injects the brand) — no per-brand
+  // switch. Logo from the brand config; hero falls back to the bundled default.
+  const brand = getBrand();
+  const logoSrc = brand.logo?.light ?? './onboarding.png';
+  const heroSrc = './onboarding.png';
 
   const handleLogoTap = () => {
     const newCount = tapCount + 1;

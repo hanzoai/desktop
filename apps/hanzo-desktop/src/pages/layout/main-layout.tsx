@@ -1,3 +1,5 @@
+import { NetworkSwitcher } from '@hanzo/ui/network';
+import { WalletMenu } from '@hanzo/ui/wallet';
 import { ExitIcon, GearIcon } from '@radix-ui/react-icons';
 import { PopoverClose } from '@radix-ui/react-popover';
 import { useTranslation } from '@hanzo_network/hanzo-i18n';
@@ -529,6 +531,12 @@ export function MainNav() {
               </React.Fragment>
             );
           })}
+          {sidebarExpanded && (
+            <div className="flex flex-col items-start gap-1 px-1 py-1">
+              <NetworkSwitcher menuSide="top" />
+              <WalletMenu adapter={luxWalletAdapter} autoConnect menuSide="top" />
+            </div>
+          )}
           <MiningStatus sidebarExpanded={sidebarExpanded} />
         </div>
       </div>
