@@ -1,0 +1,70 @@
+{
+  "name": "@luxfi/crypto",
+  "version": "0.1.0",
+  "description": "The literal luxfi/crypto Go code compiled to WebAssembly — bit-identical-to-the-Lux-precompiles ML-DSA-65, secp256k1, keccak256/sha3/shake, and X-Wing KEM for Node and the browser.",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Lux Industries Inc.",
+  "homepage": "https://github.com/luxfi/crypto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luxfi/crypto.git",
+    "directory": "npm"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./crypto.wasm": "./wasm/crypto.wasm"
+  },
+  "files": [
+    "dist",
+    "wasm/crypto.wasm",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": true,
+  "scripts": {
+    "build:wasm": "bash ./build-wasm.sh",
+    "build:ts": "tsup",
+    "build": "npm run build:wasm && npm run build:ts",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "keywords": [
+    "lux",
+    "luxfi",
+    "crypto",
+    "wasm",
+    "webassembly",
+    "ml-dsa",
+    "mldsa65",
+    "dilithium",
+    "fips204",
+    "post-quantum",
+    "secp256k1",
+    "keccak256",
+    "sha3",
+    "shake256",
+    "x-wing",
+    "xwing",
+    "ml-kem",
+    "kem"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  },
+  "allowScripts": {
+    "esbuild@0.27.7": true
+  }
+}
