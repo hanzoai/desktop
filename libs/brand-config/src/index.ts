@@ -25,6 +25,11 @@ export interface BrandConfig {
   // from the chain RPC: this is the user-facing inference gateway, not the
   // chain mining target.
   inferenceEndpoint: string;
+  // Cloud control-plane API (fleet + durable jobs). Where a BYO-GPU node
+  // registers (/v1/machines, /v1/gpus) and claims work (/v1/tasks gpu-jobs).
+  // Brand-scoped: a Hanzo login links the GPU into api.hanzo.ai; Lux → lux.cloud;
+  // Zoo → zoo.cloud. This is what `hanzo gpu connect` / hanzod targets.
+  cloudApi: string;
   // OAuth IAM provider used by "Login with <Brand>" flow.
   iam: {
     baseUrl: string;
@@ -61,6 +66,7 @@ const HANZO: BrandConfig = {
   },
   overlayController: 'https://edge.web3.hanzo.ai',
   inferenceEndpoint: 'https://gateway.hanzo.ai',
+  cloudApi: 'https://api.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
     clientId: 'hanzo-app-client-id',
@@ -96,6 +102,7 @@ const ZOO: BrandConfig = {
   },
   overlayController: 'https://edge.zoo.cloud',
   inferenceEndpoint: 'https://gateway.hanzo.ai',
+  cloudApi: 'https://api.zoo.cloud',
   iam: {
     baseUrl: 'https://zoolabs.id',
     clientId: 'zoo-app-client-id',
@@ -131,6 +138,7 @@ const LUX: BrandConfig = {
   },
   overlayController: 'https://edge.lux.cloud',
   inferenceEndpoint: 'https://gateway.hanzo.ai',
+  cloudApi: 'https://api.lux.cloud',
   iam: {
     baseUrl: 'https://lux.id',
     clientId: 'lux-app-client-id',
