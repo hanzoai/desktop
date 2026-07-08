@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 
 import { useSetJobScope } from '../../components/chat/context/set-job-scope-context';
 import { usePromptSelectionStore } from '../../components/prompt/context/prompt-selection-context';
+import { useRoutedDefaultAgentId } from '../../hooks/use-routed-default-agent';
 import { useAuth } from '../../store/auth';
-import { useSettings } from '../../store/settings';
 import { useHanzoNodeManager } from '../../store/hanzo-node-manager';
 
 export const showSpotlightWindow = async () => {
@@ -38,7 +38,7 @@ const EmptyMessage = () => {
     (state) => state.setPromptSelected,
   );
   const navigate = useNavigate();
-  const defaultAgentId = useSettings((state) => state.defaultAgentId);
+  const defaultAgentId = useRoutedDefaultAgentId();
 
   const { mutateAsync: createJob } = useCreateJob({
     onError: (error) => {
