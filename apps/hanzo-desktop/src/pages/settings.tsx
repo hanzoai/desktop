@@ -114,6 +114,8 @@ const SettingsPage = () => {
   const setOptInExperimental = useSettings(
     (state) => state.setOptInExperimental,
   );
+  const smartRouting = useSettings((state) => state.smartRouting);
+  const setSmartRouting = useSettings((state) => state.setSmartRouting);
   const setEmbeddingModelMismatchPromptDismissed = useSettings(
     (state) => state.setEmbeddingModelMismatchPromptDismissed,
   );
@@ -443,6 +445,36 @@ const SettingsPage = () => {
                 </div>
               </form>
             </Form>
+          </SettingsSection>
+          <SettingsSection title="Smart routing">
+            <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
+              <div className="flex items-center justify-between gap-1 px-4 py-3">
+                <div className="flex flex-col gap-1 pr-4">
+                  <span className="text-text-default text-sm">
+                    Smart routing
+                  </span>
+                  <span className="text-text-secondary text-xs">
+                    Route each request to the best available model (local zen
+                    models first, frontier only when needed). Billed as the model
+                    that serves you. Applies to new chats on a Hanzo Cloud
+                    connection (api.hanzo.ai); local-only setups are unaffected.{' '}
+                    <a
+                      className="text-cyan-400 underline"
+                      href="https://docs.hanzo.ai/docs/usage/routing"
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Learn more
+                    </a>
+                  </span>
+                </div>
+                <Switch
+                  checked={smartRouting}
+                  onCheckedChange={setSmartRouting}
+                  className="data-[state=unchecked]:bg-gray-400"
+                />
+              </div>
+            </div>
           </SettingsSection>
           <SettingsSection title={`${getBrand().name} Node Configuration`}>
             <div className="divide-divider flex flex-col divide-y">

@@ -86,10 +86,10 @@ import {
 import { FeedbackModal } from '../components/feedback/feedback-modal';
 import { usePromptSelectionStore } from '../components/prompt/context/prompt-selection-context';
 import { useAgentRequiresToolConfigurations } from '../hooks/use-agent-requires-tool-configurations';
+import { useRoutedDefaultAgentId } from '../hooks/use-routed-default-agent';
 // import { VideoBanner } from '../components/video-banner';
 import { useAnalytics } from '../lib/posthog-provider';
 import { useAuth } from '../store/auth';
-import { useSettings } from '../store/settings';
 import { useViewportStore } from '../store/viewport';
 import { getThinkingConfig } from '../utils/thinking-config';
 // import { HANZO_DOCS_URL, HANZO_TUTORIALS } from '../utils/constants';
@@ -313,12 +313,15 @@ const EmptyMessage = () => {
     (state) => state.setPromptSelected,
   );
 
-  const defaultAgentId = useSettings((state) => state.defaultAgentId);
+  // Resolves to a Hanzo Cloud `auto` router provider when Smart routing is on,
+  // otherwise the persisted default. Only seeds the default — an explicit pick
+  // in the composer (selector / locationState) still wins via its own effect.
+  const routedDefaultAgentId = useRoutedDefaultAgentId();
 
   useEffect(() => {
-    if (!defaultAgentId) return;
-    chatForm.setValue('agent', defaultAgentId);
-  }, [chatForm, defaultAgentId]);
+    if (!routedDefaultAgentId) return;
+    chatForm.setValue('agent', routedDefaultAgentId);
+  }, [chatForm, routedDefaultAgentId]);
 
   const { mutateAsync: createJob, isPending } = useCreateJob({
     onError: (error) => {
