@@ -33,6 +33,7 @@ use crate::commands::mcp_clients_install::{
 use crate::commands::gpu::{
     gpu_connect_get_state, gpu_connect_start, gpu_connect_stop, GpuConnectManager,
 };
+use crate::commands::studio::{studio_get_state, studio_start, studio_stop, StudioManager};
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::mining::{
     mining_get_balance, mining_get_history, mining_get_local_pending, mining_get_state,
@@ -192,6 +193,9 @@ fn main() {
             gpu_connect_get_state,
             gpu_connect_start,
             gpu_connect_stop,
+            studio_get_state,
+            studio_start,
+            studio_stop,
             secure_storage_set,
             secure_storage_get,
             secure_storage_delete,
@@ -269,9 +273,12 @@ fn main() {
             let mining_manager = Arc::new(MiningManager::new(mining_storage_dir));
             app.manage(mining_manager.clone());
 
-            // "Bring your GPU to Hanzo Cloud" toggle: an Arc-managed manager that
-            // spawns/stops the `hanzo gpu connect` CLI (commands/gpu.rs).
+            // "Share this device's GPU with Hanzo Cloud" toggle: Arc-managed
+            // managers that spawn/stop the light Rust `hanzo-fleet-worker`
+            // (commands/gpu.rs) and the local studio render child
+            // (commands/studio.rs). The frontend hook drives both together.
             app.manage(Arc::new(GpuConnectManager::new()));
+            app.manage(Arc::new(StudioManager::new()));
 
             // Initialize secure storage (OS keyring with in-memory fallback)
             let secure_store = init_secure_storage();

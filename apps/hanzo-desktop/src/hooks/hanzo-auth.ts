@@ -9,10 +9,18 @@ import { useCallback, useRef, useState } from 'react';
 // Endpoints are IAM's canonical paths — authorize is the interactive login
 // page (/login/oauth/authorize); the token endpoint is /v1/iam/oauth/token
 // (see https://hanzo.id/.well-known/openid-configuration).
-const HANZO_CLIENT_ID = 'hanzo-app-client-id';
+// Canonical desktop client, declaratively provisioned in IAM (org hanzo,
+// { app: app, type: desktop }) → clientId `hanzo-app`, deep-link
+// hanzo://oauth/hanzo, PKCE public (no secret). Tokens carry aud=["hanzo-app"];
+// first-party resource servers (studio, cloud) accept that audience.
+const HANZO_CLIENT_ID = 'hanzo-app';
 const HANZO_AUTHORIZE_URL = 'https://hanzo.id/login/oauth/authorize';
 const HANZO_TOKEN_URL = 'https://hanzo.id/v1/iam/oauth/token';
 const REDIRECT_URI = 'hanzo://oauth/hanzo';
+// The Rust deep-link handler (deep_links.rs) routes the IAM redirect
+// hanzo://oauth/hanzo (path /hanzo) to this event; provider-OAuth uses
+// `oauth-deep-link`. Must match brand.config.ts `iam.callbackEvent`.
+const IAM_CALLBACK_EVENT = 'hanzo-iam-callback';
 
 export type HanzoTokens = {
   access_token: string;
@@ -151,7 +159,7 @@ export function useHanzoLogin(): UseHanzoLogin {
         }
       };
 
-      const unlistenPromise = listen('oauth-deep-link', async (event) => {
+      const unlistenPromise = listen(IAM_CALLBACK_EVENT, async (event) => {
         const payload = event.payload as { state: string; code: string };
 
         if (payload.state !== pendingState.current) return;

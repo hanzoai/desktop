@@ -102,14 +102,16 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                         .map(|(_, value)| value.to_string())
                         .unwrap_or_default();
                     let payload = OAuthDeepLinkPayload { state, code };
-                    log::debug!(
-                        "emitting oauth-deep-link event to all windows",
-                    );
-                    let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                    let _ = app_handle.emit(
-                        "oauth-deep-link",
-                        payload,
-                    );
+                    // IAM login callback (hanzo://oauth/hanzo) vs provider OAuth
+                    if url.path().starts_with("/hanzo") {
+                        log::debug!("emitting hanzo-iam-callback event globally");
+                        let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                        let _ = app_handle.emit("hanzo-iam-callback", payload);
+                    } else {
+                        log::debug!("emitting oauth-deep-link event to all windows");
+                        let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                        let _ = app_handle.emit("oauth-deep-link", payload);
+                    }
                 }
 
                 if host.to_string() == "config" {

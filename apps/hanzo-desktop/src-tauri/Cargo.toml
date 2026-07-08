@@ -103,6 +103,12 @@ hanzo-engine = { path = "../../../../engine/hanzo-engine", optional = true }
 hanzo-server-core = { path = "../../../../engine/hanzo-server-core", optional = true, default-features = false }
 axum = { version = "0.8", optional = true }
 
+# SIGTERM the managed GPU-fleet / studio children so they mark the machine
+# offline (fleet) and shut down cleanly, instead of a hard SIGKILL that waits
+# out the heartbeat window. Already in the dependency tree.
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [dev-dependencies]
 tempfile = "3"
 
