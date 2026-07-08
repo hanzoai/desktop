@@ -8,3 +8,4 @@ export * from './chains';
 export * from './siww';
 export * from './web3-session';
 export { ensureCryptoReady, getLuxCrypto } from './crypto';
+export { luxWalletAdapter } from './ui-adapter';

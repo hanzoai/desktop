@@ -7,6 +7,10 @@
  * stubs upstream — surfaced honestly as "coming soon", never faked.
  */
 import { getBrand } from '@hanzo_network/brand-config';
+import { getNetwork } from '@hanzo/ui/network';
+
+// Configure the brand's network list before any selection is read.
+import '../network';
 import { allChains, getChain, type ChainEntry } from '@luxwallet/chains';
 import { RpcClient, type RpcConfig } from '@luxwallet/rpc';
 
@@ -33,6 +37,9 @@ export function chainById(id: string | number): ChainEntry | undefined {
  * the registry (Lux C-Chain, Hanzo, Zoo), else the first ready EVM chain.
  */
 export function defaultChainId(): number {
+  // The selected hanzo.network environment wins when the registry knows it.
+  const selected = getNetwork().evmChainID;
+  if (evmChains().some((c) => c.evmChainId === selected)) return selected;
   const brandChainId = getBrand().network.chainId;
   const match = evmChains().find((c) => c.evmChainId === brandChainId);
   if (match?.evmChainId) return match.evmChainId;
@@ -48,11 +55,14 @@ export function defaultChainId(): number {
  */
 export function brandRpcConfig(): RpcConfig {
   const brand = getBrand();
-  const gateway = brand.cloudApi.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  const net = getNetwork();
+  const gateway = net.apiEndpoint.replace(/^https?:\/\//, '').replace(/\/+$/, '');
   const overrides: Record<number, string> = {};
   if (brand.network.chainId && brand.network.rpc) {
     overrides[brand.network.chainId] = brand.network.rpc;
   }
+  // The selected environment always wins for its own chain.
+  overrides[net.evmChainID] = net.rpcEndpoint;
   return { gateway, overrides };
 }
 
