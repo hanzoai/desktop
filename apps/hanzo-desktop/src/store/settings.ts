@@ -50,6 +50,8 @@ type SettingsStore = {
   ) => void;
   optInExperimental?: boolean;
   setOptInExperimental: (optInExperimental: boolean) => void;
+  smartRouting: boolean;
+  setSmartRouting: (smartRouting: boolean) => void;
   userLanguage: LocaleMode;
   setUserLanguage: (userLanguage: LocaleMode) => void;
   evmAddress: string;
@@ -193,6 +195,11 @@ export const useSettings = create<SettingsStore>()(
           set({ optInExperimental });
         },
 
+        smartRouting: false,
+        setSmartRouting: (smartRouting) => {
+          set({ smartRouting });
+        },
+
         userLanguage: 'auto',
         setUserLanguage: (userLanguage) => {
           set({ userLanguage });
@@ -286,6 +293,7 @@ export const useSettings = create<SettingsStore>()(
             sidebarExpanded: false,
             isGetStartedChecklistHidden: false,
             optInExperimental: false,
+            smartRouting: false,
             userLanguage: 'auto',
             evmAddress: '',
             heightRow: 'large',
