@@ -239,8 +239,9 @@ jobs:
         run: |
           # This repo is pnpm-native (pnpm-lock.yaml is the source of truth); npm ci
           # resolves @hanzo/ai's subpath exports differently and fails the vite build.
-          if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9.15.9; fi
-          pnpm install --frozen-lockfile
+          # Pin pnpm 9.15.9 via npx so a newer system pnpm (which needs Node 22) is
+          # never used against the setup-node Node 20 runtime.
+          npx --yes pnpm@9.15.9 install --frozen-lockfile
 
       - name: (Linux) Ensure Rust toolchain on PATH
         if: ${{ contains(matrix.arch, 'linux') }}
@@ -480,8 +481,9 @@ jobs:
         run: |
           # This repo is pnpm-native (pnpm-lock.yaml is the source of truth); npm ci
           # resolves @hanzo/ai's subpath exports differently and fails the vite build.
-          if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9.15.9; fi
-          pnpm install --frozen-lockfile
+          # Pin pnpm 9.15.9 via npx so a newer system pnpm (which needs Node 22) is
+          # never used against the setup-node Node 20 runtime.
+          npx --yes pnpm@9.15.9 install --frozen-lockfile
 
       - name: Generate updates-next.json
         id: generate-updates-next-json
