@@ -9,8 +9,10 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig(() => ({
   resolve: {
     // @hanzo/usage ships its own react devDep; force a single React instance
-    // so its useUsage hook shares the app's React runtime.
-    dedupe: ['react', 'react-dom'],
+    // so its useUsage hook shares the app's React runtime. @luxwallet/core is a
+    // file: link into ~/work/luxwallet — dedupe its peer deps (zustand/ethers)
+    // to the app's copy so the wallet store is one instance, not two.
+    dedupe: ['react', 'react-dom', 'zustand', 'ethers', '@luxfi/crypto'],
     alias: {
       // libsodium-wrappers-sumo ESM entry imports ./libsodium-sumo.mjs which
       // lives in the separate libsodium-sumo package

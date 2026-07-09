@@ -35,9 +35,9 @@ vi.mock('@tauri-apps/api/event', () => ({
     listenMock(...(args as [string, () => void])),
 }));
 
-vi.mock('../../store/wallet', () => ({
-  useWallet: () => ({
-    wallet: { address: '0x1111111111111111111111111111111111111111' },
+vi.mock('../../lib/lux-wallet', () => ({
+  useSelectedAccount: () => ({
+    evmAddress: '0x1111111111111111111111111111111111111111',
   }),
 }));
 

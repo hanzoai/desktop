@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useMiningWithWallet } from '../../hooks/useMiningWithWallet';
-import { useWallet } from '../../store/wallet';
+import { useSelectedAccount } from '../../lib/lux-wallet';
 import { isTauriAvailable, safeInvoke, safeListen } from '../../utils/tauri-check';
 
 // Synthesize a 3-note ascending coin-jingle using Web Audio (no asset file).
@@ -90,12 +90,12 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
   };
 
   useMiningWithWallet();
-  const { wallet } = useWallet();
+  const account = useSelectedAccount();
 
   useEffect(() => {
     const loadMiningState = async () => {
       if (!isTauriAvailable()) {
-        setWalletAddress(wallet?.address || '0x0000...0000');
+        setWalletAddress(account?.evmAddress || '0x0000...0000');
         setBalance(0);
         setIsMining(false);
         return;
@@ -104,15 +104,15 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
       const state = await safeInvoke<MiningState>('mining_get_state');
       if (state) {
         setBalance(weiToTokenNumber(state.local_pending_wei));
-        setWalletAddress(wallet?.address || state.wallet_address);
+        setWalletAddress(account?.evmAddress || state.wallet_address);
         setIsMining(state.is_mining);
       } else {
-        setWalletAddress(wallet?.address || '0x0000...0000');
+        setWalletAddress(account?.evmAddress || '0x0000...0000');
       }
     };
 
     void loadMiningState();
-  }, [wallet?.address]);
+  }, [account?.evmAddress]);
 
   useEffect(() => {
     if (!isTauriAvailable()) return;

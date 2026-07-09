@@ -30,17 +30,17 @@ importers:
         specifier: file:apps/hanzo-desktop/vendor/luxfi-crypto
         version: file:apps/hanzo-desktop/vendor/luxfi-crypto
       '@luxwallet/chains':
-        specifier: file:../../luxwallet/packages/chains
-        version: file:../../luxwallet/packages/chains
+        specifier: ^0.1.0
+        version: 0.1.0
       '@luxwallet/connect':
-        specifier: file:../../luxwallet/packages/connect
-        version: file:../../luxwallet/packages/connect
+        specifier: ^0.1.0
+        version: 0.1.0
       '@luxwallet/core':
-        specifier: file:../../luxwallet/packages/core
-        version: file:../../luxwallet/packages/core(@luxfi/crypto@file:apps/hanzo-desktop/vendor/luxfi-crypto)(ethers@6.17.0)(zustand@5.0.14(@types/react@19.1.17)(immer@10.2.0)(react@19.0.6)(use-sync-external-store@1.6.0(react@19.0.6)))
+        specifier: ^0.1.0
+        version: 0.1.0(@luxfi/crypto@file:apps/hanzo-desktop/vendor/luxfi-crypto)(ethers@6.17.0)(zustand@5.0.14(@types/react@19.1.17)(immer@10.2.0)(react@19.0.6)(use-sync-external-store@1.6.0(react@19.0.6)))
       '@luxwallet/rpc':
-        specifier: file:../../luxwallet/packages/rpc
-        version: file:../../luxwallet/packages/rpc
+        specifier: ^0.1.0
+        version: 0.1.0
       '@noble/ed25519':
         specifier: ^2.1.0
         version: 2.3.0
@@ -1587,11 +1587,11 @@ packages:
     resolution: {directory: apps/hanzo-desktop/vendor/luxfi-crypto, type: directory}
     engines: {node: '>=20'}
 
+  '@luxwallet/chains@0.0.0':
+    resolution: {integrity: sha512-/xgdk/ncowm+TJiSjThf6mxoXgAH5T5l0TUiqZnx1gLVwMj9oBrk4+ibxbfB2BIfK/DCBjvrXFqQO05ey4k1Eg==}
+
   '@luxwallet/chains@0.1.0':
     resolution: {integrity: sha512-DoWF6j7f+PuKfWPbHVsnUve8ZECoBNtzpDOLlYu1bVt7w3UA0KpgIJe2MbHJaopQ09H1v1Vu9g3vBJ9cC/UGFg==}
-
-  '@luxwallet/chains@file:../../luxwallet/packages/chains':
-    resolution: {directory: ../../luxwallet/packages/chains, type: directory}
 
   '@luxwallet/connect@0.1.0':
     resolution: {integrity: sha512-teLWEOqM7XIUeEo9NPmsPV/1wlzwBmRXT56W5SOxkWk1o+6UqiaTRJZFn5AKAXXEdRMkaGqzCuTNkVVAA997Bg==}
@@ -1616,18 +1616,16 @@ packages:
       viem:
         optional: true
 
-  '@luxwallet/connect@file:../../luxwallet/packages/connect':
-    resolution: {directory: ../../luxwallet/packages/connect, type: directory}
-
-  '@luxwallet/core@file:../../luxwallet/packages/core':
-    resolution: {directory: ../../luxwallet/packages/core, type: directory}
+  '@luxwallet/core@0.1.0':
+    resolution: {integrity: sha512-bR6poGD2gY9SOOpansQyZi0+snxn3TOxiPNU6ypT7r/ASXWBO3CE0bjYYBtgCHvMP50iVF0j+PKrSIOvq6svmg==}
+    version: 0.1.0
     peerDependencies:
       '@luxfi/crypto': '>=0.1.0'
       ethers: ^6.0.0
       zustand: ^5.0.0
 
-  '@luxwallet/rpc@file:../../luxwallet/packages/rpc':
-    resolution: {directory: ../../luxwallet/packages/rpc, type: directory}
+  '@luxwallet/rpc@0.1.0':
+    resolution: {integrity: sha512-gmHYKIG2w5bzo/nOqNWJ44/q6qGXpQobn8uKSdvRyKFgyns2QdIuWIyiJobsRdVphXrSPJ0AhlYkJ8XgYhRWyQ==}
 
   '@mapbox/geojson-rewind@0.5.2':
     resolution: {integrity: sha512-tJaT+RbYGJYStt7wI3cq4Nl4SXxG8W7JDG5DMJu97V25RnbNg3QtQtf+KD+VLjNpWKYsRvXDNmNrBgEETr1ifA==}
@@ -11379,9 +11377,9 @@ snapshots:
 
   '@luxfi/crypto@file:apps/hanzo-desktop/vendor/luxfi-crypto': {}
 
-  '@luxwallet/chains@0.1.0': {}
+  '@luxwallet/chains@0.0.0': {}
 
-  '@luxwallet/chains@file:../../luxwallet/packages/chains': {}
+  '@luxwallet/chains@0.1.0': {}
 
   '@luxwallet/connect@0.1.0':
     dependencies:
@@ -11389,9 +11387,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       bs58: 6.0.0
 
-  '@luxwallet/connect@file:../../luxwallet/packages/connect': {}
-
-  '@luxwallet/core@file:../../luxwallet/packages/core(@luxfi/crypto@file:apps/hanzo-desktop/vendor/luxfi-crypto)(ethers@6.17.0)(zustand@5.0.14(@types/react@19.1.17)(immer@10.2.0)(react@19.0.6)(use-sync-external-store@1.6.0(react@19.0.6)))':
+  '@luxwallet/core@0.1.0(@luxfi/crypto@file:apps/hanzo-desktop/vendor/luxfi-crypto)(ethers@6.17.0)(zustand@5.0.14(@types/react@19.1.17)(immer@10.2.0)(react@19.0.6)(use-sync-external-store@1.6.0(react@19.0.6)))':
     dependencies:
       '@luxfi/crypto': file:apps/hanzo-desktop/vendor/luxfi-crypto
       '@luxwallet/chains': 0.1.0
@@ -11406,9 +11402,9 @@ snapshots:
       - sats-connect
       - viem
 
-  '@luxwallet/rpc@file:../../luxwallet/packages/rpc':
+  '@luxwallet/rpc@0.1.0':
     dependencies:
-      '@luxwallet/chains': 0.1.0
+      '@luxwallet/chains': 0.0.0
 
   '@mapbox/geojson-rewind@0.5.2':
     dependencies:
