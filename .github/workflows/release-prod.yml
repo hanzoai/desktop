@@ -237,8 +237,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm cache verify
-          npm ci --no-audit --prefer-offline
+          # This repo is pnpm-native (pnpm-lock.yaml is the source of truth); npm ci
+          # resolves @hanzo/ai's subpath exports differently and fails the vite build.
+          if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9.15.9; fi
+          pnpm install --frozen-lockfile
 
       - name: (Linux) Ensure Rust toolchain on PATH
         if: ${{ contains(matrix.arch, 'linux') }}
@@ -282,7 +284,7 @@ jobs:
       - name: Download side binaries
         env:
           ARCH: ${{ matrix.arch }}
-          HANZO_NODE_VERSION: v1.1.20
+          HANZO_NODE_VERSION: v1.15.0
           OLLAMA_VERSION: v0.12.3
         run: |
           npx ts-node ./ci-scripts/download-side-binaries.ts
@@ -476,8 +478,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm cache verify
-          npm ci --no-audit --prefer-offline
+          # This repo is pnpm-native (pnpm-lock.yaml is the source of truth); npm ci
+          # resolves @hanzo/ai's subpath exports differently and fails the vite build.
+          if ! command -v pnpm >/dev/null 2>&1; then npm i -g pnpm@9.15.9; fi
+          pnpm install --frozen-lockfile
 
       - name: Generate updates-next.json
         id: generate-updates-next-json
