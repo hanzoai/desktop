@@ -11,7 +11,7 @@
   "dependencies": {
     "@hanzo/ai": "^0.2.0",
     "@hanzo/ui": "npm:@hanzo/ui-shadcn@^5.7.4",
-    "@hanzo/usage": "^0.1.2",
+    "@hanzo/usage": "^0.1.3",
     "@hookform/resolvers": "^5.4.0",
     "@luxfi/crypto": "file:apps/hanzo-desktop/vendor/luxfi-crypto",
     "@luxwallet/chains": "file:../../luxwallet/packages/chains",
