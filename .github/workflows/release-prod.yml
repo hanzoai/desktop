@@ -87,9 +87,11 @@ jobs:
       matrix:
         include:
           - arch: x86_64-unknown-linux-gnu
-            # Canonical Hanzo fleet: linux-x64 -> ARC scale-set "hanzoai-amd64" (native, no cross-compile).
-            # runsOn is a STRING here because ARC matches scale-sets by name (see hanzoai/arc build-matrix.yml).
-            os: hanzoai-amd64
+            # linux-x64 -> the evo self-hosted fleet ([self-hosted, Linux, X64]): idle runners
+            # with the full Tauri toolchain prebaked, native (no cross-compile). The ARC scale
+            # set is named "hanzo-build-linux-amd64" (not "hanzoai-amd64"), so the old name
+            # matched no runner; this label routes to the same fleet the prebuild job uses.
+            os: [self-hosted, Linux, X64]
             build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
             build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
             build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
