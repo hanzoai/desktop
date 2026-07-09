@@ -210,6 +210,19 @@ const QuickConnectionPage = () => {
           }}
           title={t('restoreConnection.restore')}
         />
+
+        <ConnectionOptionButton
+          description={'Create a wallet and sign in with it'}
+          icon={
+            <span aria-hidden className="text-base">
+              👛
+            </span>
+          }
+          onClick={() => {
+            void navigate('/wallet');
+          }}
+          title={'Sign in with Wallet'}
+        />
       </div>
     </div>
   );

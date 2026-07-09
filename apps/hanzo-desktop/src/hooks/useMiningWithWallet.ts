@@ -2,22 +2,22 @@ import { getBrand } from '@hanzo_network/brand-config';
 import { useEffect, useRef } from 'react';
 
 import { useAuth } from '../store/auth';
-import { useWallet } from '../store/wallet';
+import { useSelectedAccount } from '../lib/lux-wallet';
 import { safeInvoke } from '../utils/tauri-check';
 
 export const useMiningWithWallet = () => {
-  const { wallet } = useWallet();
+  const account = useSelectedAccount();
   const auth = useAuth((state) => state.auth);
   const hasStartedMining = useRef(false);
 
   useEffect(() => {
     const startMiningWithWallet = async () => {
-      if (!wallet?.address || !auth || hasStartedMining.current) return;
+      if (!account?.evmAddress || !auth || hasStartedMining.current) return;
 
       const brand = getBrand();
       await safeInvoke('mining_stop');
       await safeInvoke('mining_start', {
-        walletAddress: wallet.address,
+        walletAddress: account.evmAddress,
         chainId: brand.network.chainId,
       });
 
@@ -25,7 +25,7 @@ export const useMiningWithWallet = () => {
     };
 
     void startMiningWithWallet();
-  }, [wallet?.address, auth]);
+  }, [account?.evmAddress, auth]);
 
   useEffect(() => {
     if (!auth) {

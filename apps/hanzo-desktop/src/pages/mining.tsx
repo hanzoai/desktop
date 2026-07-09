@@ -3,7 +3,7 @@ import { getBrand } from '@hanzo_network/brand-config';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatWei, useChainBalance } from '../hooks/useChainBalance';
-import { useWallet } from '../store/wallet';
+import { useSelectedAccount } from '../lib/lux-wallet';
 import { isTauriAvailable, safeInvoke, safeListen } from '../utils/tauri-check';
 
 type Privacy = 'public' | 'private' | 'confidential' | 'sovereign';
@@ -39,7 +39,7 @@ const HASHRATE_WINDOW_MS = 5 * 60 * 1000;
 export default function MiningPage() {
   const brand = getBrand();
   const token = brand.network.token;
-  const { wallet } = useWallet();
+  const account = useSelectedAccount();
 
   const [history, setHistory] = useState<ProofRecord[]>([]);
   const [pendingWei, setPendingWei] = useState<string>('0');
@@ -49,7 +49,7 @@ export default function MiningPage() {
   const [hashrateProofsPer5Min, setHashrateProofsPer5Min] = useState<number>(0);
 
   const { balanceWei: chainBalanceWei, loading: chainLoading } = useChainBalance(
-    wallet?.address ?? null,
+    account?.evmAddress ?? null,
   );
 
   const refresh = useCallback(async () => {
@@ -97,8 +97,8 @@ export default function MiningPage() {
   };
 
   const recent = useMemo(() => history.slice(-10).reverse(), [history]);
-  const explorerUrl = wallet?.address
-    ? `${brand.network.blockExplorer}/address/${wallet.address}`
+  const explorerUrl = account?.evmAddress
+    ? `${brand.network.blockExplorer}/address/${account.evmAddress}`
     : brand.network.blockExplorer;
 
   return (

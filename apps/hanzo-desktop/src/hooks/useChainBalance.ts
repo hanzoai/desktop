@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from 'react';
 
-import { getBrand } from '@hanzo_network/brand-config';
+import { useNetwork } from '@hanzo/ui/network';
+
+// Configure the brand's network list before any selection is read.
+import '../lib/network';
 
 const POLL_MS = 30_000;
 
-// Returns the on-chain balance for `address` against the active brand's RPC
+// Returns the on-chain balance for `address` against the SELECTED network's
+// RPC (shared @hanzo/ui network store — switching environments repoints it)
 // as a decimal string of wei. Polls every 30s. Empty string means unknown.
 export function useChainBalance(address: string | null | undefined): {
   balanceWei: string;
@@ -13,8 +17,8 @@ export function useChainBalance(address: string | null | undefined): {
   loading: boolean;
   error: string | null;
 } {
-  const brand = getBrand();
-  const rpc = brand.network.rpc;
+  const { network } = useNetwork();
+  const rpc = network.rpcEndpoint;
   const [balanceWei, setBalanceWei] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

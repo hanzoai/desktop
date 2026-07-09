@@ -130,3 +130,27 @@ Productizing GRPO in-app still needs: experience/trajectory storage, agent
 versioning / A/B testing, a real training job pipeline (driving the `Policy`
 trait on a packaged model), feedback→reward mapping, and ML metrics. Foundation
 exists (agent CRUD, message history with tool metadata, Zustand, React Query).
+
+## Network + Wallet (the ONE standard)
+
+Shared components from `@hanzo/ui/network` + `@hanzo/ui/wallet`
+(npm alias `@hanzo/ui` -> `@hanzo/ui-shadcn@^5.7.3`, the 5.x line —
+same standard as the hanzo CLI `network.rs` and the console):
+
+- Model: Network = (env, label, networkID, evmChainID, rpcEndpoint,
+  apiEndpoint). Sovereign L1 => networkID === evmChainID. Hanzo envs:
+  mainnet 36963 / testnet 36964 / devnet 36965 / local 31337; public
+  envs share api.hanzo.ai; RPC per env (rpc.hanzo[-test|-dev].network).
+- `src/lib/network.ts` is the ONE composition point (brand -> network
+  list -> shared store). Endpoint consumers: `lux-wallet/chains.ts`
+  (`brandRpcConfig`/`defaultChainId`) + `hooks/useChainBalance.ts`
+  read the SELECTED network via `getNetwork()`/`useNetwork()`.
+- Wallet: `lux-wallet/ui-adapter.ts` adapts the PQ HD keychain wallet
+  to the shared `<WalletMenu/>` (auto-provisions on first connect;
+  secrets never leave the store/keychain).
+- Mounted in the sidebar footer of `pages/layout/main-layout.tsx`
+  (menuSide="top"). Semantic token aliases live in
+  `libs/hanzo-ui/src/styles/styles.css`.
+- `@hanzo/ai` is a REAL dependency of src/main.tsx — keep it declared
+  in package.json (it was once undeclared and npm install pruned it).
+
