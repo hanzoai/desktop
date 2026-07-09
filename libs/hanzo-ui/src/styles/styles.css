@@ -1,3 +1,5 @@
+/* Geist Sans — canonical Hanzo UI/body/display/heading face. */
+@import url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css');
 /* Geist Mono — canonical Hanzo mono face (code/data). */
 @import url('https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.css');
 @import 'katex/dist/katex.min.css';
@@ -61,16 +63,16 @@
   --height-input: 59px;
   --z-max: 2147483647;
 
-  /* Grayscale */
-  --color-gray-100: #ffffff;
-  --color-gray-200: #cccccc;
-  --color-gray-300: #999999;
-  --color-gray-400: #666666;
-  --color-gray-500: #333333;
-  --color-gray-600: #1a1a1a;
-  --color-gray-700: #0d0d0d;
-  --color-gray-800: #000000;
-  --color-gray-900: #000000;
+  /* Grayscale — canonical black-monochrome ladder */
+  --color-gray-100: #ededed; /* text-default */
+  --color-gray-200: #888888; /* text-secondary (muted) */
+  --color-gray-300: #666666; /* text-tertiary (dim) / placeholder */
+  --color-gray-400: #333333; /* divider / strong line */
+  --color-gray-500: #1f1f1f; /* border */
+  --color-gray-600: #161616; /* surface-active */
+  --color-gray-700: #101010; /* surface-hover */
+  --color-gray-800: #0a0a0a; /* surface / card */
+  --color-gray-900: #000000; /* app background */
   --color-gray-1000: #000000;
   --color-gray-1100: #000000;
 
@@ -119,10 +121,10 @@
   --color-red-600: #4d1e1e;
   --color-red-700: #3a1717; */
 
-  /* Font — canonical Hanzo: Basel Grotesk (UI/sans) + Geist Mono (code).
+  /* Font — canonical Hanzo: Geist Sans (UI/sans) + Geist Mono (code).
      The `--font-inter` token name is kept for call-site stability; it now
-     resolves to Basel so every `font-inter` usage renders the canonical face. */
-  --font-inter: 'Basel', sans-serif;
+     resolves to Geist so every `font-inter` usage renders the canonical face. */
+  --font-inter: 'Geist', system-ui, sans-serif;
   --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --font-size-em-xs: 0.75em;
@@ -133,7 +135,7 @@
   --font-size-em-2xl: 1.5em;
 
   --font-family-inter:
-    'Basel', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Geist', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
   /* Semantic Tokens */
@@ -144,8 +146,8 @@
   --color-text-tertiary: var(--color-gray-300);
 
   /* Border */
-  --color-border: var(--color-gray-700);
-  --color-divider: var(--color-gray-600);
+  --color-border: var(--color-gray-500);
+  --color-divider: var(--color-gray-400);
   --color-border-input: var(--color-gray-600);
   --color-border-input-focus: var(--color-gray-500);
   --color-border-input-secondary: var(--color-gray-500);
