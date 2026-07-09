@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { useEffect, useState } from 'react';
 
-import { useNetwork } from '@hanzo/ui/network';
+import { useNetwork } from '@hanzo_network/hanzo-ui/network';
 
 // Configure the brand's network list before any selection is read.
 import '../lib/network';

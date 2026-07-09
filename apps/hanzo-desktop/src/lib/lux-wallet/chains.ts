@@ -7,7 +7,7 @@
  * stubs upstream — surfaced honestly as "coming soon", never faked.
  */
 import { getBrand } from '@hanzo_network/brand-config';
-import { getNetwork } from '@hanzo/ui/network';
+import { getNetwork } from '@hanzo_network/hanzo-ui/network';
 
 // Configure the brand's network list before any selection is read.
 import '../network';

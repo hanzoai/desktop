@@ -1,7 +1,36 @@
 /**
- * Web3 sign-in session — re-exported from @luxwallet/core (the one store, shared
- * across all three desktops). Kept here so the desktop's import path
- * (`../lib/lux-wallet`) is unchanged.
+ * The identity a user established by signing in with their wallet (IAM web3).
+ * Kept separate from node auth: this is a chain-identity login, not a node
+ * connection. Brand-neutral — the persist key is fixed and app-agnostic.
+ *
+ * Inlined here (the store package ships no session store); the exports and
+ * persist key are unchanged.
  */
-export { useWeb3Session } from '@luxwallet/core';
-export type { Web3Session } from '@luxwallet/core';
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+export interface Web3Session {
+  userId: string;
+  address: string;
+  chain: string;
+  loggedInAt: number;
+}
+
+interface Web3SessionState {
+  session: Web3Session | null;
+  setSession: (s: Web3Session) => void;
+  clear: () => void;
+}
+
+export const useWeb3Session = create<Web3SessionState>()(
+  devtools(
+    persist(
+      (set) => ({
+        session: null,
+        setSession: (session) => set({ session }),
+        clear: () => set({ session: null }),
+      }),
+      { name: 'lux-web3-session' },
+    ),
+  ),
+);

@@ -1,5 +1,5 @@
-import { NetworkSwitcher } from '@hanzo/ui/network';
-import { WalletMenu } from '@hanzo/ui/wallet';
+import { NetworkSwitcher } from '@hanzo_network/hanzo-ui/network';
+import { WalletMenu } from '@hanzo_network/hanzo-ui/wallet';
 import { luxWalletAdapter } from '../../lib/lux-wallet';
 import { ExitIcon, GearIcon } from '@radix-ui/react-icons';
 import { PopoverClose } from '@radix-ui/react-popover';

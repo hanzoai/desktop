@@ -1,8 +1,8 @@
 /**
  * The desktop's Lux Wallet store — a THIN brand/network wiring over the shared
- * headless engine @luxwallet/core. The engine (create / import / reveal /
+ * headless engine @luxwallet/store. The engine (create / import / reveal /
  * balance / send, secp256k1 + ML-DSA-65, node-independent) lives once in
- * @luxwallet/core; this file only injects the desktop's seams:
+ * @luxwallet/store; this file only injects the desktop's seams:
  *
  *   - crypto   → local @luxfi/crypto WASM loader (Vite ?url asset)
  *   - keychain → OS keychain via the Tauri `secure_storage_*` commands
@@ -10,7 +10,7 @@
  *
  * All three desktops share the same engine; only these seams differ.
  */
-import { createLuxWallet } from '@luxwallet/core';
+import { createLuxWallet } from '@luxwallet/store';
 
 import { chainById, defaultChainId, rpcClient } from './chains';
 import { getLuxCrypto } from './crypto';
@@ -40,4 +40,4 @@ export type {
   SendParams,
   Status,
   LuxWalletState,
-} from '@luxwallet/core';
+} from '@luxwallet/store';

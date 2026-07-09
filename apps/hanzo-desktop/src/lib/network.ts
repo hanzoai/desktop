@@ -11,7 +11,7 @@ import {
   configureNetworks,
   HANZO_NETWORKS,
   type Network,
-} from '@hanzo/ui/network';
+} from '@hanzo_network/hanzo-ui/network';
 
 /** The network environments this brand can point at. */
 export function brandNetworks(

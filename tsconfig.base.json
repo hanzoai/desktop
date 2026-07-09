@@ -40,7 +40,11 @@
       "@hanzo_network/hanzo-ui/hooks": [
         "libs/hanzo-ui/src/hooks/index.ts"
       ],
-      "@hanzo_network/hanzo-ui/utils": ["libs/hanzo-ui/src/utils.ts"]
+      "@hanzo_network/hanzo-ui/utils": ["libs/hanzo-ui/src/utils.ts"],
+      "@hanzo_network/hanzo-ui/network": [
+        "libs/hanzo-ui/src/network/index.ts"
+      ],
+      "@hanzo_network/hanzo-ui/wallet": ["libs/hanzo-ui/src/wallet/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

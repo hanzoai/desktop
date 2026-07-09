@@ -7,8 +7,8 @@
  * the store seals the mnemonic/private key in the OS keychain; backup
  * and reveal stay on the crypto-wallet page.
  */
-import type { Network } from '@hanzo/ui/network';
-import type { WalletAdapter, WalletState } from '@hanzo/ui/wallet';
+import type { Network } from '@hanzo_network/hanzo-ui/network';
+import type { WalletAdapter, WalletState } from '@hanzo_network/hanzo-ui/wallet';
 
 import { chainById } from './chains';
 import { useLuxWallet } from './store';

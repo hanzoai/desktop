@@ -1,5 +1,5 @@
 /**
- * Wallet flow smoke — proves the shared @luxwallet/core engine works end-to-end
+ * Wallet flow smoke — proves the shared @luxwallet/store engine works end-to-end
  * in the desktop frontend. Crypto is the real @luxfi/crypto WASM; the keychain
  * uses the host `secure_storage_*` bridge, mocked here with an in-page map (the
  * same seam the three desktops inject).
@@ -7,7 +7,7 @@
  * The /wallet route is node-independent (reachable pre-onboarding by design), so
  * this loads it directly against the preview build and:
  *   1. creates a Local HD + Post-Quantum wallet through the crypto-wallet page
- *      (which drives useLuxWallet == createLuxWallet from @luxwallet/core),
+ *      (which drives useLuxWallet == createLuxWallet from @luxwallet/store),
  *   2. asserts a real EVM address + the ML-DSA-65 PQ badge render — i.e. the
  *      @luxfi/crypto WASM derived secp256k1 + ML-DSA-65 through the shared store,
  *   3. switches the network via the page NetworkSelect (store.selectChain) and
@@ -62,7 +62,7 @@ test('create PQ wallet + switch network on the shared @luxwallet store', async (
   await installTauriMock(page);
   await page.goto(`${BASE}/wallet`);
 
-  // The crypto-wallet page (backed by @luxwallet/core) mounts.
+  // The crypto-wallet page (backed by @luxwallet/store) mounts.
   const setup = page.getByRole('button', { name: /set up wallet/i });
   await expect(setup).toBeVisible({ timeout: 20000 });
   await setup.click();
@@ -70,7 +70,7 @@ test('create PQ wallet + switch network on the shared @luxwallet store', async (
   // choose -> Create New
   await page.getByText('Create New', { exact: true }).click();
   // create-type -> Local HD + Post-Quantum (runs createWallet('local-hd-pq')
-  // through @luxwallet/core → @luxfi/crypto WASM: secp256k1 + ML-DSA-65).
+  // through @luxwallet/store → @luxfi/crypto WASM: secp256k1 + ML-DSA-65).
   await page.getByText('Local HD + Post-Quantum', { exact: true }).click();
 
   // The freshly-generated recovery phrase is shown; dismiss it if present.
