@@ -40,6 +40,8 @@ type SettingsStore = {
 
   defaultAgentId: string;
   setDefaultAgentId: (defaultAgentId: string) => void;
+  selectedEngineBaseUrl: string;
+  setSelectedEngineBaseUrl: (selectedEngineBaseUrl: string) => void;
   defaultSpotlightAiId: string;
   setDefaultSpotlightAiId: (defaultSpotlightAiId: string) => void;
   sidebarExpanded: boolean;
@@ -173,6 +175,11 @@ export const useSettings = create<SettingsStore>()(
         defaultAgentId: '',
         setDefaultAgentId: (defaultAgentId) => {
           set({ defaultAgentId });
+        },
+
+        selectedEngineBaseUrl: '',
+        setSelectedEngineBaseUrl: (selectedEngineBaseUrl) => {
+          set({ selectedEngineBaseUrl });
         },
 
         defaultSpotlightAiId: '',

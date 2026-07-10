@@ -1,3 +1,4 @@
+pub mod engines;
 pub mod fetch;
 pub mod galxe;
 pub mod gpu;

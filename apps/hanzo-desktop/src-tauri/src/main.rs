@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
 use crate::commands::hardware::hardware_get_summary;
@@ -169,6 +170,8 @@ fn main() {
             galxe_generate_proof,
             get_request,
             post_request,
+            engines_discover,
+            engine_probe,
             hanzo_node_get_ollama_version,
             retrieve_logs,
             download_logs,

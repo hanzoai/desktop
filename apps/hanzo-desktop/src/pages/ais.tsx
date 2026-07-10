@@ -51,6 +51,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import LocalNetworkEngines from '../components/ais/local-network-engines';
 import { providerIconSvgs } from '../components/ais/provider-catalog-icons';
 import ProviderIcon from '../components/ais/provider-icon';
 import { useAuth } from '../store/auth';
@@ -145,6 +146,7 @@ const AIsPage = () => {
         </div>
 
         <div className="flex flex-1 flex-col space-y-3 pb-10">
+          <LocalNetworkEngines />
           {!llmProviders?.length ? (
             <div className="flex grow flex-col items-center justify-center">
               <div className="mb-8 space-y-3 text-center">
