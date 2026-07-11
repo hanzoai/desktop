@@ -33,7 +33,7 @@ jobs:
             core.setFailed('Version mismatch')
   # release-hanzo-visor:
   #   needs: prebuild
-  #   runs-on: ubuntu-latest
+  #   runs-on: hanzo-build-linux-amd64
   #   environment: production
   #   steps:
   #     - name: Check out repository
