@@ -450,7 +450,7 @@ jobs:
   e2e-summary:
     name: E2E Tests Summary
     needs: e2e-tests
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     if: always()
 
     steps:

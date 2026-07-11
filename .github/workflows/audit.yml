@@ -12,7 +12,7 @@ on:
 
 jobs:
   node-npm:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 20
 
     steps:

@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   health-checks:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 20
     steps:
       - name: Check out repository

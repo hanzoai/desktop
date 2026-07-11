@@ -11,7 +11,7 @@ defaults:
 
 jobs:
   prebuild:
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 15
     outputs:
       version: ${{ steps.package-version.outputs.version }}
@@ -458,7 +458,7 @@ jobs:
       - prebuild
       - release-hanzo-desktop
     name: Generate & Update updates.json
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 20
     outputs:
       updates-next-json-url: ${{ steps.generate-updates-next-json.outputs.updates-next-json-url }}
@@ -521,7 +521,7 @@ jobs:
       - release-hanzo-desktop
       - rollout-hanzo-desktop
     name: Notify Slack
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: hanzo-build-linux-amd64
     timeout-minutes: 15
     steps:
       - name: Post Hanzo Desktop to a Slack channel
