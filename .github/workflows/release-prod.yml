@@ -200,10 +200,11 @@ jobs:
           # never used against the setup-node Node 20 runtime.
           npx --yes pnpm@9.15.9 install --frozen-lockfile
 
-      - name: (Linux) Ensure Rust toolchain on PATH
-        if: ${{ contains(matrix.arch, 'linux') }}
+      - name: (Unix) Ensure Rust toolchain on PATH
+        if: ${{ matrix.arch != 'x86_64-pc-windows-msvc' }}
+        shell: bash
         run: |
-          # Self-hosted Linux runners have rustup under ~/.cargo/bin but not on
+          # Self-hosted Linux/macOS runners have rustup under ~/.cargo/bin but not on
           # the non-interactive job PATH; export it. Install rustup as a fallback
           # only if cargo is genuinely absent.
           if [ -x "$HOME/.cargo/bin/cargo" ]; then
@@ -215,9 +216,12 @@ jobs:
 
       - name: (macOS) Add universal Rust targets
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
+        shell: bash
         run: |
           # A universal .app lipos an arm64 + x86_64 slice; both Rust targets must exist.
-          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          # PATH was exported by the previous step; call via ~/.cargo/bin as a belt-and-suspenders.
+          RUSTUP="$(command -v rustup || echo "$HOME/.cargo/bin/rustup")"
+          "$RUSTUP" target add aarch64-apple-darwin x86_64-apple-darwin
 
       - name: (Linux) Provide hanzo engine sibling (optional path-dep source)
         if: ${{ contains(matrix.arch, 'linux') }}
