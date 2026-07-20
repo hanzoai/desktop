@@ -27,132 +27,90 @@ jobs:
 
       - name: Check version match
         if: ${{ github.ref_name != steps.package-version.outputs.version }}
-        uses: actions/github-script@v3
+        uses: actions/github-script@v7
         with:
           script: |
             core.setFailed('Version mismatch')
-  # release-hanzo-visor:
-  #   needs: prebuild
-  #   runs-on: hanzo-build-linux-amd64
-  #   environment: production
-  #   steps:
-  #     - name: Check out repository
-  #       uses: actions/checkout@v4
-  #       with:
-  #         fetch-depth: 0
-
-  #     - name: Setup Node version
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: '.nvmrc'
-  #         check-latest: false
-  #         cache: "npm"
-  #         cache-dependency-path: package-lock.json
-
-  #     - name: Install dependencies
-  #       run: |
-  #         npm cache verify
-  #         npm ci --no-audit --prefer-offline
-
-  #     - name: Run NX build on hanzo-visor
-  #       run: npx nx build hanzo-visor --skip-nx-cache
-  #       env:
-  #         VERSION: ${{ needs.prebuild.outputs.version }}.${{github.run_number}}
-  #         NAME_PREFIX: ''
-  #         DESCRIPTION_PREFIX: ''
-  #         PUBLIC_KEY: ${{ secrets.CHROME_EXTENSION_PUBLIC_KEY }}
-
-  #     - name: Zip extension
-  #       run: cd ./dist/apps && zip -r hanzo-visor.zip hanzo-visor
-
-  #     - name: Upload & Release
-  #       uses: mnao305/chrome-extension-upload@v4.0.1
-  #       with:
-  #         file-path: dist/apps/hanzo-visor.zip
-  #         extension-id: ${{ secrets.CHROME_EXTENSION_ID }}
-  #         client-id: ${{ secrets.CHROME_CLIENT_ID }}
-  #         client-secret: ${{ secrets.CHROME_CLIENT_SECRET }}
-  #         refresh-token: ${{ secrets.CHROME_REFRESH_TOKEN }}
-  #         publish: false
 
   release-hanzo-desktop:
     permissions:
       contents: 'write'
       id-token: 'write'
     needs: prebuild
-    name: Release Hanzo Desktop
+    name: Release Hanzo Desktop (${{ matrix.id }})
     environment: production
     strategy:
       fail-fast: false
       matrix:
         include:
-          - arch: x86_64-unknown-linux-gnu
-            # linux-x64 -> the evo self-hosted fleet ([self-hosted, Linux, X64]): idle runners
-            # with the full Tauri toolchain prebaked, native (no cross-compile). The ARC scale
-            # set is named "hanzo-build-linux-amd64" (not "hanzoai-amd64"), so the old name
-            # matched no runner; this label routes to the same fleet the prebuild job uses.
+          # linux-amd64 -> evo self-hosted fleet ([self-hosted, Linux, X64]): the ARC
+          # scale set "hanzo-build-linux-amd64" registers with these default labels.
+          - id: linux-amd64
+            arch: x86_64-unknown-linux-gnu
             os: [self-hosted, Linux, X64]
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_amd64.AppImage.tar.gz.sig
-            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage
-            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz
-            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-unknown-linux-gnu.AppImage.tar.gz.sig
+            tauri_target: ''
+            sidecar_archs: 'x86_64-unknown-linux-gnu'
+            installer_glob: 'appimage/*.AppImage'
+            updater_glob: 'appimage/*.AppImage.tar.gz'
+            stable_name: hanzo-linux.AppImage
+            stable_deb: hanzo-linux.deb
 
-          - arch: aarch64-unknown-linux-gnu
-            # Canonical Hanzo fleet: linux-arm64 -> ARC scale-set "hanzoai-arm64", running NATIVELY on spark.
-            # This is the change that kills the cross-compile; runsOn is a STRING (ARC scale-set name).
+          # linux-arm64 -> ARC scale-set "hanzoai-arm64", running NATIVELY on spark.
+          - id: linux-arm64
+            arch: aarch64-unknown-linux-gnu
             os: hanzoai-arm64
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.AppImage.tar.gz.sig
-            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage
-            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz
-            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-unknown-linux-gnu.AppImage.tar.gz.sig
+            tauri_target: ''
+            sidecar_archs: 'aarch64-unknown-linux-gnu'
+            installer_glob: 'appimage/*.AppImage'
+            updater_glob: 'appimage/*.AppImage.tar.gz'
+            stable_name: hanzo-linux-arm64.AppImage
+            stable_deb: hanzo-linux-arm64.deb
 
-          - arch: aarch64-apple-darwin
-            # Canonical Hanzo fleet: macos-arm64 -> ["self-hosted","macOS","ARM64"] (dbc) — already aligned.
-            # ARC can't host macOS, so this stays a standalone label set (array).
+          # macos-universal -> ["self-hosted","macOS","ARM64"] (dbc). Cross-builds the
+          # x86_64 slice on the arm64 host and lipos into ONE universal .dmg that runs
+          # native on Apple Silicon AND Intel. Needs x86_64-apple-darwin sidecars too.
+          - id: macos-universal
+            arch: aarch64-apple-darwin
             os: [self-hosted, macOS, ARM64]
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/dmg/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_aarch64.dmg
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Hanzo Desktop.app.tar.gz
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/macos/Hanzo Desktop.app.tar.gz.sig
-            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.dmg
-            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz
-            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_aarch64-apple-darwin.app.tar.gz.sig
+            tauri_target: 'universal-apple-darwin'
+            sidecar_archs: 'aarch64-apple-darwin x86_64-apple-darwin'
+            installer_glob: 'dmg/*.dmg'
+            updater_glob: 'macos/*.app.tar.gz'
+            stable_name: hanzo-macos.dmg
+            stable_deb: ''
 
-          - arch: x86_64-pc-windows-msvc
-            # Canonical Hanzo fleet: windows-x64 -> ["self-hosted","Windows","X64"] (evo) — already aligned.
-            # ARC can't host Windows, so this stays a standalone label set (array).
+          # windows-amd64 -> ["self-hosted","Windows","X64"] (evo Windows VM).
+          - id: windows-amd64
+            arch: x86_64-pc-windows-msvc
             os: [self-hosted, Windows, X64]
-            build_output_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.exe
-            build_output_update_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip
-            build_output_update_signature_file_path: apps/hanzo-desktop/src-tauri/target/release/bundle/nsis/Hanzo Desktop_${{ needs.prebuild.outputs.version }}_x64-setup.nsis.zip.sig
-            distributable_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.exe
-            distributable_update_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip
-            distributable_update_signature_file_name: Hanzo-Desktop-${{ needs.prebuild.outputs.version }}.${{ github.run_number }}_x86_64-pc-windows-msvc.nsis.zip.sig
+            tauri_target: ''
+            sidecar_archs: 'x86_64-pc-windows-msvc'
+            installer_glob: 'nsis/*-setup.exe'
+            updater_glob: 'nsis/*-setup.nsis.zip'
+            stable_name: hanzo-windows.exe
+            stable_deb: ''
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     outputs:
-      signature-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-x86_64-unknown-linux-gnu }}
-      update-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-x86_64-unknown-linux-gnu }}
-      app-url-x86_64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-x86_64-unknown-linux-gnu }}
-      signature-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.signature-aarch64-unknown-linux-gnu }}
-      update-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.update-url-aarch64-unknown-linux-gnu }}
-      app-url-aarch64-unknown-linux-gnu: ${{ steps.prepare-files.outputs.app-url-aarch64-unknown-linux-gnu }}
-      signature-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.signature-aarch64-apple-darwin }}
-      update-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.update-url-aarch64-apple-darwin }}
-      app-url-aarch64-apple-darwin: ${{ steps.prepare-files.outputs.app-url-aarch64-apple-darwin }}
-      signature-x86_64-pc-windows-msvc: ${{ steps.prepare-files.outputs.signature-x86_64-pc-windows-msvc }}
-      update-url-x86_64-pc-windows-msvc: ${{ steps.prepare-files.outputs.update-url-x86_64-pc-windows-msvc }}
-      app-url-x86_64-pc-windows-msvc: ${{ steps.prepare-files.outputs.app-url-x86_64-pc-windows-msvc }}
+      signature-x86_64-unknown-linux-gnu: ${{ steps.stage.outputs.signature-x86_64-unknown-linux-gnu }}
+      update-url-x86_64-unknown-linux-gnu: ${{ steps.stage.outputs.update-url-x86_64-unknown-linux-gnu }}
+      app-url-x86_64-unknown-linux-gnu: ${{ steps.stage.outputs.app-url-x86_64-unknown-linux-gnu }}
+      signature-aarch64-unknown-linux-gnu: ${{ steps.stage.outputs.signature-aarch64-unknown-linux-gnu }}
+      update-url-aarch64-unknown-linux-gnu: ${{ steps.stage.outputs.update-url-aarch64-unknown-linux-gnu }}
+      app-url-aarch64-unknown-linux-gnu: ${{ steps.stage.outputs.app-url-aarch64-unknown-linux-gnu }}
+      signature-aarch64-apple-darwin: ${{ steps.stage.outputs.signature-aarch64-apple-darwin }}
+      update-url-aarch64-apple-darwin: ${{ steps.stage.outputs.update-url-aarch64-apple-darwin }}
+      app-url-aarch64-apple-darwin: ${{ steps.stage.outputs.app-url-aarch64-apple-darwin }}
+      signature-x86_64-pc-windows-msvc: ${{ steps.stage.outputs.signature-x86_64-pc-windows-msvc }}
+      update-url-x86_64-pc-windows-msvc: ${{ steps.stage.outputs.update-url-x86_64-pc-windows-msvc }}
+      app-url-x86_64-pc-windows-msvc: ${{ steps.stage.outputs.app-url-x86_64-pc-windows-msvc }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: (Windows) Install asiosdk}
+      - name: (Windows) Install asiosdk
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
         shell: PowerShell
         run: |
@@ -161,7 +119,7 @@ jobs:
           choco install asio4all
           choco install llvm
 
-      # This is a workaround for NSIS bundle size limits https://nsis.sourceforge.io/Talk:Special_Builds
+      # Workaround for NSIS bundle size limits https://nsis.sourceforge.io/Talk:Special_Builds
       - name: (Windows) Override NSIS by NSISBI
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
         shell: PowerShell
@@ -196,7 +154,6 @@ jobs:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE }}
           P12_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-
         run: |
           # create variables
           CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
@@ -256,6 +213,12 @@ jobs:
             echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
 
+      - name: (macOS) Add universal Rust targets
+        if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
+        run: |
+          # A universal .app lipos an arm64 + x86_64 slice; both Rust targets must exist.
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
       - name: (Linux) Provide hanzo engine sibling (optional path-dep source)
         if: ${{ contains(matrix.arch, 'linux') }}
         env:
@@ -283,15 +246,17 @@ jobs:
           cargo set-version ${{ needs.prebuild.outputs.version }}
 
       - name: Download side binaries
+        shell: bash
         env:
-          ARCH: ${{ matrix.arch }}
           HANZO_NODE_VERSION: v1.15.0
           OLLAMA_VERSION: v0.12.3
         run: |
-          npx ts-node ./ci-scripts/download-side-binaries.ts
-
-      # Removed dead 'Download ollama repository' step — hanzo-desktop uses the
-      # native engine and does not import the ollama models list (red-team #29).
+          # macos-universal needs BOTH darwin slices; every other leg is single-arch.
+          for a in ${{ matrix.sidecar_archs }}; do
+            echo "::group::side-binaries $a"
+            ARCH="$a" npx ts-node ./ci-scripts/download-side-binaries.ts
+            echo "::endgroup::"
+          done
 
       - name: (Linux) Build hanzo-desktop
         if: ${{ contains(matrix.arch, 'linux') }}
@@ -303,10 +268,11 @@ jobs:
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{ secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY }}
           NODE_OPTIONS: '--max_old_space_size=8192'
-      - name: (Macos) Build hanzo-desktop
+
+      - name: (Macos) Build hanzo-desktop (universal)
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
         working-directory: apps/hanzo-desktop
-        run: npx tauri build
+        run: npx tauri build --target universal-apple-darwin
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -319,6 +285,7 @@ jobs:
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{ secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY }}
           NODE_OPTIONS: '--max_old_space_size=8192'
+
       - name: (Windows) Build hanzo-desktop
         if: ${{ matrix.arch == 'x86_64-pc-windows-msvc' }}
         working-directory: apps/hanzo-desktop
@@ -333,7 +300,37 @@ jobs:
           LIBCLANG_PATH: C:\Program Files\LLVM\bin
           NODE_OPTIONS: '--max_old_space_size=8192'
 
-      # --- Signing process ---
+      # Locate the produced installer + updater bundle by GLOB. productName is "Hanzo",
+      # so exact filenames (Hanzo_<ver>_<arch>.dmg / _amd64.AppImage / _x64-setup.exe)
+      # vary by platform/arch; globbing keeps this robust to tauri's naming.
+      - name: Discover build artifacts
+        id: artifacts
+        shell: bash
+        run: |
+          set -uo pipefail
+          shopt -s nullglob
+          if [ -n "${{ matrix.tauri_target }}" ]; then
+            BUNDLE="apps/hanzo-desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle"
+          else
+            BUNDLE="apps/hanzo-desktop/src-tauri/target/release/bundle"
+          fi
+          echo "bundle=$BUNDLE" >> "$GITHUB_OUTPUT"
+          inst=("$BUNDLE"/${{ matrix.installer_glob }})
+          if [ ${#inst[@]} -eq 0 ]; then
+            echo "::error::No installer matched $BUNDLE/${{ matrix.installer_glob }}"
+            ls -R "$BUNDLE" || true
+            exit 1
+          fi
+          echo "installer=${inst[0]}" >> "$GITHUB_OUTPUT"
+          echo "Discovered installer: ${inst[0]}"
+          upd=("$BUNDLE"/${{ matrix.updater_glob }})
+          echo "updater=${upd[0]:-}" >> "$GITHUB_OUTPUT"
+          echo "Discovered updater bundle: ${upd[0]:-<none>}"
+          sig=("$BUNDLE"/${{ matrix.updater_glob }}.sig)
+          echo "updater_sig=${sig[0]:-}" >> "$GITHUB_OUTPUT"
+          echo "Discovered updater signature: ${sig[0]:-<none>}"
+
+      # --- Windows EV code signing (GCP KMS + jsign), on the discovered .exe ---
       - name: 'Google auth'
         id: 'auth'
         uses: 'google-github-actions/auth@v2'
@@ -379,27 +376,74 @@ jobs:
               --certfile "OS20241029372986.cer" \
               --tsmode RFC3161 \
               --tsaurl http://timestamp.globalsign.com/tsa/r6advanced1 \
-              "${{ matrix.build_output_file_path }}"
-      # ---
-      - name: Prepare binary files
-        id: prepare-files
+              "${{ steps.artifacts.outputs.installer }}"
+
+      # Stage installers under BOTH a versioned name (Hanzo-<ver>-<id>.<ext>) and a
+      # stable, unversioned alias (hanzo-<os>.<ext>) so hanzo.app can deep-link a URL
+      # that never changes. dist-release -> versioned R2 path + GitHub Release.
+      # dist-latest -> the public, overwrite-in-place R2 "latest/" prefix.
+      - name: Stage release files
+        id: stage
         shell: bash
+        env:
+          VERSION: ${{ needs.prebuild.outputs.version }}
         run: |
-          mkdir files-to-r2
-          cp "${{ matrix.build_output_file_path }}" files-to-r2/${{ matrix.distributable_file_name }}
-          cp "${{ matrix.build_output_update_file_path }}" files-to-r2/${{ matrix.distributable_update_file_name }}
-          cp "${{ matrix.build_output_update_signature_file_path }}" files-to-r2/${{ matrix.distributable_update_signature_file_name }}
-          echo "signature-${{ matrix.arch }}=$(cat files-to-r2/${{ matrix.distributable_update_signature_file_name }})" >> "$GITHUB_OUTPUT"
-          echo "update-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_update_file_name }}" >> "$GITHUB_OUTPUT"
-          echo "app-url-${{ matrix.arch }}=https://download.hanzo.ai/hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/${{ matrix.distributable_file_name }}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          BUNDLE="${{ steps.artifacts.outputs.bundle }}"
+          ID="${{ matrix.id }}"
+          installer="${{ steps.artifacts.outputs.installer }}"
+          ext="${installer##*.}"
+          mkdir -p dist-release dist-latest
+
+          # primary installer: versioned + stable alias
+          cp "$installer" "dist-release/Hanzo-${VERSION}-${ID}.${ext}"
+          cp "$installer" "dist-release/${{ matrix.stable_name }}"
+          cp "$installer" "dist-latest/${{ matrix.stable_name }}"
+
+          # extra: Linux .deb
+          if [ -n "${{ matrix.stable_deb }}" ]; then
+            deb=$(ls $BUNDLE/deb/*.deb 2>/dev/null | head -n1 || true)
+            if [ -n "$deb" ]; then
+              cp "$deb" "dist-release/Hanzo-${VERSION}-${ID}.deb"
+              cp "$deb" "dist-release/${{ matrix.stable_deb }}"
+              cp "$deb" "dist-latest/${{ matrix.stable_deb }}"
+            fi
+          fi
+
+          # extra: Windows .msi
+          if [ "$ID" = "windows-amd64" ]; then
+            msi=$(ls $BUNDLE/msi/*.msi 2>/dev/null | head -n1 || true)
+            if [ -n "$msi" ]; then
+              cp "$msi" "dist-release/Hanzo-${VERSION}-${ID}.msi"
+              cp "$msi" "dist-release/hanzo-windows.msi"
+              cp "$msi" "dist-latest/hanzo-windows.msi"
+            fi
+          fi
+
+          # updater bundle + signature (feeds the auto-updater updates.json rollout)
+          updater="${{ steps.artifacts.outputs.updater }}"
+          updater_sig="${{ steps.artifacts.outputs.updater_sig }}"
+          updater_name=""
+          if [ -n "$updater" ]; then
+            # keep the tauri-native suffix chain (.AppImage.tar.gz / .app.tar.gz / .nsis.zip)
+            updater_name="Hanzo-${VERSION}-${ID}-$(basename "$updater")"
+            cp "$updater" "dist-release/${updater_name}"
+          fi
+          if [ -n "$updater_sig" ]; then
+            cp "$updater_sig" "dist-release/${updater_name}.sig"
+            echo "signature-${{ matrix.arch }}=$(cat "$updater_sig")" >> "$GITHUB_OUTPUT"
+          fi
+
+          BASE="https://download.hanzo.ai/hanzo-desktop/binaries/production/${{ matrix.arch }}/${VERSION}.${{ github.run_number }}"
+          echo "app-url-${{ matrix.arch }}=${BASE}/Hanzo-${VERSION}-${ID}.${ext}" >> "$GITHUB_OUTPUT"
+          if [ -n "$updater_name" ]; then
+            echo "update-url-${{ matrix.arch }}=${BASE}/${updater_name}" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "=== dist-release ===" && ls -la dist-release
+          echo "=== dist-latest ===" && ls -la dist-latest
 
       # --- cosign signing for Linux artifacts (canonical, keyless GitHub OIDC) ---
-      # macOS keeps Apple notarize and Windows keeps EV/GCP-KMS jsign (both above, AS-IS).
-      # Linux .AppImage had no publisher signature, so we add cosign here — matching the
-      # canonical hanzoai/arc build-matrix.yml signing (sigstore/cosign-installer + sign-blob).
-      # Keyless: identity comes from the job's GitHub OIDC token (this job already grants
-      # `id-token: write`). Runs BEFORE the R2 + GitHub Release uploads so those downstream
-      # steps publish the now-signed .sig/.pem and the signed checksums alongside the AppImage.
       - name: (Linux) Install cosign
         if: ${{ contains(matrix.arch, 'linux') }}
         uses: sigstore/cosign-installer@v3
@@ -407,19 +451,17 @@ jobs:
       - name: (Linux) Cosign-sign AppImage + signed checksums
         if: ${{ contains(matrix.arch, 'linux') }}
         shell: bash
-        working-directory: files-to-r2
+        working-directory: dist-release
         env:
           COSIGN_YES: 'true'
         run: |
           set -euo pipefail
-          APPIMAGE="${{ matrix.distributable_file_name }}"
-          # Detached cosign signature + Sigstore cert for the AppImage itself.
+          APPIMAGE="${{ matrix.stable_name }}"
           cosign sign-blob --yes \
             --output-signature "${APPIMAGE}.cosign.sig" \
             --output-certificate "${APPIMAGE}.cosign.pem" \
             "${APPIMAGE}"
-          # Signed checksums file covering every artifact in this dir (AppImage + update bundle + sigs).
-          CHECKSUMS="${APPIMAGE}.checksums.txt"
+          CHECKSUMS="checksums.txt"
           sha256sum * > "${CHECKSUMS}"
           cosign sign-blob --yes \
             --output-signature "${CHECKSUMS}.cosign.sig" \
@@ -427,30 +469,34 @@ jobs:
             "${CHECKSUMS}"
           echo "Signed ${APPIMAGE} and ${CHECKSUMS} with cosign (keyless OIDC)."
 
-      - name: Upload binaries to R2 bucket
+      - name: Upload binaries to R2 (versioned)
         uses: shallwefootball/s3-upload-action@master
         with:
           endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
           aws_key_id: ${{ secrets.R2_ACCESS_KEY_ID }}
           aws_secret_access_key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           aws_bucket: hanzo-download
-          source_dir: files-to-r2
+          source_dir: dist-release
           destination_dir: ./hanzo-desktop/binaries/production/${{ matrix.arch }}/${{ needs.prebuild.outputs.version }}.${{ github.run_number }}/
 
-      - name: Upload installer to GitHub Release
+      - name: Upload stable aliases to R2 (latest)
+        uses: shallwefootball/s3-upload-action@master
+        with:
+          endpoint: https://54bf1bf573b3e6471e574cc4d318db64.r2.cloudflarestorage.com
+          aws_key_id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws_bucket: hanzo-download
+          source_dir: dist-latest
+          destination_dir: ./hanzo-desktop/latest/
+
+      - name: Upload installers to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prebuild.outputs.version }}
-          # The installer for every platform, plus (Linux only) the cosign signature,
-          # Sigstore cert, and signed checksums. action-gh-release skips glob patterns
-          # that match nothing, so macOS/Windows runs just upload their single installer.
+          make_latest: true
+          fail_on_unmatched_files: false
           files: |
-            files-to-r2/${{ matrix.distributable_file_name }}
-            files-to-r2/${{ matrix.distributable_file_name }}.cosign.sig
-            files-to-r2/${{ matrix.distributable_file_name }}.cosign.pem
-            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt
-            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt.cosign.sig
-            files-to-r2/${{ matrix.distributable_file_name }}.checksums.txt.cosign.pem
+            dist-release/*
 
   rollout-hanzo-desktop:
     environment: production
@@ -462,7 +508,6 @@ jobs:
     timeout-minutes: 20
     outputs:
       updates-next-json-url: ${{ steps.generate-updates-next-json.outputs.updates-next-json-url }}
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -479,10 +524,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # This repo is pnpm-native (pnpm-lock.yaml is the source of truth); npm ci
-          # resolves @hanzo/ai's subpath exports differently and fails the vite build.
-          # Pin pnpm 9.15.9 via npx so a newer system pnpm (which needs Node 22) is
-          # never used against the setup-node Node 20 runtime.
           npx --yes pnpm@9.15.9 install --frozen-lockfile
 
       - name: Generate updates-next.json
@@ -549,7 +590,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "Download it from:\n* <${{ needs.release-hanzo-desktop.outputs.app-url-aarch64-apple-darwin }}|MacOS (Apple Silicon)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-pc-windows-msvc }}|Windows (x86_64)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-unknown-linux-gnu }}|Linux (x86_64)>"
+                    "text": "Download it from:\n* <${{ needs.release-hanzo-desktop.outputs.app-url-aarch64-apple-darwin }}|macOS (Universal)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-pc-windows-msvc }}|Windows (x86_64)>\n* <${{ needs.release-hanzo-desktop.outputs.app-url-x86_64-unknown-linux-gnu }}|Linux (x86_64)>"
                   }
                 },
                 {
@@ -566,45 +607,3 @@ jobs:
                 }
               ]
             }
-      # - name: Post Hanzo Visor to a Slack channel
-      #   uses: slackapi/slack-github-action@v1.26.0
-      #   env:
-      #     SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-      #   with:
-      #     channel-id: 'C072VJ6E7GC'
-      #     payload: |
-      #       {
-      #         "blocks": [
-      #           {
-      #             "type": "header",
-      #             "text": {
-      #               "type": "plain_text",
-      #               "text": "📦 New build: Hanzo Visor v${{ needs.prebuild.outputs.version }}.${{ github.run_number }}",
-      #               "emoji": true
-      #             }
-      #           },
-      #           {
-      #             "type": "divider"
-      #           },
-      #           {
-      #             "type": "section",
-      #             "text": {
-      #               "type": "mrkdwn",
-      #               "text": "Found it at <https://chromewebstore.google.com/detail/hanzo-visor-supercharge/${{ secrets.CHROME_EXTENSION_ID }}|Chrome Web Store>"
-      #             }
-      #           },
-      #           {
-      #             "type": "divider"
-      #           },
-      #           {
-      #             "type": "context",
-      #             "elements": [
-      #               {
-      #                 "type": "mrkdwn",
-      #                 "text": "_💡 Send it for review and publish on <https://chrome.google.com/u/4/webstore/devconsole/f35b7411-6fce-4a2b-8865-c310ce95c89f/${{ secrets.CHROME_EXTENSION_ID }}/edit|Chrome Web Store Developer> to start the rollout_"
-      #               }
-      #             ]
-      #           }
-
-      #         ]
-      #       }

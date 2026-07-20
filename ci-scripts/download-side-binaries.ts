@@ -12,6 +12,7 @@ enum Arch {
   x86_64_unknown_linux_gnu = 'x86_64-unknown-linux-gnu',
   aarch64_unknown_linux_gnu = 'aarch64-unknown-linux-gnu',
   aarch64_apple_darwin = 'aarch64-apple-darwin',
+  x86_64_apple_darwin = 'x86_64-apple-darwin',
   x86_64_pc_windows_msvc = 'x86_64-pc-windows-msvc',
 }
 const envSchema = z.object({
@@ -131,31 +132,30 @@ const downloadHanzoNodeBinary = async (arch: Arch, version: string) => {
   await addExecPermissions(asSidecarName(arch, hanzoToolsRunnerUvBinaryPath));
 };
 
-const downloadOllamaAarch64AppleDarwin = async (version: string) => {
-  const downloadUrl = `https://github.com/ollama/ollama/releases/download/${version}/Ollama-darwin.zip`;
-  const zippedPath = path.join(
-    TEMP_PATH,
-    `ollama-${Arch.aarch64_apple_darwin}.zip`,
-  );
-  await downloadFile(downloadUrl, zippedPath);
-  const unzippedPath = path.join(
-    TEMP_PATH,
-    `ollama-${Arch.aarch64_apple_darwin}-${version}`,
-  );
-  await zl.extract(zippedPath, unzippedPath, {
-    overwrite: true,
-  });
-  const ollamaBinaryPath = asSidecarName(
-    Arch.aarch64_apple_darwin,
-    `./apps/hanzo-desktop/src-tauri/external-binaries/ollama/ollama`,
-  );
-  await ensureFile(ollamaBinaryPath);
-  await copyFile(
-    path.join(unzippedPath, 'Ollama.app/Contents/Resources/ollama'),
-    ollamaBinaryPath,
-  );
-  await addExecPermissions(ollamaBinaryPath);
-};
+// The published `Ollama-darwin.zip` ships a universal (arm64 + x86_64) binary,
+// so the same archive serves both darwin sidecars — only the sidecar suffix
+// differs. This is what lets the macOS release build a universal .app.
+const downloadOllamaAppleDarwin =
+  (arch: Arch.aarch64_apple_darwin | Arch.x86_64_apple_darwin) =>
+  async (version: string) => {
+    const downloadUrl = `https://github.com/ollama/ollama/releases/download/${version}/Ollama-darwin.zip`;
+    const zippedPath = path.join(TEMP_PATH, `ollama-${arch}.zip`);
+    await downloadFile(downloadUrl, zippedPath);
+    const unzippedPath = path.join(TEMP_PATH, `ollama-${arch}-${version}`);
+    await zl.extract(zippedPath, unzippedPath, {
+      overwrite: true,
+    });
+    const ollamaBinaryPath = asSidecarName(
+      arch,
+      `./apps/hanzo-desktop/src-tauri/external-binaries/ollama/ollama`,
+    );
+    await ensureFile(ollamaBinaryPath);
+    await copyFile(
+      path.join(unzippedPath, 'Ollama.app/Contents/Resources/ollama'),
+      ollamaBinaryPath,
+    );
+    await addExecPermissions(ollamaBinaryPath);
+  };
 
 const downloadOllamax8664UnknownLinuxGnu = async (version: string) => {
   const downloadUrl = `https://github.com/ollama/ollama/releases/download/${version}/ollama-linux-amd64.tgz`;
@@ -269,7 +269,12 @@ const downloadOllamax8664PcWindowsMsvcNvidia = async (version: string) => {
 };
 
 const downloadOllama = {
-  [Arch.aarch64_apple_darwin]: downloadOllamaAarch64AppleDarwin,
+  [Arch.aarch64_apple_darwin]: downloadOllamaAppleDarwin(
+    Arch.aarch64_apple_darwin,
+  ),
+  [Arch.x86_64_apple_darwin]: downloadOllamaAppleDarwin(
+    Arch.x86_64_apple_darwin,
+  ),
   [Arch.x86_64_unknown_linux_gnu]: downloadOllamax8664UnknownLinuxGnu,
   [Arch.aarch64_unknown_linux_gnu]: downloadOllamaAarch64UnknownLinuxGnu,
   [Arch.x86_64_pc_windows_msvc]: downloadOllamax8664PcWindowsMsvc,

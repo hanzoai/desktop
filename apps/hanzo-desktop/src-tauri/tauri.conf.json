@@ -7,7 +7,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "appimage", "nsis", "dmg"],
+    "targets": ["app", "appimage", "deb", "nsis", "msi", "dmg"],
     "externalBin": [
       "external-binaries/hanzo-node/hanzo-node",
       "external-binaries/hanzo-node/hanzo-tools-runner-resources/deno",
