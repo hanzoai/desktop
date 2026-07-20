@@ -264,6 +264,37 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: (macOS) Lipo sidecars into universal binaries
+        if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
+        shell: bash
+        working-directory: apps/hanzo-desktop/src-tauri
+        run: |
+          set -euo pipefail
+          # tauri build --target universal-apple-darwin expects each externalBin as a
+          # single `<name>-universal-apple-darwin` FAT binary; it does not auto-lipo the
+          # per-arch sidecars. Fuse the two arch slices we downloaded into one.
+          mkuniv() {
+            local base="$1"
+            local a="${base}-aarch64-apple-darwin"
+            local x="${base}-x86_64-apple-darwin"
+            local u="${base}-universal-apple-darwin"
+            if lipo -create "$a" "$x" -output "$u" 2>/dev/null; then
+              :
+            elif lipo "$a" -verify_arch x86_64 arm64 2>/dev/null; then
+              cp "$a" "$u"   # aarch64 slice was already a fat binary
+            elif lipo "$x" -verify_arch x86_64 arm64 2>/dev/null; then
+              cp "$x" "$u"   # x86_64 slice was already a fat binary
+            else
+              cp "$a" "$u"   # single-arch fallback (bundling still succeeds)
+            fi
+            chmod +x "$u"
+            echo "universal sidecar -> $u"
+            lipo -info "$u" || true
+          }
+          mkuniv external-binaries/hanzo-node/hanzo-node
+          mkuniv external-binaries/hanzo-node/hanzo-tools-runner-resources/deno
+          mkuniv external-binaries/hanzo-node/hanzo-tools-runner-resources/uv
+
       - name: (Linux) Build hanzo-desktop
         if: ${{ contains(matrix.arch, 'linux') }}
         working-directory: apps/hanzo-desktop
