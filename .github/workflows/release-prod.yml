@@ -223,16 +223,17 @@ jobs:
           RUSTUP="$(command -v rustup || echo "$HOME/.cargo/bin/rustup")"
           "$RUSTUP" target add aarch64-apple-darwin x86_64-apple-darwin
 
-      - name: (Linux) Provide hanzo engine sibling (optional path-dep source)
-        if: ${{ contains(matrix.arch, 'linux') }}
+      - name: Provide hanzo engine sibling (optional path-dep source)
+        shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           # The Tauri crate declares OPTIONAL path deps on the sibling hanzoai/engine
           # workspace (the `native-engine` feature, OFF by default). cargo still reads
-          # their manifests during resolution, so the source must exist at
-          # ../../../../engine even though it is never compiled here. Mirror the local
-          # dev layout by cloning it next to the repo checkout.
+          # their manifests during resolution (cargo metadata / set-version / build),
+          # so the source must exist at ../../../../engine on EVERY platform even
+          # though it is never compiled here. Mirror the local dev layout by cloning
+          # it next to the repo checkout.
           ENGINE_DIR="$(dirname "$GITHUB_WORKSPACE")/engine"
           if [ -n "$GH_PAT" ]; then
             REMOTE="https://x-access-token:${GH_PAT}@github.com/hanzoai/engine.git"
