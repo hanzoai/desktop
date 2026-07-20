@@ -224,26 +224,26 @@ jobs:
           RUSTUP="$(command -v rustup || echo "$HOME/.cargo/bin/rustup")"
           "$RUSTUP" target add aarch64-apple-darwin x86_64-apple-darwin
 
-      - name: Provide hanzo engine sibling (optional path-dep source)
+      - name: Provide hanzo engine sibling (path-dep resolution stub)
         shell: bash
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # The Tauri crate declares OPTIONAL path deps on the sibling hanzoai/engine
-          # workspace (the `native-engine` feature, OFF by default). cargo still reads
-          # their manifests during resolution (cargo metadata / set-version / build),
-          # so the source must exist at ../../../../engine on EVERY platform even
-          # though it is never compiled here. Mirror the local dev layout by cloning
-          # it next to the repo checkout.
+          set -euo pipefail
+          # The tauri crate declares OPTIONAL path deps on the sibling hanzoai/engine
+          # workspace (hanzo, hanzo-engine, hanzo-server-core) behind the default-OFF
+          # `native-engine` feature (default = ["machine"]). Release builds never enable
+          # it, so cargo only READS those crates' manifests during resolution — it never
+          # compiles them. Generate minimal stub crates (name + referenced features only)
+          # so resolution succeeds on EVERY runner without cloning the private engine repo
+          # or needing a PAT (which this repo does not have).
           ENGINE_DIR="$(dirname "$GITHUB_WORKSPACE")/engine"
-          if [ -n "$GH_PAT" ]; then
-            REMOTE="https://x-access-token:${GH_PAT}@github.com/hanzoai/engine.git"
-          else
-            REMOTE="git@github.com:hanzoai/engine.git"
-          fi
           rm -rf "$ENGINE_DIR"
-          git clone --depth=1 "$REMOTE" "$ENGINE_DIR"
+          for crate in hanzo hanzo-engine hanzo-server-core; do
+            mkdir -p "$ENGINE_DIR/$crate/src"
+            printf '[workspace]\n\n[package]\nname = "%s"\nversion = "0.1.0"\nedition = "2021"\n\n[features]\nmetal = []\ncuda = []\naccelerate = []\nflash-attn = []\n' "$crate" > "$ENGINE_DIR/$crate/Cargo.toml"
+            : > "$ENGINE_DIR/$crate/src/lib.rs"
+          done
           test -f "$ENGINE_DIR/hanzo/Cargo.toml"
+          echo "engine stub crates ready at $ENGINE_DIR"
 
       - name: Setup cargo version from npm
         run: |
