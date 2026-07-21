@@ -306,18 +306,27 @@ jobs:
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
           SECRET_DESKTOP_INSTALLATION_PROOF_KEY: ${{ secrets.SECRET_DESKTOP_INSTALLATION_PROOF_KEY }}
           NODE_OPTIONS: '--max_old_space_size=8192'
+          # linuxdeploy (and the AppImage runtime) are themselves AppImages that need
+          # FUSE to mount; ephemeral ARC runners have no FUSE, so run them in
+          # extract-and-run mode instead — the canonical FUSE-less CI fix for
+          # "failed to run linuxdeploy".
+          APPIMAGE_EXTRACT_AND_RUN: '1'
 
       - name: (Macos) Build hanzo-desktop (universal)
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
         working-directory: apps/hanzo-desktop
         run: npx tauri build --target universal-apple-darwin
         env:
+          # Developer-ID CODE SIGNING stays on (APPLE_SIGNING_IDENTITY + cert). Apple
+          # NOTARIZATION is intentionally NOT wired here: the team's Apple Developer
+          # agreement is expired (notary API returns HTTP 403 "a required agreement is
+          # missing or has expired"), which no secret can fix — the account holder must
+          # re-sign it in App Store Connect. Setting APPLE_ID/APPLE_PASSWORD/APPLE_TEAM_ID
+          # would make tauri attempt notarization and fail the whole build. Once the
+          # agreement is signed, re-add those three secrets to notarize.
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
           VITE_POSTHOG_API_KEY: ${{ secrets.VITE_POSTHOG_API_KEY }}
