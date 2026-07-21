@@ -569,20 +569,29 @@ jobs:
           fi
           gh release edit "$VERSION" -R "$REPO" --draft=false --latest || true
           # Upload each staged file with retries — the universal .dmg is large (~700MB)
-          # and GitHub occasionally drops the connection ("other side closed"); softprops
-          # does not retry, so drive gh release upload --clobber in a retry loop.
-          rc=0
-          for f in dist-release/*; do
-            [ -f "$f" ] || continue
-            ok=0
-            for attempt in 1 2 3 4 5 6; do
+          # and some self-hosted uplinks corrupt/drop large TLS uploads ("other side
+          # closed" / "tls: bad record MAC"); softprops doesn't retry, so drive gh
+          # release upload --clobber in a retry loop with capped backoff. The network
+          # has clean windows, so upload the website-critical STABLE installer first.
+          upload_one() {
+            local f="$1"
+            for attempt in $(seq 1 12); do
               if gh release upload "$VERSION" "$f" -R "$REPO" --clobber; then
-                echo "uploaded $(basename "$f")"; ok=1; break
+                echo "uploaded $(basename "$f")"; return 0
               fi
               echo "::warning::GitHub upload retry $attempt for $(basename "$f")"
-              sleep 20
+              sleep $(( attempt < 5 ? attempt * 10 : 45 ))
             done
-            [ $ok -eq 1 ] || { echo "::error::failed to upload $(basename "$f") after retries"; rc=1; }
+            echo "::error::failed to upload $(basename "$f") after retries"; return 1
+          }
+          rc=0
+          if [ -f "dist-release/${{ matrix.stable_name }}" ]; then
+            upload_one "dist-release/${{ matrix.stable_name }}" || rc=1
+          fi
+          for f in dist-release/*; do
+            [ -f "$f" ] || continue
+            [ "$f" = "dist-release/${{ matrix.stable_name }}" ] && continue
+            upload_one "$f" || rc=1
           done
           exit $rc
 
