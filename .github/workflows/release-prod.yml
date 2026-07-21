@@ -11,7 +11,10 @@ defaults:
 
 jobs:
   prebuild:
-    runs-on: hanzo-build-linux-amd64
+    # Trivial version-gate. Pin it to the macOS pool (dbc) rather than the linux
+    # ARC pool so a stalled/unavailable evo ARC scale set can't block the entire
+    # release matrix (mac/win/arm64 legs live on other hosts).
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 15
     outputs:
       version: ${{ steps.package-version.outputs.version }}
