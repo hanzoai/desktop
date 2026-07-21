@@ -546,13 +546,37 @@ jobs:
           destination_dir: ./hanzo-desktop/latest/
 
       - name: Upload installers to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ needs.prebuild.outputs.version }}
-          make_latest: true
-          fail_on_unmatched_files: false
-          files: |
-            dist-release/*
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prebuild.outputs.version }}
+        run: |
+          set -uo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          # Idempotent across the matrix legs: create the release once (published +
+          # latest), or ensure an earlier partial/draft run is published + latest.
+          if ! gh release view "$VERSION" -R "$REPO" >/dev/null 2>&1; then
+            gh release create "$VERSION" -R "$REPO" --title "$VERSION" \
+              --notes "Hanzo Desktop $VERSION — all-platform native build." --latest || true
+          fi
+          gh release edit "$VERSION" -R "$REPO" --draft=false --latest || true
+          # Upload each staged file with retries — the universal .dmg is large (~700MB)
+          # and GitHub occasionally drops the connection ("other side closed"); softprops
+          # does not retry, so drive gh release upload --clobber in a retry loop.
+          rc=0
+          for f in dist-release/*; do
+            [ -f "$f" ] || continue
+            ok=0
+            for attempt in 1 2 3 4 5 6; do
+              if gh release upload "$VERSION" "$f" -R "$REPO" --clobber; then
+                echo "uploaded $(basename "$f")"; ok=1; break
+              fi
+              echo "::warning::GitHub upload retry $attempt for $(basename "$f")"
+              sleep 20
+            done
+            [ $ok -eq 1 ] || { echo "::error::failed to upload $(basename "$f") after retries"; rc=1; }
+          done
+          exit $rc
 
   rollout-hanzo-desktop:
     environment: production
