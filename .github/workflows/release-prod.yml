@@ -222,6 +222,11 @@ jobs:
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
             echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           fi
+          # Some self-hosted / ARC runner images ship rustup with NO default toolchain,
+          # so bare `cargo` errors "could not choose a version of cargo to run". Pin a
+          # default so cargo/rustup work regardless of the runner instance's initial state.
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup show active-toolchain >/dev/null 2>&1 || rustup default stable
 
       - name: (macOS) Add universal Rust targets
         if: ${{ matrix.arch == 'aarch64-apple-darwin' }}
