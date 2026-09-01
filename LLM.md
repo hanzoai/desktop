@@ -88,6 +88,35 @@ comes apart.
 conversation named none. A model the deployment does not serve is not a safer
 answer than none, so the screen resolves the default from the catalog instead.
 
+## The free lane is this machine, not a free cloud model
+
+Measured against api.hanzo.ai on 2026-09-01, with a bogus key as the control:
+
+    GET  /v1/models              no auth 200 · pk- 200 · bogus pk- 200
+    POST /v1/chat/completions    no auth 401 · pk- 403
+
+The 403 says it outright: *"Publishable keys (pk-) can only access read-only
+endpoints (/v1/models, /v1/embeddings, /health). Use a secret key (sk-)."* So a
+`pk-` can never buy a turn — that is the design, not a version gap, and chat2's
+note that publishable keys would open anonymous chat is wrong.
+
+There is also **no `enso-free`**. The live catalogue is 22 models, none named
+enso, none priced at zero; the enso tier names were replaced by real model
+names. Nothing in the catalogue is free.
+
+What IS free is the engine on this machine: no account, no metering, and it
+answers. That is the signed-out product, and it is the reason the desktop
+exists. Two consequences in the code:
+
+* **The menu is not gated on a session.** `/v1/models` answers 200 with no
+  credential, so an empty picker for a visitor was THIS client declining to ask.
+  `useModels()` takes no `enabled` any more.
+* **The sign-in gate stands aside when the machine can answer.** It was
+  deliberately undismissable — Escape refused, no cancel — on the reasoning that
+  a refusal has nothing behind it. With a local origin that is false, so the
+  gate offers "Not now" exactly when `origins()` includes the machine, and is
+  the wall it was when it does not.
+
 ## The engine's key
 
 The engine listens on `0.0.0.0:36900` and, started without a key, serves anyone

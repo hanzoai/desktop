@@ -30,12 +30,17 @@ const OTHER = 'other'
  * Held for the visit: a catalogue changes when an estate is redeployed or an
  * engine loads a model, not while somebody is choosing from it.
  *
- * Signed-in only, and not by choice: the estate's client resolves a token
- * before every request and THROWS `AuthError` when the browser holds no
- * session, so an unguarded read by a guest fails before it reaches the network.
- * See the `anonymous` entry in `~/data/missing`.
+ * Asked whether or not anybody is signed in. `/v1/models` answers 200 with no
+ * credential at all, and a publishable key is expressly allowed on it, so the
+ * menu was empty for a visitor because THIS client declined to ask — not
+ * because the server declined to answer. The engine on this machine needs no
+ * session either.
+ *
+ * What a visitor cannot do is spend: `/v1/chat/completions` is 401 without a
+ * bearer and 403 with a `pk-`, which the estate's models therefore inherit.
+ * That refusal belongs to the turn, where the reader is told, not to the menu.
  */
-export const useModels = (enabled = true) =>
+export const useModels = () =>
   useRead<Served>(
     keys.models,
     async () => {
@@ -59,5 +64,5 @@ export const useModels = (enabled = true) =>
       })
       return served
     },
-    { enabled, fresh: 300_000 },
+    { fresh: 300_000 },
   )

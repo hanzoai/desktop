@@ -52,7 +52,7 @@ export const Root = () => {
   const { standing, user, signIn, signOut } = useSession()
   const mine = standing === 'live'
 
-  const models = useModels(mine)
+  const models = useModels()
   const convos = useConvos(mine)
 
   const open = useCallback((c: Convo) => navigate(`/c/${id(c)}`), [navigate])

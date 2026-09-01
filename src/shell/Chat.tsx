@@ -15,7 +15,6 @@ import { useConvo } from '~/data/convos'
 import { requireLogin } from '~/data/gate'
 import { useTurns } from '~/data/messages'
 import { why } from '~/data/missing'
-import { useSession } from '~/data/session'
 import * as store from '~/data/store'
 import type { Message, Part } from '~/data/types'
 import { InviteModal } from '~/presence/InviteModal'
@@ -113,8 +112,7 @@ export const Chat = () => {
   const navigate = useNavigate()
   const { search } = useLocation()
 
-  const { standing } = useSession()
-  const models = useModels(standing === 'live')
+  const models = useModels()
 
   const record = useConvo(id)
   const served = useTurns(id)
