@@ -1,7 +1,5 @@
 node_modules
 dist
-target
-src-tauri/gen/schemas
 *.tsbuildinfo
 *.log
 .env
@@ -11,3 +9,7 @@ src-tauri/gen/schemas
 # Claude Code session state (worktrees, transcripts)
 .claude/
 LLM.md
+
+# Rust build output and generated capability schemas
+src-tauri/target/
+src-tauri/gen/schemas/
