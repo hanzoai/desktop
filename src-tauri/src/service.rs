@@ -23,12 +23,16 @@ struct Service {
     health: &'static str,
 }
 
-/// The environment keys are the node's own, spelled as it reads them
-/// (`hanzo-bin/hanzo-node/src/utils/environment.rs`). It binds every interface
-/// by default; a desktop binds the loopback.
+/// One engine serves chat and another serves embeddings: a model answers for
+/// its own category and refuses the other.
 ///
-/// Its HTTP surface is mounted at `/v1/node`, so that is where health lives.
-const SERVICES: [Service; 2] = [
+/// The node's keys are spelled as it reads them
+/// (`hanzo-bin/hanzo-node/src/utils/environment.rs`). It binds every interface
+/// by default, where a desktop binds the loopback. Every port is stated because
+/// it refuses to start unless it can claim each one, and the embedding address
+/// because it refuses to start without it. Its HTTP surface is mounted at
+/// `/v1/node`, so that is where health lives.
+const SERVICES: [Service; 3] = [
     Service {
         name: "engine",
         bin: "hanzo-engine",
@@ -48,6 +52,20 @@ const SERVICES: [Service; 2] = [
         health: "http://127.0.0.1:36900/health",
     },
     Service {
+        name: "embedding",
+        bin: "hanzo-engine",
+        args: &[
+            "serve",
+            "-p",
+            "36901",
+            "embedding",
+            "-m",
+            "zenlm/zen-embedding-0.6B",
+        ],
+        env: &[],
+        health: "http://127.0.0.1:36901/health",
+    },
+    Service {
         name: "node",
         bin: "hanzod",
         args: &[],
@@ -59,6 +77,9 @@ const SERVICES: [Service; 2] = [
             // The chat socket is the API port plus one.
             ("NODE_WS_PORT", "3691"),
             ("NODE_API_HTTPS_PORT", "9553"),
+            ("NODE_ZAP_IP", "127.0.0.1"),
+            ("NODE_ZAP_PORT", "3692"),
+            ("EMBEDDINGS_SERVER_URL", "http://127.0.0.1:36901"),
         ],
         health: "http://127.0.0.1:3690/v1/node/health_check",
     },
