@@ -2,10 +2,10 @@
  * The one IAM client.
  *
  * It lives apart from `session.tsx` because two things need it and neither may
- * build its own: the session drives the sign-in, and `ai.ts` hands it to the SDK
- * as the token source. A second instance would hold a second PKCE verifier in a
- * second storage slot, and whichever one did not start the round trip would fail
- * to finish it.
+ * build its own: the session drives the sign-in, and `origin.ts` hands it to
+ * the SDK as the token source. A second instance would hold a second PKCE
+ * verifier in a second storage slot, and whichever one did not start the round
+ * trip would fail to finish it.
  *
  * Built on first use rather than at import, because it reads `window`.
  */
@@ -24,31 +24,34 @@ import { callbackPath, loginPath } from '~/data/api'
  */
 const scope = 'openid profile email offline_access'
 
+/**
+ * Which IAM answers.
+ *
+ * The brand's, unless a deployment names another — `hanzo up` stands the whole
+ * estate up on this machine, and pointing at it is then one variable rather
+ * than a second build. `VITE_HANZO_API` says where the API is; this says where
+ * identity is, and they move together.
+ */
+const issuer = (import.meta.env.VITE_HANZO_IAM as string) || brand.issuer
+
 let engine: IAM | null = null
 
 export const iam = (): IAM => {
   if (engine) return engine
 
-  const isLocal =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-
-  // On localhost, hanzo.id allowlists hanzo-app / hanzo-ai on http://localhost:3000/auth/callback.
-  // In production, each brand's domain (hanzo.chat, lux.chat, etc.) is allowlisted under `<org>-chat`.
-  const effectiveClientId = isLocal ? 'hanzo-app' : clientId
-  const redirectUri = isLocal
-    ? `http://localhost:3000${callbackPath}`
-    : `${window.location.origin}${callbackPath}`
-  const postLogoutRedirectUri = isLocal
-    ? `http://localhost:3000${loginPath}?redirect=false`
-    : `${window.location.origin}${loginPath}?redirect=false`
+  // Where the browser already is. A redirect URI is a round trip back to THIS
+  // document, so the origin serving it is the only correct answer — a literal
+  // is right for one port and silently wrong for every other, which is what
+  // sent a dev server on 5173 back to a page on 3000 that was not running.
+  // What an issuer must then do is register the loopback origins it will serve.
+  const here = window.location.origin
 
   engine = new IAM({
-    serverUrl: brand.issuer,
-    clientId: effectiveClientId,
+    serverUrl: issuer,
+    clientId,
     organization: brand.org,
-    redirectUri,
-    postLogoutRedirectUri,
+    redirectUri: `${here}${callbackPath}`,
+    postLogoutRedirectUri: `${here}${loginPath}?redirect=false`,
     scope,
   })
 

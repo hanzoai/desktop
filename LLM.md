@@ -117,6 +117,32 @@ exists. Two consequences in the code:
   gate offers "Not now" exactly when `origins()` includes the machine, and is
   the wall it was when it does not.
 
+## Pointing at a local cloud
+
+`hanzo up` stands the whole estate up on this machine. Two variables move the
+app onto it, and they move together:
+
+    VITE_HANZO_API=http://127.0.0.1:18080   # where the API is
+    VITE_HANZO_IAM=http://127.0.0.1:18080   # where identity is
+
+Measured against a local cloud on 2026-09-01: `/v1/health` 200, `/v1/models`
+200 with **86 models** — more than production's 22. **Its 200s prove nothing on
+their own**: `GET /bogus-control-xyz` also answers 200, serving the SPA
+fallback, so compare the BODY against a bogus-path control every time.
+
+Chat there is refused the same way as production — `POST /v1/chat/completions`
+with no bearer is 401 — so a local cloud still needs a local sign-in.
+
+**The redirect URI is `window.location.origin`, always.** It used to be the
+literal `http://localhost:3000/auth/callback` whenever the hostname was
+loopback, with the client swapped to `hanzo-app` to match. That is correct for
+exactly one dev server and silently wrong for every other: a session started on
+5173 came back to a page on 3000 that was not running. A round trip returns to
+the document that began it, so the origin serving it is the only answer the app
+can give. What that moves onto the ISSUER is registering the loopback origins
+it will serve — which is a registration, in one place, rather than a literal
+compiled into the client.
+
 ## The engine's key
 
 The engine listens on `0.0.0.0:36900` and, started without a key, serves anyone
