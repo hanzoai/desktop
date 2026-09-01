@@ -2,7 +2,6 @@ import { Fill, H2, Paragraph, XStack, YStack } from '@hanzo/ui'
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router'
 
-import { SwarmBar } from '~/agents/SwarmBar'
 import { ArtifactPanel } from '~/artifact/ArtifactPanel'
 import { brand } from '~/brand'
 import { Compose } from '~/compose/Compose'
@@ -304,9 +303,6 @@ export const Chat = () => {
                   </Paragraph>
                 </YStack>
 
-                {/* Multi-Agent Swarm Selector */}
-                <SwarmBar />
-
                 {/* Centered Composer with Examples Below */}
                 <Compose
                   conversation={conversation}
@@ -344,9 +340,6 @@ export const Chat = () => {
                 padding="$3"
                 $md={{ padding: '$4' }}
               >
-                {/* Multi-Agent Swarm Selector & Status */}
-                <SwarmBar />
-
                 <Compose
                   conversation={conversation}
                   parent={last}

@@ -1,136 +1,168 @@
 /**
- * Terminal and Cloud Sandbox state management.
+ * A leased computer, and the lines it actually printed.
+ *
+ * Two questions, and they are not the same one:
+ *
+ *   WHERE it runs   an origin — this machine, or the estate. The same axis a
+ *                   model is chosen on (`~/data/origin`), so there is one answer
+ *                   to "local or cloud" in this app rather than one per panel.
+ *   WHAT isolates    a runtime — `runc`, `gvisor`, or a microVM (`kata-clh`,
+ *                   `kata-fc`). A microVM is a KIND of sandbox, not a place to
+ *                   put one, so it belongs here and not beside the origin.
+ *
+ * The panel that stood here answered both with three sibling tabs — "Local k3s",
+ * "Cloud MicroVM", "Tabs" — which crossed a location, an isolation and a product
+ * surface, and then printed a fixed script no matter what anybody typed. Nothing
+ * below prints a line it was not given.
  */
 import { useEffect, useState } from 'react'
 
-export type CloudTab = 'local-k3s' | 'cloud-microvm' | 'zap-telemetry' | 'tabs-workspace'
+import type { Leased, Ran, SandboxRuntime } from '@hanzo/ai'
+
+import { client, ESTATE, type Origin } from '~/data/origin'
+
+/** What a line came from, so the view can render it without parsing it back. */
+export type Kind = 'command' | 'out' | 'err' | 'note'
+
+export interface Line {
+  kind: Kind
+  text: string
+}
 
 export interface TerminalState {
   isOpen: boolean
-  activeTab: CloudTab
-  k3sLogs: string[]
-  cloudLogs: string[]
-  zapLogs: string[]
-  tabsUrl: string
-  commandInput: string
-  isRunning: boolean
-  metrics: {
-    cpuPercent: number
-    memMb: number
-    zapThroughput: number
-    microvmLatencyMs: number
-  }
+  /** The origin id the sandbox is leased from. */
+  where: string
+  /** The isolation asked for. What was GRANTED is `box.runtime`. */
+  runtime: SandboxRuntime
+  /** The live lease, or nothing. Absence is the honest empty state. */
+  box: Leased | null
+  /** Leasing or running — the two waits worth showing. */
+  busy: boolean
+  /** Why the last attempt failed, in the words it failed with. */
+  fault: string | null
+  lines: Line[]
 }
 
-const DEFAULT_STATE: TerminalState = {
+const start = (): TerminalState => ({
   isOpen: false,
-  activeTab: 'local-k3s',
-  k3sLogs: [
-    '⚡ Local k3s Cluster v1.31.0-k3s1 (linux/amd64)',
-    '✔ CoreDNS, Traefik v3, Local Path Provisioner active',
-    '✔ Namespace [hanzo-sandbox] ready',
-    'pod/sandbox-worker-7f89d   1/1   Running   0   42s',
-    '$ pnpm dev --port 8080 --host',
-    '[dev] Ready in 280ms on http://localhost:8080',
-  ],
-  cloudLogs: [
-    '☁️ Hanzo Cloud MicroVM Sandbox (gVisor Enclave)',
-    '🔒 Hardware KMS Envelope Encryption initialized (AES-256-GCM)',
-    '🛡️ Egress Policy: Strict Zero-Trust allowlist',
-    '✔ MicroVM booted in 38ms (ID: uvm-hanzo-8829a)',
-    '✔ Live URL: https://uvm-hanzo-8829a.sandboxes.hanzo.ai',
-  ],
-  zapLogs: [
-    '🚀 ZAP (Zero-Allocation Protocol) Stream Telemetry',
-    '📡 Connected to NATS cluster: nats://edge.hanzo.ai:4222',
-    '⚡ Channel: zap.stream.v1.events',
-    '[ZAP] Throughput: 14,820 msgs/sec | p99: 0.18ms | Mem alloc: 0 B',
-  ],
-  tabsUrl: 'https://tabs.hanzo.ai/app',
-  commandInput: '',
-  isRunning: true,
-  metrics: {
-    cpuPercent: 12.4,
-    memMb: 86.2,
-    zapThroughput: 14820,
-    microvmLatencyMs: 0.18,
-  },
-}
+  where: ESTATE,
+  runtime: 'gvisor',
+  box: null,
+  busy: false,
+  fault: null,
+  lines: [],
+})
 
-let terminalState: TerminalState = { ...DEFAULT_STATE }
+let state: TerminalState = start()
 const listeners = new Set<(s: TerminalState) => void>()
 
-const notify = () => {
-  listeners.forEach((fn) => fn(terminalState))
+const put = (next: Partial<TerminalState>) => {
+  state = { ...state, ...next }
+  listeners.forEach((fn) => fn(state))
 }
 
+const say = (kind: Kind, text: string) =>
+  put({ lines: [...state.lines, ...text.split('\n').map((line) => ({ kind, text: line }))] })
+
+/** The message an error carries, never the object's own spelling of itself. */
+const because = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+
 export const terminalStore = {
-  get: (): TerminalState => terminalState,
+  get: (): TerminalState => state,
 
-  open: (tab?: CloudTab) => {
-    terminalState = {
-      ...terminalState,
-      isOpen: true,
-      activeTab: tab || terminalState.activeTab,
+  open: () => put({ isOpen: true }),
+  close: () => put({ isOpen: false }),
+  toggle: () => put({ isOpen: !state.isOpen }),
+
+  /**
+   * Moves to another origin.
+   *
+   * A lease belongs to the place that granted it, so it is dropped rather than
+   * carried — an id from the estate names nothing on this machine.
+   */
+  setWhere: (where: string) => {
+    if (where === state.where) return
+    put({ where, box: null, fault: null })
+    say('note', `origin: ${where}`)
+  },
+
+  setRuntime: (runtime: SandboxRuntime) => {
+    if (runtime === state.runtime) return
+    put({ runtime, fault: null })
+    say('note', `runtime: ${runtime} (takes effect on the next lease)`)
+  },
+
+  /**
+   * Leases a computer, or resumes the one already held.
+   *
+   * `exec` keeps nothing and needs no project, which is what makes it the class
+   * a terminal can lease without asking anybody anything first.
+   */
+  lease: async (): Promise<Leased | null> => {
+    if (state.box) return state.box
+    put({ busy: true, fault: null })
+    try {
+      const box = await client(state.where).sandboxes.lease({
+        class: 'exec',
+        runtime: state.runtime,
+      })
+      put({ box, busy: false })
+      const granted = box.runtime && box.runtime !== state.runtime ? ` (asked ${state.runtime})` : ''
+      say('note', `leased ${box.id} · ${box.runtime ?? 'runtime unstated'}${granted}`)
+      return box
+    } catch (e) {
+      put({ busy: false, fault: because(e) })
+      say('err', because(e))
+      return null
     }
-    notify()
   },
 
-  close: () => {
-    terminalState = { ...terminalState, isOpen: false }
-    notify()
-  },
+  /** Runs one line and prints what it printed. Leases first if nothing is held. */
+  run: async (command: string) => {
+    const line = command.trim()
+    if (!line || state.busy) return
 
-  toggle: () => {
-    terminalState = { ...terminalState, isOpen: !terminalState.isOpen }
-    notify()
-  },
+    say('command', line)
+    const box = state.box ?? (await terminalStore.lease())
+    if (!box) return
 
-  setTab: (activeTab: CloudTab) => {
-    terminalState = { ...terminalState, activeTab }
-    notify()
-  },
-
-  setTabsUrl: (tabsUrl: string) => {
-    terminalState = { ...terminalState, tabsUrl }
-    notify()
-  },
-
-  executeCommand: (cmd: string) => {
-    const trimmed = cmd.trim()
-    if (!trimmed) return
-
-    const timestamp = new Date().toLocaleTimeString()
-    let response = `[${timestamp}] Command completed with exit code 0`
-
-    if (trimmed.startsWith('kubectl') || trimmed.startsWith('k3s')) {
-      response = `pod/sandbox-app-worker-99d   1/1   Running   0   12s\nservice/sandbox-http   NodePort   10.43.0.12   8080:31245/TCP   12s`
-    } else if (trimmed.startsWith('pnpm') || trimmed.startsWith('npm')) {
-      response = `✔ Build succeeded in 0.42s (0 errors, 0 warnings)`
-    } else if (trimmed.startsWith('hanzo cloud')) {
-      response = `☁️ Hanzo MicroVM deployed: https://uvm-sandbox.hanzo.ai`
+    put({ busy: true, fault: null })
+    try {
+      const ran: Ran = await client(state.where).sandboxes.run({ id: box.id, command: line })
+      if (ran.stdout) say('out', ran.stdout.replace(/\n$/, ''))
+      if (ran.stderr) say('err', ran.stderr.replace(/\n$/, ''))
+      // A command that printed nothing still ended, and a non-zero end is the
+      // whole result when there is no output to read it from.
+      if (!ran.stdout && !ran.stderr) say('note', `exit ${ran.exitCode ?? 0}`)
+      else if (ran.exitCode) say('note', `exit ${ran.exitCode}`)
+      put({ busy: false })
+    } catch (e) {
+      put({ busy: false, fault: because(e) })
+      say('err', because(e))
     }
-
-    terminalState = {
-      ...terminalState,
-      k3sLogs: [...terminalState.k3sLogs, `$ ${trimmed}`, response],
-      commandInput: '',
-    }
-    notify()
   },
 
-  clearLogs: () => {
-    terminalState = {
-      ...terminalState,
-      k3sLogs: [`$ clear`],
+  /** Ends the lease. The computer is borrowed; nothing on it survives. */
+  end: async () => {
+    const box = state.box
+    if (!box) return
+    put({ busy: true })
+    try {
+      await client(state.where).sandboxes.end({ id: box.id })
+      say('note', `ended ${box.id}`)
+    } catch (e) {
+      say('err', because(e))
     }
-    notify()
+    put({ box: null, busy: false })
   },
+
+  clear: () => put({ lines: [], fault: null }),
 }
 
 export const useTerminal = (): TerminalState => {
-  const [current, setCurrent] = useState<TerminalState>(terminalState)
-
+  const [current, setCurrent] = useState<TerminalState>(state)
   useEffect(() => {
     const handler = (next: TerminalState) => setCurrent(next)
     listeners.add(handler)
@@ -138,6 +170,7 @@ export const useTerminal = (): TerminalState => {
       listeners.delete(handler)
     }
   }, [])
-
   return current
 }
+
+export type { Origin }

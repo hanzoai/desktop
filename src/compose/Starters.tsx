@@ -15,39 +15,51 @@ export interface Starter {
 const HOUSE: Starter[] = [
   {
     label: 'Next.js 16 + React 19',
-    subtitle: 'Fullstack App Blueprint',
-    text: 'Write a production-ready Next.js 16 app with React 19, @hanzo/ui design system, and pgvector semantic search.',
+    subtitle: 'Fullstack app blueprint',
+    text: 'Write a production-ready Next.js 16 app with React 19, the @hanzo/ui design system, and pgvector semantic search.',
     icon: Code,
   },
   {
-    label: 'Autonomous Commerce',
-    subtitle: 'Luxury Storefront & Checkout',
-    text: 'Scaffold a luxury commerce storefront with @hanzo/ui, zero-fee multi-currency checkout, and pgvector search.',
-    icon: ShoppingBag,
-  },
-  {
-    label: 'Agent Swarm Swarm',
-    subtitle: 'Planner, Dev & SecOps',
-    text: 'Orchestrate an autonomous agent swarm to plan, refactor, and verify code with isolated worktrees.',
-    icon: Bot,
-  },
-  {
-    label: 'ZAP Binary Protocol',
-    subtitle: '0.18ms Microservices',
-    text: 'Design a high-throughput microservice architecture using the ZAP zero-allocation binary protocol and NATS messaging.',
-    icon: Zap,
-  },
-  {
-    label: 'Zero-Trust KMS Enclave',
-    subtitle: 'gVisor & Hardware Secrets',
-    text: 'Configure hardware enclave KMS envelope encryption, zero-trust IAM policies, and 42ms gVisor sandboxes.',
+    label: 'Run it in a sandbox',
+    subtitle: 'A leased computer, gVisor or microVM',
+    text: 'Lease a sandbox, install the dependencies for this project, run the test suite, and show me only what failed.',
     icon: Server,
   },
   {
-    label: 'Vector Search & AI',
-    subtitle: 'pgvector & Embedding Index',
-    text: 'Implement PostgreSQL pgvector semantic search with AST symbol indexing and RAG memory retrieval.',
+    label: 'Agent swarm',
+    subtitle: 'Planner, dev and secops',
+    text: 'Orchestrate an agent swarm to plan, refactor and verify a change across isolated git worktrees.',
+    icon: Bot,
+  },
+  {
+    label: 'Autonomous commerce',
+    subtitle: 'Storefront and checkout',
+    text: 'Scaffold a commerce storefront with @hanzo/ui, multi-currency checkout, and vector product search.',
+    icon: ShoppingBag,
+  },
+  {
+    label: 'Read this codebase',
+    subtitle: 'Structure before changes',
+    text: 'Map this repository: entry points, where state lives, what talks to the network, and the three files worth reading first.',
+    icon: Sparkles,
+  },
+  {
+    label: 'Vector search',
+    subtitle: 'pgvector and an embedding index',
+    text: 'Implement PostgreSQL pgvector semantic search with AST symbol indexing and retrieval for long-context memory.',
     icon: Database,
+  },
+  {
+    label: 'ZAP binary protocol',
+    subtitle: 'Zero-allocation services',
+    text: 'Design a high-throughput service on the ZAP zero-allocation binary protocol, and say where it beats JSON over HTTP and where it does not.',
+    icon: Zap,
+  },
+  {
+    label: 'Zero-trust secrets',
+    subtitle: 'KMS envelopes and sandboxes',
+    text: 'Configure KMS envelope encryption, zero-trust IAM policy, and a sandbox that can hold a secret without printing it.',
+    icon: Server,
   },
 ]
 

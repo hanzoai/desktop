@@ -73,9 +73,14 @@ export const client = (origin: string = ESTATE): AiClient => {
       ? createAiClient({ baseUrl: ENGINE, token: key.get() })
       : createAiClient({
           publishableKey: brand.publishableKey,
+          auth: iam(),
+          // WHERE the estate is and WHO is calling it are separate questions.
+          // Naming a local cloud used to drop the bearer with it, so every call
+          // to that cloud answered 401 — and VITE_HANZO_IAM exists precisely so
+          // the identity moves with the API rather than instead of it.
           ...(import.meta.env.VITE_HANZO_API
             ? { baseUrl: import.meta.env.VITE_HANZO_API as string }
-            : { auth: iam() }),
+            : {}),
         })
   held.set(origin, made)
   return made

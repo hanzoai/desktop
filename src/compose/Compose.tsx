@@ -1,11 +1,12 @@
 /**
  * The composer with file upload, drag-and-drop, clipboard paste, and attachment previews.
  */
-import { Paperclip, X } from '@hanzogui/lucide-icons-2'
+import { Paperclip, Plus, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { Composer } from '@hanzo/ui/chat'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
+import { Insert, type Lane } from '~/compose/Insert'
 import { Starters, type Starter } from '~/compose/Starters'
 import { useDraft } from '~/compose/draft'
 import type { Handoff } from '~/compose/link'
@@ -45,6 +46,33 @@ export const Compose = ({
   const field = useRef<HTMLTextAreaElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
+  // What the insert menu is showing, or nothing. `query` is what was typed
+  // after the trigger, so the list narrows as somebody keeps typing.
+  const [insert, setInsert] = useState<{ lane: Lane; query: string } | null>(null)
+
+  /**
+   * Writes the draft, and reads its tail for a trigger.
+   *
+   * `/` opens the skills at the START of a word only — otherwise every URL and
+   * every date in a sentence would open a menu over what somebody is writing.
+   */
+  const type = (text: string) => {
+    write(text)
+    const slash = /(?:^|\s)\/([^\s/]*)$/.exec(text)
+    setInsert(slash ? { lane: 'skill', query: slash[1] } : null)
+  }
+
+  /** Puts the chosen name in, replacing the trigger that opened the menu. */
+  const put = (chosen: string) => {
+    const text = draft.text
+    write(
+      insert?.lane === 'skill'
+        ? text.replace(/(?:^|\s)\/[^\s/]*$/, (m) => (m.startsWith('/') ? chosen : ` ${chosen}`))
+        : `${text}${text && !text.endsWith(' ') ? ' ' : ''}${chosen}`,
+    )
+    setInsert(null)
+    field.current?.focus()
+  }
 
   const conversationId = conversation?.conversationId ?? null
   const { draft, write, addFiles, removeFile, clear } = useDraft(conversationId)
@@ -235,9 +263,12 @@ export const Compose = ({
         }}
         onPaste={handlePaste}
       >
+        {insert && (
+          <Insert lane={insert.lane} query={insert.query} onPick={put} onClose={() => setInsert(null)} />
+        )}
         <Composer
           value={draft.text}
-          onChange={write}
+          onChange={type}
           onSend={send}
           onStop={onStop}
           busy={busy}
@@ -249,6 +280,30 @@ export const Compose = ({
           field={{ ref: field }}
         >
           <XStack alignItems="center" gap="$2">
+            {/* Add an agent or a skill by name. */}
+            <button
+              type="button"
+              title="Add an agent or a skill"
+              disabled={busy || disabled}
+              onClick={() => setInsert(insert ? null : { lane: 'all', query: '' })}
+              className="tap"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Plus size={14} />
+            </button>
+
             {/* Paperclip upload button */}
             <button
               type="button"

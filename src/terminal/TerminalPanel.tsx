@@ -1,27 +1,33 @@
 /**
- * Interactive Terminal & Cloud Sandbox Panel.
+ * The sandbox panel: a leased computer, and what it printed.
  *
- * Provides real-time execution in local k3s clusters, Hanzo Cloud gVisor MicroVMs,
- * Tabs Workspace (tabs.hanzo.ai), and live ZAP zero-allocation streaming telemetry.
+ * Two controls, because there are two questions (see `./store`): WHERE it runs
+ * is an origin, and WHAT isolates it is a runtime. A microVM is one of the
+ * runtimes, so it is in that menu rather than standing beside the origin as if
+ * "cloud microVM" were a third place.
+ *
+ * Tabs is a workspace that opens against whichever origin is selected, so it is
+ * a destination rather than a peer of the two controls.
  */
 import {
-  Activity,
   Check,
-  Cloud,
   Copy,
-  Cpu,
   ExternalLink,
   Layers,
-  Shield,
+  Square,
   Trash2,
   X,
-  Zap,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type CSSProperties, type FormEvent } from 'react'
-import { terminalStore, useTerminal } from './store'
 
-const TAB_STYLE = (active: boolean): CSSProperties => ({
+import { origins } from '~/data/origin'
+import { terminalStore, useTerminal, type Kind } from './store'
+
+/** Where the Tabs workspace lives. It is a destination, not an origin. */
+const TABS = 'https://tabs.hanzo.ai/app'
+
+const PICK = (active: boolean): CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
   gap: 6,
@@ -36,7 +42,7 @@ const TAB_STYLE = (active: boolean): CSSProperties => ({
   transition: 'all 0.15s ease',
 })
 
-const ACTION_BTN: CSSProperties = {
+const ACTION: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -50,46 +56,53 @@ const ACTION_BTN: CSSProperties = {
   transition: 'all 0.15s ease',
 }
 
-const QUICK_BTN: CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 4,
-  padding: '3px 8px',
-  borderRadius: 5,
+const SELECT: CSSProperties = {
+  appearance: 'none',
+  padding: '5px 10px',
+  borderRadius: 6,
+  fontSize: 11,
+  fontWeight: 600,
+  color: 'rgba(255, 255, 255, 0.75)',
   background: 'rgba(255, 255, 255, 0.05)',
   border: '1px solid rgba(255, 255, 255, 0.09)',
-  color: 'rgba(255, 255, 255, 0.8)',
-  fontSize: 11,
-  fontWeight: 500,
   cursor: 'pointer',
-  whiteSpace: 'nowrap',
+}
+
+/** The isolation a sandbox can be asked for. A microVM is two of these. */
+const RUNTIMES: { id: 'runc' | 'gvisor' | 'kata-clh' | 'kata-fc'; label: string }[] = [
+  { id: 'runc', label: 'runc — shared kernel' },
+  { id: 'gvisor', label: 'gVisor — user-space kernel' },
+  { id: 'kata-clh', label: 'microVM (cloud-hypervisor)' },
+  { id: 'kata-fc', label: 'microVM (firecracker)' },
+]
+
+const INK: Record<Kind, string> = {
+  command: '#ffffff',
+  out: 'rgba(255, 255, 255, 0.78)',
+  err: '#f87171',
+  note: 'rgba(255, 255, 255, 0.42)',
 }
 
 export const TerminalPanel = () => {
-  const { isOpen, activeTab, k3sLogs, cloudLogs, zapLogs, tabsUrl, metrics } = useTerminal()
-  const [cmd, setCmd] = useState('')
+  const { isOpen, where, runtime, box, busy, fault, lines } = useTerminal()
+  const [typed, setTyped] = useState('')
   const [copied, setCopied] = useState(false)
 
   if (!isOpen) return null
 
-  const logs = activeTab === 'local-k3s' ? k3sLogs : activeTab === 'cloud-microvm' ? cloudLogs : zapLogs
+  const places = origins()
 
-  const handleSubmit = (e: FormEvent) => {
+  const submit = (e: FormEvent) => {
     e.preventDefault()
-    if (cmd.trim()) {
-      terminalStore.executeCommand(cmd)
-      setCmd('')
-    }
+    const line = typed
+    setTyped('')
+    void terminalStore.run(line)
   }
 
-  const handleCopyLogs = async () => {
-    try {
-      await navigator.clipboard.writeText(logs.join('\n'))
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1800)
-    } catch {
-      // fallback
-    }
+  const copy = () => {
+    void navigator.clipboard.writeText(lines.map((l) => l.text).join('\n'))
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1200)
   }
 
   return (
@@ -108,7 +121,6 @@ export const TerminalPanel = () => {
         zIndex: 35,
       }}
     >
-      {/* Top Bar */}
       <XStack
         alignItems="center"
         justifyContent="space-between"
@@ -117,271 +129,152 @@ export const TerminalPanel = () => {
         borderBottomWidth={1}
         borderColor="rgba(255, 255, 255, 0.07)"
       >
+        {/* WHERE it runs. One button per origin this build can reach — the
+            machine only appears in the desktop shell, so this is one option in
+            the browser and two in the app. */}
         <XStack gap="$1.5" flexWrap="wrap" flex={1}>
-          <button
-            type="button"
-            onClick={() => terminalStore.setTab('local-k3s')}
-            style={TAB_STYLE(activeTab === 'local-k3s')}
-          >
-            <Zap size={13} style={{ color: activeTab === 'local-k3s' ? '#34d399' : 'currentColor' }} />
-            <span>Local k3s</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => terminalStore.setTab('tabs-workspace')}
-            style={TAB_STYLE(activeTab === 'tabs-workspace')}
-          >
-            <Layers size={13} style={{ color: activeTab === 'tabs-workspace' ? '#a78bfa' : 'currentColor' }} />
-            <span>Tabs (tabs.hanzo.ai)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => terminalStore.setTab('cloud-microvm')}
-            style={TAB_STYLE(activeTab === 'cloud-microvm')}
-          >
-            <Cloud size={13} style={{ color: activeTab === 'cloud-microvm' ? '#60a5fa' : 'currentColor' }} />
-            <span>Cloud MicroVM</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => terminalStore.setTab('zap-telemetry')}
-            style={TAB_STYLE(activeTab === 'zap-telemetry')}
-          >
-            <Activity size={13} style={{ color: activeTab === 'zap-telemetry' ? '#fbbf24' : 'currentColor' }} />
-            <span>ZAP Stream</span>
-          </button>
+          {places.map((place) => (
+            <button
+              key={place.id}
+              type="button"
+              onClick={() => terminalStore.setWhere(place.id)}
+              style={PICK(where === place.id)}
+            >
+              <span>{place.label}</span>
+            </button>
+          ))}
         </XStack>
 
         <XStack alignItems="center" gap="$1.5">
-          {activeTab === 'tabs-workspace' && (
-            <button
-              type="button"
-              title="Open tabs.hanzo.ai in new window"
-              onClick={() => window.open(tabsUrl, '_blank', 'noopener,noreferrer')}
-              style={ACTION_BTN}
-            >
-              <ExternalLink size={13} />
-            </button>
-          )}
-
           <button
             type="button"
-            title="Copy logs"
-            onClick={handleCopyLogs}
-            style={ACTION_BTN}
+            title="Open Tabs against this origin"
+            onClick={() => window.open(TABS, '_blank', 'noopener,noreferrer')}
+            style={ACTION}
           >
+            <Layers size={13} />
+          </button>
+          <button type="button" title="Copy output" onClick={copy} style={ACTION}>
             {copied ? <Check size={13} color="#34d399" /> : <Copy size={13} />}
           </button>
-
           <button
             type="button"
-            title="Clear terminal"
-            onClick={() => terminalStore.clearLogs()}
-            style={ACTION_BTN}
+            title="Clear output"
+            onClick={() => terminalStore.clear()}
+            style={ACTION}
           >
             <Trash2 size={13} />
           </button>
-
+          {box && (
+            <button
+              type="button"
+              title="End the lease"
+              onClick={() => void terminalStore.end()}
+              style={ACTION}
+            >
+              <Square size={12} />
+            </button>
+          )}
           <button
             type="button"
-            title="Close terminal"
+            title="Close"
             onClick={() => terminalStore.close()}
-            style={ACTION_BTN}
+            style={ACTION}
           >
             <X size={14} />
           </button>
         </XStack>
       </XStack>
 
-      {/* Metrics Strip */}
+      {/* WHAT isolates it, and what is actually held. The lease's own runtime is
+          shown rather than the one asked for: the fleet may refuse a
+          combination, and `Leased.runtime` is the field that says what happened. */}
       <XStack
         alignItems="center"
-        justifyContent="space-between"
+        gap="$2"
         paddingHorizontal="$3"
-        paddingVertical="$1.5"
+        paddingVertical="$2"
         borderBottomWidth={1}
-        borderColor="rgba(255, 255, 255, 0.05)"
-        backgroundColor="rgba(255, 255, 255, 0.01)"
+        borderColor="rgba(255, 255, 255, 0.06)"
       >
-        <XStack gap="$3" alignItems="center">
-          <XStack alignItems="center" gap="$1">
-            <Cpu size={11} color="rgba(255, 255, 255, 0.4)" />
-            <SizableText size="$1" style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.6)' }}>
-              CPU: <strong>{metrics.cpuPercent}%</strong>
-            </SizableText>
-          </XStack>
-
-          <XStack alignItems="center" gap="$1">
-            <Shield size={11} color="rgba(255, 255, 255, 0.4)" />
-            <SizableText size="$1" style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.6)' }}>
-              RAM: <strong>{metrics.memMb} MB</strong>
-            </SizableText>
-          </XStack>
-
-          <XStack alignItems="center" gap="$1">
-            <Zap size={11} color="#34d399" />
-            <SizableText size="$1" style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.6)' }}>
-              p99: <strong>{metrics.microvmLatencyMs}ms</strong>
-            </SizableText>
-          </XStack>
-        </XStack>
-
-        <span
-          style={{
-            fontSize: 10.5,
-            fontWeight: 600,
-            padding: '2px 6px',
-            borderRadius: 4,
-            background: 'rgba(52, 211, 153, 0.12)',
-            color: '#34d399',
-            border: '1px solid rgba(52, 211, 153, 0.25)',
-          }}
+        <select
+          value={runtime}
+          onChange={(e) => terminalStore.setRuntime(e.target.value as typeof runtime)}
+          style={SELECT}
         >
-          CONNECTED
-        </span>
+          {RUNTIMES.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+
+        <SizableText size="$1" color="rgba(255,255,255,0.45)">
+          {busy
+            ? 'working…'
+            : box
+              ? `${box.id} · ${box.runtime ?? 'runtime unstated'}`
+              : 'no sandbox — a command leases one'}
+        </SizableText>
+
+        {fault && (
+          <SizableText size="$1" color="#f87171" numberOfLines={1}>
+            {fault}
+          </SizableText>
+        )}
       </XStack>
 
-      {/* Quick Action Chips */}
-      <XStack
-        gap="$1.5"
+      <YStack
+        flex={1}
         paddingHorizontal="$3"
-        paddingVertical="$1.5"
-        borderBottomWidth={1}
-        borderColor="rgba(255, 255, 255, 0.04)"
-        overflow="hidden"
-        flexWrap="wrap"
+        paddingVertical="$2"
+        gap="$0.5"
+        style={{ overflowY: 'auto', fontFamily: 'ui-monospace, monospace', fontSize: 12 }}
       >
-        <button
-          type="button"
-          onClick={() => terminalStore.executeCommand('kubectl get pods -n hanzo-sandbox')}
-          style={QUICK_BTN}
-        >
-          $ kubectl get pods
-        </button>
-        <button
-          type="button"
-          onClick={() => terminalStore.executeCommand('pnpm build')}
-          style={QUICK_BTN}
-        >
-          $ pnpm build
-        </button>
-        <button
-          type="button"
-          onClick={() => terminalStore.executeCommand('hanzo cloud microvm status')}
-          style={QUICK_BTN}
-        >
-          $ hanzo microvm
-        </button>
-      </XStack>
+        {lines.length === 0 ? (
+          <SizableText size="$1" color="rgba(255,255,255,0.35)">
+            Nothing has run yet. A command leases a sandbox from the selected origin.
+          </SizableText>
+        ) : (
+          lines.map((line, i) => (
+            <div key={i} style={{ color: INK[line.kind], whiteSpace: 'pre-wrap' }}>
+              {line.kind === 'command' ? `$ ${line.text}` : line.text}
+            </div>
+          ))
+        )}
+      </YStack>
 
-      {/* Main Panel View */}
-      {activeTab === 'tabs-workspace' ? (
-        <YStack flex={1} minHeight={0} position="relative">
-          <iframe
-            title="Tabs Workspace"
-            src={tabsUrl}
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+      <form onSubmit={submit}>
+        <XStack
+          alignItems="center"
+          gap="$2"
+          paddingHorizontal="$3"
+          paddingVertical="$2"
+          borderTopWidth={1}
+          borderColor="rgba(255, 255, 255, 0.07)"
+        >
+          <input
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            placeholder={busy ? 'working…' : 'Run a command in the sandbox'}
+            disabled={busy}
             style={{
-              width: '100%',
-              height: '100%',
+              flex: 1,
+              background: 'transparent',
               border: 'none',
-              background: '#09090b',
+              outline: 'none',
+              color: '#ffffff',
+              fontFamily: 'ui-monospace, monospace',
+              fontSize: 12,
             }}
           />
-        </YStack>
-      ) : (
-        <>
-          {/* Live Log Area */}
-          <YStack
-            flex={1}
-            minHeight={0}
-            backgroundColor="#050507"
-            padding="$3"
-            style={{
-              fontFamily: 'var(--font-mono, monospace)',
-              fontSize: 12,
-              lineHeight: 1.55,
-              overflowY: 'auto',
-            }}
-          >
-            {logs.map((line, idx) => {
-              const isCmd = line.startsWith('$')
-              const isCheck = line.includes('✔') || line.includes('online') || line.includes('Ready')
-              const isHead = line.startsWith('⚡') || line.startsWith('☁️') || line.startsWith('🚀')
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    color: isCmd
-                      ? '#60a5fa'
-                      : isCheck
-                      ? '#34d399'
-                      : isHead
-                      ? '#ffffff'
-                      : 'rgba(255, 255, 255, 0.7)',
-                    fontWeight: isHead || isCmd ? 600 : 400,
-                    marginBottom: 3,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {line}
-                </div>
-              )
-            })}
-          </YStack>
-
-          {/* Interactive Command Shell Input */}
-          <form
-            onSubmit={handleSubmit}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '8px 12px',
-              borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-            }}
-          >
-            <span style={{ color: '#34d399', fontFamily: 'monospace', fontWeight: 700, fontSize: 13 }}>
-              $
-            </span>
-            <input
-              type="text"
-              value={cmd}
-              onChange={(e) => setCmd(e.target.value)}
-              placeholder="Run sandbox or k3s command (e.g. kubectl get pods, pnpm test)..."
-              style={{
-                flex: 1,
-                background: 'transparent',
-                border: 'none',
-                outline: 'none',
-                color: '#ffffff',
-                fontFamily: 'var(--font-mono, monospace)',
-                fontSize: 12.5,
-              }}
-            />
-            <button
-              type="submit"
-              className="tap"
-              style={{
-                padding: '4px 10px',
-                borderRadius: 5,
-                background: 'rgba(255, 255, 255, 0.08)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                color: '#ffffff',
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              Run
-            </button>
-          </form>
-        </>
-      )}
+          <button type="submit" disabled={busy || !typed.trim()} style={ACTION}>
+            <ExternalLink size={13} />
+          </button>
+        </XStack>
+      </form>
     </YStack>
   )
 }
+
+export default TerminalPanel
