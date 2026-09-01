@@ -59,13 +59,21 @@ export const initialRegistration = async (
   nodeAddress: string,
   payload: InitialRegistrationRequest,
 ): Promise<InitialRegistrationResponse> => {
+  // A bare { status: 'error' } here is how a dead node became a dead button:
+  // the caller had nothing to show and nothing to log. Carry the reason.
   const healthResponse = await checkHealth(nodeAddress);
   const { status, is_pristine } = healthResponse;
   if (status !== 'ok') {
-    return { status: 'error' };
+    return {
+      status: 'error',
+      reason: `the node at ${nodeAddress} reported "${status}" rather than "ok"`,
+    };
   }
   if (!is_pristine) {
-    return { status: 'non-pristine' };
+    return {
+      status: 'non-pristine',
+      reason: `the node at ${nodeAddress} already holds an identity`,
+    };
   }
 
   const response = await httpClient.post(

@@ -164,6 +164,8 @@ export type InitialRegistrationData = {
 export type InitialRegistrationResponse = {
   status: InitialRegistrationStatus;
   data?: InitialRegistrationData;
+  /** Why a non-success status happened, so a caller can say so out loud. */
+  reason?: string;
 };
 
 export type SubmitRegistrationNoCodeResponse = {
