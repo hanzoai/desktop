@@ -95,8 +95,9 @@ impl HanzoNodeProcessHandler {
     async fn wait_hanzo_node_server(&self) -> Result<(), String> {
         let max_wait_time = Duration::from_millis(Self::HEALTH_TIMEOUT_MS);
         let default_timeout = Duration::from_millis(Self::HEALTH_REQUEST_TIMEOUT_MS);
-        let mut timeout = default_timeout;
-        let mut retries = 0;
+        let timeout = default_timeout;
+        let mut retries: u32 = 0;
+        const MAX_BACKOFF: Duration = Duration::from_secs(2);
         let start_time = std::time::Instant::now();
         let base_url = self.get_base_url();
         tokio::select! {
@@ -106,17 +107,22 @@ impl HanzoNodeProcessHandler {
             }
             _ = tokio::spawn(async move {
                 loop {
-                    match Self::health(base_url.as_str(), timeout).await {
-                        true => break,
-                        false => {
-                            retries = retries + 1;
-                            log::info!("health check failed, retrying in {:?}ms", timeout);
-                            let retry_add = default_timeout * retries;
-                            timeout = timeout.checked_add(retry_add).unwrap_or(max_wait_time);
-                            log::info!("new timeout is: {:?}", timeout);
-                            tokio::time::sleep(Duration::from_millis(50)).await
-                        }
+                    if Self::health(base_url.as_str(), timeout).await {
+                        break;
                     }
+                    retries += 1;
+
+                    // Back off the wait between attempts, not the request
+                    // timeout: growing the timeout made each attempt slower to
+                    // fail while the loop still ran every 50ms, so a node that
+                    // answers 404 gets thousands of requests a second and the
+                    // log fills with retries that never happened.
+                    let backoff = default_timeout
+                        .checked_mul(1 << retries.min(6))
+                        .unwrap_or(MAX_BACKOFF)
+                        .min(MAX_BACKOFF);
+                    log::info!("health check failed, retrying in {:?}", backoff);
+                    tokio::time::sleep(backoff).await;
                 }
             }) => {
                 Ok(())
