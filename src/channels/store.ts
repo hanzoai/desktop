@@ -1,164 +1,108 @@
 /**
- * Unified Room Store for Channels, DMs, and Informal Groups.
+ * The rooms this org has, from the estate's own team surface.
+ *
+ * The rooms here were nine literals — `#general`, `#dev-swarm`, DMs with agents,
+ * each with an invented last message, an invented unread count and a "Just now"
+ * that was a string. None of it came from anywhere.
+ *
+ * `GET /v1/team/rooms` is where rooms actually live, and a room carries
+ * `name`, `topic`, `private`, `direct`, `members`, `workspace` and `archived`.
+ * There is no `team` resource on the SDK client, so this goes through
+ * `client.http`, which the SDK exposes for exactly this; `collection('rooms')`
+ * unwraps the `{rooms: […]}` envelope the route answers with.
+ *
+ * TWO THINGS THE SERVER DOES NOT DO, and neither is invented here:
+ *
+ *   Cross-org. The route's own summary is "every room of the CALLER'S org",
+ *   so there is no browsing another org and no joining one. Public channels
+ *   across orgs need a route that lists them and a route that joins one —
+ *   see `docs` in this repo's CLAUDE.md rather than a client that pretends.
+ *
+ *   Unread. Nothing on the wire says what has been read, so no count is shown.
+ *   A zero would be a claim, and an invented number is what was here before.
  */
 import { useEffect, useState } from 'react'
+
+import { client, ESTATE } from '~/data/origin'
 import type { ChatRoom, RoomType } from './types'
 
 export type { ChatRoom, RoomType }
 
-const DEFAULT_ROOMS: ChatRoom[] = [
-  // Channels
-  {
-    id: 'chan-general',
-    type: 'channel',
-    name: 'general',
-    topic: 'Company-wide updates and AI co-piloting',
-    members: ['user_self', 'user_alex', 'user_sarah', 'agent_dev'],
-    unreadCount: 0,
-    lastActivity: '1m ago',
-  },
-  {
-    id: 'chan-dev-swarm',
-    type: 'channel',
-    name: 'dev-swarm',
-    topic: 'Full-stack Next.js 16, React 19, and ZAP microservices',
-    members: ['user_self', 'agent_planner', 'agent_dev', 'agent_secops'],
-    unreadCount: 2,
-    lastActivity: 'Just now',
-  },
-  {
-    id: 'chan-cloud-ops',
-    type: 'channel',
-    name: 'cloud-ops',
-    topic: 'Local k3s cluster, MicroVM enclaves, and CI/CD pipelines',
-    members: ['user_self', 'agent_executor'],
-    unreadCount: 0,
-    lastActivity: '15m ago',
-  },
-
-  // Direct Messages (People & Agents)
-  {
-    id: 'dm-alex',
-    type: 'dm',
-    name: 'Alex Vance',
-    members: ['user_self', 'user_alex'],
-    unreadCount: 0,
-    lastMessage: 'Let us run the benchmark tests on the ZAP stream.',
-    lastActivity: '5m ago',
-    avatar: 'https://cdn.hanzo.ai/avatars/alex.png',
-  },
-  {
-    id: 'dm-dev-agent',
-    type: 'dm',
-    name: '@dev (SWE Agent)',
-    members: ['user_self', 'agent_dev'],
-    unreadCount: 1,
-    lastMessage: 'Ready to synthesize the Next.js 16 components.',
-    lastActivity: '2m ago',
-    avatar: 'https://cdn.hanzo.ai/avatars/dev.png',
-  },
-  {
-    id: 'dm-planner',
-    type: 'dm',
-    name: '@planner (Architect)',
-    members: ['user_self', 'agent_planner'],
-    unreadCount: 0,
-    lastMessage: 'Architecture DAG phases validated.',
-    lastActivity: '20m ago',
-    avatar: 'https://cdn.hanzo.ai/avatars/planner.png',
-  },
-
-  // Informal Groups (No formal name required — derived from participant set)
-  {
-    id: 'group-alex-dev',
-    type: 'group',
-    members: ['user_self', 'user_alex', 'agent_dev'],
-    unreadCount: 0,
-    lastMessage: 'Multi-agent review session in progress.',
-    lastActivity: '10m ago',
-  },
-]
+/** One room as `/v1/team/rooms` answers it. */
+interface TeamRoom {
+  id: string
+  name?: string
+  topic?: string
+  workspace?: string
+  /** A direct message rather than a named room. */
+  direct?: boolean
+  /** Visible to the org, or only to its members. */
+  private?: boolean
+  archived?: boolean
+  members?: string[]
+}
 
 export interface ChannelsState {
   rooms: ChatRoom[]
   activeRoomId: string
-  isCreateOpen: boolean
-  createType: RoomType
+  pending: boolean
+  fault: string | null
 }
 
-let state: ChannelsState = {
-  rooms: DEFAULT_ROOMS,
-  activeRoomId: 'chan-general',
-  isCreateOpen: false,
-  createType: 'channel',
-}
+let state: ChannelsState = { rooms: [], activeRoomId: '', pending: false, fault: null }
 
 const listeners = new Set<(s: ChannelsState) => void>()
 
-const notify = () => {
+const put = (next: Partial<ChannelsState>) => {
+  state = { ...state, ...next }
   listeners.forEach((fn) => fn(state))
+}
+
+const because = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+
+const read = async () => {
+  put({ pending: true, fault: null })
+  try {
+    const listed = await client(ESTATE).http.collection<TeamRoom>('rooms', {
+      path: '/v1/team/rooms',
+    })
+
+    // An archived room is not a room somebody is in; it is kept so history
+    // survives. Listing it in the rail would make every closed thread permanent.
+    const seen: ChatRoom[] = listed
+      .filter((room) => !room.archived)
+      .map((room) => ({
+        id: room.id,
+        type: room.direct ? ('dm' as RoomType) : ('channel' as RoomType),
+        name: room.name ?? room.id,
+        topic: room.topic,
+        members: room.members ?? [],
+        isPrivate: room.private,
+      }))
+
+    put({ rooms: seen, pending: false, activeRoomId: state.activeRoomId || seen[0]?.id || '' })
+  } catch (e) {
+    put({ pending: false, fault: because(e) })
+  }
 }
 
 export const channelsStore = {
   get: (): ChannelsState => state,
-
-  setActiveRoom: (id: string) => {
-    state = {
-      ...state,
-      activeRoomId: id,
-      rooms: state.rooms.map((r) => (r.id === id ? { ...r, unreadCount: 0 } : r)),
-    }
-    notify()
-  },
-
-  openCreate: (type: RoomType = 'channel') => {
-    state = { ...state, isCreateOpen: true, createType: type }
-    notify()
-  },
-
-  closeCreate: () => {
-    state = { ...state, isCreateOpen: false }
-    notify()
-  },
-
-  createRoom: (type: RoomType, members: string[], name?: string, topic?: string, isPrivate = false) => {
-    const id = type === 'channel'
-      ? `chan-${name?.toLowerCase().replace(/[^a-z0-9_-]/g, '-') || Date.now()}`
-      : type === 'dm'
-      ? `dm-${members.find((m) => m !== 'user_self') || Date.now()}`
-      : `group-${Date.now()}`
-
-    const newRoom: ChatRoom = {
-      id,
-      type,
-      name,
-      topic,
-      members,
-      isPrivate,
-      unreadCount: 0,
-      lastActivity: 'Just now',
-    }
-
-    state = {
-      ...state,
-      rooms: [newRoom, ...state.rooms],
-      activeRoomId: newRoom.id,
-      isCreateOpen: false,
-    }
-    notify()
-  },
+  refresh: () => void read(),
+  setActiveRoom: (activeRoomId: string) => put({ activeRoomId }),
 }
 
 export const useChannels = (): ChannelsState => {
   const [current, setCurrent] = useState<ChannelsState>(state)
-
   useEffect(() => {
     const handler = (next: ChannelsState) => setCurrent(next)
     listeners.add(handler)
+    // The rail mounts once, so the first mount is the read. Nothing polls.
+    if (!state.pending && state.rooms.length === 0 && !state.fault) void read()
     return () => {
       listeners.delete(handler)
     }
   }, [])
-
   return current
 }

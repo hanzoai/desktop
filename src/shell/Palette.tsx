@@ -8,7 +8,6 @@ import {
   Code2,
   FileText,
   FolderGit2,
-  Hash,
   Kanban,
   ListTodo,
   LogIn,
@@ -31,7 +30,6 @@ import { workspaceAppsStore } from '~/apps/store'
 import { artifactStore } from '~/artifact/store'
 import { automationsStore } from '~/automations/store'
 import { boardStore } from '~/boards/store'
-import { channelsStore } from '~/channels/store'
 import { api } from '~/data/api'
 import { useSession } from '~/data/session'
 import { intelligenceStore } from '~/intelligence/store'
@@ -226,13 +224,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         icon: <Code2 size={15} />,
       },
       {
-        id: 'channel',
-        group: 'Collaboration',
-        label: 'Create Channel or Group',
-        hint: 'New topic or informal agent room',
-        icon: <Hash size={15} />,
-      },
-      {
         id: 'invite',
         group: 'Collaboration',
         label: 'Invite Friends & Multiplayer Collaboration',
@@ -326,9 +317,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
             code: '// Write TypeScript, TSX or HTML code here\nconsole.log("Hello from Hanzo Sandbox!");',
             language: 'typescript',
           })
-          break
-        case 'channel':
-          channelsStore.openCreate()
           break
         case 'invite':
           multiplayerStore.openInvite()

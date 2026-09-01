@@ -5,7 +5,6 @@ import {
   Bot,
   Hash,
   Lock,
-  Plus,
   Users,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
@@ -32,25 +31,6 @@ export const ChannelSection = () => {
           <SizableText size="$1" fontWeight="700" color="$faint" style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
             Channels
           </SizableText>
-          <button
-            type="button"
-            onClick={() => channelsStore.openCreate('channel')}
-            title="Create new channel"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: 'rgba(255, 255, 255, 0.7)',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={11} />
-          </button>
         </XStack>
 
         {channels.map((chan) => {
@@ -120,25 +100,6 @@ export const ChannelSection = () => {
           <SizableText size="$1" fontWeight="700" color="$faint" style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
             Direct Messages & Agents
           </SizableText>
-          <button
-            type="button"
-            onClick={() => channelsStore.openCreate('dm')}
-            title="New Direct Message"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: 'rgba(255, 255, 255, 0.7)',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={11} />
-          </button>
         </XStack>
 
         {dms.map((dm) => {
@@ -217,25 +178,6 @@ export const ChannelSection = () => {
           <SizableText size="$1" fontWeight="700" color="$faint" style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
             Informal Groups
           </SizableText>
-          <button
-            type="button"
-            onClick={() => channelsStore.openCreate('group')}
-            title="Create informal group"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: 'rgba(255, 255, 255, 0.7)',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus size={11} />
-          </button>
         </XStack>
 
         {groups.map((grp) => {
