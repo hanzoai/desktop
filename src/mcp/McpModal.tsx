@@ -3,34 +3,13 @@
  */
 import {
   Blocks,
-  Cloud,
-  Database,
-  Github,
-  Globe,
   Power,
-  Terminal,
   Wrench,
   X,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { mcpStore, useMcp } from './store'
-import type { McpServer } from './types'
-
-const iconFor = (iconName: string) => {
-  switch (iconName) {
-    case 'database':
-      return Database
-    case 'github':
-      return Github
-    case 'cloud':
-      return Cloud
-    case 'globe':
-      return Globe
-    case 'terminal':
-    default:
-      return Terminal
-  }
-}
+import type { Connected } from './types'
 
 export const McpModal = () => {
   const { isOpen, servers, activeServerId } = useMcp()
@@ -132,10 +111,12 @@ export const McpModal = () => {
             gap="$1.5"
             style={{ overflowY: 'auto' }}
           >
-            {servers.map((s: McpServer) => {
-              const Icon = iconFor(s.icon)
+            {servers.map((s: Connected) => {
               const isSelected = s.id === activeServer.id
-              const isConnected = s.status === 'connected'
+              // Every server in this list IS connected — that is what the list
+              // is. The dot says whether any of its tools are switched on, which
+              // is the fact that decides whether an agent can use it.
+              const isConnected = s.tools.some((t) => t.activated)
 
               return (
                 <button
@@ -174,14 +155,14 @@ export const McpModal = () => {
                         flexShrink: 0,
                       }}
                     >
-                      <Icon size={13} />
+                      <Wrench size={13} />
                     </div>
                     <YStack flex={1} minWidth={0}>
                       <SizableText size="$1" fontWeight="600" color="$ink" numberOfLines={1}>
                         {s.name}
                       </SizableText>
                       <SizableText size="$1" color="$faint" style={{ fontSize: 10.5 }}>
-                        {s.toolsCount} tools • v{s.version}
+                        {s.tools.length} tools • {s.tools.filter((t) => t.activated).length} on
                       </SizableText>
                     </YStack>
                   </XStack>
@@ -204,41 +185,24 @@ export const McpModal = () => {
           <YStack flex={1} minHeight={0} padding="$4" gap="$4" style={{ overflowY: 'auto' }}>
             {activeServer && (
               <>
-                {/* Title & Status Bar */}
+                {/* What the estate actually knows: a name, where it was
+                    connected, and that a credential is held — never what it is.
+                    No version, no category, and no per-server switch, because
+                    activation is per tool and lives on the rows below. */}
                 <XStack alignItems="center" justifyContent="space-between">
-                  <YStack gap="$1">
-                    <XStack alignItems="center" gap="$2">
-                      <SizableText size="$4" fontWeight="700" color="$ink">
-                        {activeServer.name}
-                      </SizableText>
-                      <span
-                        style={{
-                          fontSize: 10.5,
-                          fontWeight: 600,
-                          padding: '2px 7px',
-                          borderRadius: 4,
-                          background:
-                            activeServer.status === 'connected'
-                              ? 'rgba(52, 211, 153, 0.12)'
-                              : 'rgba(255, 255, 255, 0.06)',
-                          color: activeServer.status === 'connected' ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
-                          border:
-                            activeServer.status === 'connected'
-                              ? '1px solid rgba(52, 211, 153, 0.25)'
-                              : '1px solid rgba(255, 255, 255, 0.1)',
-                        }}
-                      >
-                        {activeServer.status === 'connected' ? 'CONNECTED' : 'DISABLED'}
-                      </span>
-                    </XStack>
-                    <SizableText size="$1" color="$faint" style={{ fontSize: 12 }}>
-                      {activeServer.description}
+                  <YStack gap="$1" flex={1} minWidth={0}>
+                    <SizableText size="$4" fontWeight="700" color="$ink">
+                      {activeServer.name}
+                    </SizableText>
+                    <SizableText size="$1" color="$faint" style={{ fontSize: 12 }} numberOfLines={1}>
+                      {activeServer.url ?? 'No address recorded'}
+                      {activeServer.hasSecret ? ' · credential stored' : ''}
                     </SizableText>
                   </YStack>
 
                   <button
                     type="button"
-                    onClick={() => mcpStore.toggleServerStatus(activeServer.id)}
+                    onClick={() => mcpStore.refresh()}
                     className="tap"
                     style={{
                       display: 'inline-flex',
@@ -246,22 +210,16 @@ export const McpModal = () => {
                       gap: 6,
                       padding: '6px 12px',
                       borderRadius: 6,
-                      background:
-                        activeServer.status === 'connected'
-                          ? 'rgba(239, 68, 68, 0.15)'
-                          : 'rgba(52, 211, 153, 0.15)',
-                      border:
-                        activeServer.status === 'connected'
-                          ? '1px solid rgba(239, 68, 68, 0.3)'
-                          : '1px solid rgba(52, 211, 153, 0.3)',
-                      color: activeServer.status === 'connected' ? '#f87171' : '#34d399',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'rgba(255, 255, 255, 0.75)',
                       fontSize: 11.5,
                       fontWeight: 600,
                       cursor: 'pointer',
                     }}
                   >
                     <Power size={12} />
-                    <span>{activeServer.status === 'connected' ? 'Disable MCP' : 'Enable MCP'}</span>
+                    <span>Refresh</span>
                   </button>
                 </XStack>
 
@@ -296,8 +254,30 @@ export const McpModal = () => {
                           </code>
                         </XStack>
                         <SizableText size="$1" color="$faint" style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.7)' }}>
-                          {t.description}
+                          {t.description ?? 'No description published.'}
                         </SizableText>
+                        <button
+                          type="button"
+                          onClick={() => void mcpStore.toggleTool(t.name)}
+                          className="tap"
+                          style={{
+                            alignSelf: 'flex-start',
+                            padding: '3px 9px',
+                            borderRadius: 5,
+                            fontSize: 10.5,
+                            fontWeight: 600,
+                            background: t.activated
+                              ? 'rgba(52, 211, 153, 0.14)'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            border: t.activated
+                              ? '1px solid rgba(52, 211, 153, 0.3)'
+                              : '1px solid rgba(255, 255, 255, 0.1)',
+                            color: t.activated ? '#34d399' : 'rgba(255, 255, 255, 0.6)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {t.activated ? 'On' : 'Off'}
+                        </button>
                       </YStack>
                     ))}
                   </YStack>

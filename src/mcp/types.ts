@@ -1,98 +1,32 @@
 /**
- * Model Context Protocol (MCP) Server & Skill definitions.
+ * The MCP servers an org has connected, and what they expose.
+ *
+ * This was a table of five literals — fixed versions, fixed tool counts, and
+ * `status: 'connected'` written into the source — so the modal reported a fleet
+ * that did not exist and the composer offered names nothing could dispatch.
+ *
+ * What the API actually answers is thinner and truer. A server has an id, a
+ * name, the URL it was connected at, and whether a credential is stored — never
+ * the credential itself. There is no version, no category and no per-server
+ * on/off, because the estate does not keep those: **activation is per TOOL**
+ * (`tools.activation` / `tools.activate`), which is the switch this modal owns.
  */
-export interface McpServer {
-  id: string
+
+/** One tool a connected server exposes. */
+export interface Exposed {
   name: string
-  description: string
-  version: string
-  status: 'connected' | 'connecting' | 'disabled'
-  category: 'System' | 'Database' | 'DevOps' | 'Search' | 'Cloud'
-  icon: 'terminal' | 'database' | 'github' | 'globe' | 'cloud' | 'shield'
-  toolsCount: number
-  tools: readonly {
-    name: string
-    description: string
-  }[]
-  envRequired?: string[]
+  description?: string
+  /** Whether an agent may dispatch it today. */
+  activated: boolean
 }
 
-export const DEFAULT_MCP_SERVERS: readonly McpServer[] = [
-  {
-    id: 'filesystem',
-    name: 'Local Filesystem MCP',
-    description: 'Read, write, edit files and traverse local workspace directories.',
-    version: '1.4.0',
-    status: 'connected',
-    category: 'System',
-    icon: 'terminal',
-    toolsCount: 5,
-    tools: [
-      { name: 'read_file', description: 'Read file contents from local disk' },
-      { name: 'write_file', description: 'Create or overwrite local project files' },
-      { name: 'list_directory', description: 'List files and folders in directory' },
-      { name: 'grep_search', description: 'Search regex patterns across project' },
-      { name: 'find_by_name', description: 'Find files matching glob patterns' },
-    ],
-  },
-  {
-    id: 'github',
-    name: 'GitHub & Git MCP',
-    description: 'Create branches, commit diffs, inspect PRs and dispatch workflows.',
-    version: '2.1.0',
-    status: 'connected',
-    category: 'DevOps',
-    icon: 'github',
-    toolsCount: 6,
-    tools: [
-      { name: 'github_create_pr', description: 'Open pull request with branch changes' },
-      { name: 'github_get_issue', description: 'Fetch issue details and discussions' },
-      { name: 'github_list_repos', description: 'List repositories in Hanzo org' },
-      { name: 'git_status', description: 'Inspect modified files and staged index' },
-    ],
-  },
-  {
-    id: 'postgres',
-    name: 'PostgreSQL & pgvector MCP',
-    description: 'Execute SQL queries, inspect table schemas, and compute vector cosine similarities.',
-    version: '1.8.2',
-    status: 'connected',
-    category: 'Database',
-    icon: 'database',
-    toolsCount: 4,
-    tools: [
-      { name: 'query_sql', description: 'Execute parameterized read/write SQL queries' },
-      { name: 'vector_search', description: 'Hybrid pgvector semantic embedding search' },
-      { name: 'describe_schema', description: 'Extract tables, columns, indexes, and FKs' },
-    ],
-  },
-  {
-    id: 'k8s',
-    name: 'Kubernetes & k3s Sandbox MCP',
-    description: 'Inspect Pods, stream container logs, scale deployments, and apply manifests.',
-    version: '1.2.1',
-    status: 'connected',
-    category: 'Cloud',
-    icon: 'cloud',
-    toolsCount: 5,
-    tools: [
-      { name: 'k8s_get_pods', description: 'List active pods and health status' },
-      { name: 'k8s_container_exec', description: 'Execute isolated process in sandbox pod' },
-      { name: 'k8s_stream_logs', description: 'Tail container stdout/stderr log stream' },
-    ],
-  },
-  {
-    id: 'web-search',
-    name: 'Brave & Web Search MCP',
-    description: 'Real-time web search and live documentation extraction with verified citations.',
-    version: '3.0.0',
-    status: 'connected',
-    category: 'Search',
-    icon: 'globe',
-    toolsCount: 3,
-    tools: [
-      { name: 'search_web', description: 'Search web with verified snippets and links' },
-      { name: 'fetch_page', description: 'Extract markdown content from target URL' },
-    ],
-  },
-]
+/** A server this org has connected. Every field here is one the API answers. */
+export interface Connected {
+  id: string
+  /** The server's name, or its id when it has never been given one. */
+  name: string
+  url?: string
+  /** That a credential is held, never what it is. */
+  hasSecret?: boolean
+  tools: Exposed[]
+}
