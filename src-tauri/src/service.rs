@@ -1,4 +1,4 @@
-//! The two local processes the desktop keeps alive.
+//! The local processes the desktop keeps alive.
 //!
 //! A service is a binary, its arguments, its environment, and the URL that
 //! answers when it is serving. Everything else — where it is found, where it
