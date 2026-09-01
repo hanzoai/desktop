@@ -27,6 +27,11 @@ So the desktop does NOT need hanzo-node's job protocol (`create_job` →
 desktop spoke. No pairing, no `api_v2_key`, no keychain that can lock the app
 out of a node it spawned itself.
 
+### The API is `/v1`. There is no `/v2`
+
+One version, and it never moves. Where `/v2` appears below it is naming a
+retired prefix to say it is gone, not offering a second surface.
+
 ### Two node binaries, opposite route prefixes
 
 This is the trap that reads as "the node is broken". The same handlers are
