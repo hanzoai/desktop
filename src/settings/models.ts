@@ -1,6 +1,6 @@
 import type { ModelCatalogEntry } from '@hanzo/ui/models'
 
-import { origins } from '~/data/origin'
+import type { Origin } from '~/data/origin'
 import type { Served } from '~/data/types'
 
 /**
@@ -38,8 +38,11 @@ export const pick = (id: string): { origin: string; model: string } => {
  * that is already an address groups by the wrong half. The origin says which
  * axis is the useful one — its own name, or the publisher.
  */
-export function catalog(served: Served | null | undefined): ModelCatalogEntry[] {
-  return origins().flatMap(({ id, group }) =>
+export function catalog(
+  served: Served | null | undefined,
+  where: readonly Origin[],
+): ModelCatalogEntry[] {
+  return where.flatMap(({ id, group }) =>
     Object.entries(served?.[id] ?? {}).flatMap(([owner, models]) =>
       models.map((model) => ({
         id: address(id, model),

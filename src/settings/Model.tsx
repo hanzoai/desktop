@@ -1,6 +1,7 @@
 import { ModelSelector } from '@hanzo/ui/models'
 import { useMemo } from 'react'
 
+import { origins } from '~/data/origin'
 import type { Served } from '~/data/types'
 import { catalog } from './models'
 
@@ -27,7 +28,7 @@ export interface ModelProps {
 }
 
 export function Model({ models, value, onChange, disabled, size, placeholder }: ModelProps) {
-  const list = useMemo(() => catalog(models), [models])
+  const list = useMemo(() => catalog(models, origins()), [models])
 
   return (
     <ModelSelector
