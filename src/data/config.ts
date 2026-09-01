@@ -16,8 +16,8 @@
  * always was; what a guest may do is decided server-side from the absence of a
  * bearer, which is where it belongs and where it was already decided.
  */
-import { client, origins } from '~/data/origin'
 import { keys } from '~/data/keys'
+import { client, origins } from '~/data/origin'
 import { useRead } from '~/data/query'
 import type { Served } from '~/data/types'
 
@@ -41,7 +41,11 @@ export const useModels = (enabled = true) =>
     async () => {
       const here = origins()
       const listed = await Promise.all(
-        here.map((origin) => client(origin.id).models.list().catch(() => [])),
+        here.map((origin) =>
+          client(origin.id)
+            .models.list()
+            .catch(() => []),
+        ),
       )
       const served: Served = {}
       here.forEach((origin, at) => {

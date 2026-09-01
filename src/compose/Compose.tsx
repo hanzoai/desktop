@@ -1,74 +1,31 @@
 /**
- * The composer.
- *
- * A field and three controls, and the count is the point. What used to sit here
- * — a badge per tool, a menu of parameters, a model-and-preset picker on `+`,
- * an artifacts mode, a pin per badge and an edit mode for arranging them — asked
- * the reader to hold a model of the machine before they could write a sentence.
- * Each of those ideas still exists; none of them is a question this row asks.
- *
- * The BOX is `Composer` from `@hanzo/ui/chat`, and everything the box knows how
- * to do is deleted from here: Enter sends and Shift+Enter writes a line, the
- * field grows with the draft between a floor and a ceiling, and ONE control
- * submits and stops. The pair of absolutely-positioned buttons that used to
- * live in this file is the arrangement every surface got subtly different.
- *
- * What stays is this surface's own: which model answers, and the one send path
- * everything funnels through — typed, dropped from a link, or picked from an
- * opening.
- *
- * Attachments, the tool badges and the microphone went with the routes behind
- * them. There is no upload for a chat turn to carry; a completion takes OpenAI
- * `tools` rather than the old server's `{web_search: true}`; and `/v1/models`
- * publishes no transcription model to dictate with. Each is gone rather than
- * left as a control that does nothing.
+ * The composer with file upload, drag-and-drop, clipboard paste, and attachment previews.
  */
-import { YStack } from '@hanzo/ui'
-import { Composer, ready } from '@hanzo/ui/chat'
-import { useCallback, useEffect, useRef, type ReactNode } from 'react'
+import { Paperclip, X } from '@hanzogui/lucide-icons-2'
+import { SizableText, XStack, YStack } from '@hanzo/ui'
+import { Composer } from '@hanzo/ui/chat'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Starters, type Starter } from '~/compose/Starters'
 import { useDraft } from '~/compose/draft'
 import type { Handoff } from '~/compose/link'
 import { payload, type Conversation, type Draft, type Payload } from '~/compose/submit'
+import type { Attachment } from '~/data/types'
 
-/** The reading measure. `Thread` caps and centres its own column at this; the
- *  box sits OUTSIDE the thread and has to be told, or the two columns are
- *  different widths and the answer does not line up with the question. */
 const COLUMN = 768
-
-/** How tall the field may grow before it scrolls. Past this the composer is
- *  eating the conversation it belongs to. */
 const CEILING = 240
 
 export interface ComposeProps {
   conversation?: Conversation | null
-  /** The turn this one answers — the last message in the thread. */
   parent?: string | null
-  /** A turn is in flight: the send control becomes stop. */
   busy?: boolean
   disabled?: boolean
-  /** The model picker. Which models exist is settings'; where the control sits
-   *  is the composer's, and that is the whole of what crosses here. */
   model?: ReactNode
-  /** A question that arrived in the address bar. */
   link?: Handoff | null
-  /** The thread has no turns yet, so openings are worth offering. */
   empty?: boolean
   starters?: Starter[]
-  /**
-   * The turn is leaving.
-   *
-   * Answer `false` to KEEP the draft. A send can be held — for a consent
-   * nobody has given yet, for a session that lapsed — and a box that empties
-   * on the ASK rather than on the departure throws the question away behind
-   * the dialog that is asking about it.
-   */
   onSend: (turn: Payload) => boolean | void
   onStop?: () => void
-  /** Where a refused upload, a denied microphone or a file that is too large
-   *  gets said. Omit it and those reasons are discarded — the composer has
-   *  nowhere of its own to put a sentence. */
   onTrouble?: (say: string) => void
 }
 
@@ -83,34 +40,93 @@ export const Compose = ({
   starters,
   onSend,
   onStop,
-  onTrouble,
+  onTrouble: _onTrouble,
 }: ComposeProps) => {
   const field = useRef<HTMLTextAreaElement>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+  const [dragOver, setDragOver] = useState(false)
 
   const conversationId = conversation?.conversationId ?? null
-  const { draft, write, clear } = useDraft(conversationId)
+  const { draft, write, addFiles, removeFile, clear } = useDraft(conversationId)
 
-  const say = useCallback((trouble: string) => onTrouble?.(trouble), [onTrouble])
+  const processFiles = useCallback(
+    async (fileList: FileList | File[]) => {
+      const incoming: Attachment[] = []
+      for (const f of Array.from(fileList)) {
+        const isImg = f.type.startsWith('image/')
+        let preview = ''
+        let text = ''
 
-  /**
-   * The ONE send. Typed, dictated, picked from an opening, handed over in a
-   * link — all four arrive here, so a rule about sending is written once.
-   */
+        if (isImg) {
+          preview = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(reader.result as string)
+            reader.readAsDataURL(f)
+          })
+        } else {
+          // Read text for code/markdown/json files if small
+          if (f.size < 500000) {
+            text = await new Promise<string>((resolve) => {
+              const reader = new FileReader()
+              reader.onload = () => resolve(reader.result as string)
+              reader.readAsText(f)
+            })
+          }
+        }
+
+        incoming.push({
+          file_id: `file_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+          filename: f.name,
+          filepath: preview || '',
+          type: f.type || 'application/octet-stream',
+          bytes: f.size,
+          preview,
+          text,
+        })
+      }
+
+      if (incoming.length > 0) {
+        addFiles(incoming)
+      }
+    },
+    [addFiles],
+  )
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      void processFiles(e.target.files)
+      e.target.value = ''
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+      e.preventDefault()
+      void processFiles(e.clipboardData.files)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      void processFiles(e.dataTransfer.files)
+    }
+  }
+
   const fire = useCallback(
     (text: string) => {
       const going: Draft = { ...draft, text: text.trim() }
-      if (!ready(going.text, busy, disabled)) return
+      const hasContent = going.text.length > 0 || (going.files && going.files.length > 0)
+      if (!hasContent || busy || disabled) return
       const gone = onSend(payload({ draft: going, conversation, parent }))
       if (gone !== false) clear()
     },
-    [draft, busy, disabled, conversation, parent, onSend, clear, say],
+    [draft, busy, disabled, conversation, parent, onSend, clear],
   )
 
   const send = useCallback(() => fire(draft.text), [fire, draft.text])
 
-  // A question handed over in a link fills the box; `submit=true` also sends
-  // it. Sending waits for the text to actually BE the draft — firing in the
-  // same pass would send whatever was in the box before the handoff.
   const seeded = useRef<string | null>(null)
   const armed = useRef(false)
   useEffect(() => {
@@ -125,6 +141,8 @@ export const Compose = ({
     fire(draft.text)
   }, [draft.text, fire])
 
+  const attachments = draft.files ?? []
+
   return (
     <YStack
       width="100%"
@@ -132,28 +150,137 @@ export const Compose = ({
       alignSelf="center"
       gap="$3"
       data-testid="compose"
+      onDragOver={(e) => {
+        e.preventDefault()
+        setDragOver(true)
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
     >
-      {empty && <Starters starters={starters} disabled={busy || disabled} onPick={fire} />}
-      <Composer
-        value={draft.text}
-        onChange={write}
-        onSend={send}
-        onStop={onStop}
-        busy={busy}
-        disabled={disabled}
-        rows={1}
-        maxHeight={CEILING}
-        label="Message"
-        hint={busy ? 'Generating…' : 'Enter to send, Shift+Enter for a new line'}
-        // The ref, and only the ref. The field is already addressable —
-        // `Composer` marks it `[data-slot="composer-field"]` and it answers to
-        // its accessible name — so its props take no test handle, and a third
-        // name for one element is the one nobody keeps in step.
-        field={{ ref: field }}
+      {/* Hidden file input */}
+      <input
+        ref={fileInput}
+        type="file"
+        multiple
+        style={{ display: 'none' }}
+        onChange={handleFileInput}
+      />
+
+      {/* Attachment Previews */}
+      {attachments.length > 0 && (
+        <XStack gap="$2" flexWrap="wrap" paddingHorizontal="$2" paddingBottom="$1">
+          {attachments.map((file) => {
+            const isImg = file.type.startsWith('image/')
+            return (
+              <XStack
+                key={file.file_id}
+                alignItems="center"
+                gap="$2"
+                paddingHorizontal="$2.5"
+                paddingVertical="$1.5"
+                borderRadius="$3"
+                borderWidth={1}
+                borderColor="rgba(255, 255, 255, 0.12)"
+                backgroundColor="rgba(255, 255, 255, 0.05)"
+                style={{ backdropFilter: 'blur(16px)' }}
+              >
+                {isImg && file.preview ? (
+                  <img
+                    src={file.preview}
+                    alt={file.filename}
+                    style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'cover' }}
+                  />
+                ) : (
+                  <Paperclip size={13} color="rgba(255, 255, 255, 0.7)" />
+                )}
+                <SizableText size="$1" color="$ink" numberOfLines={1} maxWidth={160}>
+                  {file.filename}
+                </SizableText>
+                <button
+                  type="button"
+                  title="Remove attachment"
+                  onClick={() => removeFile(file.file_id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'none',
+                    border: 'none',
+                    padding: 0,
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={13} />
+                </button>
+              </XStack>
+            )
+          })}
+        </XStack>
+      )}
+
+      {/* Main Composer Box */}
+      <div
+        style={{
+          position: 'relative',
+          borderRadius: 18,
+          background: 'rgba(255, 255, 255, 0.03)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: dragOver
+            ? '1px dashed #3b82f6'
+            : '1px solid rgba(255, 255, 255, 0.09)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08)',
+          transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+        onPaste={handlePaste}
       >
-        {/* Which model answers. */}
-        {model}
-      </Composer>
+        <Composer
+          value={draft.text}
+          onChange={write}
+          onSend={send}
+          onStop={onStop}
+          busy={busy}
+          disabled={disabled}
+          rows={1}
+          maxHeight={CEILING}
+          label="Message"
+          hint={busy ? 'Generating…' : 'Enter to send, Shift+Enter for a new line'}
+          field={{ ref: field }}
+        >
+          <XStack alignItems="center" gap="$2">
+            {/* Paperclip upload button */}
+            <button
+              type="button"
+              title="Attach files or images"
+              disabled={busy || disabled}
+              onClick={() => fileInput.current?.click()}
+              className="tap"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: 'rgba(255, 255, 255, 0.7)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Paperclip size={14} />
+            </button>
+
+            {/* Model Selector */}
+            {model}
+          </XStack>
+        </Composer>
+      </div>
+
+      {/* Examples / Starter Suggestion Cards Below Composer */}
+      {empty && <Starters starters={starters} disabled={busy || disabled} onPick={fire} />}
     </YStack>
   )
 }

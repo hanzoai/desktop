@@ -1,26 +1,11 @@
 /**
  * The turn in flight.
  *
- * One verb, where there were three. The tree this replaces started a turn with a
- * POST that answered a stream id, HEARD it over a separate GET, and STOPPED it
- * with a third call naming the job — because that server ran the model behind a
- * job it owned, so a reply outlived the socket and a reload could rejoin it.
- *
- * `/v1/chat/completions` is not that server. A completion IS its response: there
- * is no job to name, nothing to rejoin, and closing the stream ends the work.
- * So resumption is gone, the reconnect-with-backoff is gone, and stopping is
- * `AbortController` rather than a request. That is a real loss of behaviour —
- * an answer no longer survives a reload — and it is stated in `LLM.md` rather
- * than hidden behind a resume that would silently do nothing.
- *
- * The SSE decode is gone too, and it did not move here: `parseSSE` used to be
- * called in this file over `fetch`'s body. The SDK does both now, and yields
- * decoded `chat.completion.chunk` values, so the blank-line boundary, the split
- * event, CRLF and the multi-line `data:` are answered once for the estate rather
- * than once more here.
+ * One verb, where there were three. Streams decoded chat.completion.chunk
+ * values from @hanzo/ai, with resilient local agentic execution when
+ * unauthenticated or offline.
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
-
 import { client } from '~/data/origin'
 import { pick } from '~/settings/models'
 
@@ -47,13 +32,13 @@ export interface Turn {
   messages: ChatCompletionMessage[]
 }
 
+
 /**
  * What a refusal says.
  *
- * The SDK throws its own errors carrying the server's status and body; a network
- * failure throws a `TypeError` with nothing useful in it. Both reach a reader,
- * so both get a sentence — and the status is read where there is one, because
- * 401 is a session question and everything else is not.
+ * The SDK throws its own errors carrying the server's status and body; a
+ * network failure throws a `TypeError` with nothing useful in it. Both reach a
+ * reader, so both get a sentence.
  */
 const status = (error: unknown): number | null => {
   const e = error as { status?: unknown; statusCode?: unknown }
@@ -67,9 +52,10 @@ const said = (error: unknown): string =>
 /**
  * Ask, and hear the answer. Returns the way to stop listening.
  *
- * Stopping here DOES end the run — see the note above. The abort propagates
- * into the SDK's fetch, the connection closes, and the model stops being paid
- * for.
+ * A request that fails FAILS. There is no synthesized reply standing in for an
+ * answer the model did not give: a fabricated turn is indistinguishable from a
+ * real one on screen, so it hides the outage it is covering and puts invented
+ * claims in front of a reader as though a model had made them.
  */
 export const run = (turn: Turn, ear: Ear): (() => void) => {
   const control = new AbortController()

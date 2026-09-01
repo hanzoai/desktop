@@ -10,10 +10,11 @@ import type { Served } from '~/data/types'
  * that answers this question, so there is nothing to reconcile and no curated
  * second list that could win over it.
  *
- * Pure, and deliberately so: no fetch, no cache, no hook. `src/data` owns the
- * requests and the vocabulary they arrive in; this owns the one shape they
- * collapse into, so the mapping can be read and changed without a network in
- * the way.
+ * Pure, and deliberately so: no fetch, no cache, no hook, and no import that
+ * reaches one. `src/data` owns the requests and the vocabulary they arrive in;
+ * this owns the one shape they collapse into, so the mapping can be read,
+ * changed and tested without a network in the way — which is why the origins
+ * are an argument rather than something this file goes and asks for.
  */
 
 /**

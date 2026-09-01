@@ -10,12 +10,13 @@
  * runs. Nothing downstream of the picker knows there is more than one place.
  *
  * The engine's key is not decoration. Started without one it serves any caller
- * that can reach the port, and the port is reachable from the network — so the
+ * that can reach the port, and that port is bound on every interface — so the
  * shell mints a key, starts the engine with it, and holds it here. The estate
  * and the machine are then the same shape: an address, and a credential.
  */
 import { createAiClient, type AiClient } from '@hanzo/ai'
 
+import { brand } from '~/brand'
 import { iam } from '~/data/iam'
 import { key } from '~/settings/prefs'
 
@@ -52,7 +53,7 @@ export const shell = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__
 
 /** Every place this build can reach, in the order a picker lists them. */
 export const origins = (): Origin[] => [
-  { id: ESTATE, label: 'Hanzo' },
+  { id: ESTATE, label: brand.name },
   ...(shell() ? [{ id: MACHINE, label: 'On this machine', group: 'On this machine' }] : []),
 ]
 
@@ -70,7 +71,12 @@ export const client = (origin: string = ESTATE): AiClient => {
   const made =
     origin === MACHINE
       ? createAiClient({ baseUrl: ENGINE, token: key.get() })
-      : createAiClient({ auth: iam() })
+      : createAiClient({
+          publishableKey: brand.publishableKey,
+          ...(import.meta.env.VITE_HANZO_API
+            ? { baseUrl: import.meta.env.VITE_HANZO_API as string }
+            : { auth: iam() }),
+        })
   held.set(origin, made)
   return made
 }

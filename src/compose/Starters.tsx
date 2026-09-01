@@ -1,50 +1,57 @@
 /**
- * Openings — what to say when there is nothing to say yet.
- *
- * A chip SENDS. It is not a draft you then have to finish, so every `text` is a
- * complete question standing on its own and the short `label` is only the
- * caption on it.
- *
- * Two by default, not six, and they name DIFFERENT things the product does. The
- * row that read Summarize / Explain / Brainstorm was three ways of saying "it
- * answers questions", which the box above it already says; the row is for what
- * you would not otherwise guess.
- *
- * An agent's author may write their own openings, and an author who wrote none
- * meant none — the defaults are for a plain model chat, and are not poured into
- * a conversation somebody has already furnished.
+ * Openings — starter suggestions when entering a conversation.
+ * Rendered below the centered composer in the ChatGPT/lux.chat style.
  */
-import { Button, SizableText, XStack } from '@hanzo/ui'
+import { Bot, Code, Database, Server, ShoppingBag, Sparkles, Zap } from '@hanzogui/lucide-icons-2'
+import type { CSSProperties } from 'react'
 
 export interface Starter {
-  /** The caption. */
   label: string
-  /** What is actually sent. */
+  subtitle?: string
   text: string
+  icon?: typeof Code
 }
 
 const HOUSE: Starter[] = [
   {
-    label: 'Write code',
-    text:
-      'Write a Python script that renames every file in a folder to a slugified version of its name.',
+    label: 'Next.js 16 + React 19',
+    subtitle: 'Fullstack App Blueprint',
+    text: 'Write a production-ready Next.js 16 app with React 19, @hanzo/ui design system, and pgvector semantic search.',
+    icon: Code,
   },
   {
-    label: 'Make an image',
-    text: 'Make an image of a paper boat crossing a puddle at night, lit by a streetlight.',
+    label: 'Autonomous Commerce',
+    subtitle: 'Luxury Storefront & Checkout',
+    text: 'Scaffold a luxury commerce storefront with @hanzo/ui, zero-fee multi-currency checkout, and pgvector search.',
+    icon: ShoppingBag,
+  },
+  {
+    label: 'Agent Swarm Swarm',
+    subtitle: 'Planner, Dev & SecOps',
+    text: 'Orchestrate an autonomous agent swarm to plan, refactor, and verify code with isolated worktrees.',
+    icon: Bot,
+  },
+  {
+    label: 'ZAP Binary Protocol',
+    subtitle: '0.18ms Microservices',
+    text: 'Design a high-throughput microservice architecture using the ZAP zero-allocation binary protocol and NATS messaging.',
+    icon: Zap,
+  },
+  {
+    label: 'Zero-Trust KMS Enclave',
+    subtitle: 'gVisor & Hardware Secrets',
+    text: 'Configure hardware enclave KMS envelope encryption, zero-trust IAM policies, and 42ms gVisor sandboxes.',
+    icon: Server,
+  },
+  {
+    label: 'Vector Search & AI',
+    subtitle: 'pgvector & Embedding Index',
+    text: 'Implement PostgreSQL pgvector semantic search with AST symbol indexing and RAG memory retrieval.',
+    icon: Database,
   },
 ]
 
-/**
- * The handful of placeholders an author may write into an opening.
- *
- * Time only. `{{current_user}}` is not among them: a starter is authored once
- * and read by everyone, and a name substituted into a shared prompt is the
- * reader's identity travelling into somebody else's text.
- */
 export const filled = (text: string, at = new Date()): string => {
-  // `sv` is the locale whose ordinary date IS the ISO one — the one place a
-  // locale tag is used for its format rather than for a reader's language.
   const day = at.getDay()
   return text
     .replace(/\{\{current_date\}\}/gi, `${at.toLocaleDateString('sv')} (${day})`)
@@ -53,43 +60,82 @@ export const filled = (text: string, at = new Date()): string => {
 }
 
 export interface StartersProps {
-  /** The author's openings. Absent means a plain chat, which gets the house
-   *  pair; an empty array means the author chose none, which is honoured. */
   starters?: Starter[]
   disabled?: boolean
   onPick: (text: string) => void
 }
 
-/** How many fit before the row stops being a row. */
-const MOST = 4
+const CARD_STYLE: CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 10,
+  padding: '10px 14px',
+  borderRadius: 12,
+  fontSize: 12.5,
+  fontWeight: 600,
+  color: 'rgba(255, 255, 255, 0.85)',
+  background: 'rgba(255, 255, 255, 0.03)',
+  border: '1px solid rgba(255, 255, 255, 0.08)',
+  cursor: 'pointer',
+  textAlign: 'left',
+  transition: 'all 0.16s ease',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+  backdropFilter: 'blur(12px)',
+  WebkitBackdropFilter: 'blur(12px)',
+}
 
 export const Starters = ({ starters, disabled = false, onPick }: StartersProps) => {
-  const row = (starters ?? HOUSE).slice(0, MOST)
-  if (row.length === 0) return null
+  const items = (starters ?? HOUSE).slice(0, 4)
+  if (items.length === 0) return null
 
   return (
-    <XStack
-      alignItems="center"
-      justifyContent="center"
-      flexWrap="wrap"
-      gap="$2"
+    <div
       data-testid="starters"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: 10,
+        width: '100%',
+        paddingTop: 12,
+      }}
     >
-      {row.map(({ label, text }) => (
-        <Button
+      {items.map(({ label, subtitle, text, icon: Icon = Sparkles }) => (
+        <button
           key={label}
-          variant="outline"
-          size="sm"
-          borderRadius="$10"
+          type="button"
           disabled={disabled}
           title={label}
-          onPress={() => onPick(filled(text))}
+          onClick={() => onPick(filled(text))}
+          className="tap"
+          style={CARD_STYLE}
         >
-          <SizableText fontSize="$2" color="$color11" numberOfLines={1}>
-            {label}
-          </SizableText>
-        </Button>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <Icon size={16} color="rgba(255, 255, 255, 0.85)" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {label}
+            </span>
+            {subtitle && (
+              <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.45)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {subtitle}
+              </span>
+            )}
+          </div>
+        </button>
       ))}
-    </XStack>
+    </div>
   )
 }

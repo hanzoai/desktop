@@ -26,21 +26,31 @@ const scope = 'openid profile email offline_access'
 
 let engine: IAM | null = null
 
-export const iam = (): IAM =>
-  (engine ??= new IAM({
+export const iam = (): IAM => {
+  if (engine) return engine
+
+  const isLocal =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+
+  // On localhost, hanzo.id allowlists hanzo-app / hanzo-ai on http://localhost:3000/auth/callback.
+  // In production, each brand's domain (hanzo.chat, lux.chat, etc.) is allowlisted under `<org>-chat`.
+  const effectiveClientId = isLocal ? 'hanzo-app' : clientId
+  const redirectUri = isLocal
+    ? `http://localhost:3000${callbackPath}`
+    : `${window.location.origin}${callbackPath}`
+  const postLogoutRedirectUri = isLocal
+    ? `http://localhost:3000${loginPath}?redirect=false`
+    : `${window.location.origin}${loginPath}?redirect=false`
+
+  engine = new IAM({
     serverUrl: brand.issuer,
-    clientId,
+    clientId: effectiveClientId,
     organization: brand.org,
-    redirectUri: `${window.location.origin}${callbackPath}`,
-    /**
-     * Where the issuer returns the browser once the session has ended.
-     *
-     * `?redirect=false` is what makes this a landing rather than a bounce: the
-     * login route starts a fresh authorize on mount, so a bare `/login` would
-     * send somebody who just signed out straight back to the issuer. Built from
-     * the current origin for the same reason the callback is — each brand
-     * returns to its OWN host, and each host registers this exact address.
-     */
-    postLogoutRedirectUri: `${window.location.origin}${loginPath}?redirect=false`,
+    redirectUri,
+    postLogoutRedirectUri,
     scope,
-  }))
+  })
+
+  return engine
+}

@@ -27,7 +27,14 @@ export interface ModelProps {
   placeholder?: string
 }
 
-export function Model({ models, value, onChange, disabled, size, placeholder }: ModelProps) {
+export function Model({
+  models,
+  value,
+  onChange,
+  disabled,
+  size,
+  placeholder,
+}: ModelProps) {
   const list = useMemo(() => catalog(models, origins()), [models])
 
   return (

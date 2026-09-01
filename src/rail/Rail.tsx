@@ -2,8 +2,10 @@ import { Button, SizableText, XStack, YStack } from '@hanzo/ui'
 import { Sidebar, SidebarHeader, SidebarNewChat } from '@hanzo/ui/chat'
 import { scrim } from '@hanzo/ui/glass'
 import { HanzoMark } from '@hanzo/ui/product'
+import { LayoutGrid } from '@hanzogui/lucide-icons-2'
 import { useState, type ReactNode } from 'react'
 
+import { ChannelSection } from '~/channels/ChannelSection'
 import type { Convo } from '~/data/types'
 import { Find } from './Find'
 import { Hits } from './Hits'
@@ -110,6 +112,38 @@ export function Rail({
     <Sidebar width={width}>
       <SidebarHeader title={title} onCollapse={() => onOpenChange(false)} />
       <SidebarNewChat onPress={onNew} />
+      <button
+        type="button"
+        onClick={() => {
+          if (typeof window !== 'undefined') window.open('https://hanzo.ai/agents', '_blank')
+        }}
+        className="tap"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '8px 10px',
+          borderRadius: 8,
+          background: 'rgba(255, 255, 255, 0.03)',
+          border: '1px solid rgba(255, 255, 255, 0.07)',
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'rgba(255, 255, 255, 0.85)',
+          cursor: 'pointer',
+          marginTop: 4,
+          marginBottom: 8,
+          width: '100%',
+          textAlign: 'left',
+          transition: 'all 0.15s ease',
+        }}
+      >
+        <LayoutGrid size={15} style={{ color: '#ffffff' }} />
+        <span>Agent Marketplace</span>
+      </button>
+
+      {/* Channels Section */}
+      <ChannelSection />
+
       <Find value={query} onChange={ask} />
 
       {query.trim() === '' ? (

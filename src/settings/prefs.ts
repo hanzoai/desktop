@@ -117,9 +117,9 @@ export const model = pref('model', '', text)
 /**
  * The key the engine on this machine was started with.
  *
- * Started without one it serves any caller that can reach the port, and the
- * port is reachable from the network. The shell mints this and starts the
- * engine with it; a person running their own engine sets it to match.
+ * Started without one it serves any caller that can reach the port, and that
+ * port is bound on every interface. The shell mints this and starts the engine
+ * with it; a person running their own engine sets it to match.
  */
 export const key = pref('key', '', text)
 
