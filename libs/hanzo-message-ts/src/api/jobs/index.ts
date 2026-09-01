@@ -63,7 +63,7 @@ export const createJob = async (
   payload: CreateJobRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/create_job'),
+    urlJoin(nodeAddress, '/v2/create_job'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -80,7 +80,7 @@ export const sendMessageToJob = async (
   payload: JobMessageRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/job_message'),
+    urlJoin(nodeAddress, '/v2/job_message'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -96,7 +96,7 @@ export const getLastMessages = async (
   payload: GetLastMessagesRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/last_messages'),
+    urlJoin(nodeAddress, '/v2/last_messages'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -111,7 +111,7 @@ export const getLastMessagesWithBranches = async (
   payload: GetLastMessagesWithBranchesRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/last_messages_with_branches'),
+    urlJoin(nodeAddress, '/v2/last_messages_with_branches'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -127,7 +127,7 @@ export const updateLLMProviderInJob = async (
   payload: UpdateLLMProviderInJobRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/change_job_llm_provider'),
+    urlJoin(nodeAddress, '/v2/change_job_llm_provider'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -144,7 +144,7 @@ export const getFileNames = async (
   // No `list_files_in_inbox` route on the node; `retrieve_files_for_job` (keyed by
   // job_id) is the equivalent. Flatten the returned directory tree to file names.
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/retrieve_files_for_job'),
+    urlJoin(nodeAddress, '/v2/retrieve_files_for_job'),
     {
       params: { job_id: payload.inboxName },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -168,7 +168,7 @@ export const createFilesInbox = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/create_files_inbox'),
+    urlJoin(nodeAddress, '/v2/create_files_inbox'),
     undefined,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -192,7 +192,7 @@ export const addFileToInbox = async (
   formData.append('file_data', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_file_to_inbox'),
+    urlJoin(nodeAddress, '/v2/add_file_to_inbox'),
     formData,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -216,7 +216,7 @@ export const addFileToJob = async (
   formData.append('file_data', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/upload_file_to_job'),
+    urlJoin(nodeAddress, '/v2/upload_file_to_job'),
     formData,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -251,7 +251,7 @@ export const getJobFolderName = async (
   payload: GetJobFolderNameRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_folder_name_for_job'),
+    urlJoin(nodeAddress, '/v2/get_folder_name_for_job'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -267,7 +267,7 @@ export const downloadFile = async (
   payload: GetDownloadFileRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, `/v1/node/download_file`),
+    urlJoin(nodeAddress, `/v2/download_file`),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: payload,
@@ -281,7 +281,7 @@ export const getLLMProviders = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/available_models'),
+    urlJoin(nodeAddress, '/v2/available_models'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -344,7 +344,7 @@ export const addLLMProvider = async (
   payload: AddLLMProviderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_llm_provider'),
+    urlJoin(nodeAddress, '/v2/add_llm_provider'),
     { ...payload, model: getModelString(payload.model) },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -359,7 +359,7 @@ export const testLLMProvider = async (
   payload: AddLLMProviderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/test_llm_provider'),
+    urlJoin(nodeAddress, '/v2/test_llm_provider'),
     { ...payload, model: getModelString(payload.model) },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -375,7 +375,7 @@ export const updateLLMProvider = async (
   payload: UpdateLLMProviderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/modify_llm_provider'),
+    urlJoin(nodeAddress, '/v2/modify_llm_provider'),
     { ...payload, model: getModelString(payload.model) },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -391,7 +391,7 @@ export const removeLLMProvider = async (
   payload: RemoveLLMProviderRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_llm_provider'),
+    urlJoin(nodeAddress, '/v2/remove_llm_provider'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -406,7 +406,7 @@ export const getAllInboxes = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/all_inboxes'),
+    urlJoin(nodeAddress, '/v2/all_inboxes'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -420,7 +420,7 @@ export const getAllAgentInboxes = async (
   payload: GetAllAgentInboxesRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/all_inboxes'),
+    urlJoin(nodeAddress, '/v2/all_inboxes'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -439,7 +439,7 @@ export const getAllInboxesWithPagination = async (
   payload: GetAllInboxesWithPaginationRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/all_inboxes_paginated'),
+    urlJoin(nodeAddress, '/v2/all_inboxes_paginated'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -455,7 +455,7 @@ export const updateInboxName = async (
   payload: UpdateInboxNameRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_smart_inbox_name'),
+    urlJoin(nodeAddress, '/v2/update_smart_inbox_name'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -471,7 +471,7 @@ export const getJobConfig = async (
   payload: GetChatConfigRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_job_config'),
+    urlJoin(nodeAddress, '/v2/get_job_config'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -489,7 +489,7 @@ export const updateChatConfig = async (
   payload: UpdateChatConfigRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_job_config'),
+    urlJoin(nodeAddress, '/v2/update_job_config'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -505,7 +505,7 @@ export const stopGeneratingLLM = async (
   jobId: StopGeneratingLLMRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/stop_llm'),
+    urlJoin(nodeAddress, '/v2/stop_llm'),
     { inbox_name: jobId },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -521,7 +521,7 @@ export const getJobScope = async (
   payload: GetJobScopeRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_job_scope'),
+    urlJoin(nodeAddress, '/v2/get_job_scope'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -536,7 +536,7 @@ export const updateJobScope = async (
   payload: UpdateJobScopeRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_job_scope'),
+    urlJoin(nodeAddress, '/v2/update_job_scope'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -552,7 +552,7 @@ export const retryMessage = async (
   payload: RetryMessageRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/retry_message'),
+    urlJoin(nodeAddress, '/v2/retry_message'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -568,7 +568,7 @@ export const removeJob = async (
   payload: RemoveJobRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_job'),
+    urlJoin(nodeAddress, '/v2/remove_job'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -589,7 +589,7 @@ export const removeJobs = async (
     payload.job_ids.map((job_id) =>
       httpClient
         .post(
-          urlJoin(nodeAddress, '/v1/node/remove_job'),
+          urlJoin(nodeAddress, '/v2/remove_job'),
           { job_id },
           {
             headers: { Authorization: `Bearer ${bearerToken}` },
@@ -634,7 +634,7 @@ export const getProviderFromJob = async (
   payload: GetProviderFromJobRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_job_provider'),
+    urlJoin(nodeAddress, '/v2/get_job_provider'),
     {
       params: { job_id: payload.job_id },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -650,7 +650,7 @@ export const forkJobMessages = async (
   payload: ForkJobMessagesRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/fork_job_messages'),
+    urlJoin(nodeAddress, '/v2/fork_job_messages'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -666,7 +666,7 @@ export const exportMessagesFromInbox = async (
   payload: ExportMessagesFromInboxRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/export_messages_from_inbox'),
+    urlJoin(nodeAddress, '/v2/export_messages_from_inbox'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -682,7 +682,7 @@ export const getMessageTraces = async (
   payload: GetMessageTracesRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_message_traces'),
+    urlJoin(nodeAddress, '/v2/get_message_traces'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',

@@ -17,7 +17,7 @@ import {
 
 export const checkHealth = async (nodeAddress: string) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/health_check'),
+    urlJoin(nodeAddress, '/v2/health_check'),
     { responseType: 'json' },
   );
   return response.data as CheckHealthResponse;
@@ -25,7 +25,7 @@ export const checkHealth = async (nodeAddress: string) => {
 
 export const getDockerStatus = async (nodeAddress: string) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/docker_status'),
+    urlJoin(nodeAddress, '/v2/docker_status'),
     { responseType: 'json' },
   );
   return response.data as DockerStatusResponse;
@@ -36,7 +36,7 @@ export const getNodeStorageLocation = async (
   token: string,
 ): Promise<GetNodeStorageLocationResponse> => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/storage_location'),
+    urlJoin(nodeAddress, '/v2/storage_location'),
     { responseType: 'json', headers: { Authorization: `Bearer ${token}` } },
   );
   return response.data;
@@ -48,7 +48,7 @@ export const updateNodeName = async (
   newNodeName: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/change_node_name'),
+    urlJoin(nodeAddress, '/v2/change_node_name'),
     { new_name: newNodeName },
     { headers: { Authorization: `Bearer ${token}` } },
   );
@@ -69,7 +69,7 @@ export const initialRegistration = async (
   }
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/initial_registration'),
+    urlJoin(nodeAddress, '/v2/initial_registration'),
     payload,
     { responseType: 'json' },
   );
@@ -98,7 +98,7 @@ export const setPreferences = async (
   payload: SetPreferencesRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_preferences'),
+    urlJoin(nodeAddress, '/v2/set_preferences'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -113,7 +113,7 @@ export const getPreferences = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_preferences'),
+    urlJoin(nodeAddress, '/v2/get_preferences'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -128,7 +128,7 @@ export const startEmbeddingMigration = async (
   payload: EmbeddingMigrationRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/embedding_migration'),
+    urlJoin(nodeAddress, '/v2/embedding_migration'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -143,7 +143,7 @@ export const getEmbeddingMigrationStatus = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/embedding_migration'),
+    urlJoin(nodeAddress, '/v2/embedding_migration'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',

@@ -79,7 +79,7 @@ export const createTool = async (
   payload: AddToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_hanzo_tool'),
+    urlJoin(nodeAddress, '/v2/add_hanzo_tool'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -95,7 +95,7 @@ export const getTool = async (
   toolKey: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_hanzo_tool'),
+    urlJoin(nodeAddress, '/v2/get_hanzo_tool'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { tool_name: toolKey, serialize_config: true },
@@ -111,7 +111,7 @@ export const getTools = async (
   payload: GetToolsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/list_all_hanzo_tools'),
+    urlJoin(nodeAddress, '/v2/list_all_hanzo_tools'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { category: payload.category },
@@ -127,7 +127,7 @@ export const searchTools = async (
   query: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/search_hanzo_tool'),
+    urlJoin(nodeAddress, '/v2/search_hanzo_tool'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { query },
@@ -143,7 +143,7 @@ export const getToolsFromToolset = async (
   tool_set_key: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/tools_from_toolset'),
+    urlJoin(nodeAddress, '/v2/tools_from_toolset'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { tool_set_key },
@@ -159,7 +159,7 @@ export const setCommonToolsetConfig = async (
   payload: SetCommonToolsetConfigRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_common_toolset_config'),
+    urlJoin(nodeAddress, '/v2/set_common_toolset_config'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -176,7 +176,7 @@ export const updateTool = async (
   payload: UpdateToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_hanzo_tool'),
+    urlJoin(nodeAddress, '/v2/set_hanzo_tool'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -193,7 +193,7 @@ export const toggleEnableTool = async (
   payload: ToggleEnableToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_tool_enabled'),
+    urlJoin(nodeAddress, '/v2/set_tool_enabled'),
     { tool_router_key: payload.tool_router_key, enabled: payload.enabled },
     { headers: { Authorization: `Bearer ${bearerToken}` } },
   );
@@ -206,7 +206,7 @@ export const payInvoice = async (
   payload: PayInvoiceRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/pay_invoice'),
+    urlJoin(nodeAddress, '/v2/pay_invoice'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -222,7 +222,7 @@ export const rejectInvoice = async (
   payload: RejectInvoiceRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/reject_invoice'),
+    urlJoin(nodeAddress, '/v2/reject_invoice'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -236,7 +236,7 @@ export const getAllPrompts = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_all_custom_prompts'),
+    urlJoin(nodeAddress, '/v2/get_all_custom_prompts'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -251,7 +251,7 @@ export const searchPrompt = async (
   query: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/search_custom_prompts'),
+    urlJoin(nodeAddress, '/v2/search_custom_prompts'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { query },
@@ -267,7 +267,7 @@ export const createPrompt = async (
   payload: CreatePromptRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_custom_prompt'),
+    urlJoin(nodeAddress, '/v2/add_custom_prompt'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -282,7 +282,7 @@ export const updatePrompt = async (
   payload: UpdatePromptRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_custom_prompt'),
+    urlJoin(nodeAddress, '/v2/update_custom_prompt'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -298,7 +298,7 @@ export const removePrompt = async (
   payload: DeletePromptRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/delete_custom_prompt'),
+    urlJoin(nodeAddress, '/v2/delete_custom_prompt'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -314,7 +314,7 @@ export const toolImplementation = async (
   payload: CreateToolCodeRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tool_implementation'),
+    urlJoin(nodeAddress, '/v2/tool_implementation'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -329,7 +329,7 @@ export const toolMetadataImplementation = async (
   payload: CreateToolMetadataRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tool_metadata_implementation'),
+    urlJoin(nodeAddress, '/v2/tool_metadata_implementation'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -344,7 +344,7 @@ export const getToolPlaygroundMetadata = async (
   bearerToken: string,
   payload: GetToolPlaygroundMetadataRequest,
 ) => {
-  const url = urlJoin(nodeAddress, '/v1/node/get_hanzo_tool_metadata');
+  const url = urlJoin(nodeAddress, '/v2/get_hanzo_tool_metadata');
   const params = new URLSearchParams();
   params.set('tool_router_key', payload.tool_router_key);
   const response = await httpClient.get(url, {
@@ -363,7 +363,7 @@ export const executeToolCode = async (
   xHanzoToolId: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/code_execution'),
+    urlJoin(nodeAddress, '/v2/code_execution'),
     payload,
     {
       headers: {
@@ -386,7 +386,7 @@ export const saveToolCode = async (
   xHanzoOriginalToolRouterKey?: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_playground_tool'),
+    urlJoin(nodeAddress, '/v2/set_playground_tool'),
     payload,
     {
       headers: {
@@ -408,7 +408,7 @@ export const getPlaygroundTools = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/list_playground_tools'),
+    urlJoin(nodeAddress, '/v2/list_playground_tools'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -424,7 +424,7 @@ export const getPlaygroundTool = async (
   xHanzoOriginalToolRouterKey?: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_playground_tool'),
+    urlJoin(nodeAddress, '/v2/get_playground_tool'),
     {
       headers: {
         Authorization: `Bearer ${bearerToken}`,
@@ -446,7 +446,7 @@ export const restoreToolConversation = async (
   payload: UndoToolImplementationRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tool_implementation_undo_to'),
+    urlJoin(nodeAddress, '/v2/tool_implementation_undo_to'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -462,7 +462,7 @@ export const removeTool = async (
   payload: RemoveToolRequest,
 ) => {
   const response = await httpClient.delete(
-    urlJoin(nodeAddress, '/v1/node/remove_tool'),
+    urlJoin(nodeAddress, '/v2/remove_tool'),
     {
       params: { tool_key: payload.tool_key },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -478,7 +478,7 @@ export const removePlaygroundTool = async (
   payload: RemovePlaygroundToolRequest,
 ) => {
   const response = await httpClient.delete(
-    urlJoin(nodeAddress, '/v1/node/remove_playground_tool'),
+    urlJoin(nodeAddress, '/v2/remove_playground_tool'),
     {
       params: { tool_key: payload.tool_key },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -494,7 +494,7 @@ export const updateToolCodeImplementation = async (
   payload: UpdateToolCodeImplementationRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tool_implementation_code_update'),
+    urlJoin(nodeAddress, '/v2/tool_implementation_code_update'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -513,7 +513,7 @@ export const openToolInCodeEditor = async (
   xHanzoLLMProvider: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tools_standalone_playground'),
+    urlJoin(nodeAddress, '/v2/tools_standalone_playground'),
     payload,
     {
       headers: {
@@ -533,7 +533,7 @@ export const duplicateTool = async (
   payload: DuplicateToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/duplicate_tool'),
+    urlJoin(nodeAddress, '/v2/duplicate_tool'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -550,7 +550,7 @@ export const importTool = async (
   payload: ImportToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/import_tool'),
+    urlJoin(nodeAddress, '/v2/import_tool'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -566,7 +566,7 @@ export const exportTool = async (
   payload: ExportToolRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/export_tool'),
+    urlJoin(nodeAddress, '/v2/export_tool'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { tool_key_path: payload.toolKey },
@@ -582,7 +582,7 @@ export const getHanzoFileProtocol = async (
   payload: GetHanzoFileProtocolRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/resolve_hanzo_file_protocol'),
+    urlJoin(nodeAddress, '/v2/resolve_hanzo_file_protocol'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { file: payload.file },
@@ -598,7 +598,7 @@ export const setOAuthToken = async (
   payload: SetOAuthTokenRequest,
 ): Promise<SetOAuthTokenResponse> => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_oauth_token'),
+    urlJoin(nodeAddress, '/v2/set_oauth_token'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -615,7 +615,7 @@ export const getAllToolAssets = async (
   xHanzoToolId: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/list_tool_asset'),
+    urlJoin(nodeAddress, '/v2/list_tool_asset'),
     {
       headers: {
         Authorization: `Bearer ${bearerToken}`,
@@ -642,7 +642,7 @@ export const uploadAssetTool = async (
   formData.append('file', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/tool_asset'),
+    urlJoin(nodeAddress, '/v2/tool_asset'),
     formData,
     {
       headers: {
@@ -670,7 +670,7 @@ export const uploadPlaygroundToolFile = async (
   formData.append('file', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/playground_file'),
+    urlJoin(nodeAddress, '/v2/playground_file'),
     formData,
     {
       headers: {
@@ -738,7 +738,7 @@ export const removeToolAsset = async (
   xHanzoToolId: string,
 ) => {
   const response = await httpClient.delete(
-    urlJoin(nodeAddress, '/v1/node/tool_asset'),
+    urlJoin(nodeAddress, '/v2/tool_asset'),
     {
       headers: {
         Authorization: `Bearer ${bearerToken}`,
@@ -757,7 +757,7 @@ export const enableAllTools = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/enable_all_tools'),
+    urlJoin(nodeAddress, '/v2/enable_all_tools'),
     {},
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -772,7 +772,7 @@ export const disableAllTools = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/disable_all_tools'),
+    urlJoin(nodeAddress, '/v2/disable_all_tools'),
     {},
     { headers: { Authorization: `Bearer ${bearerToken}` } },
   );
@@ -784,7 +784,7 @@ export const publishTool = async (
   payload: PublishToolRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/publish_tool'),
+    urlJoin(nodeAddress, '/v2/publish_tool'),
     {
       params: { tool_key_path: payload.tool_key_path },
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -800,7 +800,7 @@ export const getToolStoreDetails = async (
   payload: GetToolStoreDetailsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, `/v1/node/tool_store_proxy/${payload.tool_router_key}`),
+    urlJoin(nodeAddress, `/v2/tool_store_proxy/${payload.tool_router_key}`),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -820,7 +820,7 @@ export const importToolZip = async (
   formData.append('file', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/import_tool_zip'),
+    urlJoin(nodeAddress, '/v2/import_tool_zip'),
     formData,
     {
       headers: {
@@ -838,7 +838,7 @@ export const copyToolAssets = async (
   payload: CopyToolAssetsRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/copy_tool_assets'),
+    urlJoin(nodeAddress, '/v2/copy_tool_assets'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -853,7 +853,7 @@ export const getToolsWithOfferings = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_tools_with_offerings'),
+    urlJoin(nodeAddress, '/v2/get_tools_with_offerings'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -868,7 +868,7 @@ export const setToolOffering = async (
   payload: SetToolOfferingRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_tool_offering'),
+    urlJoin(nodeAddress, '/v2/set_tool_offering'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -884,7 +884,7 @@ export const removeToolOffering = async (
   payload: RemoveToolOfferingRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_tool_offering'),
+    urlJoin(nodeAddress, '/v2/remove_tool_offering'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -901,7 +901,7 @@ export const setToolMcpEnabled = async (
   mcpEnabled: boolean,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/set_tool_mcp_enabled'),
+    urlJoin(nodeAddress, '/v2/set_tool_mcp_enabled'),
     {
       tool_router_key: toolRouterKey,
       mcp_enabled: mcpEnabled,
@@ -929,7 +929,7 @@ export const getInstalledNetworkTools = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/list_all_network_hanzo_tools'),
+    urlJoin(nodeAddress, '/v2/list_all_network_hanzo_tools'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -944,7 +944,7 @@ export const addNetworkTool = async (
   payload: AddNetworkToolRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_network_agent'),
+    urlJoin(nodeAddress, '/v2/add_network_agent'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },

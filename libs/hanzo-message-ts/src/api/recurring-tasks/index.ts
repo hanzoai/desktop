@@ -21,7 +21,7 @@ export const createRecurringTask = async (
   payload: CreateRecurringTaskRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_cron_task'),
+    urlJoin(nodeAddress, '/v2/add_cron_task'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -36,7 +36,7 @@ export const getRecurringTasks = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/list_all_cron_tasks'),
+    urlJoin(nodeAddress, '/v2/list_all_cron_tasks'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -51,7 +51,7 @@ export const getRecurringTask = async (
   payload: GetRecurringTaskRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_specific_cron_task'),
+    urlJoin(nodeAddress, '/v2/get_specific_cron_task'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { cron_task_id: payload.cron_task_id },
@@ -66,7 +66,7 @@ export const getRecurringTasksExecutionTime = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_cron_schedule'),
+    urlJoin(nodeAddress, '/v2/get_cron_schedule'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -81,7 +81,7 @@ export const setRecurringTask = async (
   payload: SetRecurringTaskRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_cron_task'),
+    urlJoin(nodeAddress, '/v2/update_cron_task'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -98,7 +98,7 @@ export const removeRecurringTask = async (
   payload: RemoveRecurringTaskRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_cron_task'),
+    urlJoin(nodeAddress, '/v2/remove_cron_task'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -115,7 +115,7 @@ export const getRecurringTaskLogs = async (
   payload: GetRecurringTaskLogsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_cron_task_logs'),
+    urlJoin(nodeAddress, '/v2/get_cron_task_logs'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { cron_task_id: payload.cron_task_id },
@@ -131,7 +131,7 @@ export const runTaskNowApi = async (
   taskId: string,
 ) => {
   const response = await httpClient.post(
-    `${nodeAddress}/v1/node/force_execute_cron_task`,
+    `${nodeAddress}/v2/force_execute_cron_task`,
     null, // No body needed for this request
     {
       headers: {

@@ -22,7 +22,7 @@ export const createAgent = async (
   payload: CreateAgentRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/add_agent'),
+    urlJoin(nodeAddress, '/v2/add_agent'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -38,7 +38,7 @@ export const removeAgent = async (
   payload: RemoveAgentRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/remove_agent'),
+    urlJoin(nodeAddress, '/v2/remove_agent'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -54,7 +54,7 @@ export const updateAgent = async (
   payload: UpdateAgentRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/update_agent'),
+    urlJoin(nodeAddress, '/v2/update_agent'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -70,7 +70,7 @@ export const getAgent = async (
   payload: GetAgentRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, `/v1/node/get_agent/${payload.agentId}`),
+    urlJoin(nodeAddress, `/v2/get_agent/${payload.agentId}`),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -85,7 +85,7 @@ export const getAgents = async (
   categoryFilter?: 'recently_used',
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/get_all_agents'),
+    urlJoin(nodeAddress, '/v2/get_all_agents'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: {
@@ -103,7 +103,7 @@ export const exportAgent = async (
   agentId: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v1/node/export_agent'),
+    urlJoin(nodeAddress, '/v2/export_agent'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       params: { agent_id: agentId },
@@ -124,7 +124,7 @@ export const importAgent = async (
   formData.append('file', new Blob([fileData]));
 
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/import_agent_zip'),
+    urlJoin(nodeAddress, '/v2/import_agent_zip'),
     formData,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -140,7 +140,7 @@ export const importAgentFromUrl = async (
   url: string,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v1/node/import_agent'),
+    urlJoin(nodeAddress, '/v2/import_agent'),
     { url },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
