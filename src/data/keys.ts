@@ -26,6 +26,9 @@ export const sign = (filter: Record<string, unknown>): string =>
 export const keys = {
   models: ['models'] as Key,
 
+  /** What an agent may dispatch. One read per origin, like the models. */
+  skills: ['skills'] as Key,
+
   user: ['user'] as Key,
 
   convos: ['convos'] as Key,

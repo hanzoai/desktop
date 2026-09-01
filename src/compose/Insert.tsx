@@ -13,7 +13,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { CSSProperties } from 'react'
 
 import { AGENT_ROSTER } from '~/agents/types'
-import { useMcp } from '~/mcp/store'
+import { useSkills } from '~/compose/skills'
 
 /** Which half of the list a trigger opens at. */
 export type Lane = 'all' | 'skill'
@@ -62,22 +62,22 @@ const hit = (query: string, ...fields: string[]) => {
 }
 
 export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
-  const { servers } = useMcp()
+  const { data: served, pending } = useSkills()
 
   const agents = lane === 'skill' ? [] : AGENT_ROSTER.filter((a) => hit(query, a.handle, a.name, a.role))
 
-  // Only a connected server's tools can be called, so only those are offered.
-  const skills = servers
-    .filter((s) => s.status === 'connected')
-    .flatMap((s) => s.tools.map((t) => ({ ...t, from: s.name })))
-    .filter((t) => hit(query, t.name, t.description, t.from))
+  const skills = (served ?? []).filter((t) => hit(query, t.name, t.description ?? '', t.source ?? ''))
 
   if (agents.length === 0 && skills.length === 0) {
     return (
       <div style={SHEET}>
         <YStack padding="$2">
           <SizableText size="$1" color="rgba(255,255,255,0.45)">
-            {lane === 'skill' ? 'No skill matches that.' : 'Nothing matches that.'}
+            {pending
+              ? 'Asking what this origin can run…'
+              : lane === 'skill'
+                ? 'No skill matches that.'
+                : 'Nothing matches that.'}
           </SizableText>
         </YStack>
       </div>
@@ -113,7 +113,7 @@ export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
           </SizableText>
           {skills.map((t) => (
             <button
-              key={`${t.from}:${t.name}`}
+              key={t.name}
               type="button"
               style={ROW}
               onClick={() => onPick(`/${t.name} `)}
@@ -123,7 +123,7 @@ export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
                   /{t.name}
                 </SizableText>
                 <SizableText size="$1" color="rgba(255,255,255,0.45)" numberOfLines={1}>
-                  {t.description}
+                  {t.description ?? t.source ?? ''}
                 </SizableText>
               </XStack>
             </button>
