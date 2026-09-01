@@ -150,7 +150,7 @@ export const Root = () => {
         <Settings
           open
           onOpenChange={setSettings}
-          served={{ models: models.data }}
+          served={models.data}
           account={{
             person: user ?? undefined,
             onSignOut: signOut,

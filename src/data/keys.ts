@@ -24,8 +24,6 @@ export const sign = (filter: Record<string, unknown>): string =>
     .join('&')
 
 export const keys = {
-  config: ['config'] as Key,
-  endpoints: ['endpoints'] as Key,
   models: ['models'] as Key,
 
   user: ['user'] as Key,

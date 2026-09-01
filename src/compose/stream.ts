@@ -21,7 +21,8 @@
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
 
-import { ai } from '~/data/ai'
+import { client } from '~/data/origin'
+import { pick } from '~/settings/models'
 
 /** How a turn ended. The shell answers each differently, so it is told which. */
 export type Ended =
@@ -40,6 +41,8 @@ export interface Ear {
 }
 
 export interface Turn {
+  /** The address — `origin/model`. The origin picks the client, the model is
+   *  what that client is asked for; this is the one place they come apart. */
   model: string
   messages: ChatCompletionMessage[]
 }
@@ -80,8 +83,9 @@ export const run = (turn: Turn, ear: Ear): (() => void) => {
 
   void (async () => {
     try {
-      const stream = await ai().chat.completions.create(
-        { model: turn.model, messages: turn.messages, stream: true },
+      const { origin, model } = pick(turn.model)
+      const stream = await client(origin).chat.completions.create(
+        { model, messages: turn.messages, stream: true },
         { signal: control.signal },
       )
 

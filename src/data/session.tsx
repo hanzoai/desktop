@@ -33,7 +33,7 @@ import {
   type ReactNode,
 } from 'react'
 
-import { ai } from '~/data/ai'
+import { client } from '~/data/origin'
 import { api } from '~/data/api'
 import { keepHere, take } from '~/data/back'
 import { guest } from '~/data/guest'
@@ -133,7 +133,7 @@ export const Session = ({ children }: { children: ReactNode }) => {
   const record = useRead<User>(
     keys.user,
     async () => {
-      const account = await ai().account.get()
+      const account = await client().account.get()
       return {
         id: account.name,
         name: account.displayName || account.name,

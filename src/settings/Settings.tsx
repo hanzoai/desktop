@@ -19,7 +19,7 @@ import { useState, type ReactNode } from 'react'
 import { Account, type AccountProps } from './Account'
 import { General } from './General'
 import { Look } from './Look'
-import type { Served } from './models'
+import type { Served } from '~/data/types'
 
 export interface SettingsProps {
   open: boolean

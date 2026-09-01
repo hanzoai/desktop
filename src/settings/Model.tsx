@@ -1,7 +1,8 @@
 import { ModelSelector } from '@hanzo/ui/models'
 import { useMemo } from 'react'
 
-import { catalog, type Served } from './models'
+import type { Served } from '~/data/types'
+import { catalog } from './models'
 
 /**
  * Which model answers — one control, every surface that asks.
@@ -15,8 +16,9 @@ import { catalog, type Served } from './models'
  *
  * It stays presentational: hand it what was fetched, take back an address.
  */
-export interface ModelProps extends Served {
-  /** The chosen address — `endpoint/model`, from `catalog`. */
+export interface ModelProps {
+  models?: Served | null
+  /** The chosen address — `origin/model`, from `catalog`. */
   value?: string
   onChange: (id: string) => void
   disabled?: boolean
@@ -24,17 +26,8 @@ export interface ModelProps extends Served {
   placeholder?: string
 }
 
-export function Model({
-  endpoints,
-  models,
-  specs,
-  value,
-  onChange,
-  disabled,
-  size,
-  placeholder,
-}: ModelProps) {
-  const list = useMemo(() => catalog({ endpoints, models, specs }), [endpoints, models, specs])
+export function Model({ models, value, onChange, disabled, size, placeholder }: ModelProps) {
+  const list = useMemo(() => catalog(models), [models])
 
   return (
     <ModelSelector

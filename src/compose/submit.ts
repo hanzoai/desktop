@@ -43,11 +43,11 @@ export const blank: Draft = { text: '' }
  */
 export interface Conversation {
   conversationId?: string | null
+  /** The address — `origin/model`. The screen resolves it; there is no literal
+   *  here to fall back to, because a model this deployment does not serve is
+   *  not a safer answer than a disabled composer. */
   model?: string | null
 }
-
-/** The model asked when a conversation names none. */
-const DEFAULT_MODEL = 'deepseek-chat'
 
 export interface Payload {
   text: string
@@ -75,7 +75,7 @@ export const payload = ({
   messageId: crypto.randomUUID(),
   parentMessageId: parent ?? null,
   conversationId: conversation?.conversationId ?? null,
-  model: conversation?.model || DEFAULT_MODEL,
+  model: conversation?.model ?? '',
 })
 
 /**

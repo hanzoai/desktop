@@ -17,7 +17,7 @@ import { useSession } from '~/data/session'
 import * as store from '~/data/store'
 import type { Message, Part } from '~/data/types'
 import { Model } from '~/settings/Model'
-import { pick } from '~/settings/models'
+import { catalog } from '~/settings/models'
 import { model as preferred, usePref } from '~/settings/prefs'
 import { Header } from '~/shell/Header'
 import { useFrame } from '~/shell/Root'
@@ -249,11 +249,16 @@ export const Chat = () => {
     [ask, standing],
   )
 
-  const { model } = useMemo(() => pick(address), [address])
+  /** The chosen address, or the first thing served. Empty until a catalogue
+   *  arrives, which is what disables the composer. */
+  const chosen = useMemo(
+    () => address || catalog(models.data)[0]?.id || '',
+    [address, models.data],
+  )
 
   const conversation = useMemo<Conversation>(
-    () => ({ conversationId: id, model }),
-    [id, model],
+    () => ({ conversationId: id, model: chosen }),
+    [id, chosen],
   )
 
   const last = messages.length ? messages[messages.length - 1].messageId : null

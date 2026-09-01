@@ -1,0 +1,19 @@
+[package]
+name = "desktop"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+license = "MIT"
+
+[build-dependencies]
+tauri-build = "2"
+
+[dependencies]
+tauri = "2"
+tauri-plugin-deep-link = "2"
+tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+# Health is an HTTP question and every service answers it on the loopback, so
+# no TLS is linked.
+reqwest = { version = "0.12", default-features = false }
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["time"] }

@@ -114,6 +114,15 @@ export const usePref = <T>(p: Pref<T>): [T, Atom<T>['set']] => [useAtom(p), p.se
  */
 export const model = pref('model', '', text)
 
+/**
+ * The key the engine on this machine was started with.
+ *
+ * Started without one it serves any caller that can reach the port, and the
+ * port is reachable from the network. The shell mints this and starts the
+ * engine with it; a person running their own engine sets it to match.
+ */
+export const key = pref('key', '', text)
+
 /** A new conversation is not kept after you leave it. */
 export const temporary = pref('temporary', false, flag)
 

@@ -1,10 +1,10 @@
 {
-  "name": "@hanzo/chat2",
+  "name": "@hanzo/desktop",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Hanzo Chat \u2014 the client, on @hanzo/gui + @hanzo/ui.",
+  "description": "Hanzo Desktop \u2014 the client, local and cloud, on @hanzo/gui + @hanzo/ui.",
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
