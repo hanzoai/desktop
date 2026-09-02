@@ -467,3 +467,78 @@ and checked one at a time, since a regex reads those as missing.
 Re-run the audit by extracting every `path:` literal and matching it against
 `GET /v1/openapi.json`, normalising `${…}` to `{x}`. A path that does not match
 is either a typo or a route the fleet does not serve, and both are worth failing.
+
+
+## What holds at scale, and the one thing that does not
+
+Audited for what breaks when an org is large and a session is long. Everything
+below was measured, and the client-side half is fixed.
+
+**Nothing polls.** There is not one `setInterval` in the app. Every read happens
+because a panel opened or a key was invalidated, and a failed read is NOT
+retried — `useRead`'s freshness window covers a failed entry too, deliberately,
+so a fleet having a bad minute does not get a retry storm from every desktop at
+once. `invalidate()` is what re-reads, and that only happens after a write this
+client made. This is the single best scale property the app has; do not add a
+poll without a reason that survives being multiplied by every customer.
+
+### Four things grew without limit, and all four are bounded now
+
+| what | was | now |
+|---|---|---|
+| the query cache | `invalidate` was the ONLY thing that removed an entry — one entry, one reader CLOSURE and one era counter per key ever read | bounded at 256 settled entries; a watched, in-flight or pending entry is never evicted |
+| the terminal scrollback | every line for the life of the window | 2000, oldest dropped |
+| the artifact log | the same | the same |
+| the DOM | one node per row, for whatever the server sent | `useShown`, which reports what it withholds |
+
+The cache one was the sharpest because `keys.symbols(query)` mints a key per
+KEYSTROKE, so a long search typed a leak one character at a time and nothing
+failed — a leak is a screen that keeps working. `useSettled` fixed the cause
+(the key lags the typing, the box does not) and the bound fixed the class.
+
+**`data/query.test.ts` proves the bound and was mutation-checked**: with
+`reclaim` disabled, two tests fail. It also says in as many words which arm it
+CANNOT reach — the three eviction protections need a renderer, and `node --test`
+has none. A test file that looks complete and covers two of five branches is
+worse than one that names the gap.
+
+### A truncated list must say so
+
+`useShown` reports `total` and `more` and that is the load-bearing half, not the
+slice. **A list silently cut at thirty is the silent-empty failure one level
+over**: a person concludes their org has thirty rooms when it has three thousand,
+and nothing on the screen distinguishes those. Never render `shown.rows` without
+rendering `shown.more`.
+
+The same rule caught a real one in the notepad: `localStorage` is a few megabytes
+and notes are unbounded, so `setItem` eventually throws — and the catch swallowed
+it, which made the newest note look saved and lose it on the next reload. It is a
+value now and the editor says "not being saved" while somebody is typing, rather
+than on the reload that loses the work.
+
+### THE REMAINING SCALE BLOCKER IS SERVER-SIDE, and it is most of the API
+
+Measured against `api.hanzo.ai`'s own document: of the **505 GETs that answer a
+list** (counting enveloped ones, not just bare arrays), **432 — 85% — accept no
+bound at all.** No `limit`, no `cursor`, no `page`. They answer with everything
+the org has.
+
+Worst by product: `ai` 46, `o11y` 37, `iam` 26, `platform` 14, `billing` 14,
+`pricing` 14, `visor` 13. Eight of the twelve this app reads are among them —
+`/v1/team/rooms`, `/v1/todo/board`, `/v1/iam/projects`, `/v1/ai/memory/list`,
+`/v1/agents`, `/v1/network`, `/v1/network/routers`, `/v1/tools/plugins`.
+
+**No client flag fixes this.** `useShown` bounds the DOM, which stops the app
+freezing; it does not stop the server assembling and serialising ten thousand
+rows, or the wire carrying them, or the client parsing them. An org with ten
+thousand rooms gets a ten-thousand-room JSON body on every rail read. That is a
+cloud change — a `limit`/`cursor` on those routes — and it is the one thing
+standing between this and an org of any size.
+
+Re-measure it rather than trusting the number: fetch `/v1/openapi.json`, keep
+every GET whose 200 carries an array at any depth (an envelope counts), and
+report those whose parameters name none of limit/cursor/page/offset/after.
+**Check membership by NAME, not by absence from a filtered list** — the first
+version of this measurement classified `/v1/ai/memory/list` as bounded because
+its enveloped response was never classified as a list at all, so it fell out of
+the candidate set and its absence from the naked list read as success.
