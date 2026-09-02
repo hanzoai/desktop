@@ -21,10 +21,27 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
+import type { SandboxRuntime } from '@hanzo/ai'
+
+import { origins } from '~/data/origin'
+
+/** Both pickers, so the two questions read as siblings rather than as ranks. */
+const PICKER: CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.05)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  borderRadius: 6,
+  color: 'rgba(255, 255, 255, 0.85)',
+  fontSize: 11.5,
+  fontWeight: 500,
+  padding: '3px 8px',
+  outline: 'none',
+  cursor: 'pointer',
+}
+
 import {
   artifactStore,
   useArtifact,
-  type SandboxEnvironment,
+
 } from './store'
 
 const TAB_BUTTON_STYLE = (active: boolean): CSSProperties => ({
@@ -69,7 +86,7 @@ export const ArtifactPanel = () => {
 
   if (!artifact) return null
 
-  const { title, language, code, environment, activeTab, isRunning, logs } = artifact
+  const { title, language, code, where, runtime, activeTab, isRunning, logs } = artifact
 
   const handleCopy = async () => {
     try {
@@ -128,7 +145,7 @@ export const ArtifactPanel = () => {
     <div class="card">
       <h3 style="margin-top: 0;">⚡ Sandbox Output: ${title}</h3>
       <p style="color: rgba(255, 255, 255, 0.6); font-size: 13px;">
-        Environment: <strong>${environment}</strong> · Language: <strong>${language}</strong>
+        ${where} · <strong>${runtime}</strong> · Language: <strong>${language}</strong>
       </p>
       <pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
     </div>
@@ -189,26 +206,31 @@ export const ArtifactPanel = () => {
           </SizableText>
         </XStack>
 
-        {/* Runtime Environment Selector & Actions */}
+        {/* WHERE it runs, and WHAT isolates it — two questions, two controls.
+            One picker offering "Local k3s / Hanzo Cloud / gVisor Enclave" made
+            them look like three values of one. */}
         <XStack alignItems="center" gap="$1.5">
           <select
-            value={environment}
-            onChange={(e) => artifactStore.setEnvironment(e.target.value as SandboxEnvironment)}
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: 6,
-              color: 'rgba(255, 255, 255, 0.85)',
-              fontSize: 11.5,
-              fontWeight: 500,
-              padding: '3px 8px',
-              outline: 'none',
-              cursor: 'pointer',
-            }}
+            value={where}
+            onChange={(e) => artifactStore.setWhere(e.target.value)}
+            style={PICKER}
           >
-            <option value="local-k3s">⚡ Local k3s</option>
-            <option value="hanzo-cloud">☁️ Hanzo Cloud</option>
-            <option value="gvisor-enclave">🔒 gVisor Enclave</option>
+            {origins().map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={runtime}
+            onChange={(e) => artifactStore.setRuntime(e.target.value as SandboxRuntime)}
+            style={PICKER}
+          >
+            <option value="runc">runc</option>
+            <option value="gvisor">gVisor</option>
+            <option value="kata-clh">microVM · cloud-hypervisor</option>
+            <option value="kata-fc">microVM · firecracker</option>
           </select>
 
           {isRunning ? (
@@ -341,8 +363,10 @@ export const ArtifactPanel = () => {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <Cpu size={12} style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+            {/* The isolation the sandbox ASKED for. What it GOT is on the
+                lease and is printed to the log when the two differ. */}
             <span style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.4)', fontWeight: 500 }}>
-              {environment === 'local-k3s' ? 'k3s sandboxed' : environment === 'hanzo-cloud' ? 'Cloud MicroVM' : 'gVisor KMS'}
+              {runtime}
             </span>
           </div>
         </div>
