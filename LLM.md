@@ -308,7 +308,74 @@ the result is not rewritten again.
 ## Verifying
 
     npx tsc --noEmit                                  # noUnusedLocals: dead code fails
-    node --test --experimental-strip-types 'src/**/*.test.ts'   # 22 assertions
+    node --test --experimental-strip-types 'src/**/*.test.ts'   # 27 assertions
 
 `tsconfig.json` has `noUnusedLocals`/`noUnusedParameters`, so un-exporting a
 symbol makes tsc name it if nothing uses it. That is the lever for pruning.
+
+
+## Every store reads. The eleven that did not, and what they claimed
+
+Eleven surfaces held literal tables and rendered them as measurements. Each is
+now a read, and what could not be read was DELETED rather than defaulted — the
+rule throughout being that an invented number is worse than a missing one,
+because a screen gives no sign which it is showing.
+
+| surface | reads | what was invented |
+|---|---|---|
+| plugins | `/v1/tools/plugins` + `/authored` | a marketplace: version, author, download count, star rating |
+| automations | `/v1/auto/flows`, `/runs` | a cron line, an agent, a run count; `runNow` faked the result on a timer |
+| tasks | `/v1/agents/sessions` | hand-written logs, artifact lists, a progress number |
+| projects | `/v1/iam/{organizations,projects}` | org tiers, member counts, two stock people, runtime targets |
+| agents | `client.agents.list()` | five personas with prompts, capabilities and dead avatar URLs |
+| workspace | `/v1/todo`, `/v1/meet/call`, `/v1/network` | a meeting roster, a transcript, an `aiSummary`, a tunnel URL and an `enclaveKey` |
+| artifact | `client.sandboxes` | a boot sequence, a compile time, an ingress URL, a 0.18ms p99 |
+| boards | `/v1/todo/board` | four cards with branches and agents; a "review" column that does not exist |
+| intelligence | `/v1/ai/memory/list`, `/v1/code/search` | confidence scores; a symbol index at fixed line numbers |
+| channels | `/v1/team/rooms` | nine rooms with unread counts and a "Just now" that was a string |
+| presence | `people.list` | three people with a `status` of online or idle |
+
+### What the exercise taught, beyond the counts
+
+**A store that writes nothing is the loudest kind of lie, and it is silent.**
+`AgentBuilderModal` built an object and handed it to an optional `onSave` that
+the one place mounting it never passed, so every agent anyone defined there was
+discarded without a word. `boardStore.moveCard` and `taskQueueStore.retryTask`
+were the same shape one level down: they edited an array, the screen updated,
+and nothing left the process.
+
+**Read the source before writing a body.** `POST /v1/ai/memory/remember` is
+behind ai's wildcard, so the document names the route and declares no body. The
+shape came out of the pinned module (`controllers/memory.go`: `{id, name,
+content, kind, metadata}`, and identity is force-set server-side and never read
+from the body). Guessing would have stored an empty memory and reported success,
+which is the failure `apps/captable` records for the same reason.
+
+**Two schemas can spell one column differently, and one of them is right.**
+`issueView`, `issueHit`, `issueEdit` and `newIssue` all say `canceled`, one L. A
+`cancelled` written from memory would have been refused with a 400 by a select
+option that looked correct.
+
+**Null is not zero, and the wire keeps them apart on purpose.**
+`sessionProgress.pct` is ABSENT rather than 0 when a run's progress is
+indeterminate, so `pct` is `number | null` here and a null draws NO BAR — an
+empty one reads as "nothing has happened yet", which is the one thing it does
+not mean. The same route marks its answer `estimated` when a model produced it,
+and the card says so: an estimate rendered as a measurement tells somebody a
+stuck run is fine.
+
+**A dead host answers everything, including a control.** The five agent avatars
+pointed at `cdn.hanzo.ai/avatars/<id>.png`, which answers 525 — as does
+`cdn.hanzo.ai/bogus-control-xyz.png`. Without the control the 525 reads as five
+missing files rather than a host that does not work.
+
+**A crossed axis shows up as three options where there are two questions.** The
+artifact panel offered "Local k3s / Hanzo Cloud / gVisor Enclave" as one picker,
+which is a place, a place and an isolation. It is two controls now, the same
+split `~/terminal` already made: WHERE it runs is an origin, WHAT isolates it is
+a runtime, and a microVM is a runtime.
+
+**Collapse a branch-per-column into a table and the wrong column cannot exist.**
+The board had three hand-written "move forward" buttons, and the middle one
+moved a card to `review` — a column the board does not have. One button over one
+`onward` map made that unrepresentable.
