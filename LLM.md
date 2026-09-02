@@ -781,3 +781,68 @@ Adjacent to what was just built, and small enough to finish:
 
 `/v1/tools/call` is served and has no client here on purpose — a turn dispatches
 through the chat completion, and a second way to call a tool is a second way.
+
+
+## Type by the producer, not by the reader
+
+Two types here declared fields their own producer could not fill, and both were
+found the same way: read the fold, and see what it writes a placeholder for.
+
+`AutomationJob` declared `name`, `trigger`, `triggerName` and `valid`, and the
+list read filled them with `''`, `'empty'` and `valid: false` — that last one
+asserting *the builder rejected this flow* about every flow the org has, because
+`GET /v1/auto/flows` carries no version and has no populate parameter. It is
+`Flow` (the row) and `Version` (the per-flow read) now, and the second is
+returned as `Version | null` so "not read yet" and "read, and it has no trigger"
+stay different answers.
+
+`PluginExtension` was one record with optional halves, so the fold wrote
+`prefixes: []` and `enabled: true` for an authored plugin — which has neither
+concept. As a discriminated union the wrong access does not compile, **and the
+compiler immediately found five live ones**: a filter searching prefixes on an
+authored row, a card border drawn from a switch that kind does not have, two
+source reads on a mount, and a footer that drew every authored plugin as
+permanently "on".
+
+**A type whose producer must lie to satisfy it is describing two things.** The
+test is mechanical: `grep` the folds for a field set to a constant, and ask
+whether that constant is a fact or a filler.
+
+## A hook that reads two things is usually a place, not a value
+
+`useWorkspaceApps` returned seventeen fields covering the notepad, the backlog,
+the call and the overlay network. `useIntelligence` read memories and the code
+index. `useProjects` read orgs, projects and people. In every case what the
+parts shared was a MODAL — a place — so a note being typed re-rendered on a
+network read, and one `fault` field held two unrelated failures.
+
+Split by tab, not by count. `useAutomations` and `useTaskQueue` still read two
+things each and stayed that way on purpose: a flow row shows its last run and
+the queue shows the selected run's transcript, so each is ONE view composing two
+sources rather than two views sharing a strip.
+
+Where a value is genuinely shared, give it its own hook rather than passing it
+around: `useOrgs` is read by `useOrgProjects` and `useOrgPeople`, because the org
+really does select both.
+
+## Two sessions edit this checkout at once
+
+This repository is worked by more than one agent at a time, and it shows up in
+ways that do not look like concurrency:
+
+- **`git add -A` takes the other session's staged work.** It happened twice.
+  Once it took a rename of `compose/skills.ts` WITHOUT the import updates, so
+  that commit did not build although the working tree did — the dangling-
+  reference shape, with no conflict to warn you. **Use `git commit -- <paths>`**,
+  which ignores the index for everything else. `git add` then `git commit` is
+  not enough: the peer can stage between the two.
+- **Work you pushed can be gone.** The plugin union was reverted by a peer's
+  rewrite of the same files hours later — not carelessly: that rewrite carried
+  three findings this pass had missed (`all=true`, without which the route
+  returns only RUNNING subsystems so `enabled` can never read false; `source` is
+  authored TypeScript rather than a location; `builtAt` in this app's clock).
+  The answer is to re-apply over theirs, keeping both, not to revert.
+- **`tsc` green is not `build` green.** Main was red for a while because two
+  entry points import `@hanzo/font/css` and nothing declared the package. A CSS
+  side-effect import carries no types, so only a bundle catches it. Run the
+  build, not just the typecheck, before calling anything shipped.
