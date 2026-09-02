@@ -379,3 +379,91 @@ a runtime, and a microVM is a runtime.
 The board had three hand-written "move forward" buttons, and the middle one
 moved a card to `review` — a column the board does not have. One button over one
 `onward` map made that unrepresentable.
+
+
+## One way to hold state, and it is two questions
+
+A value is either THIS WINDOW'S or THE SERVER'S, and the two have different
+primitives because they have different failure modes. There is no third.
+
+| the question | the primitive | where |
+|---|---|---|
+| what this window owns — is the panel open, which tab, which origin, the draft | `atom` + `useAtom` | `data/store.ts` |
+| what the server owns — the rooms, the board, the roster | `useRead(key, read)` | `data/query.ts` |
+| a change to the server | `useSend(call, [keys…])` | `data/query.ts` |
+| that is no longer true | `invalidate(key)` | `data/query.ts` |
+
+Both read through `useSyncExternalStore`, so a component reading a cached answer
+and one reading a live atom behave identically under a concurrent render. There
+is no provider to mount, which is why `invalidate()` can be reached from a
+callback route with no hook.
+
+**Thirteen stores each hand-rolled all of it**, and the header of `store.ts` had
+said "nothing else in the app subscribes to anything by hand" the whole time —
+so the rule was written down and thirteen files falsified it. What that cost,
+measured before deleting it: 13 listener sets, 12 character-identical copies of
+one error helper, 12 `put` reducers, 3 copies of `ago` and 2 of `tint`. 2456
+lines of store became 1922.
+
+`query.ts` was itself part of the problem: it named FOUR verbs and shipped two.
+`usePages` was never written and `useSend` was named while every store rolled
+its own. **A verb a doc promises and a file does not define is worse than a
+missing one, because the next author writes their own rather than looking.**
+
+### Three things the move bought that the old shape could not express
+
+**A filter belongs in the KEY.** The board's narrowing and the projects org are
+part of `keys.board(key)` and `keys.projects(owner)`, so switching either is a
+different cache entry rather than a re-read of one. The previous answer stays on
+screen while the next arrives, and going back costs nothing. A `state.key` field
+plus one reader can do neither.
+
+**A key expresses what does NOT get read.** A session's transcript is
+`keys.session(id)`, read only for the run on screen — which is how "a list of
+fifty runs does not need fifty transcripts" becomes a fact about the code rather
+than a flag somebody must remember.
+
+**A stale-key list beats calling your own reader.** Every hand-rolled write ended
+`await read()`. Naming the keys instead (`useSend(call, [keys.flows])`) says what
+the write CHANGED, which is a different statement from what this panel happens to
+show — and only the first one stays true when a second panel shows the same rows.
+
+### The exception, and why it is not a third way
+
+`terminal` and `artifact` hold a LEASE, and a lease is a handle this window
+HOLDS rather than a value it fetched: re-reading it would rent a second computer
+and dropping it from a cache would strand the first. The accumulated output is
+the same shape one level down — no key can be invalidated to recover a log. Both
+are atoms plus `useSend`, never `useRead`. The test for the next one: **if
+fetching it twice would create two of something, it is not a read.**
+
+### Time is unix milliseconds inside this app
+
+The estate sends three spellings — RFC 3339 on a session, unix SECONDS on a
+board issue, unix MILLISECONDS on a flow — so `show.ts` converts at the boundary
+where a store folds the wire (`fromStamp`, `fromSeconds`) and every clock past
+that point is one number. `ago` therefore takes a number and nothing else: given
+all three it could not tell which it was handed, and `1_700_000_000` is a
+plausible answer in either unit and fifty-four years apart between them.
+
+## Everything talks to the unified API, and that is checked rather than assumed
+
+Audited across the whole tree: **30 of 30 calls resolve to a path in
+`api.hanzo.ai`'s own OpenAPI document**, including the five whose leaf is
+computed (`/sessions/{id}/{pause|resume|stop}`,
+`/flows/{id}/{enable|disable}`) — expanded to every value the code can produce
+and checked one at a time, since a regex reads those as missing.
+
+- **One data host.** `client(ESTATE)` is the SDK's default base, overridable by
+  `VITE_HANZO_API` for a local cloud; `client(MACHINE)` is the engine on
+  `127.0.0.1:36900`. Nothing else is dialled.
+- **No `/api/` prefix anywhere**, and every data path is `/v1/*`.
+- **Auth is Hanzo IAM**, per brand (`hanzo.id`, `lux.id`, `zoolabs.id`). No
+  second auth, no bespoke session.
+- `tasks.hanzo.ai` and `tabs.hanzo.ai` appear ONLY inside `window.open` and an
+  `<a href>` — destinations a person clicks, not endpoints. Re-check with
+  `grep -rn "https://" src` before believing a new host is a call.
+
+Re-run the audit by extracting every `path:` literal and matching it against
+`GET /v1/openapi.json`, normalising `${…}` to `{x}`. A path that does not match
+is either a typo or a route the fleet does not serve, and both are worth failing.
