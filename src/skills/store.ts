@@ -44,16 +44,15 @@ export const open = atom(false)
 
 const read = async (): Promise<Skill[]> => {
   const api = client(ESTATE).http
-  // Independent, so an org that has authored none still sees the brand's
-  // catalogue — and an org whose store is closed still sees what it can reach.
+  // Asked together, and a refusal from either is the answer. An empty list in
+  // place of one would draw a tab reporting that the org has nothing.
   const [listed, written] = await Promise.all([
-    api.collection<Listed>('tools', { path: '/v1/tools/skills' }).catch(() => null),
-    api.collection<Written>('skills', { path: '/v1/tools/skills/authored' }).catch(() => null),
+    api.collection<Listed>('tools', { path: '/v1/tools/skills' }),
+    api.collection<Written>('skills', { path: '/v1/tools/skills/authored' }),
   ])
-  if (listed === null && written === null) throw new Error('neither skill list answered')
   return fold(
-    listed ?? [],
-    (written ?? []).map((one) => ({ ...one, writtenAt: fromSeconds(one.createdAt) })),
+    listed,
+    written.map((one) => ({ ...one, writtenAt: fromSeconds(one.createdAt) })),
   )
 }
 

@@ -44,12 +44,3 @@ export interface Version {
   /** The builder's own verdict on the latest version. */
   valid: boolean
 }
-
-/** One row of `GET /v1/auto/runs`. */
-export interface AutomationRun {
-  id: string
-  flowId: string
-  status: string
-  startTime: number
-  finishTime: number
-}

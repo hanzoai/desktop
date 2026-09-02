@@ -4,18 +4,10 @@
  * Five columns and the wire's own words. There is no "Review" column — that was
  * this app's invention, and moving a card into it moved nothing anywhere.
  */
-import {
-  ArrowRight,
-  CheckCircle2,
-  GitBranch,
-  Kanban,
-  Play,
-  Plus,
-  X,
-} from '@hanzogui/lucide-icons-2'
+import { ArrowRight, GitBranch, Kanban, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
 import { boardStore, useBoard, useMoveCard, useOpenCard, type BoardCard } from './store'
-import { taskQueueStore, useOpenRun } from '~/tasks/store'
+import { useRunAgent } from '~/agents/store'
 
 const COLUMNS: { id: BoardCard['column']; title: string; color: string }[] = [
   { id: 'backlog', title: 'Backlog', color: 'rgba(255, 255, 255, 0.4)' },
@@ -42,8 +34,8 @@ export const BoardModal = () => {
   // Two writes, each with its own pending and its own refusal.
   const moving = useMoveCard()
   const opening = useOpenCard()
-  // Dispatching a card opens a RUN, which is the tasks surface's own verb.
-  const dispatching = useOpenRun()
+  // Running a card asks the agent it names, which is the agents plane's verb.
+  const dispatching = useRunAgent()
 
   if (!isOpen) return null
 
@@ -55,14 +47,6 @@ export const BoardModal = () => {
       setNewTitle('')
       setIsAdding(false)
     }
-  }
-
-  const handleExecute = (card: BoardCard) => {
-    void moving.run(card, 'in_progress')
-    // The card's assignee is a person or an agent by name, and it is what the
-    // run is labelled with — not a persona this app picked.
-    void dispatching.run(card.title, card.assignee || undefined)
-    taskQueueStore.open()
   }
 
   return (
@@ -201,9 +185,12 @@ export const BoardModal = () => {
           {pending ? (
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>reading…</span>
           ) : null}
-          {fault || moving.fault || opening.fault ? (
+          {dispatching.pending ? (
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>running…</span>
+          ) : null}
+          {fault || moving.fault || opening.fault || dispatching.fault ? (
             <span style={{ fontSize: 11, color: '#f87171' }}>
-              {fault || moving.fault || opening.fault}
+              {fault || moving.fault || opening.fault || dispatching.fault}
             </span>
           ) : null}
         </div>
@@ -416,12 +403,17 @@ export const BoardModal = () => {
                           borderTop: '1px solid rgba(255, 255, 255, 0.05)',
                         }}
                       >
-                        {card.column !== 'done' ? (
+                        {card.assignee && card.column !== 'done' ? (
+                          /* The card's own words go to the agent it names. A
+                             card nobody holds names nobody to ask, so it has
+                             no button rather than a button with no addressee. */
                           <button
                             type="button"
-                            onClick={() => handleExecute(card)}
+                            onClick={() =>
+                              void dispatching.run(card.assignee, card.description || card.title)
+                            }
                             className="tap"
-                            title="Execute task autonomously with agent"
+                            title={`Run ${card.assignee} on this card`}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -439,12 +431,7 @@ export const BoardModal = () => {
                             <Play size={10} />
                             <span>Auto-Run</span>
                           </button>
-                        ) : (
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#34d399', fontSize: 11, fontWeight: 600 }}>
-                            <CheckCircle2 size={12} />
-                            <span>Passed</span>
-                          </span>
-                        )}
+                        ) : null}
 
                         {/* One button off one table, rather than a branch per
                             column — which is how a column came to move a card

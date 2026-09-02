@@ -135,16 +135,26 @@ export const useTaskQueue = () => {
   const isOpen = useAtom(open)
   const chosen = useAtom(selected)
   const listed = useRead(keys.sessions, readSessions, { enabled: isOpen })
-  // The transcript is per session, and read only for the one on screen.
-  const turns = useRead(keys.session(chosen ?? ''), () => readEvents(chosen!), {
-    enabled: isOpen && Boolean(chosen),
+  // The pane shows the selected run, or the first when nothing is selected, and
+  // the transcript is read for THAT one — a per-session key, so a list of fifty
+  // runs does not read fifty transcripts.
+  const showing = chosen ?? listed.data?.[0]?.id ?? ''
+  const turns = useRead(keys.session(showing), () => readEvents(showing), {
+    enabled: isOpen && Boolean(showing),
   })
 
   return {
     isOpen,
     tasks: listed.data ?? [],
-    activeTaskId: chosen,
-    events: turns.data ?? [],
+    activeTaskId: showing,
+    // Its own read, so it carries its own answer: a transcript that was refused
+    // and a run with no turns are different things, and `[]` says the second.
+    // `events` is undefined until the read lands, which is neither.
+    transcript: {
+      events: turns.data,
+      pending: turns.pending,
+      fault: turns.error ? reason(turns.error) : null,
+    },
     pending: listed.pending,
     fault: listed.error ? reason(listed.error) : null,
   }

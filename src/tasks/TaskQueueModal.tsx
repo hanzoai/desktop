@@ -31,7 +31,7 @@ const statusBadge = (status: TaskStatus) => {
 }
 
 export const TaskQueueModal = () => {
-  const { isOpen, tasks, activeTaskId, events, pending, fault } = useTaskQueue()
+  const { isOpen, tasks, activeTaskId, transcript, pending, fault } = useTaskQueue()
   // Two writes, each with its own pending and its own refusal.
   const opening = useOpenRun()
   const steering = useSteerRun()
@@ -441,10 +441,14 @@ export const TaskQueueModal = () => {
                     gap: 4,
                   }}
                 >
-                  {events.length === 0 ? (
+                  {transcript.fault ? (
+                    <div style={{ color: '#f87171' }}>{transcript.fault}</div>
+                  ) : !transcript.events || transcript.pending ? (
+                    <div style={{ color: 'rgba(255,255,255,0.35)' }}>Reading the turns…</div>
+                  ) : transcript.events.length === 0 ? (
                     <div style={{ color: 'rgba(255,255,255,0.35)' }}>No turns recorded.</div>
                   ) : null}
-                  {events.map((turn) => (
+                  {transcript.events?.map((turn) => (
                     <div
                       key={turn.id}
                       style={{

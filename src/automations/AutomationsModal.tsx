@@ -14,6 +14,7 @@ import {
   automationsStore,
   useArmFlow,
   useAutomations,
+  useLastRun,
   useOpenFlow,
   useRunFlow,
   useVersion,
@@ -30,13 +31,11 @@ import {
  */
 const Row = ({
   job,
-  lastRun,
   working,
   onRun,
   onArm,
 }: {
   job: Flow
-  lastRun: number
   working: boolean
   onRun: () => void
   onArm: (armed: boolean) => void
@@ -44,6 +43,9 @@ const Row = ({
   // Null until the version lands. A row draws its id in the meantime rather
   // than an empty name, and says nothing about a verdict it has not read.
   const version = useVersion(job.id)
+  // This flow's own history, so a run older than the org's newest fifty is
+  // still this flow's last run.
+  const last = useLastRun(job.id)
   const armed = job.status === 'ENABLED'
   return (
 
@@ -135,7 +137,13 @@ const Row = ({
                     <span>
                       Last run:{' '}
                       <strong style={{ color: '#ffffff' }}>
-                        {ago(lastRun) || 'never'}
+                        {last.fault
+                          ? last.fault
+                          : last.at === undefined
+                            ? '…'
+                            : last.at
+                              ? ago(last.at)
+                              : 'never'}
                       </strong>
                     </span>
                     <span>
@@ -199,7 +207,7 @@ const Row = ({
 }
 
 export const AutomationsModal = () => {
-  const { isOpen, jobs, runs, pending, fault } = useAutomations()
+  const { isOpen, jobs, pending, fault } = useAutomations()
   // Three writes, each with its own pending and its own refusal.
   const running = useRunFlow()
   const arming = useArmFlow()
@@ -219,15 +227,6 @@ export const AutomationsModal = () => {
     // Clear the box only on a flow that was actually opened.
     if (await opening.run(newJobName.trim())) setNewJobName('')
   }
-
-  /** When each flow last ran, from the run history rather than from a guess. */
-  const lastRun = new Map<string, number>()
-  for (const run of runs) {
-    const at = run.finishTime || run.startTime
-    if (at && at > (lastRun.get(run.flowId) ?? 0)) lastRun.set(run.flowId, at)
-  }
-
-
 
   return (
     <div
@@ -359,7 +358,6 @@ export const AutomationsModal = () => {
               <Row
                 key={job.id}
                 job={job}
-                lastRun={lastRun.get(job.id) ?? 0}
                 working={running.pending || arming.pending}
                 onRun={() => void running.run(job.id)}
                 onArm={(armed) => void arming.run(job.id, armed)}

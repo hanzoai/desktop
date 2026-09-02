@@ -816,10 +816,13 @@ index. `useProjects` read orgs, projects and people. In every case what the
 parts shared was a MODAL — a place — so a note being typed re-rendered on a
 network read, and one `fault` field held two unrelated failures.
 
-Split by tab, not by count. `useAutomations` and `useTaskQueue` still read two
-things each and stayed that way on purpose: a flow row shows its last run and
-the queue shows the selected run's transcript, so each is ONE view composing two
-sources rather than two views sharing a strip.
+Split by tab, not by count. `useTaskQueue` still reads two things and stayed
+that way on purpose: the queue shows the selected run's transcript, so it is ONE
+view composing two sources rather than two views sharing a strip.
+`useAutomations` reads the flows alone, because a row's NAME and its LAST RUN
+are both per-flow keys the ROW reads (`useVersion`, `useLastRun`) — a flow
+nobody drew is a flow nobody fetched, and an org-wide page of runs can only say
+whether a flow is among the newest fifty of them.
 
 Where a value is genuinely shared, give it its own hook rather than passing it
 around: `useOrgs` is read by `useOrgProjects` and `useOrgPeople`, because the org

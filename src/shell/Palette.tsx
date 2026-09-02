@@ -27,7 +27,6 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { swarmStore } from '~/agents/store'
 import { workspaceAppsStore } from '~/apps/store'
 import { artifactStore } from '~/artifact/store'
 import { automationsStore } from '~/automations/store'
@@ -62,7 +61,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
 
   // Global hotkeys for instant agentic surfaces:
   // ⌘` or ⌘\ -> Toggle Terminal & Cloud Sandbox
-  // ⌘J -> Toggle Swarm Mode
   // ⌘M -> Toggle MCP Skills & Connectors
   // ⌘B -> Open Sprint Boards
   // ⌘Q -> Open Durable Task Queue
@@ -76,9 +74,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       if (isCmd && (e.key === '`' || e.key === '\\')) {
         e.preventDefault()
         terminalStore.toggle()
-      } else if (isCmd && (e.key === 'j' || e.key === 'J')) {
-        e.preventDefault()
-        swarmStore.setSwarmMode(!swarmStore.isSwarming())
       } else if (isCmd && (e.key === 'm' || e.key === 'M')) {
         e.preventDefault()
         mcpStore.toggle()
@@ -170,13 +165,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         label: 'Toggle Terminal & Cloud Sandbox',
         hint: 'Local k3s, MicroVMs, Tabs, ZAP stream (⌘\\)',
         icon: <Terminal size={15} />,
-      },
-      {
-        id: 'swarm',
-        group: 'Agentic & Cloud',
-        label: 'Toggle Multi-Agent Swarm Mode',
-        hint: '@planner, @dev, @secops, @researcher, @executor (⌘J)',
-        icon: <Bot size={15} />,
       },
       {
         id: 'meet',
@@ -307,9 +295,6 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           break
         case 'terminal':
           terminalStore.toggle()
-          break
-        case 'swarm':
-          swarmStore.setSwarmMode(!swarmStore.isSwarming())
           break
         case 'meet':
           workspaceAppsStore.open('meet')

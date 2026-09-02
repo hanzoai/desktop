@@ -98,9 +98,9 @@ export const useConnect = () =>
       path: `/v1/integrations/${encodeURIComponent(id)}/connect`,
       body: {},
     })
-    // A provider whose only path is a customer token answers 200 with no URL
-    // rather than refusing. Saying so beats sending nowhere and looking busy.
-    if (!authorizeUrl) throw new Error('this provider is connected with a scoped API token')
+    // The consent trip is the URL, so an answer without one starts nothing.
+    // Why it is missing is the estate's to say, and it did not say.
+    if (!authorizeUrl) throw new Error('the answer carried no authorize URL')
     visit(authorizeUrl)
   })
 

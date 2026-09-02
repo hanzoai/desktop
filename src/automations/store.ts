@@ -21,9 +21,9 @@ import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { reason, useRead, useSend } from '~/data/query'
-import type { AutomationRun, AutomationTrigger, Flow, Version } from './types'
+import type { AutomationTrigger, Flow, Version } from './types'
 
-export type { AutomationRun, Flow, Version }
+export type { Flow, Version }
 
 /** How many flows to read, and therefore how many names to fetch. */
 const page = 50
@@ -46,10 +46,8 @@ interface WirePopulated extends WireFlow {
   version?: WireVersion
 }
 
+/** One row of `GET /v1/auto/runs`, as far as a clock goes. Unix milliseconds. */
 interface WireRun {
-  id: string
-  flowId?: string
-  status?: string
   startTime?: number
   finishTime?: number
 }
@@ -80,18 +78,14 @@ const readFlows = async (): Promise<Flow[]> => {
 const readFlow = async (id: string): Promise<WirePopulated> =>
   client(ESTATE).http.json<WirePopulated>({ method: 'GET', path: `/v1/auto/flows/${id}` })
 
-const readRuns = async (): Promise<AutomationRun[]> => {
-  const listed = await client(ESTATE).http.collection<WireRun>('data', {
+/** When one flow last ran, or null when it never has. */
+const readLastRun = async (id: string): Promise<number | null> => {
+  const [last] = await client(ESTATE).http.collection<WireRun>('data', {
     path: '/v1/auto/runs',
-    query: { limit: page },
+    query: { flowId: id, limit: 1 },
   })
-  return listed.map((one) => ({
-    id: one.id,
-    flowId: one.flowId ?? '',
-    status: one.status ?? '',
-    startTime: one.startTime ?? 0,
-    finishTime: one.finishTime ?? 0,
-  }))
+  if (!last) return null
+  return last.finishTime || last.startTime || null
 }
 
 export const automationsStore = {
@@ -125,17 +119,29 @@ export const useVersion = (id: string): Version | null => {
 export const useAutomations = () => {
   const isOpen = useAtom(open)
   const flows = useRead(keys.flows, readFlows, { enabled: isOpen })
-  // The history is a SEPARATE key, so a failure there costs the history and not
-  // the list of what is armed.
-  const runs = useRead(keys.runs, readRuns, { enabled: isOpen })
 
   return {
     isOpen,
     jobs: flows.data ?? [],
-    runs: runs.data ?? [],
     pending: flows.pending,
     fault: flows.error ? reason(flows.error) : null,
   }
+}
+
+/**
+ * When one flow last ran.
+ *
+ * NARROWED TO THE FLOW, and the route answers newest first, so one row is the
+ * last run and no rows is a flow that has never run. Read off the ORG's page
+ * this could only ever say "not among the newest fifty runs of every flow" —
+ * which is what was drawn as "never". Per row, like the name above it, and a
+ * separate key so a failure here costs the clock and not the list.
+ */
+export const useLastRun = (id: string) => {
+  const seen = useRead(keys.runs(id), () => readLastRun(id), { fresh: 60_000 })
+  // `at` is undefined until the read lands and null for a flow that has never
+  // run: three answers, and the row says which one it has.
+  return { at: seen.data, fault: seen.error ? reason(seen.error) : null }
 }
 
 /**

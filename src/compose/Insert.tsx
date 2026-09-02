@@ -14,7 +14,7 @@
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { CSSProperties } from 'react'
 
-import { useSwarm } from '~/agents/store'
+import { useAgents } from '~/agents/store'
 import { useTools } from '~/tools/store'
 
 /** Which half of the list a trigger opens at. */
@@ -65,9 +65,9 @@ const hit = (query: string, ...fields: string[]) => {
 
 export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
   const { data: served, pending } = useTools()
-  // The org's own agents, from the same store the swarm bar reads — never a
-  // second roster, which is how two lists of one thing come to disagree.
-  const { agents: roster } = useSwarm()
+  // The org's own agents, from the one store that reads them — never a second
+  // roster, which is how two lists of one thing come to disagree.
+  const { data: roster = [] } = useAgents()
 
   const agents =
     lane === 'tool' ? [] : roster.filter((a) => hit(query, `@${a.name}`, a.name, a.description))

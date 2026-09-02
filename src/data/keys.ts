@@ -74,9 +74,9 @@ export const keys = {
   /** The provider catalogue, carrying this org's connection to each. */
   connectors: ['connectors'] as Key,
 
-  /** The org's flows, and the runs they have had. Both move on a run. */
+  /** The org's flows, and one flow's own run history. Both move on a run. */
   flows: ['flows'] as Key,
-  runs: ['flows', 'runs'] as Key,
+  runs: (id: string) => ['flows', 'one', id, 'runs'] as Key,
   /**
    * One flow's populated form, which is where its NAME and trigger live.
    *

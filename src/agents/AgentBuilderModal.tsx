@@ -18,7 +18,7 @@ import { useTools } from '~/tools/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { useRead } from '~/data/query'
-import { swarmStore } from './store'
+import { refresh } from './store'
 
 export interface AgentBuilderProps {
   isOpen: boolean
@@ -64,8 +64,8 @@ export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
         tools: selectedTools.length > 0 ? selectedTools : undefined,
       })
       // The roster is read from one place, so refreshing it is what makes the
-      // new agent appear in the swarm bar and the composer alike.
-      swarmStore.refresh()
+      // new agent appear wherever it is named.
+      refresh()
       onClose()
     } catch (err) {
       setFault(err instanceof Error ? err.message : 'the call failed')
