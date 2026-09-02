@@ -55,6 +55,16 @@ export const keys = {
   /** The org's flows, and the runs they have had. Both move on a run. */
   flows: ['flows'] as Key,
   runs: ['flows', 'runs'] as Key,
+  /**
+   * One flow's populated form, which is where its NAME and trigger live.
+   *
+   * Its own key, per flow, because the list row does not carry them: read
+   * eagerly for the whole page that was 1 + N requests on open, and read this
+   * way it is one per row that is actually drawn, deduplicated by the cache and
+   * never fetched twice. It nests under `flows` so a change to the list takes
+   * every name with it.
+   */
+  flow: (id: string) => ['flows', 'one', id] as Key,
 
   /** The org's live agent sessions, and one session's transcript. */
   sessions: ['sessions'] as Key,

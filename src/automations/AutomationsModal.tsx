@@ -14,9 +14,187 @@ import {
   automationsStore,
   useArmFlow,
   useAutomations,
+  useFlow,
   useOpenFlow,
   useRunFlow,
+  type AutomationJob,
 } from './store'
+
+/**
+ * One flow's row.
+ *
+ * A COMPONENT, not a fragment of a loop, because the name and trigger are read
+ * per row (`useFlow`) — so a flow nobody drew is a flow nobody fetched, and the
+ * panel opens on ONE request instead of one plus a name for every flow the org
+ * has.
+ */
+const Row = ({
+  job,
+  lastRun,
+  working,
+  onRun,
+  onArm,
+}: {
+  job: AutomationJob
+  lastRun: number
+  working: boolean
+  onRun: () => void
+  onArm: (armed: boolean) => void
+}) => {
+  const { name, trigger, triggerName, valid } = useFlow(job.id)
+  const armed = job.status === 'ENABLED'
+  return (
+
+            <div
+              key={job.id}
+              style={{
+                padding: 14,
+                borderRadius: 12,
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: working
+                  ? '1px solid rgba(52, 211, 153, 0.4)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
+              }}
+            >
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}
+              >
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 8,
+                    background: 'rgba(255, 255, 255, 0.06)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: trigger === 'piece' ? '#34d399' : 'rgba(255,255,255,0.35)',
+                    flexShrink: 0,
+                  }}
+                >
+                  {trigger === 'piece' ? <Clock size={16} /> : <GitBranch size={16} />}
+                </div>
+
+                <div
+                  style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>
+                      {name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        padding: '1px 6px',
+                        borderRadius: 4,
+                        background: armed
+                          ? 'rgba(96, 165, 250, 0.15)'
+                          : 'rgba(255, 255, 255, 0.08)',
+                        color: armed ? '#60a5fa' : 'rgba(255, 255, 255, 0.4)',
+                      }}
+                    >
+                      {job.status || 'UNKNOWN'}
+                    </span>
+                    {/* The builder's own verdict. An invalid flow is armed
+                        and cannot run, which is worth seeing before a run. */}
+                    {!valid ? (
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fbbf24' }}>
+                        INVALID
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <span
+                    style={{
+                      fontSize: 11.5,
+                      color: 'rgba(255, 255, 255, 0.55)',
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {triggerName || 'no trigger'}
+                  </span>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      fontSize: 11,
+                      color: 'rgba(255, 255, 255, 0.4)',
+                      paddingTop: 2,
+                    }}
+                  >
+                    <span>
+                      Last run:{' '}
+                      <strong style={{ color: '#ffffff' }}>
+                        {ago(lastRun) || 'never'}
+                      </strong>
+                    </span>
+                    <span>
+                      Updated: <strong style={{ color: '#ffffff' }}>{ago(job.updated)}</strong>
+                    </span>
+                    {job.publishedVersionId ? <span>pinned</span> : null}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <button
+                  type="button"
+                  disabled={working}
+                  onClick={() => onRun()}
+                  className="tap"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#ffffff',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: working ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <Play size={11} fill="currentColor" />
+                  <span>{working ? 'Starting…' : 'Run Now'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={working}
+                  onClick={() => onArm(armed)}
+                  className="tap"
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 6,
+                    background: armed
+                      ? 'rgba(52, 211, 153, 0.15)'
+                      : 'rgba(255, 255, 255, 0.06)',
+                    border: armed
+                      ? '1px solid rgba(52, 211, 153, 0.3)'
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    color: armed ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
+                    fontSize: 11.5,
+                    fontWeight: 600,
+                    cursor: working ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {armed ? 'Enabled' : 'Disabled'}
+                </button>
+              </div>
+            </div>
+          
+  )
+}
 
 export const AutomationsModal = () => {
   const { isOpen, jobs, runs, pending, fault } = useAutomations()
@@ -175,159 +353,16 @@ export const AutomationsModal = () => {
                 No automations yet.
               </div>
             ) : null}
-            {jobs.map((job) => {
-              const armed = job.status === 'ENABLED'
-              const working = running.pending || arming.pending
-              return (
-                <div
-                  key={job.id}
-                  style={{
-                    padding: 14,
-                    borderRadius: 12,
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: working
-                      ? '1px solid rgba(52, 211, 153, 0.4)'
-                      : '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                  }}
-                >
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}
-                  >
-                    <div
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 8,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: job.trigger === 'piece' ? '#34d399' : 'rgba(255,255,255,0.35)',
-                        flexShrink: 0,
-                      }}
-                    >
-                      {job.trigger === 'piece' ? <Clock size={16} /> : <GitBranch size={16} />}
-                    </div>
-
-                    <div
-                      style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>
-                          {job.name}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            padding: '1px 6px',
-                            borderRadius: 4,
-                            background: armed
-                              ? 'rgba(96, 165, 250, 0.15)'
-                              : 'rgba(255, 255, 255, 0.08)',
-                            color: armed ? '#60a5fa' : 'rgba(255, 255, 255, 0.4)',
-                          }}
-                        >
-                          {job.status || 'UNKNOWN'}
-                        </span>
-                        {/* The builder's own verdict. An invalid flow is armed
-                            and cannot run, which is worth seeing before a run. */}
-                        {!job.valid ? (
-                          <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fbbf24' }}>
-                            INVALID
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <span
-                        style={{
-                          fontSize: 11.5,
-                          color: 'rgba(255, 255, 255, 0.55)',
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {job.triggerName || 'no trigger'}
-                      </span>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 14,
-                          fontSize: 11,
-                          color: 'rgba(255, 255, 255, 0.4)',
-                          paddingTop: 2,
-                        }}
-                      >
-                        <span>
-                          Last run:{' '}
-                          <strong style={{ color: '#ffffff' }}>
-                            {ago(lastRun.get(job.id) ?? 0) || 'never'}
-                          </strong>
-                        </span>
-                        <span>
-                          Updated: <strong style={{ color: '#ffffff' }}>{ago(job.updated)}</strong>
-                        </span>
-                        {job.publishedVersionId ? <span>pinned</span> : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      disabled={working}
-                      onClick={() => void running.run(job.id)}
-                      className="tap"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        color: '#ffffff',
-                        fontSize: 11.5,
-                        fontWeight: 600,
-                        cursor: working ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      <Play size={11} fill="currentColor" />
-                      <span>{working ? 'Starting…' : 'Run Now'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={working}
-                      onClick={() => void arming.run(job.id, armed)}
-                      className="tap"
-                      style={{
-                        padding: '6px 10px',
-                        borderRadius: 6,
-                        background: armed
-                          ? 'rgba(52, 211, 153, 0.15)'
-                          : 'rgba(255, 255, 255, 0.06)',
-                        border: armed
-                          ? '1px solid rgba(52, 211, 153, 0.3)'
-                          : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: armed ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
-                        fontSize: 11.5,
-                        fontWeight: 600,
-                        cursor: working ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      {armed ? 'Enabled' : 'Disabled'}
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
+            {jobs.map((job) => (
+              <Row
+                key={job.id}
+                job={job}
+                lastRun={lastRun.get(job.id) ?? 0}
+                working={running.pending || arming.pending}
+                onRun={() => void running.run(job.id)}
+                onArm={(armed) => void arming.run(job.id, armed)}
+              />
+            ))}
           </div>
         </div>
       </div>

@@ -6,11 +6,16 @@
  * makes stale rather than calling its own reader again — a write that re-reads
  * by hand is a second statement of what it changed, and the two drift.
  *
- * THE NAME COSTS A SECOND READ. A flow's list row carries no display name — it
- * lives on the flow's latest version — so the list is enriched by fetching each
- * flow's populated form. That read is bounded by the page and fails soft: a
- * flow whose version cannot be read is shown under its id, which is the honest
- * degradation, rather than dropped from a list of what is armed.
+ * THE NAME COSTS A SECOND READ, AND IT IS PER ROW. A flow's list row carries no
+ * display name — it lives on the flow's latest version, and `GET /v1/auto/flows`
+ * takes only `limit`, so there is no populate to ask for. Enriching the whole
+ * page on open was 1 + N requests before anybody had looked at anything.
+ *
+ * So the name is its own KEY per flow (`keys.flow(id)`) and each ROW reads its
+ * own. The cache makes that one request per flow that is actually drawn,
+ * deduplicated and never repeated; a row scrolled past costs nothing. It still
+ * fails soft — a flow whose version cannot be read shows under its id, which is
+ * the honest degradation rather than dropping it from a list of what is armed.
  */
 import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
@@ -57,33 +62,28 @@ const triggerOf = (type?: string): AutomationTrigger =>
   type === 'PIECE_TRIGGER' ? 'piece' : 'empty'
 
 const readFlows = async (): Promise<AutomationJob[]> => {
-  const api = client(ESTATE).http
-  const flows = await api.collection<WireFlow>('data', {
+  const flows = await client(ESTATE).http.collection<WireFlow>('data', {
     path: '/v1/auto/flows',
     query: { limit: page },
   })
-
-  // The names, one read each. A failure costs that flow its name and nothing
-  // else — never its row, and never the whole list.
-  return Promise.all(
-    flows.map(async (flow) => {
-      const full = await api
-        .json<WirePopulated>({ method: 'GET', path: `/v1/auto/flows/${flow.id}` })
-        .catch(() => null)
-      return {
-        id: flow.id,
-        name: full?.version?.displayName || flow.id,
-        status: flow.status ?? '',
-        trigger: triggerOf(full?.version?.trigger?.type),
-        triggerName: full?.version?.trigger?.displayName ?? '',
-        valid: full?.version?.valid ?? false,
-        publishedVersionId: flow.publishedVersionId ?? '',
-        created: flow.created ?? 0,
-        updated: flow.updated ?? 0,
-      }
-    }),
-  )
+  // Everything the LIST row carries, and nothing it does not. The name and the
+  // trigger arrive per row, through `useFlow`.
+  return flows.map((flow) => ({
+    id: flow.id,
+    name: '',
+    status: flow.status ?? '',
+    trigger: 'empty' as AutomationTrigger,
+    triggerName: '',
+    valid: false,
+    publishedVersionId: flow.publishedVersionId ?? '',
+    created: flow.created ?? 0,
+    updated: flow.updated ?? 0,
+  }))
 }
+
+/** One flow's name and trigger, read when a row is drawn and cached after. */
+const readFlow = async (id: string): Promise<WirePopulated> =>
+  client(ESTATE).http.json<WirePopulated>({ method: 'GET', path: `/v1/auto/flows/${id}` })
 
 const readRuns = async (): Promise<AutomationRun[]> => {
   const listed = await client(ESTATE).http.collection<WireRun>('data', {
@@ -103,6 +103,22 @@ export const automationsStore = {
   open: () => open.set(true),
   close: () => open.set(false),
   toggle: () => open.set((showing) => !showing),
+}
+
+/**
+ * A row's own name and trigger.
+ *
+ * Called from the row, so a flow nobody drew is a flow nobody fetched. A read
+ * that fails leaves the row under its id rather than removing it.
+ */
+export const useFlow = (id: string): Pick<AutomationJob, 'name' | 'trigger' | 'triggerName' | 'valid'> => {
+  const full = useRead(keys.flow(id), () => readFlow(id), { fresh: 300_000 })
+  return {
+    name: full.data?.version?.displayName || id,
+    trigger: triggerOf(full.data?.version?.trigger?.type),
+    triggerName: full.data?.version?.trigger?.displayName ?? '',
+    valid: full.data?.version?.valid ?? false,
+  }
 }
 
 export const useAutomations = () => {

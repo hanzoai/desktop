@@ -9,11 +9,15 @@
  * query is its own cache entry, so re-typing one already asked is free and no
  * answer can arrive for a question that has since changed — which is the race
  * a hand-rolled store had to guard by comparing the query back on arrival.
+ *
+ * The key is built from what somebody TYPED, so it settles first. Reading on
+ * every keystroke sent a request and minted a cache entry per character, and
+ * every one but the last was a question already finished being asked.
  */
 import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
+import { reason, useRead, useSend, useSettled } from '~/data/query'
 
 export interface MemoryItem {
   /** The memory's name in the store — how it is addressed. */
@@ -110,7 +114,9 @@ export const intelligenceStore = {
 export const useIntelligence = () => {
   const isOpen = useAtom(open)
   const activeTab = useAtom(tab)
-  const query = useAtom(asked)
+  const typed = useAtom(asked)
+  // What is READ lags what is typed; what is SHOWN in the box does not.
+  const query = useSettled(typed)
 
   const memories = useRead(keys.memories, readMemories, {
     enabled: isOpen && activeTab === 'memory',
@@ -126,7 +132,9 @@ export const useIntelligence = () => {
   return {
     isOpen,
     activeTab,
-    query,
+    // The box renders what was typed — a lagging input is an input that fights
+    // the person using it.
+    query: typed,
     memories: memories.data ?? [],
     symbols: found.data?.symbols ?? [],
     degraded: found.data?.degraded ?? false,
