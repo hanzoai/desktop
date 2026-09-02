@@ -40,7 +40,7 @@ export interface NoteDocument {
 export type IssuePriority = 'none' | 'urgent' | 'high' | 'medium' | 'low'
 
 /** The board columns, likewise. */
-export type IssueStatus = 'backlog' | 'todo' | 'in_progress' | 'done' | 'cancelled'
+export type IssueStatus = 'backlog' | 'todo' | 'in_progress' | 'done' | 'canceled'
 
 export interface TodoItem {
   /** `<project>#<number>` — the pair that addresses a row on its board. */

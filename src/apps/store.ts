@@ -108,7 +108,7 @@ const because = (e: unknown): string =>
   e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
 
 const statusOf = (s?: string): IssueStatus =>
-  s === 'todo' || s === 'in_progress' || s === 'done' || s === 'cancelled' ? s : 'backlog'
+  s === 'todo' || s === 'in_progress' || s === 'done' || s === 'canceled' ? s : 'backlog'
 
 const priorityOf = (s?: string): IssuePriority =>
   s === 'urgent' || s === 'high' || s === 'medium' || s === 'low' ? s : 'none'

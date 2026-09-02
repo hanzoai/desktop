@@ -444,7 +444,7 @@ export const AppWorkspaceModal = () => {
                   </div>
                 ) : null}
                 {todos.map((todo) => {
-                  const shut = todo.status === 'done' || todo.status === 'cancelled'
+                  const shut = todo.status === 'done' || todo.status === 'canceled'
                   return (
                     <div
                       key={todo.id}
@@ -459,7 +459,7 @@ export const AppWorkspaceModal = () => {
                       }}
                     >
                       {/* A board has five columns, not a checkbox: 'done' and
-                          'cancelled' are different outcomes and a tick cannot
+                          'canceled' are different outcomes and a tick cannot
                           say which. */}
                       <select
                         value={todo.status}
@@ -483,7 +483,7 @@ export const AppWorkspaceModal = () => {
                         <option value="todo">todo</option>
                         <option value="in_progress">in progress</option>
                         <option value="done">done</option>
-                        <option value="cancelled">cancelled</option>
+                        <option value="canceled">canceled</option>
                       </select>
 
                       <span

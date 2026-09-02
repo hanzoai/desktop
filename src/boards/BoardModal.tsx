@@ -1,5 +1,8 @@
 /**
- * Kanban Boards & Sprint Issue Planning Modal.
+ * The org's board.
+ *
+ * Five columns and the wire's own words. There is no "Review" column — that was
+ * this app's invention, and moving a card into it moved nothing anywhere.
  */
 import {
   ArrowRight,
@@ -16,32 +19,42 @@ import { taskQueueStore } from '~/tasks/store'
 
 const COLUMNS: { id: BoardCard['column']; title: string; color: string }[] = [
   { id: 'backlog', title: 'Backlog', color: 'rgba(255, 255, 255, 0.4)' },
+  { id: 'todo', title: 'Todo', color: '#fbbf24' },
   { id: 'in_progress', title: 'In Progress', color: '#60a5fa' },
-  { id: 'review', title: 'Review', color: '#fbbf24' },
   { id: 'done', title: 'Done', color: '#34d399' },
+  { id: 'canceled', title: 'Canceled', color: 'rgba(255, 255, 255, 0.25)' },
 ]
 
+/** The next column a card moves to, or nothing when it is at the end. */
+const onward: Partial<Record<BoardCard['column'], BoardCard['column']>> = {
+  backlog: 'todo',
+  todo: 'in_progress',
+  in_progress: 'done',
+}
+
 export const BoardModal = () => {
-  const { isOpen, cards } = useBoard()
+  const { isOpen, cards, key, pending, fault } = useBoard()
   const [newTitle, setNewTitle] = useState('')
-  const [newAgent, setNewAgent] = useState('@dev')
-  const [newPriority] = useState<BoardCard['priority']>('P1')
+  // A card belongs to a repository. Left empty the board is the ORG's whole
+  // board, which can be read and cannot be added to.
+  const [newKey, setNewKey] = useState('')
   const [isAdding, setIsAdding] = useState(false)
 
   if (!isOpen) return null
 
   const handleAdd = (e: FormEvent) => {
     e.preventDefault()
-    if (newTitle.trim()) {
-      boardStore.addCard(newTitle.trim(), newAgent, newPriority)
-      setNewTitle('')
-      setIsAdding(false)
-    }
+    if (!newTitle.trim() || !newKey.trim()) return
+    void boardStore.addCard(newKey.trim(), newTitle.trim())
+    setNewTitle('')
+    setIsAdding(false)
   }
 
   const handleExecute = (card: BoardCard) => {
-    boardStore.moveCard(card.id, 'in_progress')
-    taskQueueStore.dispatchTask(card.title, card.assignedAgent)
+    void boardStore.moveCard(card.id, 'in_progress')
+    // The card's assignee is a person or an agent by name, and it is what the
+    // run is labelled with — not a persona this app picked.
+    void taskQueueStore.dispatchTask(card.title, card.assignee || undefined)
     taskQueueStore.open()
   }
 
@@ -151,6 +164,39 @@ export const BoardModal = () => {
           </div>
         </div>
 
+        {/* WHICH board, and what the read is doing. Empty is the org's whole
+            board, which is what the route answers when nothing is bound. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '8px 16px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          }}
+        >
+          <input
+            type="text"
+            placeholder="every board"
+            value={key}
+            onChange={(e) => boardStore.setKey(e.target.value)}
+            style={{
+              width: 180,
+              padding: '5px 10px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              fontSize: 12,
+              outline: 'none',
+            }}
+          />
+          {pending ? (
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>reading…</span>
+          ) : null}
+          {fault ? <span style={{ fontSize: 11, color: '#f87171' }}>{fault}</span> : null}
+        </div>
+
         {/* Add Task Drawer */}
         {isAdding && (
           <form
@@ -181,10 +227,15 @@ export const BoardModal = () => {
                 outline: 'none',
               }}
             />
-            <select
-              value={newAgent}
-              onChange={(e) => setNewAgent(e.target.value)}
+            {/* The board a card opens on. The four agent handles that stood
+                here were this app's own, and a create sends no assignee. */}
+            <input
+              type="text"
+              placeholder="board"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
               style={{
+                width: 130,
                 padding: '6px 10px',
                 borderRadius: 6,
                 background: 'rgba(255, 255, 255, 0.05)',
@@ -192,14 +243,8 @@ export const BoardModal = () => {
                 color: '#ffffff',
                 fontSize: 12,
                 outline: 'none',
-                cursor: 'pointer',
               }}
-            >
-              <option value="@dev">@dev (SWE)</option>
-              <option value="@planner">@planner (Architect)</option>
-              <option value="@secops">@secops (Security)</option>
-              <option value="@executor">@executor (Infra)</option>
-            </select>
+            />
             <button
               type="submit"
               className="tap"
@@ -313,15 +358,18 @@ export const BoardModal = () => {
                             fontWeight: 700,
                             padding: '1px 6px',
                             borderRadius: 4,
-                            background: card.priority === 'P0' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                            color: card.priority === 'P0' ? '#f87171' : 'rgba(255, 255, 255, 0.7)',
+                            background:
+                              card.priority === 'urgent'
+                                ? 'rgba(239, 68, 68, 0.2)'
+                                : 'rgba(255, 255, 255, 0.08)',
+                            color: card.priority === 'urgent' ? '#f87171' : 'rgba(255, 255, 255, 0.7)',
                           }}
                         >
                           {card.priority}
                         </span>
 
                         <span style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600 }}>
-                          {card.assignedAgent}
+                          {card.assignee}
                         </span>
                       </div>
 
@@ -329,14 +377,23 @@ export const BoardModal = () => {
                         {card.title}
                       </div>
 
-                      {card.branch && (
+                      {/* The repository the item is BOUND to, which the row
+                          carries. A branch name is not on the wire and the one
+                          shown here was invented per card. */}
+                      {card.repo ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                           <GitBranch size={11} color="rgba(255, 255, 255, 0.4)" />
-                          <span style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.5)', fontFamily: 'monospace' }}>
-                            {card.branch}
+                          <span
+                            style={{
+                              fontSize: 10.5,
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              fontFamily: 'monospace',
+                            }}
+                          >
+                            {card.repo}
                           </span>
                         </div>
-                      )}
+                      ) : null}
 
                       {/* Card Actions */}
                       <div
@@ -378,34 +435,25 @@ export const BoardModal = () => {
                           </span>
                         )}
 
-                        {/* Move Card Forward */}
-                        {card.column === 'backlog' && (
+                        {/* One button off one table, rather than a branch per
+                            column — which is how a column came to move a card
+                            into "review", a column the board does not have. */}
+                        {onward[card.column] ? (
                           <button
                             type="button"
-                            onClick={() => boardStore.moveCard(card.id, 'in_progress')}
-                            style={{ background: 'none', border: 'none', color: 'rgba(255, 255, 255, 0.5)', cursor: 'pointer', padding: 2 }}
+                            title={`Move to ${onward[card.column]}`}
+                            onClick={() => void boardStore.moveCard(card.id, onward[card.column]!)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'rgba(255, 255, 255, 0.5)',
+                              cursor: 'pointer',
+                              padding: 2,
+                            }}
                           >
                             <ArrowRight size={13} />
                           </button>
-                        )}
-                        {card.column === 'in_progress' && (
-                          <button
-                            type="button"
-                            onClick={() => boardStore.moveCard(card.id, 'review')}
-                            style={{ background: 'none', border: 'none', color: 'rgba(255, 255, 255, 0.5)', cursor: 'pointer', padding: 2 }}
-                          >
-                            <ArrowRight size={13} />
-                          </button>
-                        )}
-                        {card.column === 'review' && (
-                          <button
-                            type="button"
-                            onClick={() => boardStore.moveCard(card.id, 'done')}
-                            style={{ background: 'none', border: 'none', color: 'rgba(255, 255, 255, 0.5)', cursor: 'pointer', padding: 2 }}
-                          >
-                            <ArrowRight size={13} />
-                          </button>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ))}
