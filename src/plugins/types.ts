@@ -16,25 +16,51 @@
 /** Which surface a plugin came from. It is the only thing that groups them. */
 export type PluginKind = 'mounted' | 'authored'
 
-export interface PluginExtension {
-  /** The name for a mount, the minted id for an authored one. */
+/**
+ * A subsystem this deployment mounts.
+ *
+ * `all=true` is what makes `enabled` mean anything: the route filters to the
+ * RUNNING subsystems by default, so every row came back enabled and the off
+ * state was unreachable — a mark that reports a constant while looking like it
+ * reports a fact.
+ */
+export interface Mounted {
+  kind: 'mounted'
+  /** The name IS the id for a mount — what a traced request resolves to. */
   id: string
   name: string
-  kind: PluginKind
-  /** Switched on in this deployment. A mount says so; an authored plugin is. */
+  /** Switched on in this deployment. Only a mount has one. */
   enabled: boolean
-  /** The URL prefixes a mounted subsystem serves. Empty for an authored one. */
+  /** The URL prefixes it serves. */
   prefixes: string[]
-  /** Who runs an authored plugin, empty for a mount. */
-  provider?: string
+}
+
+/** A plugin this org wrote. */
+export interface Authored {
+  kind: 'authored'
+  /** The minted id. */
+  id: string
+  name: string
+  /** Whose credential it runs under. */
+  provider: string
   /**
    * The authored plugin's TypeScript, as written.
    *
-   * SOURCE CODE, not a repository URL — the route says so outright and this
-   * said the opposite, so a card built to hold one line of provenance would
-   * have taken a whole program. It is shown as code, and bounded.
+   * SOURCE CODE, not a repository URL — the route says so outright. A card
+   * built to hold one line of provenance would otherwise take a whole program,
+   * so it is shown as code and bounded.
    */
-  source?: string
-  /** When an authored plugin was last built, unix milliseconds. */
-  builtAt?: number
+  source: string
+  /** When it was last built, unix milliseconds — this app's one clock. */
+  builtAt: number
 }
+
+/**
+ * The two kinds, as a UNION rather than one record with optional halves.
+ *
+ * An authored plugin does not have zero prefixes and is not "switched on" — it
+ * has neither concept, and the flat shape made the reader write `prefixes: []`
+ * and `enabled: true` for it, both claims. With the union, reading either off
+ * an authored plugin does not compile.
+ */
+export type PluginExtension = Mounted | Authored

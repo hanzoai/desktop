@@ -29,11 +29,15 @@ export const PluginsModal = () => {
   const term = search.trim().toLowerCase()
   const matched = plugins.filter((one) => {
     const kind = tab === 'all' || one.kind === tab
-    const hit =
-      !term ||
-      one.name.toLowerCase().includes(term) ||
-      one.prefixes.some((p) => p.toLowerCase().includes(term))
-    return kind && hit
+    if (!term) return kind
+    // What a plugin is searchable BY differs per kind, which is the union doing
+    // its job: a mount by the address it answers at, an authored one by the
+    // code it was written as.
+    const also =
+      one.kind === 'mounted'
+        ? one.prefixes.some((p) => p.toLowerCase().includes(term))
+        : one.source.toLowerCase().includes(term)
+    return kind && (one.name.toLowerCase().includes(term) || also)
   })
   const shown = useShown(matched, 60)
 
@@ -72,9 +76,11 @@ export const PluginsModal = () => {
               padding: 14,
               borderRadius: 12,
               background: 'rgba(255, 255, 255, 0.03)',
-              border: plugin.enabled
-                ? '1px solid rgba(167, 139, 250, 0.3)'
-                : '1px solid rgba(255, 255, 255, 0.08)',
+              // Only a MOUNT has a switch, so only a mount is drawn as lit.
+              border:
+                plugin.kind === 'mounted' && plugin.enabled
+                  ? '1px solid rgba(167, 139, 250, 0.3)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -128,7 +134,7 @@ export const PluginsModal = () => {
                 >
                   {plugin.prefixes.join('  ') || '—'}
                 </div>
-              ) : plugin.source ? (
+              ) : plugin.kind === 'authored' && plugin.source ? (
                 <button
                   type="button"
                   className="tap"
@@ -148,7 +154,7 @@ export const PluginsModal = () => {
                 </button>
               ) : null}
 
-              {reading === plugin.id && plugin.source ? (
+              {reading === plugin.id && plugin.kind === 'authored' && plugin.source ? (
                 <pre
                   style={{
                     margin: 0,
@@ -180,9 +186,17 @@ export const PluginsModal = () => {
               }}
             >
               <span>{plugin.kind}</span>
-              <span style={{ color: plugin.enabled ? '#34d399' : 'rgba(255,255,255,0.35)' }}>
-                {plugin.enabled ? 'on' : 'off'}
-              </span>
+              {/* An authored plugin is not "off" — it has no switch. Saying so
+                  is what the flat shape could not do. */}
+              {plugin.kind === 'mounted' ? (
+                <span style={{ color: plugin.enabled ? '#34d399' : 'rgba(255,255,255,0.35)' }}>
+                  {plugin.enabled ? 'on' : 'off'}
+                </span>
+              ) : (
+                <span style={{ color: 'rgba(255,255,255,0.35)' }}>
+                  {plugin.builtAt ? `built ${ago(plugin.builtAt)}` : ''}
+                </span>
+              )}
             </div>
           </div>
         ))}
