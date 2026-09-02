@@ -1,26 +1,19 @@
 /**
- * The org's live agent sessions, from `/v1/agents/sessions`.
+ * The org's live agent sessions.
  *
- * This held three literals — a CI build "✓ Bundle emitted to dist/ in 1.54s", a
- * k3s deploy at 75%, and a third — each with a hand-written log, a hand-written
- * artifact list and a progress number. `dispatchTask` prepended a fourth to the
- * array; `retryTask` set the status to 'running' and appended a line saying so;
- * `cancelTask` set it to 'failed'. None of them called anything.
+ * Every write is a route: `POST /sessions` opens a run, `/pause` and `/resume`
+ * steer it, `/stop` ends it with a recorded reason. THERE IS NO RETRY, so there
+ * is no retry verb — `PATCH` refuses to reopen a done or error session, and a
+ * control the server would refuse is the same lie as a fabricated row.
  *
- * Every write here is a route: `POST /sessions` opens a run, `/pause` and
- * `/resume` steer it, `/stop` ends it with a recorded reason. THERE IS NO
- * RETRY, so there is no retry button — `PATCH` refuses to reopen a done or
- * error session, and a control button that the server would refuse is the same
- * lie as a fabricated row.
- *
- * The logs come from the detail read, which carries the 50 most recent turns.
- * They are fetched for the SELECTED session only: a list of fifty runs does not
- * need fifty transcripts, and asking for them would make opening the queue cost
- * fifty requests.
+ * The transcript is its own KEY, per session, so selecting a run reads that
+ * run's turns and nothing else re-reads. A list of fifty runs does not need
+ * fifty transcripts, and the key is what expresses that rather than a flag.
  */
-import { useEffect, useState } from 'react'
-
+import { atom, useAtom } from '~/data/store'
+import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
+import { reason, useRead, useSend } from '~/data/query'
 import type { DurableTask, TaskEvent, TaskPhase, TaskProgress, TaskStatus } from './types'
 
 export type { DurableTask, TaskEvent }
@@ -65,37 +58,9 @@ interface WireDetail extends WireSession {
   recentEvents?: WireEvent[]
 }
 
-export interface TaskQueueState {
-  isOpen: boolean
-  tasks: DurableTask[]
-  activeTaskId: string | null
-  /** The selected session's transcript, read on selection. */
-  events: TaskEvent[]
-  pending: boolean
-  fault: string | null
-  /** The session a control command is in flight for. */
-  busy: string | null
-}
-
-let state: TaskQueueState = {
-  isOpen: false,
-  tasks: [],
-  activeTaskId: null,
-  events: [],
-  pending: false,
-  fault: null,
-  busy: null,
-}
-
-const listeners = new Set<(s: TaskQueueState) => void>()
-
-const put = (next: Partial<TaskQueueState>) => {
-  state = { ...state, ...next }
-  listeners.forEach((fn) => fn(state))
-}
-
-const because = (e: unknown): string =>
-  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+/** Whether the panel is showing, and which run is selected in it. */
+export const open = atom(false)
+export const selected = atom<string | null>(null)
 
 /** Four words, and anything else is a run we cannot describe rather than a guess. */
 const statusOf = (s?: string): TaskStatus =>
@@ -107,9 +72,8 @@ const phaseOf = (s?: string): TaskPhase =>
 /**
  * An absent `pct` stays null.
  *
- * `?? 0` here would be the whole bug this file exists to remove: it turns "we
- * cannot say" into "nothing has happened", which is a claim, and it reads
- * identically to a run that has genuinely not started.
+ * `?? 0` here would turn "we cannot say" into "nothing has happened", which is
+ * a claim, and it reads identically to a run that has genuinely not started.
  */
 const progressOf = (p?: WireProgress): TaskProgress => ({
   pct: typeof p?.pct === 'number' ? p.pct : null,
@@ -135,129 +99,91 @@ const fold = (one: WireSession): DurableTask => ({
   updatedAt: one.updatedAt ?? '',
 })
 
-const read = async () => {
-  put({ pending: true, fault: null })
-  try {
-    // With no filter this answers ROOT sessions only, so the queue shows one
-    // row per flow rather than one per subagent.
-    const seen = await client(ESTATE).http.collection<WireSession>('sessions', {
-      path: '/v1/agents/sessions',
-      query: { limit: page },
-    })
-    put({ tasks: seen.map(fold), pending: false })
-  } catch (e) {
-    put({ pending: false, fault: because(e) })
-  }
+const readSessions = async (): Promise<DurableTask[]> => {
+  // With no filter this answers ROOT sessions only, so the queue shows one row
+  // per flow rather than one per subagent.
+  const seen = await client(ESTATE).http.collection<WireSession>('sessions', {
+    path: '/v1/agents/sessions',
+    query: { limit: page },
+  })
+  return seen.map(fold)
 }
 
-/** The selected run's transcript. A failure costs the log, never the list. */
-const readEvents = async (id: string) => {
-  try {
-    const full = await client(ESTATE).http.json<WireDetail>({
-      method: 'GET',
-      path: `/v1/agents/sessions/${id}`,
-    })
-    // Another selection may have landed while this was in flight.
-    if (state.activeTaskId !== id) return
-    put({
-      events: (full.recentEvents ?? []).map((one) => ({
-        id: one.id,
-        seq: one.seq ?? 0,
-        kind: one.kind ?? '',
-        actor: one.actor ?? '',
-        createdAt: one.createdAt ?? '',
-        payload: one.payload,
-      })),
-    })
-  } catch {
-    if (state.activeTaskId === id) put({ events: [] })
+const readEvents = async (id: string): Promise<TaskEvent[]> => {
+  const full = await client(ESTATE).http.json<WireDetail>({
+    method: 'GET',
+    path: `/v1/agents/sessions/${id}`,
+  })
+  return (full.recentEvents ?? []).map((one) => ({
+    id: one.id,
+    seq: one.seq ?? 0,
+    kind: one.kind ?? '',
+    actor: one.actor ?? '',
+    createdAt: one.createdAt ?? '',
+    payload: one.payload,
+  }))
+}
+
+export const taskQueueStore = {
+  open: () => open.set(true),
+  close: () => open.set(false),
+  toggle: () => open.set((showing) => !showing),
+  selectTask: (id: string | null) => selected.set(id),
+}
+
+export const useTaskQueue = () => {
+  const isOpen = useAtom(open)
+  const chosen = useAtom(selected)
+  const listed = useRead(keys.sessions, readSessions, { enabled: isOpen })
+  // The transcript is per session, and read only for the one on screen.
+  const turns = useRead(keys.session(chosen ?? ''), () => readEvents(chosen!), {
+    enabled: isOpen && Boolean(chosen),
+  })
+
+  return {
+    isOpen,
+    tasks: listed.data ?? [],
+    activeTaskId: chosen,
+    events: turns.data ?? [],
+    pending: listed.pending,
+    fault: listed.error ? reason(listed.error) : null,
   }
 }
 
 /**
- * One steering command, then a re-read.
+ * Opens a run.
+ *
+ * `agent` is the only required field: the label the surface opening the session
+ * calls itself by. Nothing resolves it, so a board dispatching a card under the
+ * agent that card names is stating what it knows — but the default is this
+ * surface, not an invented persona.
+ *
+ * Nothing else is sent. A target in particular IS resolved server-side, so a
+ * made-up one is a refusal.
+ */
+export const useOpenRun = () =>
+  useSend(async (title: string, agent = 'hanzo-desktop') => {
+    await client(ESTATE).http.json({
+      method: 'POST',
+      path: '/v1/agents/sessions',
+      body: { agent, title },
+    })
+  }, [keys.sessions])
+
+/**
+ * Steers a run: pause, resume, or stop with a recorded reason.
  *
  * The answer says whether the command reached the durable engine as well as
  * being recorded; `forwarded: false` is NOT a failure — the intent is durable
- * either way — so it is not raised as one.
+ * either way — so it is not raised as one. Stopping is not deleting: the
+ * session and its transcript stay readable, which is why the reason is worth
+ * recording at all.
  */
-const steer = async (id: string, verb: string, message?: string) => {
-  put({ busy: id, fault: null })
-  try {
+export const useSteerRun = () =>
+  useSend(async (id: string, verb: 'pause' | 'resume' | 'stop', message?: string) => {
     await client(ESTATE).http.json({
       method: 'POST',
       path: `/v1/agents/sessions/${id}/${verb}`,
       body: message ? { message } : undefined,
     })
-    put({ busy: null })
-    await read()
-  } catch (e) {
-    put({ busy: null, fault: because(e) })
-  }
-}
-
-export const taskQueueStore = {
-  get: (): TaskQueueState => state,
-  open: () => {
-    put({ isOpen: true })
-    void read()
-  },
-  close: () => put({ isOpen: false }),
-  toggle: () => (state.isOpen ? put({ isOpen: false }) : taskQueueStore.open()),
-  refresh: () => void read(),
-
-  selectTask: (id: string | null) => {
-    put({ activeTaskId: id, events: [] })
-    if (id) void readEvents(id)
-  },
-
-  /**
-   * Opens a run.
-   *
-   * `agent` is the only required field: the label the surface opening the
-   * session calls itself by. Nothing resolves it, so a board dispatching a card
-   * under the agent that card names is stating what it knows — but the default
-   * is this surface, not an invented persona. A session opens `running`.
-   *
-   * Nothing else is sent. A target, a repo or a workflow id made up here would
-   * be recorded as fact against a run nobody dispatched that way, and `target`
-   * in particular IS resolved server-side, so a made-up one is a refusal.
-   */
-  dispatchTask: async (title: string, agent = 'hanzo-desktop') => {
-    put({ fault: null })
-    try {
-      await client(ESTATE).http.json({
-        method: 'POST',
-        path: '/v1/agents/sessions',
-        body: { agent, title },
-      })
-      await read()
-    } catch (e) {
-      put({ fault: because(e) })
-    }
-  },
-
-  pauseTask: (id: string) => void steer(id, 'pause'),
-  resumeTask: (id: string) => void steer(id, 'resume'),
-
-  /**
-   * Ends a run, recording why.
-   *
-   * Stopping is not deleting: the session and its transcript stay readable,
-   * which is why the reason is worth recording — it is what a later reader of
-   * the log sees.
-   */
-  cancelTask: (id: string) => void steer(id, 'stop', 'cancelled from the desktop queue'),
-}
-
-export const useTaskQueue = (): TaskQueueState => {
-  const [current, setCurrent] = useState<TaskQueueState>(state)
-  useEffect(() => {
-    const handler = (next: TaskQueueState) => setCurrent(next)
-    listeners.add(handler)
-    return () => {
-      listeners.delete(handler)
-    }
-  }, [])
-  return current
-}
+  }, [keys.sessions])

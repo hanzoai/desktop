@@ -11,7 +11,7 @@ import {
   X,
 } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { projectsStore, useProjects } from './store'
+import { projectsStore, useMakeOrg, useMakeProject, useProjects } from './store'
 
 export const ProjectModal = () => {
   const { isOpen, activeOrgId, activeProjectId, organizations, users, projects, pending, fault } =
@@ -21,6 +21,9 @@ export const ProjectModal = () => {
   const [newProjectName, setNewProjectName] = useState('')
   const [newProjectDesc, setNewProjectDesc] = useState('')
   const [newOrgName, setNewOrgName] = useState('')
+  // Two writes, each with its own pending and its own refusal.
+  const makingOrg = useMakeOrg()
+  const makingProject = useMakeProject()
 
   if (!isOpen) return null
 
@@ -29,12 +32,14 @@ export const ProjectModal = () => {
   // it again would only ever hide rows the server said belong here.
   const filteredProjects = projects
 
-  const handleCreateProject = (e: React.FormEvent) => {
+  const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newProjectName.trim()) return
-    void projectsStore.createProject(newProjectName.trim(), newProjectDesc.trim())
-    setNewProjectName('')
-    setNewProjectDesc('')
+    // Clear the form only on a project that was actually made.
+    if (await makingProject.run(newProjectName.trim(), newProjectDesc.trim())) {
+      setNewProjectName('')
+      setNewProjectDesc('')
+    }
   }
 
   const handleCreateOrg = (e: React.FormEvent) => {
@@ -43,11 +48,15 @@ export const ProjectModal = () => {
       // IAM's `name` is the SLUG every other surface scopes by, so it is the
       // slugged form that goes first and the typed line that is displayed.
       const typed = newOrgName.trim()
-      void projectsStore.createOrg(
-        typed.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, ''),
-        typed,
-      )
-      setNewOrgName('')
+      void makingOrg
+        .run(
+          typed
+            .toLowerCase()
+            .replace(/[^a-z0-9-]+/g, '-')
+            .replace(/^-+|-+$/g, ''),
+          typed,
+        )
+        .then((ok) => ok && setNewOrgName(''))
     }
   }
 
@@ -149,8 +158,10 @@ export const ProjectModal = () => {
         {/* Content Area */}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', padding: 18, gap: 16 }}>
           {/* TAB 1: PROJECTS */}
-          {fault ? (
-            <div style={{ padding: '8px 18px', fontSize: 12, color: '#f87171' }}>{fault}</div>
+          {fault || makingOrg.fault || makingProject.fault ? (
+            <div style={{ padding: '8px 18px', fontSize: 12, color: '#f87171' }}>
+              {fault || makingOrg.fault || makingProject.fault}
+            </div>
           ) : null}
           {pending ? (
             <div style={{ padding: '8px 18px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
@@ -171,7 +182,7 @@ export const ProjectModal = () => {
               </div>
 
               {/* Create Project Input */}
-              <form onSubmit={handleCreateProject} style={{ display: 'flex', gap: 8 }}>
+              <form onSubmit={(e) => void handleCreateProject(e)} style={{ display: 'flex', gap: 8 }}>
                 <input
                   type="text"
                   placeholder="New project name (e.g. Next.js 16 Storefront)..."

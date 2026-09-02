@@ -11,7 +11,9 @@
  */
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { taskQueueStore, useTaskQueue } from './store'
+import { ago as since } from '~/show'
+import { fromStamp } from '~/show'
+import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store'
 import type { DurableTask, TaskStatus } from './types'
 
 // A session's status is exactly four words. There is no 'queued' and no
@@ -29,20 +31,14 @@ const statusBadge = (status: TaskStatus) => {
   }
 }
 
-/** A clock the wire sends as RFC 3339, as a short relative line. */
-const ago = (at: string): string => {
-  if (!at) return ''
-  const then = Date.parse(at)
-  if (Number.isNaN(then)) return ''
-  const mins = Math.floor((Date.now() - then) / 60000)
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`
-}
+/** The wire sends RFC 3339 here; `fromStamp` is the one conversion. */
+const ago = (at: string): string => since(fromStamp(at))
 
 export const TaskQueueModal = () => {
-  const { isOpen, tasks, activeTaskId, events, pending, fault, busy } = useTaskQueue()
+  const { isOpen, tasks, activeTaskId, events, pending, fault } = useTaskQueue()
+  // Two writes, each with its own pending and its own refusal.
+  const opening = useOpenRun()
+  const steering = useSteerRun()
   const [name, setName] = useState('')
 
   if (!isOpen) return null
@@ -136,8 +132,8 @@ export const TaskQueueModal = () => {
           onSubmit={(e) => {
             e.preventDefault()
             if (!name.trim()) return
-            void taskQueueStore.dispatchTask(name.trim())
-            setName('')
+            // Clear the box only on a run that was actually opened.
+            void opening.run(name.trim()).then((ok) => ok && setName(''))
           }}
           style={{
             display: 'flex',
@@ -187,7 +183,11 @@ export const TaskQueueModal = () => {
           {pending ? (
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>reading…</span>
           ) : null}
-          {fault ? <span style={{ fontSize: 11, color: '#f87171' }}>{fault}</span> : null}
+          {fault || opening.fault || steering.fault ? (
+            <span style={{ fontSize: 11, color: '#f87171' }}>
+              {fault || opening.fault || steering.fault}
+            </span>
+          ) : null}
         </form>
 
         {/* Content Split: Left Task List, Right Task Details */}
@@ -347,11 +347,12 @@ export const TaskQueueModal = () => {
                     {activeTask.status === 'running' || activeTask.status === 'paused' ? (
                       <button
                         type="button"
-                        disabled={busy === activeTask.id}
+                        disabled={steering.pending}
                         onClick={() =>
-                          activeTask.status === 'paused'
-                            ? taskQueueStore.resumeTask(activeTask.id)
-                            : taskQueueStore.pauseTask(activeTask.id)
+                          void steering.run(
+                            activeTask.id,
+                            activeTask.status === 'paused' ? 'resume' : 'pause',
+                          )
                         }
                         className="tap"
                         style={{
@@ -364,7 +365,7 @@ export const TaskQueueModal = () => {
                           border: '1px solid rgba(255, 255, 255, 0.1)',
                           color: '#ffffff',
                           fontSize: 11.5,
-                          cursor: busy === activeTask.id ? 'not-allowed' : 'pointer',
+                          cursor: steering.pending ? 'not-allowed' : 'pointer',
                         }}
                       >
                         <RotateCcw size={12} />
@@ -376,7 +377,13 @@ export const TaskQueueModal = () => {
                       <button
                         type="button"
                         title="Cancel task"
-                        onClick={() => taskQueueStore.cancelTask(activeTask.id)}
+                        onClick={() =>
+                          void steering.run(
+                            activeTask.id,
+                            'stop',
+                            'cancelled from the desktop queue',
+                          )
+                        }
                         className="tap"
                         style={{
                           display: 'inline-flex',

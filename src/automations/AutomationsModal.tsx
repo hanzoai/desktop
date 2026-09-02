@@ -9,10 +9,21 @@
  */
 import { Clock, GitBranch, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { automationsStore, useAutomations } from './store'
+import { ago } from '~/show'
+import {
+  automationsStore,
+  useArmFlow,
+  useAutomations,
+  useOpenFlow,
+  useRunFlow,
+} from './store'
 
 export const AutomationsModal = () => {
-  const { isOpen, jobs, runs, pending, fault, busy } = useAutomations()
+  const { isOpen, jobs, runs, pending, fault } = useAutomations()
+  // Three writes, each with its own pending and its own refusal.
+  const running = useRunFlow()
+  const arming = useArmFlow()
+  const opening = useOpenFlow()
   const [newJobName, setNewJobName] = useState('')
 
   if (!isOpen) return null
@@ -22,11 +33,11 @@ export const AutomationsModal = () => {
   // the description box that stood here wrote to nothing; and a trigger
   // invented here would arm something nobody asked for. A new flow starts
   // empty and is armed in the builder.
-  const handleCreateJob = (e: React.FormEvent) => {
+  const handleCreateJob = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newJobName.trim()) return
-    void automationsStore.create(newJobName.trim())
-    setNewJobName('')
+    // Clear the box only on a flow that was actually opened.
+    if (await opening.run(newJobName.trim())) setNewJobName('')
   }
 
   /** When each flow last ran, from the run history rather than from a guess. */
@@ -36,14 +47,7 @@ export const AutomationsModal = () => {
     if (at && at > (lastRun.get(run.flowId) ?? 0)) lastRun.set(run.flowId, at)
   }
 
-  const ago = (ms: number): string => {
-    if (!ms) return 'never'
-    const mins = Math.floor((Date.now() - ms) / 60000)
-    if (mins < 1) return 'just now'
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins / 60)
-    return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`
-  }
+
 
   return (
     <div
@@ -117,7 +121,7 @@ export const AutomationsModal = () => {
         {/* Content Area */}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
           {/* Create Job Form */}
-          <form onSubmit={handleCreateJob} style={{ display: 'flex', gap: 8 }}>
+          <form onSubmit={(e) => void handleCreateJob(e)} style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
               placeholder="Name a new automation…"
@@ -158,8 +162,10 @@ export const AutomationsModal = () => {
 
           {/* Jobs List */}
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {fault ? (
-              <div style={{ fontSize: 12, color: '#f87171' }}>{fault}</div>
+            {fault || running.fault || arming.fault || opening.fault ? (
+              <div style={{ fontSize: 12, color: '#f87171' }}>
+                {fault || running.fault || arming.fault || opening.fault}
+              </div>
             ) : null}
             {!fault && pending && jobs.length === 0 ? (
               <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Reading…</div>
@@ -171,7 +177,7 @@ export const AutomationsModal = () => {
             ) : null}
             {jobs.map((job) => {
               const armed = job.status === 'ENABLED'
-              const working = busy === job.id
+              const working = running.pending || arming.pending
               return (
                 <div
                   key={job.id}
@@ -261,7 +267,7 @@ export const AutomationsModal = () => {
                         <span>
                           Last run:{' '}
                           <strong style={{ color: '#ffffff' }}>
-                            {ago(lastRun.get(job.id) ?? 0)}
+                            {ago(lastRun.get(job.id) ?? 0) || 'never'}
                           </strong>
                         </span>
                         <span>
@@ -276,7 +282,7 @@ export const AutomationsModal = () => {
                     <button
                       type="button"
                       disabled={working}
-                      onClick={() => automationsStore.runNow(job.id)}
+                      onClick={() => void running.run(job.id)}
                       className="tap"
                       style={{
                         display: 'inline-flex',
@@ -299,7 +305,7 @@ export const AutomationsModal = () => {
                     <button
                       type="button"
                       disabled={working}
-                      onClick={() => automationsStore.toggleStatus(job.id)}
+                      onClick={() => void arming.run(job.id, armed)}
                       className="tap"
                       style={{
                         padding: '6px 10px',

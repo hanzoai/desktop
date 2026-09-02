@@ -14,8 +14,8 @@ import {
   X,
 } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
-import { boardStore, useBoard, type BoardCard } from './store'
-import { taskQueueStore } from '~/tasks/store'
+import { boardStore, useBoard, useMoveCard, useOpenCard, type BoardCard } from './store'
+import { taskQueueStore, useOpenRun } from '~/tasks/store'
 
 const COLUMNS: { id: BoardCard['column']; title: string; color: string }[] = [
   { id: 'backlog', title: 'Backlog', color: 'rgba(255, 255, 255, 0.4)' },
@@ -39,22 +39,29 @@ export const BoardModal = () => {
   // board, which can be read and cannot be added to.
   const [newKey, setNewKey] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+  // Two writes, each with its own pending and its own refusal.
+  const moving = useMoveCard()
+  const opening = useOpenCard()
+  // Dispatching a card opens a RUN, which is the tasks surface's own verb.
+  const dispatching = useOpenRun()
 
   if (!isOpen) return null
 
-  const handleAdd = (e: FormEvent) => {
+  const handleAdd = async (e: FormEvent) => {
     e.preventDefault()
     if (!newTitle.trim() || !newKey.trim()) return
-    void boardStore.addCard(newKey.trim(), newTitle.trim())
-    setNewTitle('')
-    setIsAdding(false)
+    // Close the drawer only on a card that was actually opened.
+    if (await opening.run(newKey.trim(), newTitle.trim())) {
+      setNewTitle('')
+      setIsAdding(false)
+    }
   }
 
   const handleExecute = (card: BoardCard) => {
-    void boardStore.moveCard(card.id, 'in_progress')
+    void moving.run(card, 'in_progress')
     // The card's assignee is a person or an agent by name, and it is what the
     // run is labelled with — not a persona this app picked.
-    void taskQueueStore.dispatchTask(card.title, card.assignee || undefined)
+    void dispatching.run(card.title, card.assignee || undefined)
     taskQueueStore.open()
   }
 
@@ -194,13 +201,17 @@ export const BoardModal = () => {
           {pending ? (
             <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>reading…</span>
           ) : null}
-          {fault ? <span style={{ fontSize: 11, color: '#f87171' }}>{fault}</span> : null}
+          {fault || moving.fault || opening.fault ? (
+            <span style={{ fontSize: 11, color: '#f87171' }}>
+              {fault || moving.fault || opening.fault}
+            </span>
+          ) : null}
         </div>
 
         {/* Add Task Drawer */}
         {isAdding && (
           <form
-            onSubmit={handleAdd}
+            onSubmit={(e) => void handleAdd(e)}
             style={{
               padding: '10px 16px',
               background: 'rgba(255, 255, 255, 0.03)',
@@ -442,7 +453,7 @@ export const BoardModal = () => {
                           <button
                             type="button"
                             title={`Move to ${onward[card.column]}`}
-                            onClick={() => void boardStore.moveCard(card.id, onward[card.column]!)}
+                            onClick={() => void moving.run(card, onward[card.column]!)}
                             style={{
                               background: 'none',
                               border: 'none',
