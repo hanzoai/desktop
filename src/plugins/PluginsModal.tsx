@@ -7,6 +7,7 @@
  * literals in the store and are gone with it.
  */
 import { Blocks, Boxes, PenLine, Search, X } from '@hanzogui/lucide-icons-2'
+import { ago, fromSeconds } from '~/show'
 import { useState } from 'react'
 import { pluginsStore, usePlugins } from './store'
 
@@ -22,11 +23,15 @@ export const PluginsModal = () => {
   const filtered = plugins.filter((one) => {
     const kind = filter === 'all' || one.kind === filter
     const term = search.trim().toLowerCase()
-    const hit =
-      !term ||
-      one.name.toLowerCase().includes(term) ||
-      one.prefixes.some((p) => p.toLowerCase().includes(term))
-    return kind && hit
+    if (!term) return kind
+    // What a plugin is searchable BY differs per kind, which is the union doing
+    // its job: a mount is found by the address it answers at, an authored one
+    // by where it was built from.
+    const also =
+      one.kind === 'mounted'
+        ? one.prefixes.some((p) => p.toLowerCase().includes(term))
+        : one.source.toLowerCase().includes(term)
+    return kind && (one.name.toLowerCase().includes(term) || also)
   })
 
   return (
@@ -199,9 +204,12 @@ export const PluginsModal = () => {
                 padding: 14,
                 borderRadius: 12,
                 background: 'rgba(255, 255, 255, 0.03)',
-                border: plugin.enabled
-                  ? '1px solid rgba(167, 139, 250, 0.3)'
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                // Only a MOUNT has a switch. An authored plugin exists; it is
+                // not "on", and drawing it as on was the flat shape's doing.
+                border:
+                  plugin.kind === 'mounted' && plugin.enabled
+                    ? '1px solid rgba(167, 139, 250, 0.3)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -231,9 +239,9 @@ export const PluginsModal = () => {
                       {plugin.name}
                     </div>
                     <div style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                      {plugin.kind === 'authored'
-                        ? plugin.provider || 'authored here'
-                        : `${plugin.prefixes.length} prefix${plugin.prefixes.length === 1 ? '' : 'es'}`}
+                      {plugin.kind === 'mounted'
+                        ? `${plugin.prefixes.length} prefix${plugin.prefixes.length === 1 ? '' : 'es'}`
+                        : plugin.provider || 'authored here'}
                     </div>
                   </div>
                 </div>
@@ -250,9 +258,9 @@ export const PluginsModal = () => {
                     wordBreak: 'break-all',
                   }}
                 >
-                  {plugin.kind === 'authored'
-                    ? plugin.source || '—'
-                    : plugin.prefixes.join('  ') || '—'}
+                  {plugin.kind === 'mounted'
+                    ? plugin.prefixes.join('  ') || '—'
+                    : plugin.source || '—'}
                 </div>
               </div>
 
@@ -268,9 +276,17 @@ export const PluginsModal = () => {
                 }}
               >
                 <span>{plugin.kind}</span>
-                <span style={{ color: plugin.enabled ? '#34d399' : 'rgba(255,255,255,0.35)' }}>
-                  {plugin.enabled ? 'on' : 'off'}
-                </span>
+                {plugin.kind === 'mounted' ? (
+                  <span
+                    style={{ color: plugin.enabled ? '#34d399' : 'rgba(255,255,255,0.35)' }}
+                  >
+                    {plugin.enabled ? 'on' : 'off'}
+                  </span>
+                ) : (
+                  <span style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    {plugin.createdAt ? ago(fromSeconds(plugin.createdAt)) : ''}
+                  </span>
+                )}
               </div>
             </div>
           ))}

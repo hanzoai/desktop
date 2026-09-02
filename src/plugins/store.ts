@@ -13,19 +13,19 @@ import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { reason, useRead } from '~/data/query'
-import type { PluginExtension } from './types'
+import type { Authored as Written, Mounted as Mount, PluginExtension } from './types'
 
 export type { PluginExtension }
 
 /** One row of `GET /v1/tools/plugins`. */
-interface Mount {
+interface WireMount {
   name: string
   enabled?: boolean
   prefixes?: string[]
 }
 
 /** One row of `GET /v1/tools/plugins/authored`. */
-interface Authored {
+interface WireAuthored {
   id: string
   name?: string
   provider?: string
@@ -41,32 +41,31 @@ const read = async (): Promise<PluginExtension[]> => {
   // The two reads are independent, so one failing must not cost the other its
   // list — a deployment that mounts plugins and has authored none is ordinary.
   const [mounted, authored] = await Promise.all([
-    api.collection<Mount>('plugins', { path: '/v1/tools/plugins' }).catch(() => null),
-    api.collection<Authored>('plugins', { path: '/v1/tools/plugins/authored' }).catch(() => null),
+    api.collection<WireMount>('plugins', { path: '/v1/tools/plugins' }).catch(() => null),
+    api
+      .collection<WireAuthored>('plugins', { path: '/v1/tools/plugins/authored' })
+      .catch(() => null),
   ])
   if (mounted === null && authored === null) throw new Error('neither plugin list answered')
 
-  return [
-    ...(mounted ?? []).map((one) => ({
-      id: one.name,
-      name: one.name,
-      kind: 'mounted' as const,
-      enabled: one.enabled ?? false,
-      prefixes: one.prefixes ?? [],
-    })),
-    ...(authored ?? []).map((one) => ({
-      id: one.id,
-      name: one.name ?? one.id,
-      kind: 'authored' as const,
-      // An authored plugin is not mounted by the fleet, so there is no enabled
-      // bit to read; it exists, which is what it can say.
-      enabled: true,
-      prefixes: [],
-      provider: one.provider,
-      source: one.source,
-      createdAt: one.createdAt,
-    })),
-  ]
+  // Each kind is built as ITSELF. Neither fills a field the other's shape
+  // carries, which is what the union buys over a record with optional halves.
+  const mounts: Mount[] = (mounted ?? []).map((one) => ({
+    kind: 'mounted',
+    id: one.name,
+    name: one.name,
+    enabled: one.enabled ?? false,
+    prefixes: one.prefixes ?? [],
+  }))
+  const written: Written[] = (authored ?? []).map((one) => ({
+    kind: 'authored',
+    id: one.id,
+    name: one.name ?? one.id,
+    provider: one.provider ?? '',
+    source: one.source ?? '',
+    createdAt: one.createdAt ?? 0,
+  }))
+  return [...mounts, ...written]
 }
 
 export const pluginsStore = {
