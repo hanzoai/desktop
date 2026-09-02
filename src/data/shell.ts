@@ -48,9 +48,8 @@ export const open = (url: string) => call('plugin:opener|open_url', { url })
  * click that asked for it and a blocker would eat it — silently, which is the
  * worst way for a button to fail.
  *
- * `data/session.tsx` holds a private `leave` that is these same three lines for
- * the issuer's trip. It should call this; folding it in is left for the lane
- * currently editing that file.
+ * Both trips out of this app come through here — the issuer's, which returns,
+ * and a connector's consent, which lands on the console and does not.
  */
 export const visit = (url: string) => {
   if (shell()) void open(url)

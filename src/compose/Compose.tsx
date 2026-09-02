@@ -53,20 +53,20 @@ export const Compose = ({
   /**
    * Writes the draft, and reads its tail for a trigger.
    *
-   * `/` opens the skills at the START of a word only — otherwise every URL and
+   * `/` opens the tools at the START of a word only — otherwise every URL and
    * every date in a sentence would open a menu over what somebody is writing.
    */
   const type = (text: string) => {
     write(text)
     const slash = /(?:^|\s)\/([^\s/]*)$/.exec(text)
-    setInsert(slash ? { lane: 'skill', query: slash[1] } : null)
+    setInsert(slash ? { lane: 'tool', query: slash[1] } : null)
   }
 
   /** Puts the chosen name in, replacing the trigger that opened the menu. */
   const put = (chosen: string) => {
     const text = draft.text
     write(
-      insert?.lane === 'skill'
+      insert?.lane === 'tool'
         ? text.replace(/(?:^|\s)\/[^\s/]*$/, (m) => (m.startsWith('/') ? chosen : ` ${chosen}`))
         : `${text}${text && !text.endsWith(' ') ? ' ' : ''}${chosen}`,
     )
@@ -280,10 +280,10 @@ export const Compose = ({
           field={{ ref: field }}
         >
           <XStack alignItems="center" gap="$2">
-            {/* Add an agent or a skill by name. */}
+            {/* Add an agent or a tool by name. */}
             <button
               type="button"
-              title="Add an agent or a skill"
+              title="Add an agent or a tool"
               disabled={busy || disabled}
               onClick={() => setInsert(insert ? null : { lane: 'all', query: '' })}
               className="tap"

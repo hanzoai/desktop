@@ -8,28 +8,37 @@
  * The panel is read only while it is open. A closed panel polling the fleet is
  * work nobody asked for, and `enabled` says so where a hand-rolled store said
  * it by calling its reader from `open()`.
+ *
+ * **`all=true` is what makes the on/off mark mean anything.** The route filters
+ * to the RUNNING subsystems by default, so every row came back enabled and the
+ * card's off state was unreachable — a mark that reports a constant while
+ * looking like it reports a fact. Asking for the configured-but-off ones too is
+ * the difference between an inventory and a list of what happened to answer.
  */
 import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { reason, useRead } from '~/data/query'
-import type { Authored as Written, Mounted as Mount, PluginExtension } from './types'
+import { fromSeconds } from '~/show'
+import type { PluginExtension } from './types'
 
 export type { PluginExtension }
 
 /** One row of `GET /v1/tools/plugins`. */
-interface WireMount {
+interface Mount {
   name: string
   enabled?: boolean
   prefixes?: string[]
 }
 
 /** One row of `GET /v1/tools/plugins/authored`. */
-interface WireAuthored {
+interface Authored {
   id: string
   name?: string
   provider?: string
+  /** The TypeScript as authored, not a location. */
   source?: string
+  /** Unix seconds, which is not this app's clock. */
   createdAt?: number
 }
 
@@ -41,31 +50,34 @@ const read = async (): Promise<PluginExtension[]> => {
   // The two reads are independent, so one failing must not cost the other its
   // list — a deployment that mounts plugins and has authored none is ordinary.
   const [mounted, authored] = await Promise.all([
-    api.collection<WireMount>('plugins', { path: '/v1/tools/plugins' }).catch(() => null),
     api
-      .collection<WireAuthored>('plugins', { path: '/v1/tools/plugins/authored' })
+      .collection<Mount>('plugins', { path: '/v1/tools/plugins', query: { all: 'true' } })
       .catch(() => null),
+    api.collection<Authored>('plugins', { path: '/v1/tools/plugins/authored' }).catch(() => null),
   ])
   if (mounted === null && authored === null) throw new Error('neither plugin list answered')
 
-  // Each kind is built as ITSELF. Neither fills a field the other's shape
-  // carries, which is what the union buys over a record with optional halves.
-  const mounts: Mount[] = (mounted ?? []).map((one) => ({
-    kind: 'mounted',
-    id: one.name,
-    name: one.name,
-    enabled: one.enabled ?? false,
-    prefixes: one.prefixes ?? [],
-  }))
-  const written: Written[] = (authored ?? []).map((one) => ({
-    kind: 'authored',
-    id: one.id,
-    name: one.name ?? one.id,
-    provider: one.provider ?? '',
-    source: one.source ?? '',
-    createdAt: one.createdAt ?? 0,
-  }))
-  return [...mounts, ...written]
+  return [
+    ...(mounted ?? []).map((one) => ({
+      id: one.name,
+      name: one.name,
+      kind: 'mounted' as const,
+      enabled: one.enabled ?? false,
+      prefixes: one.prefixes ?? [],
+    })),
+    ...(authored ?? []).map((one) => ({
+      id: one.id,
+      name: one.name ?? one.id,
+      kind: 'authored' as const,
+      // An authored plugin is not mounted by the fleet, so there is no enabled
+      // bit to read; it exists, which is what it can say.
+      enabled: true,
+      prefixes: [],
+      provider: one.provider,
+      source: one.source,
+      builtAt: fromSeconds(one.createdAt),
+    })),
+  ]
 }
 
 export const pluginsStore = {

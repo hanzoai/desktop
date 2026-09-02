@@ -14,7 +14,7 @@ import { Bot, Save, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 
-import { useSkills } from '~/compose/skills'
+import { useTools } from '~/tools/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { useRead } from '~/data/query'
@@ -37,7 +37,7 @@ export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
   // The tools an agent may be bound to are the ones an origin can dispatch —
   // the same read the composer's `/` uses, so the two cannot offer different
   // sets of one thing.
-  const { data: tools } = useSkills()
+  const { data: tools } = useTools()
   const models = useRead(keys.models, () => client(ESTATE).models.list(), { fresh: 300_000 })
 
   if (!isOpen) return null

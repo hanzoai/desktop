@@ -1,22 +1,24 @@
 /**
- * What a message can name: an agent, or a skill.
+ * What a message can name: an agent, or a tool.
  *
  * One list with two ways in, because they are the same act — putting a name in
  * the draft — and two menus would be two places for that to drift. `+` opens it
- * whole; typing `/` opens it at the skills, which is the convention a person
+ * whole; typing `/` opens it at the tools, which is the convention a person
  * already has from every other composer.
  *
- * An agent inserts `@handle`, a skill inserts `/tool`. The text is the message;
- * nothing here holds state the draft does not.
+ * An agent inserts `@handle`, a tool inserts `/name`. The text is the message;
+ * nothing here holds state the draft does not. A SKILL is not here and cannot
+ * be: the estate registers every skill non-dispatchable, so it is a thing an
+ * agent knows rather than a thing a turn calls.
  */
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { CSSProperties } from 'react'
 
 import { useSwarm } from '~/agents/store'
-import { useSkills } from '~/compose/skills'
+import { useTools } from '~/tools/store'
 
 /** Which half of the list a trigger opens at. */
-export type Lane = 'all' | 'skill'
+export type Lane = 'all' | 'tool'
 
 export interface InsertProps {
   lane: Lane
@@ -62,25 +64,25 @@ const hit = (query: string, ...fields: string[]) => {
 }
 
 export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
-  const { data: served, pending } = useSkills()
+  const { data: served, pending } = useTools()
   // The org's own agents, from the same store the swarm bar reads — never a
   // second roster, which is how two lists of one thing come to disagree.
   const { agents: roster } = useSwarm()
 
   const agents =
-    lane === 'skill' ? [] : roster.filter((a) => hit(query, `@${a.name}`, a.name, a.description))
+    lane === 'tool' ? [] : roster.filter((a) => hit(query, `@${a.name}`, a.name, a.description))
 
-  const skills = (served ?? []).filter((t) => hit(query, t.name, t.description ?? '', t.source ?? ''))
+  const tools = (served ?? []).filter((t) => hit(query, t.name, t.description ?? '', t.source ?? ''))
 
-  if (agents.length === 0 && skills.length === 0) {
+  if (agents.length === 0 && tools.length === 0) {
     return (
       <div style={SHEET}>
         <YStack padding="$2">
           <SizableText size="$1" color="rgba(255,255,255,0.45)">
             {pending
               ? 'Asking what this origin can run…'
-              : lane === 'skill'
-                ? 'No skill matches that.'
+              : lane === 'tool'
+                ? 'No tool matches that.'
                 : 'Nothing matches that.'}
           </SizableText>
         </YStack>
@@ -110,12 +112,12 @@ export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
         </YStack>
       )}
 
-      {skills.length > 0 && (
+      {tools.length > 0 && (
         <YStack gap="$0.5">
           <SizableText size="$1" color="rgba(255,255,255,0.35)" paddingHorizontal="$2" paddingTop="$1">
-            Skills
+            Tools
           </SizableText>
-          {skills.map((t) => (
+          {tools.map((t) => (
             <button
               key={t.name}
               type="button"

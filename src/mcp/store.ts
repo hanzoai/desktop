@@ -7,15 +7,14 @@
  * not activated is listed and marked off rather than hidden — hiding it is how
  * somebody concludes a server is broken when it is merely switched off.
  *
- * **Activation is sent WHOLE.** The SDK is explicit that a name absent from
- * `enabled` is off afterwards, so a toggle reads the current set, changes one
- * name, and sends all of it. Sending the single name somebody clicked would
- * turn everything else off.
+ * The switch itself is not here. Activation is ONE set that this panel and the
+ * skills panel both change, so its writer is `~/tools/store` and both import
+ * it — a toggle per panel is two statements of one fact.
  */
 import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
+import { reason, useRead } from '~/data/query'
 import type { Connected, Exposed } from './types'
 
 /** Servers are the org's, so they are read from the estate rather than per origin. */
@@ -80,18 +79,3 @@ export const useMcp = () => {
     fault: listed.error ? reason(listed.error) : null,
   }
 }
-
-/**
- * Switches one tool on or off.
- *
- * Reads the LIVE set rather than trusting this view: another surface may have
- * changed it since, and the whole set is what gets sent.
- */
-export const useToggleTool = () =>
-  useSend(async (name: string) => {
-    const active = await ai().tools.activation()
-    const on = new Set(active?.enabled ?? [])
-    if (on.has(name)) on.delete(name)
-    else on.add(name)
-    await ai().tools.activate([...on])
-  }, [keys.servers, keys.skills])

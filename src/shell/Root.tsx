@@ -15,9 +15,11 @@ import type { Convo } from '~/data/types'
 import { useNarrow } from '~/gui'
 import { IntelligenceModal } from '~/intelligence/IntelligenceModal'
 import { CreateChannelModal } from '~/channels/CreateChannelModal'
+import { ConnectorsModal } from '~/connectors/ConnectorsModal'
 import { McpModal } from '~/mcp/McpModal'
 import { PluginsModal } from '~/plugins/PluginsModal'
 import { ProjectModal } from '~/projects/ProjectModal'
+import { SkillsModal } from '~/skills/SkillsModal'
 import { Account } from '~/rail/Account'
 import { id } from '~/rail/group'
 import { Rail } from '~/rail/Rail'
@@ -150,8 +152,9 @@ export const Root = () => {
       {/* Projects, Organizations & User Switcher Modal */}
       <ProjectModal />
 
-      {/* Plugins & Extensions Marketplace Modal */}
       <PluginsModal />
+      <SkillsModal />
+      <ConnectorsModal />
 
       {/* Scheduled Tasks & Automations Modal */}
       <AutomationsModal />

@@ -10,7 +10,8 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { invalidate } from '~/data/query'
 import { keys } from '~/data/keys'
-import { mcpStore, useMcp, useToggleTool } from './store'
+import { useToggleTool } from '~/tools/store'
+import { mcpStore, useMcp } from './store'
 import type { Connected } from './types'
 
 export const McpModal = () => {

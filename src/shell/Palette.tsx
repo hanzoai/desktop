@@ -8,11 +8,13 @@ import {
   Code2,
   FileText,
   FolderGit2,
+  GraduationCap,
   Kanban,
   ListTodo,
   LogIn,
   LogOut,
   PanelLeft,
+  Plug,
   Settings,
   Shield,
   SquarePen,
@@ -35,6 +37,8 @@ import { useSession } from '~/data/session'
 import { intelligenceStore } from '~/intelligence/store'
 import { mcpStore } from '~/mcp/store'
 import { pluginsStore } from '~/plugins/store'
+import { connectorsStore } from '~/connectors/store'
+import { skillsStore } from '~/skills/store'
 import { multiplayerStore } from '~/presence/store'
 import { projectsStore } from '~/projects/store'
 import { taskQueueStore } from '~/tasks/store'
@@ -135,9 +139,23 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       {
         id: 'plugins',
         group: 'Extensions & Tools',
-        label: 'Plugins & Extensions Marketplace',
-        hint: 'CI/CD, pgvector, KMS enclaves, ZAP profiler (⌘X)',
+        label: 'Plugins',
+        hint: 'What this deployment mounts, and what this org built (⌘X)',
         icon: <Blocks size={15} />,
+      },
+      {
+        id: 'skills',
+        group: 'Extensions & Tools',
+        label: 'Skills',
+        hint: "What this org's agents can discover",
+        icon: <GraduationCap size={15} />,
+      },
+      {
+        id: 'connectors',
+        group: 'Extensions & Tools',
+        label: 'Connectors',
+        hint: 'Providers this org has connected',
+        icon: <Plug size={15} />,
       },
       {
         id: 'automations',
@@ -198,8 +216,8 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       {
         id: 'mcp',
         group: 'Agentic & Cloud',
-        label: 'MCP Skills & Server Connectors',
-        hint: 'Filesystem, GitHub, Postgres, k3s, Web Search (⌘M)',
+        label: 'MCP servers',
+        hint: 'What this org connected, and which tools are on (⌘M)',
         icon: <Blocks size={15} />,
       },
       {
@@ -277,6 +295,12 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           break
         case 'plugins':
           pluginsStore.open()
+          break
+        case 'skills':
+          skillsStore.open()
+          break
+        case 'connectors':
+          connectorsStore.open()
           break
         case 'automations':
           automationsStore.open()
