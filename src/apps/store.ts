@@ -68,13 +68,28 @@ export const app = atom<WorkspaceAppId>('tasks')
 export const notes = atom<NoteDocument[]>(held())
 export const note = atom<string | null>(held()[0]?.id ?? null)
 
+/**
+ * Whether the last save reached the disk.
+ *
+ * `localStorage` is a few megabytes per origin and notes are unbounded, so a
+ * long-lived window WILL eventually fill it — and `setItem` throws when it
+ * does. Swallowing that made the newest note look saved and lose it on the next
+ * reload, which is the worst shape a failure can take. It is a value now, so
+ * the panel can say the note is not being kept.
+ */
+export const saved = atom(true)
+
 /** Every write to the notepad persists, because that is what makes it a notepad. */
 notes.watch(() => {
   try {
     localStorage.setItem(vault, JSON.stringify(notes.get()))
+    saved.set(true)
   } catch {
-    // A window with no storage keeps its notes for this session. That is worse
-    // than persisting them and better than refusing to hold them at all.
+    // Two different failures land here and both mean the same thing to a person
+    // typing: this is not being kept. A window with no storage (a private one)
+    // and a window whose quota is full are told apart by nothing observable,
+    // and the remedy — do not trust it to survive a reload — is the same.
+    saved.set(false)
   }
 })
 
@@ -184,6 +199,7 @@ export const useWorkspaceApps = () => {
     activeApp: useAtom(app),
     notes: useAtom(notes),
     activeNoteId: useAtom(note),
+    saved: useAtom(saved),
     todos: issues.data ?? [],
     meeting: call.data ?? null,
     overlay: overlay.data ?? null,

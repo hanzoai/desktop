@@ -44,8 +44,22 @@ export const box = atom<Leased | null>(null)
 /** What was printed, in order. */
 export const lines = atom<Line[]>([])
 
+/**
+ * How many lines the terminal keeps.
+ *
+ * The log was appended to for the life of the window with nothing ever removed,
+ * so a session that ran one chatty command — a build, a `find /` — held every
+ * line of it in memory and in the DOM until the app was closed. A terminal is a
+ * SCROLLBACK, so it has a depth; this is that depth said once.
+ */
+const scrollback = 2000
+
 const say = (kind: Kind, text: string) =>
-  lines.set((held) => [...held, ...text.split('\n').map((line) => ({ kind, text: line }))])
+  lines.set((held) => {
+    const next = [...held, ...text.split('\n').map((line) => ({ kind, text: line }))]
+    // The OLDEST go, because a terminal is read from the bottom.
+    return next.length > scrollback ? next.slice(next.length - scrollback) : next
+  })
 
 export const terminalStore = {
   open: () => open.set(true),

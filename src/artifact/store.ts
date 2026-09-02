@@ -55,9 +55,14 @@ const put = (next: Partial<ArtifactData>) => {
   if (held) current.set({ ...held, ...next })
 }
 
+/** The same scrollback the terminal keeps, and for the same reason. */
+const scrollback = 2000
+
 const say = (text: string) => {
   const held = current.get()
-  if (held) put({ logs: [...held.logs, ...text.split('\n')] })
+  if (!held) return
+  const next = [...held.logs, ...text.split('\n')]
+  put({ logs: next.length > scrollback ? next.slice(next.length - scrollback) : next })
 }
 
 export const artifactStore = {

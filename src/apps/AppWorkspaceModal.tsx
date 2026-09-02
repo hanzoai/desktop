@@ -13,7 +13,7 @@ import { useMoveIssue, useOpenIssue, useWorkspaceApps, workspaceAppsStore } from
 import type { WorkspaceAppId } from './types'
 
 export const AppWorkspaceModal = () => {
-  const { isOpen, activeApp, notes, activeNoteId, todos, meeting, overlay, pending, fault } =
+  const { isOpen, activeApp, notes, activeNoteId, saved, todos, meeting, overlay, pending, fault } =
     useWorkspaceApps()
   const [newTodoText, setNewTodoText] = useState('')
   // An issue belongs to a board, and there is no inbox to drop one into, so the
@@ -315,16 +315,18 @@ export const AppWorkspaceModal = () => {
                   </div>
                   {/* Nothing co-authors these and nothing syncs them. The badge
                       here read "Live AI Co-Authoring Active". */}
+                  {/* A note that is not being kept must say so while it is
+                      being typed, not on the reload that loses it. */}
                   <span
                     style={{
                       fontSize: 11,
-                      color: 'rgba(255,255,255,0.45)',
-                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: saved ? 'rgba(255,255,255,0.45)' : '#fbbf24',
+                      background: saved ? 'rgba(255, 255, 255, 0.05)' : 'rgba(251,191,36,0.12)',
                       padding: '2px 8px',
                       borderRadius: 4,
                     }}
                   >
-                    local to this window
+                    {saved ? 'local to this window' : 'not being saved — storage is full'}
                   </span>
                 </div>
 
