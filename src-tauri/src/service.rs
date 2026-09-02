@@ -7,7 +7,8 @@
 
 use std::collections::HashMap;
 use std::ffi::OsString;
-use std::process::{Child, Command};
+use std::path::PathBuf;
+use std::process::{Child, Command, Stdio};
 use std::sync::{Mutex, OnceLock};
 use std::time::Duration;
 
@@ -90,6 +91,10 @@ const SERVICES: [Service; 3] = [
 const PATIENCE: Duration = Duration::from_secs(120);
 const PROBE: Duration = Duration::from_millis(500);
 
+/// How much of a service's output is worth showing. A log is read when it is
+/// looked at, so the tail is the whole cost.
+const TAIL: usize = 400;
+
 /// The children we started. Nothing else is ours to kill.
 #[derive(Default)]
 pub struct Registry(Mutex<HashMap<&'static str, Child>>);
@@ -126,6 +131,21 @@ fn find(name: &str) -> Result<&'static Service, String> {
         .iter()
         .find(|s| s.name == name)
         .ok_or_else(|| format!("no service named {name}"))
+}
+
+/// Where the services keep their files. The node's own storage default is
+/// relative, so one working directory beats a path per service.
+fn home(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("no data directory: {e}"))?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("cannot make {}: {e}", dir.display()))?;
+    Ok(dir)
+}
+
+fn log(app: &AppHandle, name: &str) -> Result<PathBuf, String> {
+    Ok(home(app)?.join(format!("{name}.log")))
 }
 
 /// The binary that ships beside the app, else whatever the PATH offers. An
@@ -167,37 +187,57 @@ async fn settle(health: &str) -> Result<(), String> {
 
 /// Start a service and resolve once it answers. A service already serving is
 /// adopted rather than duplicated, so this is safe to call at every launch.
-#[tauri::command]
-pub async fn spawn(
-    app: AppHandle,
-    registry: State<'_, Registry>,
-    name: String,
-) -> Result<(), String> {
-    let service = find(&name)?;
+///
+/// Output goes to a file beside the service's own storage, because that is the
+/// only place it survives the process that wrote it — which is exactly when
+/// somebody wants to read it.
+pub async fn start(app: &AppHandle, name: &str) -> Result<(), String> {
+    let service = find(name)?;
     if up(service.health).await {
         return Ok(());
     }
+    let registry = app.state::<Registry>();
     if let Some(child) = registry.release(service.name) {
         end(child);
     }
 
-    // Services keep their files under the working directory: the node's own
-    // storage default is relative, and one rule beats a path per service.
-    let dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("no data directory: {e}"))?;
-    std::fs::create_dir_all(&dir).map_err(|e| format!("cannot make {}: {e}", dir.display()))?;
+    let dir = home(app)?;
+    let file = std::fs::File::create(log(app, service.name)?)
+        .map_err(|e| format!("cannot open the log for {}: {e}", service.name))?;
+    let errors = file
+        .try_clone()
+        .map_err(|e| format!("cannot open the log for {}: {e}", service.name))?;
 
     let child = Command::new(locate(service.bin))
         .args(service.args)
         .envs(service.env.iter().copied())
         .current_dir(&dir)
+        .stdout(Stdio::from(file))
+        .stderr(Stdio::from(errors))
         .spawn()
         .map_err(|e| format!("cannot start {}: {e}", service.bin))?;
     registry.hold(service.name, child);
 
     settle(service.health).await
+}
+
+#[tauri::command]
+pub async fn spawn(app: AppHandle, name: String) -> Result<(), String> {
+    start(&app, &name).await
+}
+
+/// Start everything this machine serves, without holding up the window. The
+/// node refuses to boot before the embedder answers, so they race and the node
+/// waits for the port rather than for a turn.
+pub fn boot(app: &AppHandle) {
+    for service in &SERVICES {
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move {
+            if let Err(e) = start(&app, service.name).await {
+                eprintln!("{}: {e}", service.name);
+            }
+        });
+    }
 }
 
 /// Stop a service we started. One we adopted stays up — it is not ours.
@@ -217,6 +257,8 @@ pub struct Health {
     own: bool,
     /// It answers.
     up: bool,
+    /// Where it answers. Stated once, here, so nothing downstream writes a port.
+    at: &'static str,
 }
 
 #[tauri::command]
@@ -228,7 +270,18 @@ pub async fn status(registry: State<'_, Registry>) -> Result<Vec<Health>, String
             name: service.name,
             own,
             up: up(service.health).await,
+            at: service.health,
         });
     }
     Ok(all)
+}
+
+/// The end of what a service has said. A service that has never run has said
+/// nothing, which is an empty answer rather than a failure.
+#[tauri::command]
+pub async fn logs(app: AppHandle, name: String) -> Result<String, String> {
+    let service = find(&name)?;
+    let text = std::fs::read_to_string(log(&app, service.name)?).unwrap_or_default();
+    let lines: Vec<&str> = text.lines().collect();
+    Ok(lines[lines.len().saturating_sub(TAIL)..].join("\n"))
 }

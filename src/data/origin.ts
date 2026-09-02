@@ -18,6 +18,7 @@ import { createAiClient, type AiClient } from '@hanzo/ai'
 
 import { brand } from '~/brand'
 import { iam } from '~/data/iam'
+import { shell } from '~/data/shell'
 import { key } from '~/settings/prefs'
 
 /** The estate. Its base URL is the SDK's default and is not restated. */
@@ -43,15 +44,13 @@ export interface Origin {
 }
 
 /**
- * True in the desktop shell.
+ * Every place this build can reach, in the order a picker lists them.
  *
- * The web build has no machine to ask, and asking anyway costs a failed request
- * and a console error on every load. Tauri stamps this on `window` before the
- * first script runs, so it is settled by the time an origin list is read.
+ * The machine is only declared in the desktop: the web build has no engine to
+ * ask, and asking anyway costs a failed request and a console error on every
+ * load. `shell()` is settled before the first script runs, so an origin list
+ * never has to wait to know.
  */
-export const shell = () => typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-
-/** Every place this build can reach, in the order a picker lists them. */
 export const origins = (): Origin[] => [
   { id: ESTATE, label: brand.name },
   ...(shell() ? [{ id: MACHINE, label: 'On this machine', group: 'On this machine' }] : []),

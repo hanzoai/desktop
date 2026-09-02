@@ -178,18 +178,26 @@ alone changes nothing.
 What ships today is `src/hanzo/` — seven files, ~900 lines. That, and only that,
 is the parity bar:
 
-- [ ] Welcome / consent screen
-- [ ] IAM OAuth + PKCE sign-in (`hanzo://oauth/<brand>` deep link — the one deep
-      link that works)
-- [ ] Conversation list and history
-- [ ] Chat: stream, stop, retry
-- [ ] Model selection
-- [ ] Settings: node address, identity, version, status; open node manager;
-      reset-and-pair
-- [ ] Node manager window (logs, options, models, model tools)
-- [ ] Tray: show, node manager, spotlight, quit
-- [ ] Keychain-backed secret storage
-- [ ] Local node spawn / kill / health on boot and exit
+- [x] Welcome / consent screen — `shell/Welcome.tsx`, shown by `app.tsx`'s
+      `Entry` in the desktop until `prefs.consent` is set
+- [x] IAM OAuth + PKCE sign-in (`hanzo://oauth/<brand>` deep link — the one deep
+      link that works) — `data/iam.ts` `back()`, `data/session.tsx` `leave()`,
+      `shell/Root.tsx` hears `url`
+- [x] Conversation list and history — `data/convos.ts`, `data/messages.ts`,
+      `rail/List.tsx`
+- [x] Chat: stream, stop, retry — `compose/stream.ts:61` and `:95`,
+      `shell/Chat.tsx` `retry`
+- [x] Model selection — `settings/Model.tsx`, in the composer and in General
+- [x] Settings: node address, identity, version, status; open node manager —
+      `settings/Node.tsx`. Reset-and-pair has no counterpart: see below
+- [x] Node manager window — `machine/Services.tsx` in its own document, all
+      three services with their logs. Options and model tools are node-protocol
+      surfaces this app does not speak
+- [x] Tray: show, services, new chat, quit — `src-tauri/src/tray.rs`
+- [x] Keychain-backed secret storage — `src-tauri/src/secret.rs`, holding the
+      session (`data/vault.ts`)
+- [x] Local node spawn / kill / health on boot and exit — `service::boot` at
+      setup, `Registry::clear` on `RunEvent::Exit`
 
 Everything else in that repo is backend with no reachable UI, or UI wired to an
 API the node does not serve. Four defects worth not reproducing:
@@ -208,6 +216,92 @@ API the node does not serve. Four defects worth not reproducing:
 - A successful sign-in does not advance the app — `startLogin` is
   fire-and-forget and nothing calls `onGetStarted()` — and onboarding is
   `useState(false)`, so Welcome reappears on every launch.
+
+### The shell speaks one way in each direction
+
+`data/shell.ts` is the whole bridge: `call` asks the shell to do something, `on`
+hears about something it did, and both ride the IPC object Tauri stamps on
+`window` before the first script runs — which is also what makes `shell()`
+answerable without a request. Nothing else in the app invokes a command, and
+`origin.ts` reads `shell()` from here rather than testing `window` a second time.
+
+The Rust side registers seven commands and no more: `manage`, `keep`, `secret`,
+`logs`, `spawn`, `status`, `stop`. The old app registered 83, of which 26 had no
+caller — so the rule here is that a command with no caller is deleted, and
+`forget` was, on the day the keychain facade turned out to clear itself through
+`removeItem`.
+
+### The desktop is a different OAuth client, and this is measured
+
+`clientId` is `<org>-app` in the shell and `<org>-chat` on the web, because a
+different redirect, a different distribution and a different consent screen make
+a different APPLICATION rather than a second copy of one. Which registrations
+exist is a fact about the issuer, so it is probed rather than assumed — against
+hanzo.id, with an unknown client and an unregistered redirect as the two
+controls:
+
+    hanzo-app  + hanzo://oauth/hanzo               302
+    hanzo-chat + https://hanzo.chat/auth/callback  302
+    hanzo-chat + hanzo://oauth/hanzo               400
+    hanzo-chat + hanzo://bogus-control-xyz         400
+    bogus-client-xyz + hanzo://oauth/hanzo         400
+
+So `hanzo://oauth/hanzo` is registered on `hanzo-app` and nowhere else, and
+`hanzo-desktop` is not a client at all — 400 on every redirect. A better name
+for that registration is an issuer change, not a client one.
+
+The round trip goes OUT to the system browser (`data/shell.ts` `open`, over the
+opener plugin) because the webview has no address an issuer can return to and
+because a login screen inside an app's own webview is a credential prompt with
+no address bar to check. It comes back as a deep link the operating system hands
+to the process, which `main.rs` emits whole and `Root` completes with
+`land(url)` — the same `handleCallback` the web callback route runs, one
+optional argument apart.
+
+Signing out in the desktop clears the token THIS app holds and stops. The
+issuer's session lives in the browser, which has its own tabs, and ending it
+from here would sign somebody out everywhere because they signed out of a chat
+window.
+
+### Three things the old app had that have nothing to be here
+
+**Reset-and-pair.** It existed because the node minted an `api_v2_key` on
+`initial_registration`, the app kept it, and a machine with no keyring lost it
+on restart — locking the app out of a node it had started itself. Chat does not
+go through the node here, so there is no key to mint and nothing to lose. The
+verb on the Node screen is Restart, and restart is stop-then-start because the
+shell ADOPTS a service that is already serving, so a start on its own would find
+the old one and do nothing.
+
+**Spotlight.** A second always-on-top window with its own composer, summoned by
+a global accelerator. The tray item is "New chat", which raises the one window
+and announces `ask`; `Root` starts a fresh conversation. What the old app got
+for the extra window was a second surface and the register-versus-match bug
+above — four accelerators registered, two matched.
+
+**A keyring fallback.** `secure_storage.rs` falls back to a process-local
+`HashMap` when `Entry::new` fails, which answers every call and forgets on exit
+— a working keychain right up to the restart that loses the secret. `secret.rs`
+refuses instead, and `data/vault.ts` reads that refusal as "this machine has no
+better store than the browser's" and hands the SDK no `storage` at all, so it
+uses the one the web build already uses. A rung down, named, rather than a
+pretence.
+
+### Two documents, because two windows
+
+`index.html` and `services.html`, both declared in `vite.config.ts` — naming one
+input turns the default off, so both are named. The services window is a
+document rather than a route because it outlives wherever the main window
+happens to be, and it holds no session and no router: what a process on this
+machine is doing is a question with no account and no address.
+
+Everything it shows is the shell's own answer. `status` reports each service's
+name, whether it answers, whether this app started it, and WHERE — so the port
+is stated once, in `service.rs`, and `settings/Node.tsx` shows the origin it was
+given rather than a number written down twice. Logs are files the services write
+beside their storage, read when they are looked at: nothing streams and nothing
+polls, and a log that is a file is still there after the crash that makes it
+worth reading.
 
 ## Rooms come from `/v1/team/rooms`, and three things do not exist
 

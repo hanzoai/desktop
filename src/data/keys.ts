@@ -27,12 +27,31 @@ export const keys = {
   models: ['models'] as Key,
 
   /** What an agent may dispatch. One read per origin, like the models. */
+  tools: ['tools'] as Key,
+
+  /**
+   * The skills this org can reach, and the ones it wrote.
+   *
+   * A sibling of `tools` and not a child of it, though both are the same
+   * registry: a skill is never dispatchable, so activating one changes the
+   * skills list and the composer's menu cannot contain it either way.
+   */
   skills: ['skills'] as Key,
 
   /** The org's directory, read through IAM's SCIM surface. */
   people: (owner: string) => ['people', owner] as Key,
 
   user: ['user'] as Key,
+
+  /**
+   * What this machine runs, and what the node says about itself.
+   *
+   * Nested, so starting or stopping anything drops both: the node's identity
+   * and version are only true while the node that answered is the one running.
+   */
+  machine: ['machine'] as Key,
+  node: ['machine', 'node'] as Key,
+  logs: (name: string) => ['machine', name, 'logs'] as Key,
 
   convos: ['convos'] as Key,
   convoList: (filter: Record<string, unknown>) => ['convos', 'list', sign(filter)] as Key,
@@ -51,6 +70,9 @@ export const keys = {
 
   /** What this deployment mounts, and what this org authored. */
   plugins: ['plugins'] as Key,
+
+  /** The provider catalogue, carrying this org's connection to each. */
+  connectors: ['connectors'] as Key,
 
   /** The org's flows, and the runs they have had. Both move on a run. */
   flows: ['flows'] as Key,

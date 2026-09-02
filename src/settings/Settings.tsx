@@ -19,6 +19,8 @@ import { useState, type ReactNode } from 'react'
 import { Account, type AccountProps } from './Account'
 import { General } from './General'
 import { Look } from './Look'
+import { Node } from './Node'
+import { shell } from '~/data/shell'
 import type { Served } from '~/data/types'
 
 export interface SettingsProps {
@@ -50,12 +52,16 @@ interface Tab {
 }
 
 /**
- * Six sections, and the same six for everyone.
+ * The sections, and the same ones for everyone on the same build.
  *
  * What is NOT here is the point of the list. Parameters, presets, endpoints,
  * speech engines, token balances and command toggles were sections of their
  * own; not one of them is a thing a person came here to decide. A control only
  * a developer can name belongs where the deployment is configured, or nowhere.
+ *
+ * Node is the one exception to "the same for everyone", because a browser has
+ * no node: a section reporting a machine that is not there would be four
+ * dashes and a button that refuses.
  *
  * This array is the ONE source of order — the strip reads it, the panels read
  * it, and the arrow keys read it — which is how a tab strip and its keyboard
@@ -64,6 +70,7 @@ interface Tab {
 const TABS: readonly Tab[] = [
   { id: 'general', label: 'General', panel: (p) => <General served={p.served} /> },
   { id: 'look', label: 'Look', panel: () => <Look /> },
+  ...(shell() ? [{ id: 'node', label: 'Node', panel: () => <Node /> }] : []),
   { id: 'account', label: 'Account', panel: (p) => <Account {...p.account} /> },
 ]
 

@@ -23,6 +23,8 @@
  * answers nothing, every brand called itself Hanzo Chat.
  */
 
+import { shell } from '~/data/shell'
+
 export type Brand = {
   /** IAM organization, lowercase. The OAuth client is `<org>-chat`. */
   org: string
@@ -46,6 +48,14 @@ export type Brand = {
   scene: string
   /** The line under the composer. Empty means the brand wants none. */
   footer: string
+  /**
+   * The terms somebody installing the desktop agrees to.
+   *
+   * Optional, and unset where the brand publishes none that answers — an
+   * address written here on the assumption that it exists is a consent screen
+   * pointing at a 404, which is worse than a sentence with nothing to click.
+   */
+  terms?: string
   /** The hosts this brand answers on. */
   hosts: readonly string[]
   /**
@@ -121,6 +131,7 @@ export const brands: readonly Brand[] = [
     backdrop: 'dark',
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(120, 119, 198, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
+    terms: 'https://hanzo.ai/terms',
     hosts: ['hanzo.chat', 'chat.hanzo.ai'],
     // Free AI without signing in: this org-scoped `pk-` names the tenant, so an
     // anonymous visitor asks on the projected free/anonymous policy (data-shared,
@@ -147,6 +158,7 @@ export const brands: readonly Brand[] = [
     backdrop: 'dark',
     scene: 'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0))',
     footer: '',
+    terms: 'https://zoo.ngo/terms',
     hosts: ['zoolabs.io', 'chat.zoo.ngo'],
   },
 ]
@@ -172,8 +184,24 @@ export const brand: Brand = {
   ...(typeof window === 'undefined' ? {} : window.__brand),
 }
 
-/** The OAuth client: `<org>-<app>`, the estate's rule, spelled once. */
-export const clientId = `${brand.org}-chat`
+/**
+ * The OAuth client: `<org>-<app>`, the estate's rule, spelled once.
+ *
+ * The desktop is a different APPLICATION from the web chat, not a second copy
+ * of it — a different redirect, a different distribution, a different consent —
+ * so it names a different client, which is the same rule applied twice rather
+ * than an exception to it.
+ *
+ * Which registrations exist is measured, not assumed. Against hanzo.id, with an
+ * unknown client and an unregistered redirect as the two controls:
+ *
+ *     hanzo-app  + hanzo://oauth/hanzo               302
+ *     hanzo-chat + https://hanzo.chat/auth/callback  302
+ *     hanzo-chat + hanzo://oauth/hanzo               400
+ *     hanzo-chat + hanzo://bogus-control-xyz         400
+ *     bogus-client-xyz + hanzo://oauth/hanzo         400
+ */
+export const clientId = `${brand.org}-${shell() ? 'app' : 'chat'}`
 
 /**
  * Put the brand on the document.

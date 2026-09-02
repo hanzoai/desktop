@@ -248,6 +248,36 @@ export const Chat = () => {
     [address, models.data],
   )
 
+  /**
+   * Ask again.
+   *
+   * A retry is the QUESTION going back out, not the answer being repaired — so
+   * it rebuilds the payload from the turn this one answered and hands it to the
+   * same `ask`, with everything said BEFORE that turn as the history. The reply
+   * keeps the local id it had, which is what makes the new answer replace the
+   * old one rather than appear beneath it.
+   */
+  const retry = useCallback(
+    (answer: Message) => {
+      const all = store.turns.get()
+      const at = all.findIndex((m) => m.messageId === answer.parentMessageId)
+      const asked = all[at]
+      if (!asked || asked.role !== 'user') return
+      ask(
+        {
+          text: asked.text ?? '',
+          files: asked.files,
+          messageId: asked.messageId,
+          parentMessageId: asked.parentMessageId,
+          conversationId: asked.conversationId,
+          model: chosen,
+        },
+        all.slice(0, at),
+      )
+    },
+    [ask, chosen],
+  )
+
   const conversation = useMemo<Conversation>(
     () => ({ conversationId: id, model: chosen }),
     [id, chosen],
@@ -331,6 +361,7 @@ export const Chat = () => {
                 <Thread
                   messages={turns}
                   busy={busy}
+                  onRetry={retry}
                 />
               </Fill>
 

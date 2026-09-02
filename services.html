@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Local services</title>
+    <style>
+      /* The same two things only the host document can answer as index.html:
+         how tall the app is, and that its one child is a flex item. */
+      #root {
+        display: flex;
+        height: 100dvh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/machine/main.tsx"></script>
+  </body>
+</html>

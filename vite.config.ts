@@ -27,6 +27,9 @@ const API = 'https://api.hanzo.ai'
 const config = hanzo(
   {
     plugins: [react()],
+    // Two documents, because the desktop opens two windows and a window is a
+    // document. Declaring one input turns the default off, so both are named.
+    build: { rollupOptions: { input: { main: 'index.html', services: 'services.html' } } },
     server: {
       port: 3090,
       // Reachable by LAN name in dev — the Spark serves this to the Mac over
