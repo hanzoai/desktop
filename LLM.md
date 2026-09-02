@@ -209,6 +209,79 @@ API the node does not serve. Four defects worth not reproducing:
   fire-and-forget and nothing calls `onGetStarted()` — and onboarding is
   `useState(false)`, so Welcome reappears on every launch.
 
+## Rooms come from `/v1/team/rooms`, and three things do not exist
+
+The rail's rooms were nine literals — `#general`, `#dev-swarm`, DMs with agents,
+each with an invented last message, an invented unread count, and a `lastActivity`
+that was the STRING "Just now". The MCP servers beside them were five more, with
+fixed versions and `status: 'connected'` written into the source.
+
+Measured on a local cloud, with `/v1/bogus-control-xyz` as the control (404), so
+the codes mean something:
+
+    GET  /v1/team/rooms            403   exists, wants a principal
+    POST /v1/team/rooms            403   so does create — see below
+    GET  /v1/team/rooms/x/messages 403   and messages
+    GET  /v1/channels              403   exists — but it is NOT this
+    GET  /v1/presence              404   does not exist
+    GET  /v1/bogus-control-xyz     404   the control
+
+`teamRoom` carries `id, name, topic, workspace, direct, private, archived,
+members, bindings, life`. So a room already knows whether it is private, whether
+it is a DM, and which workspace it belongs to. There is no `team` resource on the
+SDK client, so the read goes through `client.http.collection('rooms', …)` — the
+transport the SDK exposes for exactly this, and the unwrap for the `{rooms: […]}`
+envelope the route answers with.
+
+**`/v1/channels` is a different product and must not be confused with this.** It
+is the messaging TRANSPORTS an org has connected — Slack, Discord, Teams,
+Telegram — and `/v1/channels/inbox` is what arrived on them. The SDK says it
+plainly: inbound only, no send route, and `rooms()` there is arithmetic on a page
+you already hold rather than a request. Wiring the rail to it would put somebody
+else's Slack ids in a sidebar that is meant to show this org's rooms.
+
+### What the server does not do, and what each would take
+
+Nothing below is stubbed in the client. A client that pretends is how the nine
+literals happened.
+
+- **Creation EXISTS, and reading the document said otherwise.** A local cloud's
+  `/v1/openapi.json` listed `GET` alone on `/v1/team/rooms`, so a first pass
+  deleted the create modal as unreachable. PROBING THE ROUTE says the opposite:
+  `POST /v1/team/rooms` answers **403** on production and on that same local
+  cloud, against a `/v1/bogus-control-xyz` that answers 404 — and `apps/team`
+  registers it at `room.go:122`, with `/rooms/{id}/messages` beside it. The
+  document was stale, the route was not. Probe the route; a spec is an artifact
+  with its own release lag.
+
+  What create takes is `teamRoomNew`: a name is the whole required request, and
+  public is the DEFAULT because "a room nobody can find is the more surprising of
+  the two". `space` is deliberately not sent by this client — an org with one has
+  no choice to make, and an org with several must be asked rather than guessed
+  for. There is no `direct` field, so a DM is not something the route opens.
+
+- **No cross-org anything.** The route's own summary is "every room of the
+  CALLER'S org, across the workspaces it owns". Public channels that everyone can
+  see and join, and browsing other orgs' public channels, therefore need TWO
+  routes that do not exist: a listing that spans orgs and filters on `private ==
+  false`, and a join that adds the caller to a room their org does not own. The
+  second is the one carrying the real decision — membership today is an org-scoped
+  list, and a joiner from elsewhere is a principal the room's own tenant boundary
+  currently has no way to admit.
+
+- **No unread.** Nothing on the wire says what has been read, so no count is
+  shown. A zero is a claim, and an invented number is what was there before.
+
+## Activation is per TOOL, not per server
+
+The MCP modal had an "Enable MCP" button per server. The estate has no such
+switch: `tools.activation()` answers which TOOLS are on and `tools.activate()`
+sets them, so the switch belongs on the tool rows and that is where it went.
+
+`activate` takes the WHOLE set — the SDK is explicit that a name absent from
+`enabled` is off afterwards — so a toggle reads the live set, changes one name,
+and sends all of it. Sending only the name somebody clicked turns off the rest.
+
 ## Two traps inherited from chat2, still true
 
 **`@hanzo/ui` needs `react-hook-form` even with no forms.** Declared an
