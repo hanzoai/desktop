@@ -14,15 +14,8 @@ import { useState } from 'react'
 import { projectsStore, useProjects } from './store'
 
 export const ProjectModal = () => {
-  const {
-    isOpen,
-    activeOrgId,
-    activeUserId,
-    activeProjectId,
-    organizations,
-    users,
-    projects,
-  } = useProjects()
+  const { isOpen, activeOrgId, activeProjectId, organizations, users, projects, pending, fault } =
+    useProjects()
 
   const [activeTab, setActiveTab] = useState<'projects' | 'orgs' | 'users'>('projects')
   const [newProjectName, setNewProjectName] = useState('')
@@ -32,21 +25,28 @@ export const ProjectModal = () => {
   if (!isOpen) return null
 
   const activeOrg = organizations.find((o) => o.id === activeOrgId) || organizations[0]
-  const filteredProjects = projects.filter((p) => p.orgId === activeOrgId)
+  // The list already IS this org's — it was read `?owner=<org>` — so filtering
+  // it again would only ever hide rows the server said belong here.
+  const filteredProjects = projects
 
   const handleCreateProject = (e: React.FormEvent) => {
     e.preventDefault()
-    if (newProjectName.trim()) {
-      projectsStore.createProject(newProjectName.trim(), newProjectDesc.trim() || 'Next.js 16 fullstack application')
-      setNewProjectName('')
-      setNewProjectDesc('')
-    }
+    if (!newProjectName.trim()) return
+    void projectsStore.createProject(newProjectName.trim(), newProjectDesc.trim())
+    setNewProjectName('')
+    setNewProjectDesc('')
   }
 
   const handleCreateOrg = (e: React.FormEvent) => {
     e.preventDefault()
     if (newOrgName.trim()) {
-      projectsStore.createOrg(newOrgName.trim(), newOrgName.trim().toLowerCase())
+      // IAM's `name` is the SLUG every other surface scopes by, so it is the
+      // slugged form that goes first and the typed line that is displayed.
+      const typed = newOrgName.trim()
+      void projectsStore.createOrg(
+        typed.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, ''),
+        typed,
+      )
       setNewOrgName('')
     }
   }
@@ -149,6 +149,14 @@ export const ProjectModal = () => {
         {/* Content Area */}
         <div style={{ flex: 1, minHeight: 0, display: 'flex', padding: 18, gap: 16 }}>
           {/* TAB 1: PROJECTS */}
+          {fault ? (
+            <div style={{ padding: '8px 18px', fontSize: 12, color: '#f87171' }}>{fault}</div>
+          ) : null}
+          {pending ? (
+            <div style={{ padding: '8px 18px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              Reading…
+            </div>
+          ) : null}
           {activeTab === 'projects' && (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -234,7 +242,13 @@ export const ProjectModal = () => {
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'rgba(255, 255, 255, 0.4)' }}>
-                        <span>Target: <strong style={{ color: '#34d399' }}>{p.runtimeTarget}</strong></span>
+                        <span>
+                          {p.isDefault ? (
+                            <strong style={{ color: '#34d399' }}>default</strong>
+                          ) : (
+                            p.tags.join(' ') || '—'
+                          )}
+                        </span>
                         <span>{p.updatedAt}</span>
                       </div>
                     </div>
@@ -333,7 +347,13 @@ export const ProjectModal = () => {
                         <div>
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>{org.name}</div>
                           <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)' }}>
-                            slug: {org.slug} • {org.membersCount} members • Tier: <strong style={{ color: '#a78bfa' }}>{org.tier}</strong>
+                            {org.id}
+                            {org.personal ? (
+                              <>
+                                {' • '}
+                                <strong style={{ color: '#a78bfa' }}>personal</strong>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </div>
@@ -360,13 +380,14 @@ export const ProjectModal = () => {
 
               {/* Users List */}
               <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* A roster, not a switcher. Who you are is the validated
+                    principal on the token; picking a row here changed nothing
+                    on the server and everything a reader believed. */}
                 {users.map((u) => {
-                  const isSelected = u.id === activeUserId
+                  const isSelected = false
                   return (
                     <div
                       key={u.id}
-                      onClick={() => projectsStore.setActiveUser(u.id)}
-                      className="tap"
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -397,7 +418,13 @@ export const ProjectModal = () => {
                         <div>
                           <div style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>{u.name}</div>
                           <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.45)' }}>
-                            {u.email} • Role: <strong style={{ color: '#34d399' }}>{u.role}</strong>
+                            {u.email}
+                            {u.admin ? (
+                              <>
+                                {' • '}
+                                <strong style={{ color: '#34d399' }}>admin</strong>
+                              </>
+                            ) : null}
                           </div>
                         </div>
                       </div>
