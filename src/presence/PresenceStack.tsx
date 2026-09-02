@@ -71,20 +71,6 @@ export const PresenceStack = () => {
             }}
           >
             {p.name.charAt(0)}
-            {p.status === 'online' && (
-              <span
-                style={{
-                  position: 'absolute',
-                  bottom: -1,
-                  right: -1,
-                  width: 6,
-                  height: 6,
-                  borderRadius: 9999,
-                  background: '#10b981',
-                  border: '1px solid #000',
-                }}
-              />
-            )}
           </div>
         ))}
       </div>

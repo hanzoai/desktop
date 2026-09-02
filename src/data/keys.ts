@@ -29,6 +29,9 @@ export const keys = {
   /** What an agent may dispatch. One read per origin, like the models. */
   skills: ['skills'] as Key,
 
+  /** The org's directory, read through IAM's SCIM surface. */
+  people: (owner: string) => ['people', owner] as Key,
+
   user: ['user'] as Key,
 
   convos: ['convos'] as Key,
