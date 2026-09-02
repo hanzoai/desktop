@@ -1,35 +1,49 @@
 /**
- * Durable Task Queue & CI/CD Pipelines Modal.
+ * The org's live agent runs.
+ *
+ * A card shows the run's status, how far along it is and whether that number is
+ * a MEASUREMENT or a model's estimate — the server marks the difference and so
+ * does this. The transcript below is the selected run's own turns.
+ *
+ * The three canned "dispatch pipeline" buttons that stood here — a Next.js
+ * build, a k3s pod, a KMS audit — named work this desktop cannot do; a run is
+ * named by whoever starts it.
  */
-import {
-  ListTodo,
-  Play,
-  RotateCcw,
-  Shield,
-  X,
-  Zap,
-} from '@hanzogui/lucide-icons-2'
+import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
+import { useState } from 'react'
 import { taskQueueStore, useTaskQueue } from './store'
 import type { DurableTask, TaskStatus } from './types'
 
+// A session's status is exactly four words. There is no 'queued' and no
+// 'retrying': a run is open or it is not, and a finished one stays finished.
 const statusBadge = (status: TaskStatus) => {
   switch (status) {
-    case 'completed':
-      return { label: 'COMPLETED', bg: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: 'rgba(52, 211, 153, 0.3)' }
-    case 'running':
-      return { label: 'RUNNING', bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa', border: 'rgba(96, 165, 250, 0.3)' }
-    case 'retrying':
-      return { label: 'RETRYING', bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: 'rgba(251, 191, 36, 0.3)' }
-    case 'failed':
-      return { label: 'FAILED', bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171', border: 'rgba(248, 113, 113, 0.3)' }
-    case 'queued':
+    case 'done':
+      return { label: 'DONE', bg: 'rgba(52, 211, 153, 0.15)', color: '#34d399', border: 'rgba(52, 211, 153, 0.3)' }
+    case 'paused':
+      return { label: 'PAUSED', bg: 'rgba(251, 191, 36, 0.15)', color: '#fbbf24', border: 'rgba(251, 191, 36, 0.3)' }
+    case 'error':
+      return { label: 'ERROR', bg: 'rgba(248, 113, 113, 0.15)', color: '#f87171', border: 'rgba(248, 113, 113, 0.3)' }
     default:
-      return { label: 'QUEUED', bg: 'rgba(255, 255, 255, 0.06)', color: 'rgba(255, 255, 255, 0.6)', border: 'rgba(255, 255, 255, 0.1)' }
+      return { label: 'RUNNING', bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa', border: 'rgba(96, 165, 250, 0.3)' }
   }
 }
 
+/** A clock the wire sends as RFC 3339, as a short relative line. */
+const ago = (at: string): string => {
+  if (!at) return ''
+  const then = Date.parse(at)
+  if (Number.isNaN(then)) return ''
+  const mins = Math.floor((Date.now() - then) / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`
+}
+
 export const TaskQueueModal = () => {
-  const { isOpen, tasks, activeTaskId } = useTaskQueue()
+  const { isOpen, tasks, activeTaskId, events, pending, fault, busy } = useTaskQueue()
+  const [name, setName] = useState('')
 
   if (!isOpen) return null
 
@@ -117,8 +131,14 @@ export const TaskQueueModal = () => {
           </button>
         </div>
 
-        {/* Action Bar: Quick CI/CD Triggers */}
-        <div
+        {/* Open a run, by name */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (!name.trim()) return
+            void taskQueueStore.dispatchTask(name.trim())
+            setName('')
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -128,18 +148,30 @@ export const TaskQueueModal = () => {
             backgroundColor: 'rgba(255, 255, 255, 0.01)',
           }}
         >
-          <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)' }}>
-            Dispatch Pipeline:
-          </span>
+          <input
+            type="text"
+            placeholder="Name a run…"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={{
+              flex: 1,
+              padding: '6px 10px',
+              borderRadius: 6,
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              fontSize: 12,
+              outline: 'none',
+            }}
+          />
           <button
-            type="button"
-            onClick={() => taskQueueStore.dispatchTask('CI/CD: Build Production Next.js 16 Bundle', '@dev')}
+            type="submit"
             className="tap"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: 5,
-              padding: '5px 10px',
+              padding: '5px 12px',
               borderRadius: 6,
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -150,53 +182,13 @@ export const TaskQueueModal = () => {
             }}
           >
             <Play size={11} color="#34d399" />
-            <span>CI/CD Build</span>
+            <span>Open</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => taskQueueStore.dispatchTask('k3s Sandbox: Deploy Worker Pod', '@executor')}
-            className="tap"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '5px 10px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              fontSize: 11.5,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            <Zap size={11} color="#60a5fa" />
-            <span>Deploy k3s Pod</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => taskQueueStore.dispatchTask('SecOps: Enclave KMS Audit', '@secops')}
-            className="tap"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              padding: '5px 10px',
-              borderRadius: 6,
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: '#ffffff',
-              fontSize: 11.5,
-              fontWeight: 500,
-              cursor: 'pointer',
-            }}
-          >
-            <Shield size={11} color="#f87171" />
-            <span>SecOps Audit</span>
-          </button>
-        </div>
+          {pending ? (
+            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>reading…</span>
+          ) : null}
+          {fault ? <span style={{ fontSize: 11, color: '#f87171' }}>{fault}</span> : null}
+        </form>
 
         {/* Content Split: Left Task List, Right Task Details */}
         <div style={{ flex: 1, display: 'flex', minHeight: 0 }}>
@@ -256,12 +248,12 @@ export const TaskQueueModal = () => {
                         {badge.label}
                       </span>
                       <span style={{ fontSize: 11, color: '#a78bfa', fontWeight: 600 }}>
-                        {t.assignedAgent}
+                        {t.agent}
                       </span>
                     </div>
 
                     <span style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                      {t.startedAt}
+                      {ago(t.startedAt)}
                     </span>
                   </div>
 
@@ -269,8 +261,9 @@ export const TaskQueueModal = () => {
                     {t.title}
                   </div>
 
-                  {/* Progress Bar */}
-                  {t.status === 'running' && (
+                  {/* A bar only where there is a share to draw. A null pct is
+                      "indeterminate", which an empty bar would read as zero. */}
+                  {t.status === 'running' && t.progress.pct !== null ? (
                     <div
                       style={{
                         width: '100%',
@@ -283,14 +276,16 @@ export const TaskQueueModal = () => {
                     >
                       <div
                         style={{
-                          width: `${t.progress}%`,
+                          width: `${t.progress.pct}%`,
                           height: '100%',
-                          background: '#34d399',
+                          // A model's guess is drawn differently from a run's
+                          // own word, because they are different claims.
+                          background: t.progress.estimated ? '#a78bfa' : '#34d399',
                           transition: 'width 0.3s ease',
                         }}
                       />
                     </div>
-                  )}
+                  ) : null}
                 </button>
               )
             })}
@@ -315,38 +310,67 @@ export const TaskQueueModal = () => {
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
                       {activeTask.title}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                        Agent: <strong style={{ color: '#ffffff' }}>{activeTask.assignedAgent}</strong>
+                        Agent: <strong style={{ color: '#ffffff' }}>{activeTask.agent || '—'}</strong>
                       </span>
                       <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                        Step: <strong style={{ color: '#34d399' }}>{activeTask.currentStep}</strong>
+                        Phase: <strong style={{ color: '#34d399' }}>{activeTask.progress.phase}</strong>
                       </span>
+                      {activeTask.progress.activity ? (
+                        <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
+                          {activeTask.progress.activity}
+                        </span>
+                      ) : null}
+                      {/* The server marks this a model estimate, and so does
+                          the card: a guess shown as a measurement tells
+                          somebody a stuck run is fine. */}
+                      {activeTask.progress.estimated ? (
+                        <span
+                          title="A model read this off the run's transcript. It is not a measurement."
+                          style={{ fontSize: 10.5, fontWeight: 700, color: '#a78bfa' }}
+                        >
+                          ESTIMATED
+                        </span>
+                      ) : null}
+                      {activeTask.taskWorkflowId ? (
+                        <span style={{ fontSize: 10.5, fontWeight: 700, color: '#60a5fa' }}>
+                          DURABLE
+                        </span>
+                      ) : null}
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      type="button"
-                      title="Retry task"
-                      onClick={() => taskQueueStore.retryTask(activeTask.id)}
-                      className="tap"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        padding: '6px 12px',
-                        borderRadius: 6,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        color: '#ffffff',
-                        fontSize: 11.5,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <RotateCcw size={12} />
-                      <span>Retry</span>
-                    </button>
+                    {/* There is no retry: a done or error run cannot reopen,
+                        so the steering that exists is pause and resume. */}
+                    {activeTask.status === 'running' || activeTask.status === 'paused' ? (
+                      <button
+                        type="button"
+                        disabled={busy === activeTask.id}
+                        onClick={() =>
+                          activeTask.status === 'paused'
+                            ? taskQueueStore.resumeTask(activeTask.id)
+                            : taskQueueStore.pauseTask(activeTask.id)
+                        }
+                        className="tap"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '6px 12px',
+                          borderRadius: 6,
+                          background: 'rgba(255, 255, 255, 0.06)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          color: '#ffffff',
+                          fontSize: 11.5,
+                          cursor: busy === activeTask.id ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <RotateCcw size={12} />
+                        <span>{activeTask.status === 'paused' ? 'Resume' : 'Pause'}</span>
+                      </button>
+                    ) : null}
 
                     {activeTask.status === 'running' && (
                       <button
@@ -392,42 +416,36 @@ export const TaskQueueModal = () => {
                     gap: 4,
                   }}
                 >
-                  {activeTask.logs.map((l, i) => (
+                  {events.length === 0 ? (
+                    <div style={{ color: 'rgba(255,255,255,0.35)' }}>No turns recorded.</div>
+                  ) : null}
+                  {events.map((turn) => (
                     <div
-                      key={i}
+                      key={turn.id}
                       style={{
-                        color: l.startsWith('$') ? '#60a5fa' : l.includes('✔') || l.includes('✓') ? '#34d399' : 'rgba(255, 255, 255, 0.8)',
+                        color:
+                          turn.kind === 'error'
+                            ? '#f87171'
+                            : turn.kind === 'tool-call'
+                              ? '#60a5fa'
+                              : turn.kind === 'tool-result'
+                                ? '#34d399'
+                                : 'rgba(255, 255, 255, 0.8)',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
                       }}
                     >
-                      {l}
+                      <span style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        {String(turn.seq).padStart(3, ' ')} {turn.kind}
+                      </span>{' '}
+                      {/* A payload's shape belongs to whoever wrote the turn,
+                          so it is shown as it arrived rather than interpreted. */}
+                      {typeof turn.payload === 'string'
+                        ? turn.payload
+                        : JSON.stringify(turn.payload)}
                     </div>
                   ))}
                 </div>
-
-                {/* Artifacts Strip */}
-                {activeTask.artifacts && activeTask.artifacts.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 11.5, fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)' }}>
-                      Emitted Artifacts:
-                    </span>
-                    {activeTask.artifacts.map((a) => (
-                      <span
-                        key={a}
-                        style={{
-                          fontSize: 11,
-                          padding: '2px 8px',
-                          borderRadius: 4,
-                          background: 'rgba(255, 255, 255, 0.05)',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          color: '#60a5fa',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        {a}
-                      </span>
-                    ))}
-                  </div>
-                )}
               </>
             )}
           </div>
