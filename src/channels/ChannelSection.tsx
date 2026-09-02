@@ -2,6 +2,7 @@
  * Unified Room Section in the Rail: Channels, DMs (People & Agents), and Informal Groups.
  */
 import {
+  Plus,
   Bot,
   Hash,
   Lock,
@@ -31,6 +32,27 @@ export const ChannelSection = () => {
           <SizableText size="$1" fontWeight="700" color="$faint" style={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>
             Channels
           </SizableText>
+          {/* Only channels can be opened. `teamRoomNew` has no `direct`, so a
+              DM is not something this route creates. */}
+          <button
+            type="button"
+            onClick={() => channelsStore.openCreate()}
+            title="Open a channel"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 18,
+              height: 18,
+              borderRadius: 4,
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              color: 'rgba(255, 255, 255, 0.7)',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus size={11} />
+          </button>
         </XStack>
 
         {channels.map((chan) => {

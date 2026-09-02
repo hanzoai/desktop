@@ -47,9 +47,16 @@ export interface ChannelsState {
   activeRoomId: string
   pending: boolean
   fault: string | null
+  isCreateOpen: boolean
 }
 
-let state: ChannelsState = { rooms: [], activeRoomId: '', pending: false, fault: null }
+let state: ChannelsState = {
+  rooms: [],
+  activeRoomId: '',
+  pending: false,
+  fault: null,
+  isCreateOpen: false,
+}
 
 const listeners = new Set<(s: ChannelsState) => void>()
 
@@ -91,6 +98,30 @@ export const channelsStore = {
   get: (): ChannelsState => state,
   refresh: () => void read(),
   setActiveRoom: (activeRoomId: string) => put({ activeRoomId }),
+
+  openCreate: () => put({ isCreateOpen: true, fault: null }),
+  closeCreate: () => put({ isCreateOpen: false }),
+
+  /**
+   * Opens a room.
+   *
+   * A name is the whole required request — the server defaults the rest, and
+   * public is its default because a room nobody can find is the more surprising
+   * of the two. `space` is deliberately not sent: an org with one has no choice
+   * to make, and an org with several must be asked rather than guessed for.
+   *
+   * The refusal is raised, not swallowed. A room that was never opened must not
+   * read as one that was.
+   */
+  create: async (name: string, topic?: string, isPrivate?: boolean) => {
+    await client(ESTATE).http.json({
+      method: 'POST',
+      path: '/v1/team/rooms',
+      body: { name, topic: topic || undefined, private: isPrivate || undefined },
+    })
+    put({ isCreateOpen: false })
+    await read()
+  },
 }
 
 export const useChannels = (): ChannelsState => {

@@ -14,6 +14,7 @@ import { useSession } from '~/data/session'
 import type { Convo } from '~/data/types'
 import { useNarrow } from '~/gui'
 import { IntelligenceModal } from '~/intelligence/IntelligenceModal'
+import { CreateChannelModal } from '~/channels/CreateChannelModal'
 import { McpModal } from '~/mcp/McpModal'
 import { PluginsModal } from '~/plugins/PluginsModal'
 import { ProjectModal } from '~/projects/ProjectModal'
@@ -125,6 +126,7 @@ export const Root = () => {
       {/* Channel Creation Modal */}
 
       {/* MCP Skills & Server Connectors Modal */}
+      <CreateChannelModal />
       <McpModal />
 
       {/* Memory & Code Intelligence Modal */}
