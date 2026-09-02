@@ -10,35 +10,34 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { intelligenceStore, useIntelligence, type MemoryItem } from './store'
+import { intelligenceStore, useIntelligence } from './store'
 
 export const IntelligenceModal = () => {
-  const { isOpen, memories, symbols, activeTab } = useIntelligence()
+  const { isOpen, memories, symbols, query, activeTab, pending, fault, degraded } =
+    useIntelligence()
   const [filter, setFilter] = useState('')
   const [newContent, setNewContent] = useState('')
-  const [newCategory, setNewCategory] = useState<MemoryItem['category']>('Project Rule')
+  // The store records a `kind`, which is free text, not one of four categories.
+  const [newKind, setNewKind] = useState('')
 
   if (!isOpen) return null
 
   const handleAddMemory = (e: FormEvent) => {
     e.preventDefault()
-    if (newContent.trim()) {
-      intelligenceStore.addMemory(newCategory, newContent.trim())
-      setNewContent('')
-    }
+    if (!newContent.trim()) return
+    void intelligenceStore.addMemory(newContent.trim(), newKind.trim())
+    setNewContent('')
   }
 
   const filteredMemories = memories.filter(
     (m) =>
       m.content.toLowerCase().includes(filter.toLowerCase()) ||
-      m.category.toLowerCase().includes(filter.toLowerCase()),
+      m.kind.toLowerCase().includes(filter.toLowerCase()),
   )
 
-  const filteredSymbols = symbols.filter(
-    (s) =>
-      s.name.toLowerCase().includes(filter.toLowerCase()) ||
-      s.file.toLowerCase().includes(filter.toLowerCase()),
-  )
+  // The SYMBOLS are already the answer to a query the server ran, so a second
+  // filter over them would hide rows the index said matched.
+  const filteredSymbols = symbols
 
   return (
     <div
@@ -180,11 +179,18 @@ export const IntelligenceModal = () => {
             backgroundColor="rgba(255, 255, 255, 0.03)"
           >
             <Search size={12} color="rgba(255, 255, 255, 0.4)" />
+            {/* On memories this filters what was read; on symbols it IS the
+                query the index answers, so the two are not one control with
+                one meaning and the placeholder says which. */}
             <input
               type="text"
-              placeholder="Filter entries..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
+              placeholder={activeTab === 'memory' ? 'Filter memories…' : 'Search symbols…'}
+              value={activeTab === 'memory' ? filter : query}
+              onChange={(e) =>
+                activeTab === 'memory'
+                  ? setFilter(e.target.value)
+                  : intelligenceStore.search(e.target.value)
+              }
               style={{
                 background: 'transparent',
                 border: 'none',
@@ -194,20 +200,41 @@ export const IntelligenceModal = () => {
                 width: 140,
               }}
             />
+            {pending ? (
+              <span style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)' }}>…</span>
+            ) : null}
           </XStack>
         </XStack>
 
         {/* Tab Body */}
         <YStack flex={1} minHeight={0} padding="$4" gap="$3" style={{ overflowY: 'auto' }}>
+          {fault ? (
+            <SizableText size="$1" color="#f87171">
+              {fault}
+            </SizableText>
+          ) : null}
+          {/* An empty result after a failed retrieval is an OUTAGE, not an
+              absence of matches, and the route says which. */}
+          {degraded ? (
+            <SizableText size="$1" color="#fbbf24">
+              The index was unreachable — this is not "no matches".
+            </SizableText>
+          ) : null}
           {activeTab === 'memory' ? (
             <>
               {/* Add Memory Row */}
               <form onSubmit={handleAddMemory}>
                 <XStack gap="$2">
-                  <select
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value as any)}
+                  {/* A kind is free text. The four categories offered here
+                      were this app's own, and one of them — "Enclave KMS Key" —
+                      invited somebody to type key material into a memory. */}
+                  <input
+                    type="text"
+                    placeholder="kind"
+                    value={newKind}
+                    onChange={(e) => setNewKind(e.target.value)}
                     style={{
+                      width: 110,
                       padding: '6px 10px',
                       borderRadius: 6,
                       background: 'rgba(255, 255, 255, 0.05)',
@@ -215,18 +242,12 @@ export const IntelligenceModal = () => {
                       color: '#ffffff',
                       fontSize: 11.5,
                       outline: 'none',
-                      cursor: 'pointer',
                     }}
-                  >
-                    <option value="Project Rule">Project Rule</option>
-                    <option value="Architecture Decision">Architecture Decision</option>
-                    <option value="User Preference">User Preference</option>
-                    <option value="Enclave KMS Key">Enclave KMS Key</option>
-                  </select>
+                  />
 
                   <input
                     type="text"
-                    placeholder="Add persistent rule or context..."
+                    placeholder="Remember something…"
                     value={newContent}
                     onChange={(e) => setNewContent(e.target.value)}
                     style={{
@@ -264,7 +285,7 @@ export const IntelligenceModal = () => {
               <YStack gap="$2" paddingTop="$1">
                 {filteredMemories.map((m) => (
                   <XStack
-                    key={m.id}
+                    key={m.name}
                     alignItems="center"
                     justifyContent="space-between"
                     padding="$3"
@@ -286,10 +307,10 @@ export const IntelligenceModal = () => {
                             textTransform: 'uppercase',
                           }}
                         >
-                          {m.category}
+                          {m.kind || 'memory'}
                         </span>
                         <SizableText size="$1" color="$faint" style={{ fontSize: 10.5 }}>
-                          {m.updatedAt}
+                          {m.updatedTime}
                         </SizableText>
                       </XStack>
                       <SizableText size="$2" color="$ink" style={{ fontSize: 12 }}>
@@ -299,7 +320,7 @@ export const IntelligenceModal = () => {
 
                     <button
                       type="button"
-                      onClick={() => intelligenceStore.deleteMemory(m.id)}
+                      onClick={() => void intelligenceStore.deleteMemory(m.name)}
                       style={{
                         background: 'none',
                         border: 'none',
@@ -318,7 +339,7 @@ export const IntelligenceModal = () => {
             <YStack gap="$1.5">
               {filteredSymbols.map((s) => (
                 <XStack
-                  key={`${s.file}:${s.name}`}
+                  key={`${s.repo}:${s.file}:${s.line}`}
                   alignItems="center"
                   justifyContent="space-between"
                   padding="$2.5"
@@ -329,7 +350,9 @@ export const IntelligenceModal = () => {
                 >
                   <XStack alignItems="center" gap="$2">
                     <FileCode size={13} color="#34d399" />
-                    <code style={{ color: '#ffffff', fontSize: 12, fontWeight: 600 }}>{s.name}</code>
+                    <code style={{ color: '#ffffff', fontSize: 12, fontWeight: 600 }}>
+                      {s.symbol || s.file.split('/').pop()}
+                    </code>
                     <span
                       style={{
                         fontSize: 10,
