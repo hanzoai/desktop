@@ -4,20 +4,25 @@
 import { Hash, Lock, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { channelsStore, useChannels } from './store'
+import { channelsStore, useChannels, useOpenRoom } from './store'
 
 export const CreateChannelModal = () => {
   const { isCreateOpen } = useChannels()
+  // The write carries its own pending and its own refusal, so the form does not
+  // hold either — and it says which keys it makes stale rather than re-reading.
+  const opening = useOpenRoom()
   const [name, setName] = useState('')
   const [topic, setTopic] = useState('')
   const [isPrivate, setIsPrivate] = useState(false)
 
   if (!isCreateOpen) return null
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (name.trim()) {
-      void channelsStore.create(name.trim(), topic.trim(), isPrivate)
+    if (!name.trim()) return
+    // Clear the form only on a room that was actually opened; a refusal leaves
+    // what was typed where it is, which is the whole reason `run` answers.
+    if (await opening.run(name.trim(), topic.trim(), isPrivate)) {
       setName('')
       setTopic('')
       setIsPrivate(false)
@@ -95,7 +100,15 @@ export const CreateChannelModal = () => {
           </button>
         </XStack>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+        >
+          {opening.fault ? (
+            <SizableText size="$1" color="#f87171">
+              {opening.fault}
+            </SizableText>
+          ) : null}
           <YStack gap="$1.5">
             <SizableText size="$1" fontWeight="600" color="$ink">
               Channel Name
@@ -192,10 +205,11 @@ export const CreateChannelModal = () => {
             <button
               type="submit"
               className="tap"
+              disabled={opening.pending || !name.trim()}
               style={{
                 padding: '7px 16px',
                 borderRadius: 6,
-                background: '#ffffff',
+                background: opening.pending || !name.trim() ? 'rgba(255,255,255,0.25)' : '#ffffff',
                 border: 'none',
                 color: '#000000',
                 fontSize: 12,
@@ -203,7 +217,7 @@ export const CreateChannelModal = () => {
                 cursor: 'pointer',
               }}
             >
-              Create Channel
+              {opening.pending ? 'Opening…' : 'Create Channel'}
             </button>
           </XStack>
         </form>

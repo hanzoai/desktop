@@ -1,11 +1,16 @@
 /**
  * Reading from the server, and remembering what came back.
  *
- * Four verbs. `useRead` for a value, `usePages` for a cursor-paged list,
- * `useSend` for a change, `invalidate` for "that is no longer true". Everything
- * else a data-fetching library offers — retries, windows, garbage collection,
- * suspense — is a policy this product does not have, and carrying the policies
- * it does not have is how a client ends up with a cache nobody can predict.
+ * Three verbs. `useRead` for a value, `useSend` for a change, `invalidate` for
+ * "that is no longer true". Everything else a data-fetching library offers —
+ * retries, windows, garbage collection, suspense — is a policy this product does
+ * not have, and carrying the policies it does not have is how a client ends up
+ * with a cache nobody can predict.
+ *
+ * It said FOUR and shipped two: `usePages` was named here and never written,
+ * and `useSend` was named here while thirteen stores each hand-rolled it. A verb
+ * a doc promises and a file does not define is worse than a missing one, because
+ * the next author writes their own rather than looking.
  *
  * It is built on `atom`'s primitive rather than beside it: one subscription
  * mechanism for the whole app, so a component that reads a conversation from
@@ -18,7 +23,7 @@
  * the identity is being decided. What re-reads it is `invalidate()`, which is
  * exactly what adopting an identity does.
  */
-import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 import type { Key } from '~/data/keys'
 
@@ -198,3 +203,70 @@ export const write = <T,>(key: Key, data: T) =>
 
 /** What is cached under `key`, if anything. Never triggers a read. */
 export const peek = <T,>(key: Key): T | undefined => cache.get(idOf(key))?.data as T | undefined
+
+/**
+ * What went wrong, as a sentence somebody can read.
+ *
+ * There were TWELVE copies of this, one per store, identical to the character.
+ * An error reaches a screen exactly one way, so it is written down once — and
+ * the one thing it must not do is print the object's own spelling of itself,
+ * which is how `[object Object]` reaches a customer.
+ */
+export const reason = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+
+export type Send<A extends unknown[]> = {
+  /** Run it. Resolves true when the call succeeded, false when it did not. */
+  run: (...args: A) => Promise<boolean>
+  /** In flight. */
+  pending: boolean
+  /** Why the last attempt failed, already a sentence. Null once one succeeds. */
+  fault: string | null
+}
+
+/**
+ * A change, and what it makes stale.
+ *
+ * The shape every store had hand-rolled: call the route, and on success say
+ * which keys no longer hold. Naming the keys is the whole point — a write that
+ * re-reads by calling its own reader again is a second statement of what it
+ * changed, and the two drift.
+ *
+ * IT DOES NOT THROW. A refusal is a value here (`fault`), because the caller is
+ * a click handler and a rejected promise from one is an unhandled rejection.
+ * `run` answers whether it worked, so a caller that must branch still can.
+ */
+export const useSend = <A extends unknown[]>(
+  call: (...args: A) => Promise<unknown>,
+  stale: Key[] = [],
+): Send<A> => {
+  const [pending, setPending] = useState(false)
+  const [fault, setFault] = useState<string | null>(null)
+
+  // The call closes over props that change every render, so the latest one is
+  // used — the same rule `useRead` applies to its reader.
+  const latest = useRef(call)
+  latest.current = call
+
+  const keys = useRef(stale)
+  keys.current = stale
+
+  const run = useCallback(async (...args: A): Promise<boolean> => {
+    setPending(true)
+    setFault(null)
+    try {
+      await latest.current(...args)
+      // Only on success: a refused write changed nothing, so nothing it names
+      // has gone stale, and dropping those keys would cost a re-read for free.
+      if (keys.current.length > 0) invalidate(...keys.current)
+      return true
+    } catch (e) {
+      setFault(reason(e))
+      return false
+    } finally {
+      setPending(false)
+    }
+  }, [])
+
+  return { run, pending, fault }
+}

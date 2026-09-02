@@ -12,131 +12,86 @@
  * name, and sends all of it. Sending the single name somebody clicked would
  * turn everything else off.
  */
-import { useEffect, useState } from 'react'
-
+import { atom, useAtom } from '~/data/store'
+import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
+import { reason, useRead, useSend } from '~/data/query'
 import type { Connected, Exposed } from './types'
-
-export interface McpState {
-  servers: Connected[]
-  /** Nothing has been read yet, or a read is in flight. */
-  pending: boolean
-  /** Why the last read or write failed, in the words it failed with. */
-  fault: string | null
-  isOpen: boolean
-  activeServerId: string | null
-}
-
-let state: McpState = {
-  servers: [],
-  pending: false,
-  fault: null,
-  isOpen: false,
-  activeServerId: null,
-}
-
-const listeners = new Set<(s: McpState) => void>()
-
-const put = (next: Partial<McpState>) => {
-  state = { ...state, ...next }
-  listeners.forEach((fn) => fn(state))
-}
-
-const because = (e: unknown): string =>
-  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
 
 /** Servers are the org's, so they are read from the estate rather than per origin. */
 const ai = () => client(ESTATE)
 
-const read = async () => {
-  put({ pending: true, fault: null })
-  try {
-    const [servers, tools, active] = await Promise.all([
-      ai().tools.mcp(),
-      ai().tools.list(),
-      ai().tools.activation(),
-    ])
+/** Whether the panel is showing, and which server is selected in it. */
+export const open = atom(false)
+export const selected = atom<string | null>(null)
 
-    const on = new Set(active?.enabled ?? [])
-    const bySource = new Map<string, Exposed[]>()
-    for (const tool of tools) {
-      if (!tool.name) continue
-      const key = tool.source ?? ''
-      ;(bySource.get(key) ?? bySource.set(key, []).get(key)!).push({
-        name: tool.name,
-        description: tool.description,
-        activated: tool.activated ?? on.has(tool.name),
-      })
-    }
+const read = async (): Promise<Connected[]> => {
+  const [servers, tools, active] = await Promise.all([
+    ai().tools.mcp(),
+    ai().tools.list(),
+    ai().tools.activation(),
+  ])
 
-    const seen: Connected[] = servers.map((s) => ({
-      id: s.id,
-      name: s.name ?? s.id,
-      url: s.url,
-      hasSecret: s.hasSecret,
-      tools: bySource.get(s.id) ?? bySource.get(s.source ?? s.id) ?? [],
-    }))
-
-    put({
-      servers: seen,
-      pending: false,
-      activeServerId: state.activeServerId ?? seen[0]?.id ?? null,
+  const on = new Set(active?.enabled ?? [])
+  const bySource = new Map<string, Exposed[]>()
+  for (const tool of tools) {
+    if (!tool.name) continue
+    const key = tool.source ?? ''
+    ;(bySource.get(key) ?? bySource.set(key, []).get(key)!).push({
+      name: tool.name,
+      description: tool.description,
+      activated: tool.activated ?? on.has(tool.name),
     })
-  } catch (e) {
-    put({ pending: false, fault: because(e) })
   }
+
+  return servers.map((s) => ({
+    id: s.id,
+    name: s.name ?? s.id,
+    url: s.url,
+    hasSecret: s.hasSecret,
+    tools: bySource.get(s.id) ?? bySource.get(s.source ?? s.id) ?? [],
+  }))
 }
 
 export const mcpStore = {
-  get: (): McpState => state,
-
   open: (serverId?: string) => {
-    put({ isOpen: true, activeServerId: serverId ?? state.activeServerId })
-    void read()
+    if (serverId) selected.set(serverId)
+    open.set(true)
   },
-
-  close: () => put({ isOpen: false }),
-
-  /** Opens or closes the modal. The keyboard reaches this one. */
-  toggle: () => {
-    const opening = !state.isOpen
-    put({ isOpen: opening })
-    if (opening) void read()
-  },
-
-  refresh: () => void read(),
-
-  selectServer: (activeServerId: string) => put({ activeServerId }),
-
-  /**
-   * Switches one tool on or off.
-   *
-   * Reads the live set rather than trusting this view: another surface may have
-   * changed it since, and the whole set is what gets sent.
-   */
-  toggleTool: async (name: string) => {
-    put({ fault: null })
-    try {
-      const active = await ai().tools.activation()
-      const on = new Set(active?.enabled ?? [])
-      if (on.has(name)) on.delete(name)
-      else on.add(name)
-      await ai().tools.activate([...on])
-      await read()
-    } catch (e) {
-      put({ fault: because(e) })
-    }
-  },
+  close: () => open.set(false),
+  toggle: () => open.set((showing) => !showing),
+  selectServer: (id: string) => selected.set(id),
 }
 
-export const useMcp = (): McpState => {
-  const [current, setCurrent] = useState<McpState>(state)
-  useEffect(() => {
-    const handler = (next: McpState) => setCurrent(next)
-    listeners.add(handler)
-    return () => {
-      listeners.delete(handler)
-    }
-  }, [])
-  return current
+export const useMcp = () => {
+  const isOpen = useAtom(open)
+  const listed = useRead(keys.servers, read, { enabled: isOpen, fresh: 60_000 })
+  const servers = listed.data ?? []
+  const chosen = useAtom(selected)
+
+  return {
+    servers,
+    isOpen,
+    // The panel must land on a server, and the first is where — as a FALLBACK,
+    // so a choice already made survives a re-read.
+    activeServerId:
+      chosen && servers.some((one) => one.id === chosen) ? chosen : (servers[0]?.id ?? null),
+    pending: listed.pending,
+    fault: listed.error ? reason(listed.error) : null,
+  }
 }
+
+/**
+ * Switches one tool on or off.
+ *
+ * Reads the LIVE set rather than trusting this view: another surface may have
+ * changed it since, and the whole set is what gets sent.
+ */
+export const useToggleTool = () =>
+  useSend(async (name: string) => {
+    const active = await ai().tools.activation()
+    const on = new Set(active?.enabled ?? [])
+    if (on.has(name)) on.delete(name)
+    else on.add(name)
+    await ai().tools.activate([...on])
+  }, [keys.servers, keys.skills])

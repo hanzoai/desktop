@@ -8,11 +8,15 @@ import {
   X,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
-import { mcpStore, useMcp } from './store'
+import { invalidate } from '~/data/query'
+import { keys } from '~/data/keys'
+import { mcpStore, useMcp, useToggleTool } from './store'
 import type { Connected } from './types'
 
 export const McpModal = () => {
   const { isOpen, servers, activeServerId } = useMcp()
+  // One write, with its own pending and its own refusal.
+  const flipping = useToggleTool()
 
   if (!isOpen) return null
 
@@ -202,7 +206,7 @@ export const McpModal = () => {
 
                   <button
                     type="button"
-                    onClick={() => mcpStore.refresh()}
+                    onClick={() => invalidate(keys.servers)}
                     className="tap"
                     style={{
                       display: 'inline-flex',
@@ -258,7 +262,7 @@ export const McpModal = () => {
                         </SizableText>
                         <button
                           type="button"
-                          onClick={() => void mcpStore.toggleTool(t.name)}
+                          onClick={() => void void flipping.run(t.name)}
                           className="tap"
                           style={{
                             alignSelf: 'flex-start',

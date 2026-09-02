@@ -11,15 +11,15 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 import { useSession } from '~/data/session'
-import { multiplayerStore, useMultiplayer } from './store'
+import { multiplayerStore, useInvite, useMultiplayer } from './store'
 
 export const InviteModal = ({ conversationId }: { conversationId?: string | null }) => {
   const { isInviteOpen, participants } = useMultiplayer()
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'editor' | 'viewer'>('editor')
   const [copied, setCopied] = useState(false)
-  const [sending, setSending] = useState(false)
-  const [trouble, setTrouble] = useState<string | null>(null)
+  // The write carries its own pending and its own refusal.
+  const inviting = useInvite()
   // The org an invitation joins somebody to. IAM calls it the owner, and the
   // session carries it on `role`.
   const { user } = useSession()
@@ -27,32 +27,30 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
 
   if (!isInviteOpen) return null
 
-  const inviteLink = `${typeof window !== 'undefined' ? window.location.origin : 'https://hanzo.chat'}/c/${conversationId || 'new'}?invite=inv_${conversationId || 'hanzo_team'}`
+  // The room's own address, and nothing appended to it.
+  //
+  // A `?invite=inv_<conversationId>` was spliced on here, which is a TOKEN this
+  // app minted for itself: nothing issued it, nothing validates it, and pasting
+  // one admitted nobody. An invitation's code is minted by
+  // POST /v1/iam/invitations and delivered to the address it was issued for —
+  // which is what the form below does.
+  const roomLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/c/${conversationId || 'new'}`
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(inviteLink)
+      await navigator.clipboard.writeText(roomLink)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // fallback
+      // A window with no clipboard leaves the link in the box to be selected.
     }
   }
 
   const handleInvite = async (e: FormEvent) => {
     e.preventDefault()
     const to = email.trim()
-    if (!to.includes('@') || !owner || sending) return
-    setSending(true)
-    setTrouble(null)
-    try {
-      await multiplayerStore.invite(owner, to)
-      setEmail('')
-    } catch (err) {
-      // An invitation nobody received must not read as one that was sent.
-      setTrouble(err instanceof Error ? err.message : 'the invitation was refused')
-    }
-    setSending(false)
+    if (!to.includes('@') || !owner) return
+    if (await inviting.run(to)) setEmail('')
   }
 
   return (
@@ -130,7 +128,7 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
         {/* Invite Link Row */}
         <YStack gap="$1.5">
           <SizableText size="$1" fontWeight="600" color="$ink">
-            Shareable Room Link
+            Room link
           </SizableText>
           <XStack
             alignItems="center"
@@ -145,7 +143,7 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
             <input
               type="text"
               readOnly
-              value={inviteLink}
+              value={roomLink}
               style={{
                 flex: 1,
                 background: 'transparent',
@@ -222,7 +220,7 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
               <button
                 type="submit"
                 className="tap"
-                disabled={sending || !owner}
+                disabled={inviting.pending || !owner}
                 style={{
                   padding: '7px 14px',
                   borderRadius: 6,
@@ -231,17 +229,17 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
                   color: '#000000',
                   fontSize: 12,
                   fontWeight: 600,
-                  cursor: sending || !owner ? 'default' : 'pointer',
-                  opacity: sending || !owner ? 0.5 : 1,
+                  cursor: inviting.pending || !owner ? 'default' : 'pointer',
+                  opacity: inviting.pending || !owner ? 0.5 : 1,
                 }}
               >
-                {sending ? 'Inviting…' : 'Invite'}
+                {inviting.pending ? 'Inviting…' : 'Invite'}
               </button>
             </XStack>
 
-            {trouble && (
+            {inviting.fault && (
               <SizableText size="$1" color="#f87171">
-                {trouble}
+                {inviting.fault}
               </SizableText>
             )}
           </YStack>

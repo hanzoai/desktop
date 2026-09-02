@@ -74,7 +74,7 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
         terminalStore.toggle()
       } else if (isCmd && (e.key === 'j' || e.key === 'J')) {
         e.preventDefault()
-        swarmStore.setSwarmMode(!swarmStore.get().swarmMode)
+        swarmStore.setSwarmMode(!swarmStore.isSwarming())
       } else if (isCmd && (e.key === 'm' || e.key === 'M')) {
         e.preventDefault()
         mcpStore.toggle()
@@ -285,7 +285,7 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
           terminalStore.toggle()
           break
         case 'swarm':
-          swarmStore.setSwarmMode(!swarmStore.get().swarmMode)
+          swarmStore.setSwarmMode(!swarmStore.isSwarming())
           break
         case 'meet':
           workspaceAppsStore.open('meet')

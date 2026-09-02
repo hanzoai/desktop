@@ -49,4 +49,44 @@ export const keys = {
   servers: ['mcp', 'servers'] as Key,
   status: ['mcp', 'status'] as Key,
 
+  /** What this deployment mounts, and what this org authored. */
+  plugins: ['plugins'] as Key,
+
+  /** The org's flows, and the runs they have had. Both move on a run. */
+  flows: ['flows'] as Key,
+  runs: ['flows', 'runs'] as Key,
+
+  /** The org's live agent sessions, and one session's transcript. */
+  sessions: ['sessions'] as Key,
+  session: (id: string) => ['sessions', 'one', id] as Key,
+
+  /** The org's agents. */
+  agents: ['agents'] as Key,
+
+  /** The orgs a caller may act in, and one org's projects. */
+  orgs: ['orgs'] as Key,
+  projects: (owner: string) => ['orgs', 'one', owner, 'projects'] as Key,
+
+  /** The rooms this org has. */
+  rooms: ['rooms'] as Key,
+
+  /**
+   * A board, narrowed to one repository or the org's whole board.
+   *
+   * The key carries the narrowing, so switching board is a different key rather
+   * than a re-read of the same one — which is what lets the previous board stay
+   * on screen while the next one arrives, and what makes going back free.
+   */
+  board: (key: string) => ['board', key] as Key,
+
+  /** The org's backlog across every project. */
+  issues: ['issues'] as Key,
+
+  /** Where a room's call happens, and the org's overlay network. */
+  call: ['call'] as Key,
+  network: ['network'] as Key,
+
+  /** What the estate remembers, and one search of the code index. */
+  memories: ['memories'] as Key,
+  symbols: (query: string) => ['symbols', query] as Key,
 } as const
