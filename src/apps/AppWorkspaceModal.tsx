@@ -9,12 +9,26 @@
 import { CheckSquare, ExternalLink, FileText, ListTodo, Plus, Shield, Video, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import { ago, useShown } from '~/show'
-import { useMoveIssue, useOpenIssue, useWorkspaceApps, workspaceAppsStore } from './store'
+import {
+  useBacklog,
+  useCall,
+  useMoveIssue,
+  useNotes,
+  useOpenIssue,
+  useOverlay,
+  useWorkspace,
+  workspaceAppsStore,
+} from './store'
 import type { WorkspaceAppId } from './types'
 
 export const AppWorkspaceModal = () => {
-  const { isOpen, activeApp, notes, activeNoteId, saved, todos, meeting, overlay, pending, fault } =
-    useWorkspaceApps()
+  // Four products, four hooks. What they share is the tab strip, which is a
+  // place — so only `useWorkspace` is about all of them.
+  const { isOpen, activeApp } = useWorkspace()
+  const { notes, activeNoteId, saved } = useNotes()
+  const { todos, pending, fault } = useBacklog()
+  const { meeting } = useCall()
+  const { overlay } = useOverlay()
   const [newTodoText, setNewTodoText] = useState('')
   // An issue belongs to a board, and there is no inbox to drop one into, so the
   // board is asked for rather than guessed at.

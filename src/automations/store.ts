@@ -21,9 +21,9 @@ import { atom, useAtom } from '~/data/store'
 import { keys } from '~/data/keys'
 import { client, ESTATE } from '~/data/origin'
 import { reason, useRead, useSend } from '~/data/query'
-import type { AutomationJob, AutomationRun, AutomationTrigger } from './types'
+import type { AutomationRun, AutomationTrigger, Flow, Version } from './types'
 
-export type { AutomationJob, AutomationRun }
+export type { AutomationRun, Flow, Version }
 
 /** How many flows to read, and therefore how many names to fetch. */
 const page = 50
@@ -61,20 +61,15 @@ export const open = atom(false)
 const triggerOf = (type?: string): AutomationTrigger =>
   type === 'PIECE_TRIGGER' ? 'piece' : 'empty'
 
-const readFlows = async (): Promise<AutomationJob[]> => {
+const readFlows = async (): Promise<Flow[]> => {
   const flows = await client(ESTATE).http.collection<WireFlow>('data', {
     path: '/v1/auto/flows',
     query: { limit: page },
   })
-  // Everything the LIST row carries, and nothing it does not. The name and the
-  // trigger arrive per row, through `useFlow`.
+  // Everything the LIST row carries, and nothing it does not.
   return flows.map((flow) => ({
     id: flow.id,
-    name: '',
     status: flow.status ?? '',
-    trigger: 'empty' as AutomationTrigger,
-    triggerName: '',
-    valid: false,
     publishedVersionId: flow.publishedVersionId ?? '',
     created: flow.created ?? 0,
     updated: flow.updated ?? 0,
@@ -106,18 +101,24 @@ export const automationsStore = {
 }
 
 /**
- * A row's own name and trigger.
+ * A flow's latest version — its name, its trigger, its verdict.
  *
- * Called from the row, so a flow nobody drew is a flow nobody fetched. A read
- * that fails leaves the row under its id rather than removing it.
+ * Called from the ROW, so a flow nobody drew is a flow nobody fetched.
+ *
+ * NULL UNTIL IT LANDS, and that is the point of the return type: a row that has
+ * not read yet and a row whose version has no trigger are different, and
+ * flattening them into a `Version` with empty fields is what let `valid: false`
+ * be asserted about a flow nobody had asked about.
  */
-export const useFlow = (id: string): Pick<AutomationJob, 'name' | 'trigger' | 'triggerName' | 'valid'> => {
+export const useVersion = (id: string): Version | null => {
   const full = useRead(keys.flow(id), () => readFlow(id), { fresh: 300_000 })
+  const version = full.data?.version
+  if (!version) return null
   return {
-    name: full.data?.version?.displayName || id,
-    trigger: triggerOf(full.data?.version?.trigger?.type),
-    triggerName: full.data?.version?.trigger?.displayName ?? '',
-    valid: full.data?.version?.valid ?? false,
+    name: version.displayName || id,
+    trigger: triggerOf(version.trigger?.type),
+    triggerName: version.trigger?.displayName ?? '',
+    valid: version.valid ?? false,
   }
 }
 

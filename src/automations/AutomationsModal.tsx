@@ -14,10 +14,10 @@ import {
   automationsStore,
   useArmFlow,
   useAutomations,
-  useFlow,
   useOpenFlow,
   useRunFlow,
-  type AutomationJob,
+  useVersion,
+  type Flow,
 } from './store'
 
 /**
@@ -35,13 +35,15 @@ const Row = ({
   onRun,
   onArm,
 }: {
-  job: AutomationJob
+  job: Flow
   lastRun: number
   working: boolean
   onRun: () => void
   onArm: (armed: boolean) => void
 }) => {
-  const { name, trigger, triggerName, valid } = useFlow(job.id)
+  // Null until the version lands. A row draws its id in the meantime rather
+  // than an empty name, and says nothing about a verdict it has not read.
+  const version = useVersion(job.id)
   const armed = job.status === 'ENABLED'
   return (
 
@@ -73,11 +75,11 @@ const Row = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: trigger === 'piece' ? '#34d399' : 'rgba(255,255,255,0.35)',
+                    color: version?.trigger === 'piece' ? '#34d399' : 'rgba(255,255,255,0.35)',
                     flexShrink: 0,
                   }}
                 >
-                  {trigger === 'piece' ? <Clock size={16} /> : <GitBranch size={16} />}
+                  {version?.trigger === 'piece' ? <Clock size={16} /> : <GitBranch size={16} />}
                 </div>
 
                 <div
@@ -85,7 +87,7 @@ const Row = ({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>
-                      {name}
+                      {version?.name ?? job.id}
                     </span>
                     <span
                       style={{
@@ -103,7 +105,7 @@ const Row = ({
                     </span>
                     {/* The builder's own verdict. An invalid flow is armed
                         and cannot run, which is worth seeing before a run. */}
-                    {!valid ? (
+                    {version && !version.valid ? (
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fbbf24' }}>
                         INVALID
                       </span>
@@ -117,7 +119,7 @@ const Row = ({
                       lineHeight: 1.3,
                     }}
                   >
-                    {triggerName || 'no trigger'}
+                    {version ? version.triggerName || 'no trigger' : '…'}
                   </span>
 
                   <div

@@ -186,26 +186,67 @@ export const workspaceAppsStore = {
   },
 }
 
-export const useWorkspaceApps = () => {
-  const isOpen = useAtom(open)
-  // Three independent questions, three keys — so one failing costs its own
-  // panel and nothing else.
-  const issues = useRead(keys.issues, readIssues, { enabled: isOpen })
-  const call = useRead(keys.call, readCall, { enabled: isOpen })
-  const overlay = useRead(keys.network, readOverlay, { enabled: isOpen })
+/**
+ * FOUR PRODUCTS, FOUR HOOKS. What they share is a tab strip, which is a PLACE.
+ *
+ * They were one hook returning seventeen fields: the notepad, the backlog, the
+ * call and the overlay network, braided because they are drawn in one modal.
+ * The cost was not only conceptual — a note being typed re-rendered on every
+ * network read, and a panel nobody had opened was read because a sibling was.
+ *
+ * Each panel now reads its own, so `enabled` can say the ONE thing that is
+ * true of it: the backlog is read when the backlog is showing.
+ */
 
+/** Which panel is showing, which is the only thing the four have in common. */
+export const useWorkspace = () => ({
+  isOpen: useAtom(open),
+  activeApp: useAtom(app),
+})
+
+/** The notepad. Local, so there is no pending and no fault — only whether it
+ *  is being kept. */
+export const useNotes = () => ({
+  notes: useAtom(notes),
+  activeNoteId: useAtom(note),
+  saved: useAtom(saved),
+})
+
+/** The org's backlog. */
+export const useBacklog = () => {
+  // Both atoms are read UNCONDITIONALLY: `a && useAtom(b)` skips the second
+  // hook when the first is false, which changes hook order between renders.
+  const isOpen = useAtom(open)
+  const which = useAtom(app)
+  const showing = isOpen && which === 'todo'
+  const issues = useRead(keys.issues, readIssues, { enabled: showing })
   return {
-    isOpen,
-    activeApp: useAtom(app),
-    notes: useAtom(notes),
-    activeNoteId: useAtom(note),
-    saved: useAtom(saved),
     todos: issues.data ?? [],
-    meeting: call.data ?? null,
-    overlay: overlay.data ?? null,
-    pending: issues.pending || call.pending || overlay.pending,
+    pending: issues.pending,
     fault: issues.error ? reason(issues.error) : null,
   }
+}
+
+/** Where a room's call happens. */
+export const useCall = () => {
+  // Both atoms are read UNCONDITIONALLY: `a && useAtom(b)` skips the second
+  // hook when the first is false, which changes hook order between renders.
+  const isOpen = useAtom(open)
+  const which = useAtom(app)
+  const showing = isOpen && which === 'meet'
+  const call = useRead(keys.call, readCall, { enabled: showing })
+  return { meeting: call.data ?? null, pending: call.pending }
+}
+
+/** The org's overlay on the Zero Trust fabric. */
+export const useOverlay = () => {
+  // Both atoms are read UNCONDITIONALLY: `a && useAtom(b)` skips the second
+  // hook when the first is false, which changes hook order between renders.
+  const isOpen = useAtom(open)
+  const which = useAtom(app)
+  const showing = isOpen && which === 'tunnel'
+  const overlay = useRead(keys.network, readOverlay, { enabled: showing })
+  return { overlay: overlay.data ?? null, pending: overlay.pending }
 }
 
 /**

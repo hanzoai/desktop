@@ -1,37 +1,48 @@
 /**
- * What an automation IS on this estate.
+ * A flow is TWO values, and neither claims the other's fields.
  *
- * `GET /v1/auto/flows` answers `Flow` — an id, a status, two clocks and the
- * version pinned for a run. The NAME is not on that row: it lives on the flow's
- * latest `FlowVersion`, which `GET /v1/auto/flows/{id}` carries as `version`.
- * The trigger lives there too.
+ * `GET /v1/auto/flows` answers a row: an id, a status, two clocks, the pinned
+ * version. `GET /v1/auto/flows/{id}` answers that flow's latest VERSION, which
+ * is where the display name, the trigger and the builder's verdict live. The
+ * list cannot know the second and the second is read per row.
  *
- * So there is no schedule string, no assigned agent, no runtime target and no
- * total-run count — every one of those was a literal here ("0 * * * * (Hourly)",
- * "@secops", "gvisor-enclave", 142). A cron expression is a property of an armed
- * POLLING trigger inside the step tree, not a column, and inventing one told an
- * operator their sweep runs on the hour when nothing runs at all.
+ * They were one interface, and the list filled the half it could not know with
+ * `''`, `'empty'` and `valid: false` — the last of which asserts "the builder
+ * rejected this flow" about every flow the org has. A type whose producer must
+ * lie to satisfy it is a type describing two things.
  */
 
 /** How a flow starts. The wire spells the type `PIECE_TRIGGER` or `EMPTY`. */
 export type AutomationTrigger = 'piece' | 'empty'
 
-export interface AutomationJob {
+/** What the LIST row carries, and nothing more. */
+export interface Flow {
   id: string
-  /** The latest version's display name; the id when the version is unread. */
-  name: string
   /** ENABLED or DISABLED, as the flow's own status column says. */
   status: string
-  trigger: AutomationTrigger
-  /** The trigger's own display name — what actually starts it. Empty if none. */
-  triggerName: string
-  /** True when the flow's latest version passes the builder's own validation. */
-  valid: boolean
   /** A run executes this version when pinned; empty means the latest runs. */
   publishedVersionId: string
   /** Unix milliseconds, as the wire sends them. */
   created: number
   updated: number
+}
+
+/**
+ * What the flow's latest VERSION carries.
+ *
+ * Absent until that read lands, which is why it is handed about as
+ * `Version | null` rather than as a `Version` with empty fields: "not read yet"
+ * and "read, and it has no trigger" are different answers and a row draws them
+ * differently.
+ */
+export interface Version {
+  /** The display name. This is the only place a flow has one. */
+  name: string
+  trigger: AutomationTrigger
+  /** The trigger's own display name — what actually starts it. Empty if none. */
+  triggerName: string
+  /** The builder's own verdict on the latest version. */
+  valid: boolean
 }
 
 /** One row of `GET /v1/auto/runs`. */
