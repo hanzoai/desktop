@@ -1,36 +1,26 @@
 /**
- * Swarm Bar — multi-agent selector and orchestration status.
+ * Which of the org's agents the composer is addressing.
+ *
+ * The tiles are the org's own agents. They used to be five literals with a
+ * hand-picked icon and badge colour each; an agent carries an avatar or one
+ * emoji, and neither means it is drawn as its initial — which is what a row
+ * with neither gets here.
  */
-import {
-  Bot,
-  Brain,
-  Code,
-  Search,
-  Shield,
-  Zap,
-} from '@hanzogui/lucide-icons-2'
+import { Bot } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack } from '@hanzo/ui'
-import { AGENT_ROSTER, type AgentDefinition } from './types'
+import type { AgentDefinition } from './types'
 import { swarmStore, useSwarm } from './store'
 
-const iconFor = (iconName: string) => {
-  switch (iconName) {
-    case 'brain':
-      return Brain
-    case 'code':
-      return Code
-    case 'shield':
-      return Shield
-    case 'search':
-      return Search
-    case 'zap':
-    default:
-      return Zap
-  }
+/** A stable tint per agent, derived from its id so it is not a claim. */
+const tint = (id: string): string => {
+  const hues = ['#34d399', '#60a5fa', '#f472b6', '#a78bfa', '#fbbf24', '#f87171']
+  let sum = 0
+  for (let i = 0; i < id.length; i += 1) sum = (sum + id.charCodeAt(i)) % 997
+  return hues[sum % hues.length]
 }
 
 export const SwarmBar = () => {
-  const { activeAgentIds, swarmMode, isExecuting, activePhase } = useSwarm()
+  const { agents, activeAgentIds, swarmMode, isExecuting, activePhase } = useSwarm()
 
   return (
     <XStack
@@ -80,10 +70,10 @@ export const SwarmBar = () => {
           <span>{swarmMode ? 'Swarm Active' : 'Swarm Mode'}</span>
         </button>
 
-        {/* Individual Agent Badges */}
-        {AGENT_ROSTER.map((agent: AgentDefinition) => {
+        {/* One tile per agent the org actually defines. */}
+        {agents.map((agent: AgentDefinition) => {
           const active = activeAgentIds.includes(agent.id)
-          const Icon = iconFor(agent.iconName)
+          const colour = tint(agent.id)
 
           return (
             <button
@@ -91,7 +81,7 @@ export const SwarmBar = () => {
               type="button"
               onClick={() => swarmStore.toggleAgent(agent.id)}
               className="tap"
-              title={`${agent.name}: ${agent.role}`}
+              title={agent.description ? `${agent.name}: ${agent.description}` : agent.name}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -100,17 +90,19 @@ export const SwarmBar = () => {
                 borderRadius: 5,
                 fontSize: 10.5,
                 fontWeight: 600,
-                background: active ? `${agent.badgeColor}22` : 'transparent',
-                border: active
-                  ? `1px solid ${agent.badgeColor}55`
-                  : '1px solid rgba(255, 255, 255, 0.06)',
-                color: active ? agent.badgeColor : 'rgba(255, 255, 255, 0.4)',
+                background: active ? `${colour}22` : 'transparent',
+                border: active ? `1px solid ${colour}55` : '1px solid rgba(255, 255, 255, 0.06)',
+                color: active ? colour : 'rgba(255, 255, 255, 0.4)',
                 cursor: 'pointer',
                 transition: 'all 0.12s ease',
               }}
             >
-              <Icon size={11} />
-              <span>{agent.handle}</span>
+              {agent.emoji ? (
+                <span style={{ fontSize: 11 }}>{agent.emoji}</span>
+              ) : (
+                <Bot size={11} />
+              )}
+              <span>@{agent.name}</span>
             </button>
           )
         })}

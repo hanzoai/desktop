@@ -1,72 +1,36 @@
 /**
- * Multi-Agent Swarm definitions and roles.
+ * The org's agents, as `/v1/agents` has them.
+ *
+ * This file used to BE the roster: five personas — @planner, @dev, @secops,
+ * @researcher, @executor — each with a hand-written system prompt, a capability
+ * list, a badge colour and an avatar at `cdn.hanzo.ai/avatars/<id>.png`. That
+ * host answers 525 to every path, its own bogus-path control included, so the
+ * pictures had never loaded either.
+ *
+ * An agent is a model, a description and a set of TOOL NAMES, and the tool list
+ * IS the authority on what it may call — which is why `capabilities`, a prose
+ * list beside it that nothing enforced, is gone rather than renamed.
  */
 export interface AgentDefinition {
+  /** "agent_" + 32 hex. */
   id: string
-  handle: string
+  /** The org-unique handle. `@name` is a rendering, not a second field. */
   name: string
-  role: string
+  description: string
+  /** Always our own name for it, never an upstream's. */
+  model: string
+  /** What this agent may call. The list is the authority. */
+  tools: string[]
+  /** one-shot, or the long-running mode. */
+  executionMode: string
+  /** The 5-field cron a long-running agent fires on, empty when unscheduled. */
+  schedule: string
+  /** Readiness. Today every row reads "ready". */
+  status: string
+  /** How many executions the org has recorded, counted at read time. */
+  runs: number
+  /** An image, or the one glyph somebody picked instead. At most one is set. */
   avatar: string
-  badgeColor: string
-  systemPrompt: string
-  capabilities: readonly string[]
-  iconName: 'brain' | 'code' | 'shield' | 'search' | 'zap'
+  emoji: string
+  updatedAt: string
 }
-
-export const AGENT_ROSTER: readonly AgentDefinition[] = [
-  {
-    id: 'planner',
-    handle: '@planner',
-    name: 'Architect & Planner',
-    role: 'Decomposes complex requests into DAG execution phases.',
-    avatar: 'https://cdn.hanzo.ai/avatars/planner.png',
-    badgeColor: '#818cf8',
-    systemPrompt: 'You are Hanzo Planner, an elite systems architect and project planner.',
-    capabilities: ['Architecture DAG', 'Milestone Planning', 'Risk Analysis'],
-    iconName: 'brain',
-  },
-  {
-    id: 'dev',
-    handle: '@dev',
-    name: 'Full-Stack SWE',
-    role: 'Synthesizes clean Next.js 16, React 19, and ZAP microservices.',
-    avatar: 'https://cdn.hanzo.ai/avatars/dev.png',
-    badgeColor: '#34d399',
-    systemPrompt: 'You are Hanzo Dev, a staff software engineer specializing in TypeScript, Next.js 16, and ZAP protocol.',
-    capabilities: ['Code Synthesis', 'Refactoring', 'Bug Fixing', 'Test Generation'],
-    iconName: 'code',
-  },
-  {
-    id: 'secops',
-    handle: '@secops',
-    name: 'SecOps & Guardrails',
-    role: 'Audits KMS enclaves, gVisor microVMs, and zero-trust IAM policies.',
-    avatar: 'https://cdn.hanzo.ai/avatars/secops.png',
-    badgeColor: '#f87171',
-    systemPrompt: 'You are Hanzo SecOps, a zero-trust cloud security and cryptographic enclave specialist.',
-    capabilities: ['KMS Envelope Audit', 'gVisor Isolation', 'IAM Policy Verification', 'Vulnerability Scan'],
-    iconName: 'shield',
-  },
-  {
-    id: 'researcher',
-    handle: '@researcher',
-    name: 'Deep Research & RAG',
-    role: 'Scrapes live docs, reads GitHub repositories, and extracts verified citations.',
-    avatar: 'https://cdn.hanzo.ai/avatars/researcher.png',
-    badgeColor: '#fbbf24',
-    systemPrompt: 'You are Hanzo Researcher, a literature and deep technical documentation researcher.',
-    capabilities: ['Web Search', 'Paper Extraction', 'Citation Verification', 'GitHub Search'],
-    iconName: 'search',
-  },
-  {
-    id: 'executor',
-    handle: '@executor',
-    name: 'Sandbox & Infra Runner',
-    role: 'Runs builds, executes tests, and manages local k3s containers and Cloud MicroVMs.',
-    avatar: 'https://cdn.hanzo.ai/avatars/executor.png',
-    badgeColor: '#60a5fa',
-    systemPrompt: 'You are Hanzo Executor, an autonomous DevOps and cloud container orchestrator.',
-    capabilities: ['k3s Container Execution', 'eBPF Tracing', 'Cloud MicroVM Deploy', 'Playwright E2E'],
-    iconName: 'zap',
-  },
-]

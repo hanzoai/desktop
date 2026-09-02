@@ -1,68 +1,77 @@
 /**
- * Custom Agent Studio & Agent Builder Modal.
+ * Defines an agent in the org.
+ *
+ * This form used to build an object and hand it to an optional `onSave` that
+ * the one place mounting it never passed — so every agent anyone defined here
+ * was discarded silently, and the five tool bindings it offered
+ * ("PostgreSQL & pgvector", "Brave Web Search") were ids nothing serves.
+ *
+ * It calls `agents.create` now. `name` and `model` are what the wire requires,
+ * so the model is CHOSEN rather than defaulted: picking one here on the
+ * caller's behalf would define an agent against a model the org may not serve.
  */
-import {
-  Bot,
-  Database,
-  Github,
-  Globe,
-  Save,
-  Terminal,
-  X,
-  Zap,
-} from '@hanzogui/lucide-icons-2'
+import { Bot, Save, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import type { AgentDefinition } from './types'
+
+import { useSkills } from '~/compose/skills'
+import { keys } from '~/data/keys'
+import { client, ESTATE } from '~/data/origin'
+import { useRead } from '~/data/query'
+import { swarmStore } from './store'
 
 export interface AgentBuilderProps {
   isOpen: boolean
   onClose: () => void
-  onSave?: (agent: AgentDefinition) => void
 }
 
-export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps) => {
-  const [handle, setHandle] = useState('@custom-agent')
-  const [name, setName] = useState('Custom Specialist')
-  const [role, setRole] = useState('Domain-specific agent with custom skills and prompt.')
-  const [systemPrompt, setSystemPrompt] = useState(
-    'You are a specialized Hanzo AI assistant. Focus on concise, correct code and verify with tests.',
-  )
-  const [selectedTools, setSelectedTools] = useState<string[]>([
-    'filesystem',
-    'web-search',
-    'terminal',
-  ])
+export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
+  const [handle, setHandle] = useState('')
+  const [role, setRole] = useState('')
+  const [systemPrompt, setSystemPrompt] = useState('')
+  const [model, setModel] = useState('')
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [fault, setFault] = useState<string | null>(null)
+
+  // The tools an agent may be bound to are the ones an origin can dispatch —
+  // the same read the composer's `/` uses, so the two cannot offer different
+  // sets of one thing.
+  const { data: tools } = useSkills()
+  const models = useRead(keys.models, () => client(ESTATE).models.list(), { fresh: 300_000 })
 
   if (!isOpen) return null
 
   const toggleTool = (toolId: string) => {
-    if (selectedTools.includes(toolId)) {
-      setSelectedTools(selectedTools.filter((t) => t !== toolId))
-    } else {
-      setSelectedTools([...selectedTools, toolId])
-    }
+    setSelectedTools((held) =>
+      held.includes(toolId) ? held.filter((t) => t !== toolId) : [...held, toolId],
+    )
   }
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    const cleanHandle = handle.startsWith('@') ? handle : `@${handle}`
-    const id = cleanHandle.replace('@', '').toLowerCase().replace(/[^a-z0-9_-]/g, '-')
-
-    const newAgent: AgentDefinition = {
-      id: id || `agent-${Date.now()}`,
-      handle: cleanHandle,
-      name,
-      role,
-      avatar: 'https://cdn.hanzo.ai/avatars/custom.png',
-      badgeColor: '#a78bfa',
-      systemPrompt,
-      capabilities: selectedTools,
-      iconName: 'code',
+    // The handle is the org-unique name; the leading @ is a rendering.
+    const name = handle.trim().replace(/^@/, '')
+    if (!name || !model || saving) return
+    setSaving(true)
+    setFault(null)
+    try {
+      await client(ESTATE).agents.create({
+        name,
+        model,
+        description: role.trim() || undefined,
+        instructions: systemPrompt.trim() || undefined,
+        tools: selectedTools.length > 0 ? selectedTools : undefined,
+      })
+      // The roster is read from one place, so refreshing it is what makes the
+      // new agent appear in the swarm bar and the composer alike.
+      swarmStore.refresh()
+      onClose()
+    } catch (err) {
+      setFault(err instanceof Error ? err.message : 'the call failed')
+    } finally {
+      setSaving(false)
     }
-
-    onSave?.(newAgent)
-    onClose()
   }
 
   return (
@@ -166,28 +175,9 @@ export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps
               />
             </YStack>
 
-            <YStack flex={1.5} gap="$1.5">
-              <SizableText size="$1" fontWeight="600" color="$ink">
-                Display Name
-              </SizableText>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Systems Architect"
-                required
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  borderRadius: 6,
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  color: '#ffffff',
-                  fontSize: 12.5,
-                  outline: 'none',
-                }}
-              />
-            </YStack>
+            {/* There is ONE name. An agent's `name` is its org-unique handle,
+                and the `@` a screen draws is a rendering — a second "display
+                name" box beside it was two fields for one value. */}
           </XStack>
 
           {/* Role / Description */}
@@ -241,24 +231,47 @@ export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps
           {/* Tool Bindings */}
           <YStack gap="$2">
             <SizableText size="$1" fontWeight="600" color="$ink">
-              Bind MCP Tools & Capabilities
+              Model
+            </SizableText>
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              style={{
+                padding: '7px 10px',
+                borderRadius: 6,
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(255, 255, 255, 0.04)',
+                color: '#ffffff',
+                fontSize: 12,
+                outline: 'none',
+              }}
+            >
+              <option value="">Pick a model…</option>
+              {(models.data ?? []).map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.id}
+                </option>
+              ))}
+            </select>
+
+            <SizableText size="$1" fontWeight="600" color="$ink">
+              Tools it may call
             </SizableText>
             <XStack gap="$2" flexWrap="wrap">
-              {[
-                { id: 'filesystem', label: 'Local Filesystem', icon: Terminal },
-                { id: 'github', label: 'GitHub & Git', icon: Github },
-                { id: 'postgres', label: 'PostgreSQL & pgvector', icon: Database },
-                { id: 'web-search', label: 'Brave Web Search', icon: Globe },
-                { id: 'k8s', label: 'Kubernetes Sandbox', icon: Zap },
-              ].map((t) => {
-                const active = selectedTools.includes(t.id)
-                const Icon = t.icon
+              {(tools ?? []).length === 0 ? (
+                <SizableText size="$1" color="rgba(255,255,255,0.4)">
+                  No origin offers a dispatchable tool right now.
+                </SizableText>
+              ) : null}
+              {(tools ?? []).map((t) => {
+                const active = selectedTools.includes(t.name)
                 return (
                   <button
-                    key={t.id}
+                    key={t.name}
                     type="button"
-                    onClick={() => toggleTool(t.id)}
+                    onClick={() => toggleTool(t.name)}
                     className="tap"
+                    title={t.description}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -275,12 +288,16 @@ export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps
                       cursor: 'pointer',
                     }}
                   >
-                    <Icon size={12} />
-                    <span>{t.label}</span>
+                    <span>{t.name}</span>
                   </button>
                 )
               })}
             </XStack>
+            {fault ? (
+              <SizableText size="$1" color="#f87171">
+                {fault}
+              </SizableText>
+            ) : null}
           </YStack>
 
           {/* Actions Footer */}
@@ -303,13 +320,14 @@ export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps
             <button
               type="submit"
               className="tap"
+              disabled={saving || !handle.trim() || !model}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
                 padding: '7px 16px',
                 borderRadius: 6,
-                background: '#ffffff',
+                background: saving || !handle.trim() || !model ? 'rgba(255,255,255,0.25)' : '#ffffff',
                 border: 'none',
                 color: '#000000',
                 fontSize: 12,
@@ -318,7 +336,7 @@ export const AgentBuilderModal = ({ isOpen, onClose, onSave }: AgentBuilderProps
               }}
             >
               <Save size={13} />
-              <span>Deploy Agent</span>
+              <span>{saving ? 'Defining…' : 'Define agent'}</span>
             </button>
           </XStack>
         </form>

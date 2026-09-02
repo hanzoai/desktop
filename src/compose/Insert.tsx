@@ -12,7 +12,7 @@
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { CSSProperties } from 'react'
 
-import { AGENT_ROSTER } from '~/agents/types'
+import { useSwarm } from '~/agents/store'
 import { useSkills } from '~/compose/skills'
 
 /** Which half of the list a trigger opens at. */
@@ -63,8 +63,12 @@ const hit = (query: string, ...fields: string[]) => {
 
 export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
   const { data: served, pending } = useSkills()
+  // The org's own agents, from the same store the swarm bar reads — never a
+  // second roster, which is how two lists of one thing come to disagree.
+  const { agents: roster } = useSwarm()
 
-  const agents = lane === 'skill' ? [] : AGENT_ROSTER.filter((a) => hit(query, a.handle, a.name, a.role))
+  const agents =
+    lane === 'skill' ? [] : roster.filter((a) => hit(query, `@${a.name}`, a.name, a.description))
 
   const skills = (served ?? []).filter((t) => hit(query, t.name, t.description ?? '', t.source ?? ''))
 
@@ -92,13 +96,13 @@ export const Insert = ({ lane, query, onPick, onClose }: InsertProps) => {
             Agents
           </SizableText>
           {agents.map((a) => (
-            <button key={a.id} type="button" style={ROW} onClick={() => onPick(`${a.handle} `)}>
+            <button key={a.id} type="button" style={ROW} onClick={() => onPick(`@${a.name} `)}>
               <XStack gap="$2" alignItems="baseline" flex={1}>
                 <SizableText size="$2" color="#ffffff">
-                  {a.handle}
+                  @{a.name}
                 </SizableText>
                 <SizableText size="$1" color="rgba(255,255,255,0.45)" numberOfLines={1}>
-                  {a.name}
+                  {a.description || a.model}
                 </SizableText>
               </XStack>
             </button>
