@@ -1,152 +1,211 @@
 /**
- * Scheduled Tasks and Automations Store.
+ * The org's automations, from `/v1/auto`.
+ *
+ * This held four literals — an hourly KMS sweep, a nightly benchmark, a deploy
+ * hook — each with an invented schedule, an invented agent and an invented run
+ * count. `runNow` set the status to 'running' and used a two-second timer to set
+ * it back, so a job that had never existed appeared to succeed.
+ *
+ * The writes here are real and the routes answer: `POST /flows/{id}/run` starts
+ * a durable run, `/enable` arms the trigger, `/disable` disarms it. Each is
+ * followed by a re-read rather than a local edit, because what the server did
+ * with the request is the only thing worth showing.
+ *
+ * THE NAME COSTS A SECOND READ. A flow's list row carries no display name — it
+ * lives on the flow's latest version — so the list is enriched by fetching each
+ * flow's populated form. That read is bounded by the page and fails soft: a
+ * flow whose version cannot be read is shown under its id, which is the honest
+ * degradation, rather than dropped from a list of what is armed.
  */
 import { useEffect, useState } from 'react'
-import type { AutomationJob } from './types'
+
+import { client, ESTATE } from '~/data/origin'
+import type { AutomationJob, AutomationRun, AutomationTrigger } from './types'
+
+export type { AutomationJob, AutomationRun }
+
+/** How many flows to read, and therefore how many names to fetch. */
+const page = 50
+
+interface WireFlow {
+  id: string
+  status?: string
+  publishedVersionId?: string
+  created?: number
+  updated?: number
+}
+
+interface WireVersion {
+  displayName?: string
+  valid?: boolean
+  trigger?: { displayName?: string; type?: string }
+}
+
+interface WirePopulated extends WireFlow {
+  version?: WireVersion
+}
+
+interface WireRun {
+  id: string
+  flowId?: string
+  status?: string
+  startTime?: number
+  finishTime?: number
+}
 
 export interface AutomationsState {
   isOpen: boolean
   jobs: AutomationJob[]
+  runs: AutomationRun[]
+  pending: boolean
+  fault: string | null
+  /** The flow a write is in flight for, so one card can show it and not the rail. */
+  busy: string | null
 }
-
-const DEFAULT_JOBS: AutomationJob[] = [
-  {
-    id: 'job-secops-audit',
-    name: 'Hourly KMS & SecOps Vulnerability Sweep',
-    description: 'Inspect dependencies, hardware enclave key expiration, and gVisor isolation barriers.',
-    trigger: 'cron',
-    schedule: '0 * * * * (Hourly)',
-    assignedAgent: '@secops',
-    runtimeTarget: 'gvisor-enclave',
-    status: 'active',
-    lastRun: '18m ago',
-    nextRun: 'in 42m',
-    runCount: 142,
-  },
-  {
-    id: 'job-model-benchmark',
-    name: 'Daily DeepSeek & ZAP Latency Benchmark',
-    description: 'Execute automated p99 token streaming speed benchmarks and vector retrieval scoring.',
-    trigger: 'cron',
-    schedule: '0 0 * * * (Daily @ 00:00 UTC)',
-    assignedAgent: '@researcher',
-    runtimeTarget: 'hanzo-cloud',
-    status: 'active',
-    lastRun: '8h ago',
-    nextRun: 'in 16h',
-    runCount: 28,
-  },
-  {
-    id: 'job-git-deploy',
-    name: 'On Git Push -> Auto-Deploy Local k3s Pod',
-    description: 'Listen on local git hooks, recompile Next.js 16 components, and deploy Traefik ingress.',
-    trigger: 'git_push',
-    schedule: 'On push to main',
-    assignedAgent: '@dev',
-    runtimeTarget: 'local-k3s',
-    status: 'active',
-    lastRun: '2m ago',
-    nextRun: 'Waiting for event',
-    runCount: 89,
-  },
-  {
-    id: 'job-vector-reindex',
-    name: 'Continuous AST Vector Memory Sync',
-    description: 'Sync modified TypeScript AST symbols into PostgreSQL pgvector table on file change.',
-    trigger: 'agent_event',
-    schedule: 'Every 15 minutes',
-    assignedAgent: '@planner',
-    runtimeTarget: 'local-k3s',
-    status: 'active',
-    lastRun: '6m ago',
-    nextRun: 'in 9m',
-    runCount: 310,
-  },
-]
 
 let state: AutomationsState = {
   isOpen: false,
-  jobs: DEFAULT_JOBS,
+  jobs: [],
+  runs: [],
+  pending: false,
+  fault: null,
+  busy: null,
 }
 
-const listeners = new Set<(state: AutomationsState) => void>()
-const notify = () => listeners.forEach((fn) => fn(state))
+const listeners = new Set<(s: AutomationsState) => void>()
+
+const put = (next: Partial<AutomationsState>) => {
+  state = { ...state, ...next }
+  listeners.forEach((fn) => fn(state))
+}
+
+const because = (e: unknown): string =>
+  e instanceof Error ? e.message : typeof e === 'string' ? e : 'the call failed'
+
+/** The wire spells a trigger `PIECE_TRIGGER` or `EMPTY`; anything else is empty. */
+const triggerOf = (type?: string): AutomationTrigger =>
+  type === 'PIECE_TRIGGER' ? 'piece' : 'empty'
+
+const fold = (flow: WireFlow, full: WirePopulated | null): AutomationJob => ({
+  id: flow.id,
+  name: full?.version?.displayName || flow.id,
+  status: flow.status ?? '',
+  trigger: triggerOf(full?.version?.trigger?.type),
+  triggerName: full?.version?.trigger?.displayName ?? '',
+  valid: full?.version?.valid ?? false,
+  publishedVersionId: flow.publishedVersionId ?? '',
+  created: flow.created ?? 0,
+  updated: flow.updated ?? 0,
+})
+
+const read = async () => {
+  put({ pending: true, fault: null })
+  const api = client(ESTATE).http
+  try {
+    const flows = await api.collection<WireFlow>('data', {
+      path: '/v1/auto/flows',
+      query: { limit: page },
+    })
+
+    // The names, one read each. A failure costs that flow its name and nothing
+    // else — never its row, and never the whole list.
+    const named = await Promise.all(
+      flows.map(async (flow) => {
+        const full = await api
+          .json<WirePopulated>({ method: 'GET', path: `/v1/auto/flows/${flow.id}` })
+          .catch(() => null)
+        return fold(flow, full)
+      }),
+    )
+
+    // The history is a separate question, so it does not fail the list.
+    const runs = await api
+      .collection<WireRun>('data', { path: '/v1/auto/runs', query: { limit: page } })
+      .catch(() => [])
+
+    put({
+      jobs: named,
+      runs: runs.map((one) => ({
+        id: one.id,
+        flowId: one.flowId ?? '',
+        status: one.status ?? '',
+        startTime: one.startTime ?? 0,
+        finishTime: one.finishTime ?? 0,
+      })),
+      pending: false,
+    })
+  } catch (e) {
+    put({ pending: false, fault: because(e) })
+  }
+}
+
+/** One write, then a re-read. What the server did is the only thing to show. */
+const act = async (id: string, leaf: string) => {
+  put({ busy: id, fault: null })
+  try {
+    await client(ESTATE).http.json({ method: 'POST', path: `/v1/auto/flows/${id}/${leaf}` })
+    put({ busy: null })
+    await read()
+  } catch (e) {
+    put({ busy: null, fault: because(e) })
+  }
+}
 
 export const automationsStore = {
-  get: () => state,
+  get: (): AutomationsState => state,
   open: () => {
-    state = { ...state, isOpen: true }
-    notify()
+    put({ isOpen: true })
+    void read()
   },
-  close: () => {
-    state = { ...state, isOpen: false }
-    notify()
-  },
-  toggle: () => {
-    state = { ...state, isOpen: !state.isOpen }
-    notify()
-  },
-  toggleStatus: (jobId: string) => {
-    state = {
-      ...state,
-      jobs: state.jobs.map((j) =>
-        j.id === jobId
-          ? { ...j, status: j.status === 'active' ? 'paused' : 'active' }
-          : j,
-      ),
-    }
-    notify()
-  },
-  runNow: (jobId: string) => {
-    state = {
-      ...state,
-      jobs: state.jobs.map((j) =>
-        j.id === jobId
-          ? { ...j, status: 'running', lastRun: 'Just now', runCount: j.runCount + 1 }
-          : j,
-      ),
-    }
-    notify()
+  close: () => put({ isOpen: false }),
+  toggle: () => (state.isOpen ? put({ isOpen: false }) : automationsStore.open()),
+  refresh: () => void read(),
 
-    setTimeout(() => {
-      state = {
-        ...state,
-        jobs: state.jobs.map((j) =>
-          j.id === jobId ? { ...j, status: 'active' } : j,
-        ),
-      }
-      notify()
-    }, 2000)
+  /**
+   * Starts one durable run now.
+   *
+   * The run is bounded by the org's per-minute start budget and its in-flight
+   * ceiling; over either, the server starts nothing and burns no run id, and
+   * says so — which is why the refusal is raised rather than swallowed.
+   */
+  runNow: (id: string) => void act(id, 'run'),
+
+  /** Arms a flow's trigger, or disarms it. The status the list shows decides. */
+  toggleStatus: (id: string) => {
+    const job = state.jobs.find((one) => one.id === id)
+    if (!job) return
+    void act(id, job.status === 'ENABLED' ? 'disable' : 'enable')
   },
-  createJob: (name: string, description: string, agent: string = '@dev') => {
-    const newJob: AutomationJob = {
-      id: `job_${Date.now()}`,
-      name,
-      description,
-      trigger: 'cron',
-      schedule: '0 * * * * (Hourly)',
-      assignedAgent: agent,
-      runtimeTarget: 'local-k3s',
-      status: 'active',
-      lastRun: 'Never',
-      nextRun: 'in 60m',
-      runCount: 0,
+
+  /**
+   * Opens an empty flow under a name.
+   *
+   * `displayName` names the flow's initial DRAFT version, which is where a name
+   * lives. A flow may be created with no trigger and edited later, so nothing
+   * else is sent — a trigger invented here would arm something nobody asked for.
+   */
+  create: async (name: string) => {
+    put({ fault: null })
+    try {
+      await client(ESTATE).http.json({
+        method: 'POST',
+        path: '/v1/auto/flows',
+        body: { displayName: name },
+      })
+      await read()
+    } catch (e) {
+      put({ fault: because(e) })
     }
-    state = {
-      ...state,
-      jobs: [newJob, ...state.jobs],
-    }
-    notify()
   },
 }
 
-export const useAutomations = () => {
-  const [val, setVal] = useState<AutomationsState>(state)
+export const useAutomations = (): AutomationsState => {
+  const [current, setCurrent] = useState<AutomationsState>(state)
   useEffect(() => {
-    listeners.add(setVal)
+    listeners.add(setCurrent)
     return () => {
-      listeners.delete(setVal)
+      listeners.delete(setCurrent)
     }
   }, [])
-  return val
+  return current
 }

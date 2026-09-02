@@ -1,31 +1,48 @@
 /**
- * Scheduled Tasks & Automations Modal.
- * Visual dashboard for background cron jobs, event-driven triggers, and agent task dispatches.
+ * The org's automations.
+ *
+ * A card shows what the flow row and its latest version actually carry — the
+ * status, the trigger that starts it, whether the builder considers it valid,
+ * and when it last changed. The schedule, the agent and the run count it used
+ * to show were literals; a cron line belongs to an armed polling trigger inside
+ * the step tree, and this surface does not read the tree.
  */
-import {
-  Clock,
-  GitBranch,
-  Play,
-  Plus,
-  X,
-} from '@hanzogui/lucide-icons-2'
+import { Clock, GitBranch, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import { automationsStore, useAutomations } from './store'
 
 export const AutomationsModal = () => {
-  const { isOpen, jobs } = useAutomations()
+  const { isOpen, jobs, runs, pending, fault, busy } = useAutomations()
   const [newJobName, setNewJobName] = useState('')
-  const [newJobDesc, setNewJobDesc] = useState('')
 
   if (!isOpen) return null
 
+  // A flow is opened by NAME and nothing else. `createFlowReq` carries a
+  // displayName, an externalId, a folderId and a trigger — no description, so
+  // the description box that stood here wrote to nothing; and a trigger
+  // invented here would arm something nobody asked for. A new flow starts
+  // empty and is armed in the builder.
   const handleCreateJob = (e: React.FormEvent) => {
     e.preventDefault()
-    if (newJobName.trim()) {
-      automationsStore.createJob(newJobName.trim(), newJobDesc.trim() || 'Automated background task')
-      setNewJobName('')
-      setNewJobDesc('')
-    }
+    if (!newJobName.trim()) return
+    void automationsStore.create(newJobName.trim())
+    setNewJobName('')
+  }
+
+  /** When each flow last ran, from the run history rather than from a guess. */
+  const lastRun = new Map<string, number>()
+  for (const run of runs) {
+    const at = run.finishTime || run.startTime
+    if (at && at > (lastRun.get(run.flowId) ?? 0)) lastRun.set(run.flowId, at)
+  }
+
+  const ago = (ms: number): string => {
+    if (!ms) return 'never'
+    const mins = Math.floor((Date.now() - ms) / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`
   }
 
   return (
@@ -77,7 +94,7 @@ export const AutomationsModal = () => {
                 Scheduled Tasks & Automations
               </div>
               <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                Recurring cron jobs, event-driven webhook triggers, and autonomous agent routines.
+                Flows this org owns, and what each one is armed to start on.
               </div>
             </div>
           </div>
@@ -103,7 +120,7 @@ export const AutomationsModal = () => {
           <form onSubmit={handleCreateJob} style={{ display: 'flex', gap: 8 }}>
             <input
               type="text"
-              placeholder="New scheduled automation (e.g. Daily AST Vector Sync)..."
+              placeholder="Name a new automation…"
               value={newJobName}
               onChange={(e) => setNewJobName(e.target.value)}
               style={{
@@ -135,15 +152,26 @@ export const AutomationsModal = () => {
               }}
             >
               <Plus size={14} />
-              <span>Schedule Job</span>
+              <span>New flow</span>
             </button>
           </form>
 
           {/* Jobs List */}
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {fault ? (
+              <div style={{ fontSize: 12, color: '#f87171' }}>{fault}</div>
+            ) : null}
+            {!fault && pending && jobs.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>Reading…</div>
+            ) : null}
+            {!fault && !pending && jobs.length === 0 ? (
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                No automations yet.
+              </div>
+            ) : null}
             {jobs.map((job) => {
-              const isActive = job.status === 'active'
-              const isRunning = job.status === 'running'
+              const armed = job.status === 'ENABLED'
+              const working = busy === job.id
               return (
                 <div
                   key={job.id}
@@ -151,7 +179,7 @@ export const AutomationsModal = () => {
                     padding: 14,
                     borderRadius: 12,
                     background: 'rgba(255, 255, 255, 0.03)',
-                    border: isRunning
+                    border: working
                       ? '1px solid rgba(52, 211, 153, 0.4)'
                       : '1px solid rgba(255, 255, 255, 0.08)',
                     display: 'flex',
@@ -160,7 +188,9 @@ export const AutomationsModal = () => {
                     gap: 12,
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}
+                  >
                     <div
                       style={{
                         width: 36,
@@ -171,14 +201,16 @@ export const AutomationsModal = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: job.trigger === 'cron' ? '#34d399' : '#60a5fa',
+                        color: job.trigger === 'piece' ? '#34d399' : 'rgba(255,255,255,0.35)',
                         flexShrink: 0,
                       }}
                     >
-                      {job.trigger === 'cron' ? <Clock size={16} /> : <GitBranch size={16} />}
+                      {job.trigger === 'piece' ? <Clock size={16} /> : <GitBranch size={16} />}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                    <div
+                      style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>
                           {job.name}
@@ -189,36 +221,61 @@ export const AutomationsModal = () => {
                             fontWeight: 700,
                             padding: '1px 6px',
                             borderRadius: 4,
-                            background: isRunning
-                              ? 'rgba(52, 211, 153, 0.2)'
-                              : isActive
+                            background: armed
                               ? 'rgba(96, 165, 250, 0.15)'
                               : 'rgba(255, 255, 255, 0.08)',
-                            color: isRunning ? '#34d399' : isActive ? '#60a5fa' : 'rgba(255, 255, 255, 0.4)',
+                            color: armed ? '#60a5fa' : 'rgba(255, 255, 255, 0.4)',
                           }}
                         >
-                          {isRunning ? 'RUNNING' : job.status.toUpperCase()}
+                          {job.status || 'UNKNOWN'}
                         </span>
+                        {/* The builder's own verdict. An invalid flow is armed
+                            and cannot run, which is worth seeing before a run. */}
+                        {!job.valid ? (
+                          <span style={{ fontSize: 10.5, fontWeight: 700, color: '#fbbf24' }}>
+                            INVALID
+                          </span>
+                        ) : null}
                       </div>
 
-                      <span style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.55)', lineHeight: 1.3 }}>
-                        {job.description}
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          color: 'rgba(255, 255, 255, 0.55)',
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {job.triggerName || 'no trigger'}
                       </span>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14, fontSize: 11, color: 'rgba(255, 255, 255, 0.4)', paddingTop: 2 }}>
-                        <span>Schedule: <strong style={{ color: '#ffffff' }}>{job.schedule}</strong></span>
-                        <span>Agent: <strong style={{ color: '#a78bfa' }}>{job.assignedAgent}</strong></span>
-                        <span>Target: <strong style={{ color: '#34d399' }}>{job.runtimeTarget}</strong></span>
-                        <span>Total Runs: <strong style={{ color: '#ffffff' }}>{job.runCount}</strong></span>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 14,
+                          fontSize: 11,
+                          color: 'rgba(255, 255, 255, 0.4)',
+                          paddingTop: 2,
+                        }}
+                      >
+                        <span>
+                          Last run:{' '}
+                          <strong style={{ color: '#ffffff' }}>
+                            {ago(lastRun.get(job.id) ?? 0)}
+                          </strong>
+                        </span>
+                        <span>
+                          Updated: <strong style={{ color: '#ffffff' }}>{ago(job.updated)}</strong>
+                        </span>
+                        {job.publishedVersionId ? <span>pinned</span> : null}
                       </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                     <button
                       type="button"
-                      disabled={isRunning}
+                      disabled={working}
                       onClick={() => automationsStore.runNow(job.id)}
                       className="tap"
                       style={{
@@ -232,29 +289,34 @@ export const AutomationsModal = () => {
                         color: '#ffffff',
                         fontSize: 11.5,
                         fontWeight: 600,
-                        cursor: isRunning ? 'not-allowed' : 'pointer',
+                        cursor: working ? 'not-allowed' : 'pointer',
                       }}
                     >
                       <Play size={11} fill="currentColor" />
-                      <span>{isRunning ? 'Running...' : 'Run Now'}</span>
+                      <span>{working ? 'Starting…' : 'Run Now'}</span>
                     </button>
 
                     <button
                       type="button"
+                      disabled={working}
                       onClick={() => automationsStore.toggleStatus(job.id)}
                       className="tap"
                       style={{
                         padding: '6px 10px',
                         borderRadius: 6,
-                        background: isActive ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.06)',
-                        border: isActive ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-                        color: isActive ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
+                        background: armed
+                          ? 'rgba(52, 211, 153, 0.15)'
+                          : 'rgba(255, 255, 255, 0.06)',
+                        border: armed
+                          ? '1px solid rgba(52, 211, 153, 0.3)'
+                          : '1px solid rgba(255, 255, 255, 0.1)',
+                        color: armed ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
                         fontSize: 11.5,
                         fontWeight: 600,
-                        cursor: 'pointer',
+                        cursor: working ? 'not-allowed' : 'pointer',
                       }}
                     >
-                      {isActive ? 'Active' : 'Paused'}
+                      {armed ? 'Enabled' : 'Disabled'}
                     </button>
                   </div>
                 </div>

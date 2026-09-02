@@ -1,32 +1,32 @@
 /**
- * Plugins & Extensions Marketplace Modal.
- * Supports browsing, 1-click install, and toggling tools/extensions.
+ * What this estate mounts, and what this org wrote.
+ *
+ * It is not a marketplace and there is nothing to install: a subsystem is
+ * switched on by an operator against the fleet, so this browses and does not
+ * buy. The star rating, the download count, the version and the author were
+ * literals in the store and are gone with it.
  */
-import {
-  Blocks,
-  Check,
-  Database,
-  Download,
-  GitPullRequest,
-  Search,
-  Shield,
-  X,
-  Zap,
-} from '@hanzogui/lucide-icons-2'
+import { Blocks, Boxes, PenLine, Search, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import { pluginsStore, usePlugins } from './store'
 
 export const PluginsModal = () => {
-  const { isOpen, plugins } = usePlugins()
+  const { isOpen, plugins, pending, fault } = usePlugins()
   const [filter, setFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
 
   if (!isOpen) return null
 
-  const filtered = plugins.filter((p) => {
-    const matchesFilter = filter === 'all' || p.category === filter || (filter === 'installed' && p.installed)
-    const matchesSearch = !search.trim() || p.name.toLowerCase().includes(search.toLowerCase()) || p.description.toLowerCase().includes(search.toLowerCase())
-    return matchesFilter && matchesSearch
+  // A plugin's searchable text is its name and, for a mount, the prefixes it
+  // answers at — which is what somebody looking for "who serves /v1/team" means.
+  const filtered = plugins.filter((one) => {
+    const kind = filter === 'all' || one.kind === filter
+    const term = search.trim().toLowerCase()
+    const hit =
+      !term ||
+      one.name.toLowerCase().includes(term) ||
+      one.prefixes.some((p) => p.toLowerCase().includes(term))
+    return kind && hit
   })
 
   return (
@@ -113,11 +113,8 @@ export const PluginsModal = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {[
               { id: 'all', label: 'All' },
-              { id: 'installed', label: 'Installed' },
-              { id: 'devtools', label: 'DevTools' },
-              { id: 'database', label: 'Databases' },
-              { id: 'security', label: 'Security' },
-              { id: 'cloud', label: 'Cloud' },
+              { id: 'mounted', label: 'Mounted' },
+              { id: 'authored', label: 'Authored' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -156,7 +153,7 @@ export const PluginsModal = () => {
             <Search size={13} color="rgba(255, 255, 255, 0.4)" />
             <input
               type="text"
-              placeholder="Search plugins..."
+              placeholder="Search name or prefix..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
@@ -182,6 +179,19 @@ export const PluginsModal = () => {
             gap: 12,
           }}
         >
+          {fault ? (
+            <div style={{ gridColumn: '1 / -1', fontSize: 12, color: '#f87171' }}>{fault}</div>
+          ) : null}
+          {!fault && pending && plugins.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              Reading…
+            </div>
+          ) : null}
+          {!fault && !pending && filtered.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+              Nothing here.
+            </div>
+          ) : null}
           {filtered.map((plugin) => (
             <div
               key={plugin.id}
@@ -189,7 +199,9 @@ export const PluginsModal = () => {
                 padding: 14,
                 borderRadius: 12,
                 background: 'rgba(255, 255, 255, 0.03)',
-                border: plugin.enabled ? '1px solid rgba(167, 139, 250, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
+                border: plugin.enabled
+                  ? '1px solid rgba(167, 139, 250, 0.3)'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -197,97 +209,68 @@ export const PluginsModal = () => {
               }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: 8,
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#a78bfa',
-                      }}
-                    >
-                      {plugin.category === 'devtools' ? (
-                        <GitPullRequest size={16} />
-                      ) : plugin.category === 'database' ? (
-                        <Database size={16} />
-                      ) : plugin.category === 'security' ? (
-                        <Shield size={16} />
-                      ) : (
-                        <Zap size={16} />
-                      )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#a78bfa',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {plugin.kind === 'authored' ? <PenLine size={16} /> : <Boxes size={16} />}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>
+                      {plugin.name}
                     </div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>{plugin.name}</div>
-                      <div style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                        v{plugin.version} by {plugin.author}
-                      </div>
+                    <div style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
+                      {plugin.kind === 'authored'
+                        ? plugin.provider || 'authored here'
+                        : `${plugin.prefixes.length} prefix${plugin.prefixes.length === 1 ? '' : 'es'}`}
                     </div>
                   </div>
                 </div>
 
-                <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.6)', lineHeight: 1.4 }}>
-                  {plugin.description}
+                {/* What it answers at, or where it was built from. Both are on
+                    the wire; a description is not. */}
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    lineHeight: 1.4,
+                    fontFamily:
+                      plugin.kind === 'mounted' ? 'ui-monospace, monospace' : undefined,
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  {plugin.kind === 'authored'
+                    ? plugin.source || '—'
+                    : plugin.prefixes.join('  ') || '—'}
                 </div>
               </div>
 
-              {/* Bottom Row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 11, color: 'rgba(255, 255, 255, 0.4)' }}>
-                  <span>⭐ {plugin.rating}</span>
-                  <span>📥 {plugin.downloads}</span>
-                </div>
-
-                {plugin.installed ? (
-                  <button
-                    type="button"
-                    onClick={() => pluginsStore.toggleEnable(plugin.id)}
-                    className="tap"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 10px',
-                      borderRadius: 6,
-                      background: plugin.enabled ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.06)',
-                      border: plugin.enabled ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
-                      color: plugin.enabled ? '#34d399' : 'rgba(255, 255, 255, 0.5)',
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {plugin.enabled ? <Check size={12} /> : null}
-                    <span>{plugin.enabled ? 'Enabled' : 'Disabled'}</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => pluginsStore.toggleInstall(plugin.id)}
-                    className="tap"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: '4px 12px',
-                      borderRadius: 6,
-                      background: '#ffffff',
-                      border: 'none',
-                      color: '#000000',
-                      fontSize: 11.5,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <Download size={12} />
-                    <span>Install</span>
-                  </button>
-                )}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: 6,
+                  borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+                  fontSize: 11,
+                  color: 'rgba(255, 255, 255, 0.4)',
+                }}
+              >
+                <span>{plugin.kind}</span>
+                <span style={{ color: plugin.enabled ? '#34d399' : 'rgba(255,255,255,0.35)' }}>
+                  {plugin.enabled ? 'on' : 'off'}
+                </span>
               </div>
             </div>
           ))}
