@@ -8,7 +8,8 @@
  */
 import { CheckSquare, ExternalLink, FileText, ListTodo, Plus, Shield, Video, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { workspaceAppsStore, useWorkspaceApps } from './store'
+import { ago } from '~/show'
+import { useMoveIssue, useOpenIssue, useWorkspaceApps, workspaceAppsStore } from './store'
 import type { WorkspaceAppId } from './types'
 
 export const AppWorkspaceModal = () => {
@@ -18,16 +19,9 @@ export const AppWorkspaceModal = () => {
   // An issue belongs to a board, and there is no inbox to drop one into, so the
   // board is asked for rather than guessed at.
   const [board, setBoard] = useState('')
-
-  /** A local edit stamp, as a short relative line. */
-  const ago = (ms: number): string => {
-    if (!ms) return ''
-    const mins = Math.floor((Date.now() - ms) / 60000)
-    if (mins < 1) return 'just now'
-    if (mins < 60) return `${mins}m ago`
-    const hrs = Math.floor(mins / 60)
-    return hrs < 24 ? `${hrs}h ago` : `${Math.floor(hrs / 24)}d ago`
-  }
+  // Two writes, each with its own pending and its own refusal.
+  const moving = useMoveIssue()
+  const opening = useOpenIssue()
 
   if (!isOpen) return null
 
@@ -370,8 +364,8 @@ export const AppWorkspaceModal = () => {
               <form
                 onSubmit={(e) => {
                   e.preventDefault()
-                  void workspaceAppsStore.addTodo(board, newTodoText)
-                  setNewTodoText('')
+                  // Clear the box only on an issue that was actually opened.
+                  void opening.run(board, newTodoText).then((ok) => ok && setNewTodoText(''))
                 }}
                 style={{ display: 'flex', gap: 8 }}
               >
@@ -464,10 +458,7 @@ export const AppWorkspaceModal = () => {
                       <select
                         value={todo.status}
                         onChange={(e) =>
-                          void workspaceAppsStore.setTodoStatus(
-                            todo.id,
-                            e.target.value as typeof todo.status,
-                          )
+                          void moving.run(todo, e.target.value as typeof todo.status)
                         }
                         style={{
                           background: 'rgba(255,255,255,0.06)',
@@ -526,8 +517,10 @@ export const AppWorkspaceModal = () => {
                   )
                 })}
               </div>
-              {fault ? (
-                <div style={{ fontSize: 12, color: '#f87171' }}>{fault}</div>
+              {fault || moving.fault || opening.fault ? (
+                <div style={{ fontSize: 12, color: '#f87171' }}>
+                  {fault || moving.fault || opening.fault}
+                </div>
               ) : null}
             </div>
           )}

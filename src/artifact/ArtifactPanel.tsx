@@ -38,11 +38,7 @@ const PICKER: CSSProperties = {
   cursor: 'pointer',
 }
 
-import {
-  artifactStore,
-  useArtifact,
-
-} from './store'
+import { artifactStore, useArtifact, useRunCode, useStopCode } from './store'
 
 const TAB_BUTTON_STYLE = (active: boolean): CSSProperties => ({
   display: 'inline-flex',
@@ -75,6 +71,10 @@ const ACTION_BUTTON_STYLE: CSSProperties = {
 
 export const ArtifactPanel = () => {
   const artifact = useArtifact()
+  // Two writes, each with its own pending and its own refusal.
+  const running = useRunCode()
+  const stopping = useStopCode()
+  const isRunning = running.pending
   const [copied, setCopied] = useState(false)
   const terminalEndRef = useRef<HTMLDivElement | null>(null)
 
@@ -86,7 +86,7 @@ export const ArtifactPanel = () => {
 
   if (!artifact) return null
 
-  const { title, language, code, where, runtime, activeTab, isRunning, logs } = artifact
+  const { title, language, code, where, runtime, activeTab, logs } = artifact
 
   const handleCopy = async () => {
     try {
@@ -237,7 +237,7 @@ export const ArtifactPanel = () => {
             <button
               type="button"
               title="Stop execution"
-              onClick={() => artifactStore.stopCode()}
+              onClick={() => void stopping.run()}
               style={{
                 ...ACTION_BUTTON_STYLE,
                 background: 'rgba(239, 68, 68, 0.15)',
@@ -251,7 +251,7 @@ export const ArtifactPanel = () => {
             <button
               type="button"
               title="Run in Sandbox"
-              onClick={() => artifactStore.runCode()}
+              onClick={() => void running.run()}
               style={{
                 ...ACTION_BUTTON_STYLE,
                 background: 'rgba(16, 185, 129, 0.15)',

@@ -11,8 +11,7 @@
  */
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago as since } from '~/show'
-import { fromStamp } from '~/show'
+import { ago, fromStamp } from '~/show'
 import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store'
 import type { DurableTask, TaskStatus } from './types'
 
@@ -30,9 +29,6 @@ const statusBadge = (status: TaskStatus) => {
       return { label: 'RUNNING', bg: 'rgba(96, 165, 250, 0.15)', color: '#60a5fa', border: 'rgba(96, 165, 250, 0.3)' }
   }
 }
-
-/** The wire sends RFC 3339 here; `fromStamp` is the one conversion. */
-const ago = (at: string): string => since(fromStamp(at))
 
 export const TaskQueueModal = () => {
   const { isOpen, tasks, activeTaskId, events, pending, fault } = useTaskQueue()
@@ -253,7 +249,7 @@ export const TaskQueueModal = () => {
                     </div>
 
                     <span style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                      {ago(t.startedAt)}
+                      {ago(fromStamp(t.startedAt))}
                     </span>
                   </div>
 

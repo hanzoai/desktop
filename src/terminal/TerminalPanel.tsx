@@ -22,7 +22,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type CSSProperties, type FormEvent } from 'react'
 
 import { origins } from '~/data/origin'
-import { terminalStore, useTerminal, type Kind } from './store'
+import { terminalStore, useEnd, useRun, useTerminal, type Kind } from './store'
 
 /** Where the Tabs workspace lives. It is a destination, not an origin. */
 const TABS = 'https://tabs.hanzo.ai/app'
@@ -84,7 +84,12 @@ const INK: Record<Kind, string> = {
 }
 
 export const TerminalPanel = () => {
-  const { isOpen, where, runtime, box, busy, fault, lines } = useTerminal()
+  const { isOpen, where, runtime, box, lines } = useTerminal()
+  // Two writes, each with its own pending and its own refusal.
+  const running = useRun()
+  const ending = useEnd()
+  const busy = running.pending || ending.pending
+  const fault = running.fault ?? ending.fault
   const [typed, setTyped] = useState('')
   const [copied, setCopied] = useState(false)
 
@@ -96,7 +101,7 @@ export const TerminalPanel = () => {
     e.preventDefault()
     const line = typed
     setTyped('')
-    void terminalStore.run(line)
+    void running.run(line)
   }
 
   const copy = () => {
@@ -169,7 +174,7 @@ export const TerminalPanel = () => {
             <button
               type="button"
               title="End the lease"
-              onClick={() => void terminalStore.end()}
+              onClick={() => void ending.run()}
               style={ACTION}
             >
               <Square size={12} />

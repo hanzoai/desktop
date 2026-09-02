@@ -8,16 +8,9 @@
  */
 import { Bot } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack } from '@hanzo/ui'
+import { tint } from '~/show'
 import type { AgentDefinition } from './types'
 import { swarmStore, useSwarm } from './store'
-
-/** A stable tint per agent, derived from its id so it is not a claim. */
-const tint = (id: string): string => {
-  const hues = ['#34d399', '#60a5fa', '#f472b6', '#a78bfa', '#fbbf24', '#f87171']
-  let sum = 0
-  for (let i = 0; i < id.length; i += 1) sum = (sum + id.charCodeAt(i)) % 997
-  return hues[sum % hues.length]
-}
 
 export const SwarmBar = () => {
   const { agents, activeAgentIds, swarmMode, isExecuting, activePhase } = useSwarm()

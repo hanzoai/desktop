@@ -10,7 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { intelligenceStore, useIntelligence } from './store'
+import { intelligenceStore, useForget, useIntelligence, useRemember } from './store'
 
 export const IntelligenceModal = () => {
   const { isOpen, memories, symbols, query, activeTab, pending, fault, degraded } =
@@ -19,14 +19,17 @@ export const IntelligenceModal = () => {
   const [newContent, setNewContent] = useState('')
   // The store records a `kind`, which is free text, not one of four categories.
   const [newKind, setNewKind] = useState('')
+  // Two writes, each with its own pending and its own refusal.
+  const remembering = useRemember()
+  const forgetting = useForget()
 
   if (!isOpen) return null
 
-  const handleAddMemory = (e: FormEvent) => {
+  const handleAddMemory = async (e: FormEvent) => {
     e.preventDefault()
     if (!newContent.trim()) return
-    void intelligenceStore.addMemory(newContent.trim(), newKind.trim())
-    setNewContent('')
+    // Clear the box only on a memory that was actually stored.
+    if (await remembering.run(newContent.trim(), newKind.trim())) setNewContent('')
   }
 
   const filteredMemories = memories.filter(
@@ -208,9 +211,9 @@ export const IntelligenceModal = () => {
 
         {/* Tab Body */}
         <YStack flex={1} minHeight={0} padding="$4" gap="$3" style={{ overflowY: 'auto' }}>
-          {fault ? (
+          {fault || remembering.fault || forgetting.fault ? (
             <SizableText size="$1" color="#f87171">
-              {fault}
+              {fault || remembering.fault || forgetting.fault}
             </SizableText>
           ) : null}
           {/* An empty result after a failed retrieval is an OUTAGE, not an
@@ -223,7 +226,7 @@ export const IntelligenceModal = () => {
           {activeTab === 'memory' ? (
             <>
               {/* Add Memory Row */}
-              <form onSubmit={handleAddMemory}>
+              <form onSubmit={(e) => void handleAddMemory(e)}>
                 <XStack gap="$2">
                   {/* A kind is free text. The four categories offered here
                       were this app's own, and one of them — "Enclave KMS Key" —
@@ -320,7 +323,7 @@ export const IntelligenceModal = () => {
 
                     <button
                       type="button"
-                      onClick={() => void intelligenceStore.deleteMemory(m.name)}
+                      onClick={() => void forgetting.run(m.name)}
                       style={{
                         background: 'none',
                         border: 'none',
