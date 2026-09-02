@@ -93,8 +93,7 @@ fn main() {
     let _ = fix_path_env::fix();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-            app.emit("single-instance", Payload { args: argv, cwd })
-                .unwrap();
+            let _ = app.emit("single-instance", Payload { args: argv, cwd });
         }))
         .plugin(
             tauri_plugin_log::Builder::new()
@@ -308,16 +307,19 @@ fn main() {
                 let app_handle = app.handle().clone();
                 async move {
                     // Kill any existing process related to hanzo and/or using hanzo ports
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    hanzo_node_manager_guard.kill().await;
+                    let Some(manager) = HANZO_NODE_MANAGER_INSTANCE.get() else {
+                        log::error!("[startup] node manager missing; skipping the stale-process kill");
+                        return;
+                    };
+                    let mut guard = manager.write().await;
+                    guard.kill().await;
                     // Cold-boot start (bug #18): the kill above only clears a stale
                     // process — start this app's own node now so it is up without
                     // relying on a frontend effect that cannot fire before the node runs.
-                    if let Err(e) = hanzo_node_manager_guard.spawn().await {
+                    if let Err(e) = guard.spawn().await {
                         log::error!("[hanzo-node] cold-boot spawn failed: {}", e);
                     }
-                    drop(hanzo_node_manager_guard);
+                    drop(guard);
 
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
                     let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
@@ -326,11 +328,11 @@ fn main() {
                     // Auto-spawn the local hanzo-node sidecar so the app is
                     // usable for first-time users without requiring auth.
                     {
-                        let mut guard = HANZO_NODE_MANAGER_INSTANCE
-                            .get()
-                            .unwrap()
-                            .write()
-                            .await;
+                        let Some(manager) = HANZO_NODE_MANAGER_INSTANCE.get() else {
+                            log::error!("[startup] node manager missing; not starting a node");
+                            return;
+                        };
+                        let mut guard = manager.write().await;
                         if let Err(e) = guard.spawn().await {
                             log::error!("auto-spawn hanzo-node failed: {}", e);
                         } else {
@@ -359,10 +361,11 @@ fn main() {
             tauri::async_runtime::spawn({
                 let app_handle = app.handle().clone();
                 async move {
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    let mut receiver = hanzo_node_manager_guard.subscribe_to_events();
-                    drop(hanzo_node_manager_guard);
+                    let Some(manager) = HANZO_NODE_MANAGER_INSTANCE.get() else {
+                        log::error!("[startup] node manager missing; no state events");
+                        return;
+                    };
+                    let mut receiver = manager.write().await.subscribe_to_events();
                     while let Ok(state_change) = receiver.recv().await {
                         app_handle
                             .emit("hanzo-node-state-change", state_change)
@@ -385,10 +388,11 @@ fn main() {
                     log::debug!("killing ollama and hanzo-node before exit");
 
                     // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    hanzo_node_manager_guard.kill().await;
-                    drop(hanzo_node_manager_guard);
+                    let Some(manager) = HANZO_NODE_MANAGER_INSTANCE.get() else {
+                        log::error!("[startup] node manager missing; skipping the stale-process kill");
+                        return;
+                    };
+                    manager.write().await.kill().await;
                     // Force exit the application
                     std::process::exit(0);
                 });
@@ -397,8 +401,8 @@ fn main() {
             RunEvent::Reopen { .. } => {
                 let main_window_label = "main";
                 if let Some(window) = app_handle.get_webview_window(main_window_label) {
-                    window.show().unwrap();
-                    window.center().unwrap();
+                    let _ = window.show();
+                    let _ = window.center();
                     let _ = window.set_focus();
                 } else {
                     let main_window_config = app_handle
@@ -407,8 +411,11 @@ fn main() {
                         .windows
                         .iter()
                         .find(|w| w.label == main_window_label)
-                        .unwrap()
-                        .clone();
+                        .cloned();
+                    let Some(main_window_config) = main_window_config else {
+                        log::error!("[reopen] no config for the main window; nothing to reopen");
+                        return;
+                    };
                     match tauri::WebviewWindowBuilder::from_config(app_handle, &main_window_config)
                     {
                         Ok(builder) => {

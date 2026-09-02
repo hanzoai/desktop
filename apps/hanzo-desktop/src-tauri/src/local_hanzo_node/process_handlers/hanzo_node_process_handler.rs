@@ -42,9 +42,20 @@ impl HanzoNodeProcessHandler {
 
         let node_api_ip = options.clone().node_api_ip.unwrap_or_default();
         let node_api_port = options.clone().node_api_port.unwrap_or_default();
-        let ready_matcher =
-            Regex::new(format!("listening on http://{}:{}", node_api_ip, node_api_port).as_str())
-                .unwrap();
+        // warp prints "listening on http://127.0.0.1:3690" when the API is up.
+        // The address is escaped because its dots are regex wildcards, and a
+        // failure to compile logs rather than panics — nothing about matching
+        // a log line is worth taking the app down for.
+        let ready_pattern = regex::escape(&format!(
+            "listening on http://{}:{}",
+            node_api_ip, node_api_port
+        ));
+        let ready_matcher = Regex::new(&ready_pattern).unwrap_or_else(|e| {
+            // Escaped text should always compile; if it somehow does not, a
+            // looser match still beats taking the process down over a log line.
+            log::error!("[node] readiness pattern would not compile ({e}); matching loosely");
+            Regex::new("listening on http").expect("a literal is a valid regex")
+        });
         let process_handler = ProcessHandler::new(
             app.clone(),
             Self::PROCESS_NAME.to_string(),
@@ -69,9 +80,12 @@ impl HanzoNodeProcessHandler {
     }
 
     async fn health(base_url: &str, timeout: Duration) -> bool {
-        // The node serves its HTTP API under `/v1/node` (matching the frontend's
-        // hanzo-message-ts client). Probe the readiness endpoint there.
-        let url = format!("{}/v1/node/health_check", base_url);
+        // The node mounts two different APIs, not two versions of one: `/v1`
+        // is the OpenAI-compatible surface (chat, completions, models) and
+        // `/v2` is the node's own control plane. Readiness lives on the
+        // control plane. Measured against the shipped sidecar:
+        // `/v2/health_check` -> 200, `/v1/health_check` -> 404.
+        let url = format!("{}/v2/health_check", base_url);
         let client = reqwest::Client::new();
         log::info!(
             "checking hanzo-nodehealth of {} with timeout {:?}",
@@ -176,9 +190,15 @@ impl HanzoNodeProcessHandler {
 
         let env = options_to_env(&self.options.clone());
         self.process_handler.spawn(env, [].to_vec(), None).await?;
+
+        // A node that has not answered yet is not a node that failed. Killing
+        // it here is what trapped first-run onboarding: the process was up and
+        // still starting, the probe gave up first, and the app destroyed the
+        // thing it was waiting for and reported failure. Leave it running and
+        // let whoever needs it find it — the health probe is a readiness hint,
+        // not a verdict.
         if let Err(e) = self.wait_hanzo_node_server().await {
-            self.process_handler.kill().await;
-            return Err(e);
+            log::warn!("[node] not ready yet ({e}); leaving it to finish starting");
         }
         Ok(())
     }

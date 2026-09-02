@@ -28,8 +28,7 @@ pub fn get_window(app_handle: AppHandle, window_name: Window, focus: bool) -> ta
             if window.is_minimized().unwrap_or_default() {
                 let _ = window.unminimize();
             }
-            window.show().unwrap();
-            // window.center().unwrap();
+            let _ = window.show();
             let _ = window.set_focus();
         }
         return Ok(window);
@@ -47,8 +46,7 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
             if window.is_minimized().unwrap_or_default() {
                 let _ = window.unminimize();
             }
-            window.show().unwrap();
-            // window.center().unwrap();
+            let _ = window.show();
             let _ = window.set_focus();
         }
         Ok(window)
@@ -60,7 +58,7 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
             .windows
             .iter()
             .find(|w| w.label == label)
-            .unwrap()
+            .ok_or_else(|| tauri::Error::WindowNotFound)?
             .clone();
         if window_config.label == Window::Coordinator.as_str() {
             window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
@@ -86,13 +84,13 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
 
 pub fn hide_spotlight_window(app_handle: AppHandle) {
     if let Some(window) = app_handle.get_webview_window(Window::Spotlight.as_str()) {
-        window.hide().unwrap();
+        let _ = window.hide();
     }
 }
 
 pub fn show_spotlight_window(app_handle: AppHandle) {
     if let Some(window) = app_handle.get_webview_window(Window::Spotlight.as_str()) {
-        window.show().unwrap();
+        let _ = window.show();
     }
 }
 
