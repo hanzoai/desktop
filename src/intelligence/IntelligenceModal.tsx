@@ -10,6 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
+import { useShown } from '~/show'
 import { intelligenceStore, useForget, useIntelligence, useRemember } from './store'
 
 export const IntelligenceModal = () => {
@@ -41,6 +42,11 @@ export const IntelligenceModal = () => {
   // The SYMBOLS are already the answer to a query the server ran, so a second
   // filter over them would hide rows the index said matched.
   const filteredSymbols = symbols
+
+  // Both lists grow with the ORG: /v1/ai/memory/list takes no limit at all, and
+  // a symbol search is capped at 50 server-side. This bounds what is DRAWN.
+  const shownMemories = useShown(filteredMemories, 60)
+  const shownSymbols = useShown(filteredSymbols, 60)
 
   return (
     <div
@@ -286,7 +292,7 @@ export const IntelligenceModal = () => {
 
               {/* Memories List */}
               <YStack gap="$2" paddingTop="$1">
-                {filteredMemories.map((m) => (
+                {shownMemories.rows.map((m) => (
                   <XStack
                     key={m.name}
                     alignItems="center"
@@ -336,11 +342,20 @@ export const IntelligenceModal = () => {
                     </button>
                   </XStack>
                 ))}
+                {shownMemories.more > 0 ? (
+                  <button type="button" onClick={shownMemories.grow} className="tap" style={{
+                    padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)',
+                    fontSize: 11.5, cursor: 'pointer',
+                  }}>
+                    {shownMemories.more} more of {shownMemories.total}
+                  </button>
+                ) : null}
               </YStack>
             </>
           ) : (
             <YStack gap="$1.5">
-              {filteredSymbols.map((s) => (
+              {shownSymbols.rows.map((s) => (
                 <XStack
                   key={`${s.repo}:${s.file}:${s.line}`}
                   alignItems="center"
@@ -374,6 +389,15 @@ export const IntelligenceModal = () => {
                   </SizableText>
                 </XStack>
               ))}
+              {shownSymbols.more > 0 ? (
+                <button type="button" onClick={shownSymbols.grow} className="tap" style={{
+                  padding: '8px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)',
+                  fontSize: 11.5, cursor: 'pointer',
+                }}>
+                  {shownSymbols.more} more of {shownSymbols.total}
+                </button>
+              ) : null}
             </YStack>
           )}
         </YStack>

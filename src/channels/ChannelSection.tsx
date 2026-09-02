@@ -9,14 +9,49 @@ import {
   Users,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
+import { useShown } from '~/show'
 import { channelsStore, useChannels, type ChatRoom } from './store'
+
+/** One "N more" affordance, so no list here is cut without saying so. */
+const More = ({ of }: { of: { more: number; total: number; grow: () => void } }) =>
+  of.more > 0 ? (
+    <button
+      type="button"
+      onClick={of.grow}
+      className="tap"
+      style={{
+        textAlign: 'left',
+        padding: '4px 8px',
+        borderRadius: 4,
+        background: 'transparent',
+        border: 'none',
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: 11,
+        cursor: 'pointer',
+      }}
+    >
+      {of.more} more of {of.total}
+    </button>
+  ) : null
 
 export const ChannelSection = () => {
   const { rooms, activeRoomId } = useChannels()
 
-  const channels = rooms.filter((r) => r.type === 'channel')
-  const dms = rooms.filter((r) => r.type === 'dm')
-  const groups = rooms.filter((r) => r.type === 'group')
+  // `GET /v1/team/rooms` takes NO limit — it answers every room the org has —
+  // so the rail bounds what it draws and says what it is holding back. A rail
+  // silently cut at twenty is how somebody concludes their org has twenty rooms.
+  const channels = useShown(
+    rooms.filter((r) => r.type === 'channel'),
+    30,
+  )
+  const dms = useShown(
+    rooms.filter((r) => r.type === 'dm'),
+    30,
+  )
+  const groups = useShown(
+    rooms.filter((r) => r.type === 'group'),
+    30,
+  )
 
   const getGroupLabel = (r: ChatRoom) => {
     if (r.name) return r.name
@@ -55,7 +90,7 @@ export const ChannelSection = () => {
           </button>
         </XStack>
 
-        {channels.map((chan) => {
+        {channels.rows.map((chan) => {
           const isActive = chan.id === activeRoomId
           return (
             <button
@@ -114,6 +149,7 @@ export const ChannelSection = () => {
             </button>
           )
         })}
+        <More of={channels} />
       </YStack>
 
       {/* Direct Messages & Agents Section */}
@@ -124,7 +160,7 @@ export const ChannelSection = () => {
           </SizableText>
         </XStack>
 
-        {dms.map((dm) => {
+        {dms.rows.map((dm) => {
           const isActive = dm.id === activeRoomId
           const isAgent = dm.name?.startsWith('@')
           return (
@@ -192,6 +228,7 @@ export const ChannelSection = () => {
             </button>
           )
         })}
+        <More of={dms} />
       </YStack>
 
       {/* Informal Groups Section */}
@@ -202,7 +239,7 @@ export const ChannelSection = () => {
           </SizableText>
         </XStack>
 
-        {groups.map((grp) => {
+        {groups.rows.map((grp) => {
           const isActive = grp.id === activeRoomId
           return (
             <button
@@ -242,6 +279,7 @@ export const ChannelSection = () => {
             </button>
           )
         })}
+        <More of={groups} />
       </YStack>
     </YStack>
   )

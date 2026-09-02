@@ -8,7 +8,7 @@
  */
 import { CheckSquare, ExternalLink, FileText, ListTodo, Plus, Shield, Video, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago } from '~/show'
+import { ago, useShown } from '~/show'
 import { useMoveIssue, useOpenIssue, useWorkspaceApps, workspaceAppsStore } from './store'
 import type { WorkspaceAppId } from './types'
 
@@ -22,6 +22,9 @@ export const AppWorkspaceModal = () => {
   // Two writes, each with its own pending and its own refusal.
   const moving = useMoveIssue()
   const opening = useOpenIssue()
+  // A backlog grows with the ORG. /v1/todo/issues takes a limit, and this
+  // bounds what is DRAWN on top of it.
+  const shown = useShown(todos, 80)
 
   if (!isOpen) return null
 
@@ -437,7 +440,7 @@ export const AppWorkspaceModal = () => {
                     No open issues.
                   </div>
                 ) : null}
-                {todos.map((todo) => {
+                {shown.rows.map((todo) => {
                   const shut = todo.status === 'done' || todo.status === 'canceled'
                   return (
                     <div
@@ -516,6 +519,24 @@ export const AppWorkspaceModal = () => {
                     </div>
                   )
                 })}
+                {shown.more > 0 ? (
+                  <button
+                    type="button"
+                    onClick={shown.grow}
+                    className="tap"
+                    style={{
+                      padding: '8px 10px',
+                      borderRadius: 8,
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: 11.5,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {shown.more} more of {shown.total}
+                  </button>
+                ) : null}
               </div>
               {fault || moving.fault || opening.fault ? (
                 <div style={{ fontSize: 12, color: '#f87171' }}>

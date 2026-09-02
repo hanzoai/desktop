@@ -11,7 +11,7 @@
  */
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago, fromStamp } from '~/show'
+import { ago, fromStamp, useShown } from '~/show'
 import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store'
 import type { DurableTask, TaskStatus } from './types'
 
@@ -36,6 +36,10 @@ export const TaskQueueModal = () => {
   const opening = useOpenRun()
   const steering = useSteerRun()
   const [name, setName] = useState('')
+  // A run list grows with the ORG, not with the screen, and /v1/agents/sessions
+  // takes a limit of 50 — so this bounds what is DRAWN and says what it holds
+  // back rather than cutting the list silently.
+  const shown = useShown(tasks, 60)
 
   if (!isOpen) return null
 
@@ -201,7 +205,7 @@ export const TaskQueueModal = () => {
               overflowY: 'auto',
             }}
           >
-            {tasks.map((t: DurableTask) => {
+            {shown.rows.map((t: DurableTask) => {
               const badge = statusBadge(t.status)
               const isSelected = t.id === activeTask?.id
 
@@ -285,6 +289,24 @@ export const TaskQueueModal = () => {
                 </button>
               )
             })}
+            {shown.more > 0 ? (
+              <button
+                type="button"
+                onClick={shown.grow}
+                className="tap"
+                style={{
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.6)',
+                  fontSize: 11.5,
+                  cursor: 'pointer',
+                }}
+              >
+                {shown.more} more of {shown.total}
+              </button>
+            ) : null}
           </div>
 
           {/* Right Task Details & Terminal Output */}

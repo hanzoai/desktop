@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+
 /**
  * Turning a value into something a person reads.
  *
@@ -5,6 +7,9 @@
  * panel because there were THREE copies of `ago` and TWO of `tint`, and a
  * duplicated formatter drifts the way a duplicated fact does: one panel called
  * the last hour "45m ago" and another "1h ago" for the same instant.
+ *
+ * `useShown` is here rather than in `data/query.ts` for the same reason: what a
+ * person is shown is a rendering decision, not a fact about the answer.
  *
  * TIME IS UNIX MILLISECONDS INSIDE THIS APP, and nothing else. The estate sends
  * three spellings — RFC 3339 on a session, unix SECONDS on a board issue, unix
@@ -54,4 +59,38 @@ export const tint = (id: string): string => {
   let sum = 0
   for (let i = 0; i < id.length; i += 1) sum = (sum + id.charCodeAt(i)) % 997
   return hues[sum % hues.length]
+}
+
+/**
+ * The first `size` of a list, and an honest count of the rest.
+ *
+ * MOST OF THE ROUTES THIS APP READS TAKE NO LIMIT — `/v1/team/rooms`,
+ * `/v1/todo/board`, `/v1/iam/projects`, `/v1/ai/memory/list` and `/v1/agents`
+ * all answer with everything the org has. That is the server's to bound and
+ * cannot be fixed from here; what CAN be fixed is that a client which renders
+ * one node per row freezes at a few thousand of them.
+ *
+ * **It reports what it is not showing, and that is the load-bearing half.** A
+ * list silently cut at fifty is the silent-empty failure one level over: a
+ * person concludes their org has fifty rooms when it has five thousand. `total`
+ * and `more` exist so a caller cannot render a truncated list without knowing
+ * it is truncated.
+ *
+ * `size` resets when the LIST does, so a filter that narrows the rows starts at
+ * the top rather than showing page four of a shorter list.
+ */
+export const useShown = <T,>(rows: T[], size = 100) => {
+  const [limit, setLimit] = useState(size)
+
+  // A different list is a different question, so the window starts over.
+  useEffect(() => setLimit(size), [rows.length === 0, size])
+
+  return {
+    rows: rows.length > limit ? rows.slice(0, limit) : rows,
+    total: rows.length,
+    /** How many are held back. Zero when everything is on screen. */
+    more: Math.max(0, rows.length - limit),
+    /** Show another page of them. */
+    grow: () => setLimit((held) => held + size),
+  }
 }

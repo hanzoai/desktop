@@ -87,6 +87,9 @@ const priorityOf = (s?: string): IssuePriority =>
 const readIssues = async (): Promise<TodoItem[]> => {
   const listed = await client(ESTATE).http.collection<WireIssue>('issues', {
     path: '/v1/todo/issues',
+    // The route takes a limit and most of its siblings do not, so it is sent
+    // where it is accepted rather than left to the server's default.
+    query: { limit: 200 },
   })
   return listed.map((one) => ({
     id: `${one.project ?? ''}#${one.number ?? 0}`,
