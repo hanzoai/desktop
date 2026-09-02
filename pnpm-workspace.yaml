@@ -1,5 +1,6 @@
 catalog:
   '@hanzo/ai': '0.6.16'
+  '@hanzo/font': '1.9.3'
   '@hanzo/gui': '8.3.1'
   '@hanzo/iam': '0.21.17'
   '@hanzo/ui': '8.27.4'
@@ -22,4 +23,5 @@ catalog:
   'vite': '^8.2.2'
 minimumReleaseAgeExclude:
   - '@hanzo/ai@0.6.16'
+  - '@hanzo/font@1.9.3'
   - '@hanzo/ui@8.27.4'
