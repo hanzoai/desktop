@@ -11,11 +11,24 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 import { useShown } from '~/show'
-import { intelligenceStore, useForget, useIntelligence, useRemember } from './store'
+import {
+  intelligenceStore,
+  useForget,
+  useMemories,
+  usePanel,
+  useRemember,
+  useSymbols,
+} from './store'
 
 export const IntelligenceModal = () => {
-  const { isOpen, memories, symbols, query, activeTab, pending, fault, degraded } =
-    useIntelligence()
+  // Two tabs, two hooks. Only the strip is about both.
+  const { isOpen, activeTab } = usePanel()
+  const held = useMemories()
+  const found = useSymbols()
+  const { memories } = held
+  const { symbols, query, degraded } = found
+  const pending = held.pending || found.pending
+  const fault = held.fault ?? found.fault
   const [filter, setFilter] = useState('')
   const [newContent, setNewContent] = useState('')
   // The store records a `kind`, which is free text, not one of four categories.

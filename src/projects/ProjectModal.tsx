@@ -11,11 +11,22 @@ import {
   X,
 } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { projectsStore, useMakeOrg, useMakeProject, useProjects } from './store'
+import {
+  projectsStore,
+  useMakeOrg,
+  useMakeProject,
+  useOrgPeople,
+  useOrgProjects,
+  useOrgs,
+} from './store'
 
 export const ProjectModal = () => {
-  const { isOpen, activeOrgId, activeProjectId, organizations, users, projects, pending, fault } =
-    useProjects()
+  // Three tabs, three hooks; the org is the one thing they share.
+  const { isOpen, activeOrgId, organizations, pending: reading, fault: orgFault } = useOrgs()
+  const { projects, activeProjectId, pending: loading, fault: projectFault } = useOrgProjects()
+  const { users } = useOrgPeople()
+  const pending = reading || loading
+  const fault = orgFault ?? projectFault
 
   const [activeTab, setActiveTab] = useState<'projects' | 'orgs' | 'users'>('projects')
   const [newProjectName, setNewProjectName] = useState('')

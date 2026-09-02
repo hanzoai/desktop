@@ -111,41 +111,56 @@ export const intelligenceStore = {
   search: (query: string) => asked.set(query),
 }
 
-export const useIntelligence = () => {
+/**
+ * TWO TABS, TWO HOOKS. What they share is the tab strip, which is a place.
+ *
+ * They were one hook reading both, so a memory list re-rendered when a symbol
+ * search landed and the panel held two faults in one field. Each reads its own
+ * now, and each `enabled` says the one thing true of it.
+ */
+export const usePanel = () => ({
+  isOpen: useAtom(open),
+  activeTab: useAtom(tab),
+})
+
+/** What the estate remembers. */
+export const useMemories = () => {
   const isOpen = useAtom(open)
   const activeTab = useAtom(tab)
-  const typed = useAtom(asked)
-  // What is READ lags what is typed; what is SHOWN in the box does not.
-  const query = useSettled(typed)
-
   const memories = useRead(keys.memories, readMemories, {
     enabled: isOpen && activeTab === 'memory',
     fresh: 60_000,
   })
+  return {
+    memories: memories.data ?? [],
+    pending: memories.pending,
+    fault: memories.error ? reason(memories.error) : null,
+  }
+}
+
+/** One search of the code index. */
+export const useSymbols = () => {
+  const isOpen = useAtom(open)
+  const activeTab = useAtom(tab)
+  const typed = useAtom(asked)
+  // What is READ lags what is typed; what is SHOWN in the box does not — a
+  // lagging input is an input that fights the person using it.
+  const query = useSettled(typed)
   // An empty query asks NOTHING: the route requires one, and a blank list is
   // the truthful answer to a question nobody asked.
   const found = useRead(keys.symbols(query), () => readSymbols(query), {
     enabled: isOpen && activeTab === 'symbols' && Boolean(query.trim()),
     fresh: 60_000,
   })
-
   return {
-    isOpen,
-    activeTab,
-    // The box renders what was typed — a lagging input is an input that fights
-    // the person using it.
     query: typed,
-    memories: memories.data ?? [],
     symbols: found.data?.symbols ?? [],
     degraded: found.data?.degraded ?? false,
-    pending: memories.pending || found.pending,
-    fault: memories.error
-      ? reason(memories.error)
-      : found.error
-        ? reason(found.error)
-        : null,
+    pending: found.pending,
+    fault: found.error ? reason(found.error) : null,
   }
 }
+
 
 /**
  * Stores a memory.

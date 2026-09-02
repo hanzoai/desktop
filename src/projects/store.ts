@@ -96,44 +96,66 @@ export const projectsStore = {
   setActiveProject: (id: string) => project.set(id),
 }
 
-export const useProjects = () => {
+/**
+ * THREE TABS, THREE HOOKS, and one shared answer: WHICH ORG.
+ *
+ * They were one hook reading orgs, projects and people together, so the org
+ * switcher waited on the directory and a project list re-rendered when people
+ * landed. The org is genuinely shared — it selects the other two — so it is its
+ * own hook that the other two read, rather than a field passed around.
+ */
+
+/** The orgs you can act in, and which one is selected. */
+export const useOrgs = () => {
   const isOpen = useAtom(open)
   const orgs = useRead(keys.orgs, readOrgs, { enabled: isOpen, fresh: 300_000 })
   const organizations = orgs.data ?? []
-
-  // The org must be one that exists; the first is the fallback, never an
-  // override of a choice already made.
   const chosen = useAtom(org)
-  const owner =
-    chosen && organizations.some((one) => one.id === chosen) ? chosen : (organizations[0]?.id ?? '')
+  return {
+    isOpen,
+    organizations,
+    // The org must be one that EXISTS; the first is a fallback, never an
+    // override of a choice already made.
+    activeOrgId:
+      chosen && organizations.some((one) => one.id === chosen)
+        ? chosen
+        : (organizations[0]?.id ?? ''),
+    pending: orgs.pending,
+    fault: orgs.error ? reason(orgs.error) : null,
+  }
+}
 
+/** One org's projects. */
+export const useOrgProjects = () => {
+  const { isOpen, activeOrgId: owner } = useOrgs()
   const projects = useRead(keys.projects(owner), () => readProjects(owner), {
     enabled: isOpen && Boolean(owner),
   })
-  const people = useRead(keys.people(owner), () => readPeople(owner), {
-    enabled: isOpen && Boolean(owner),
-    fresh: 300_000,
-  })
-
   const rows = projects.data ?? []
   const held = useAtom(project)
-
   return {
-    isOpen,
-    activeOrgId: owner,
+    projects: rows,
     // The org's DEFAULT project is where a scope-less read lands, so it is the
     // honest selection when nothing is chosen — not the first row.
     activeProjectId:
       held && rows.some((one) => one.id === held)
         ? held
         : ((rows.find((one) => one.isDefault) ?? rows[0])?.id ?? ''),
-    organizations,
-    projects: rows,
-    users: people.data ?? [],
-    pending: orgs.pending || projects.pending,
-    fault: orgs.error ? reason(orgs.error) : projects.error ? reason(projects.error) : null,
+    pending: projects.pending,
+    fault: projects.error ? reason(projects.error) : null,
   }
 }
+
+/** One org's people. */
+export const useOrgPeople = () => {
+  const { isOpen, activeOrgId: owner } = useOrgs()
+  const people = useRead(keys.people(owner), () => readPeople(owner), {
+    enabled: isOpen && Boolean(owner),
+    fresh: 300_000,
+  })
+  return { users: people.data ?? [], pending: people.pending }
+}
+
 
 /**
  * Makes an org.
