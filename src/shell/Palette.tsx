@@ -67,7 +67,7 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
   // ⌘T -> Open Zero-Trust Tunnel Sharing
   // ⌘P -> Open Projects & Switcher
   // ⌘X -> Open Plugins Marketplace
-  // ⌘A -> Open Scheduled Tasks & Automations
+  // ⌘A -> Open Automations
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const isCmd = e.metaKey || e.ctrlKey
@@ -155,15 +155,15 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       {
         id: 'automations',
         group: 'Extensions & Tools',
-        label: 'Scheduled Tasks & Automations',
+        label: 'Automations',
         hint: 'Cron jobs, git push hooks, agent schedules (⌘A)',
         icon: <Clock size={15} />,
       },
       {
         id: 'terminal',
         group: 'Agentic & Cloud',
-        label: 'Toggle Terminal & Cloud Sandbox',
-        hint: 'Local k3s, MicroVMs, Tabs, ZAP stream (⌘\\)',
+        label: 'Terminal',
+        hint: 'A leased sandbox, on this machine or the estate (⌘\\)',
         icon: <Terminal size={15} />,
       },
       {
@@ -183,8 +183,8 @@ export const Palette = ({ onSettings, onRail, onOpenAgentBuilder }: PaletteProps
       {
         id: 'tunnel',
         group: 'Workspace Apps',
-        label: 'zt.hanzo.ai — Zero-Trust Dev Sharing',
-        hint: 'Expose local machine to team via Cloudflare (⌘T)',
+        label: 'Network',
+        hint: "The org's overlay on the Zero Trust fabric (⌘T)",
         icon: <Shield size={15} />,
       },
       {

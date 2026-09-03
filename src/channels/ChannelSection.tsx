@@ -35,7 +35,7 @@ const More = ({ of }: { of: { more: number; total: number; grow: () => void } })
   ) : null
 
 export const ChannelSection = () => {
-  const { rooms, activeRoomId } = useChannels()
+  const { rooms, activeRoomId, pending, fault } = useChannels()
 
   // `GET /v1/team/rooms` takes NO limit — it answers every room the org has —
   // so the rail bounds what it draws and says what it is holding back. A rail
@@ -58,6 +58,22 @@ export const ChannelSection = () => {
     // Informal group label derived from participant count
     return `Group (${r.members.length} members)`
   }
+
+  /**
+   * THREE EMPTY HEADINGS ARE NOT AN ANSWER.
+   *
+   * A refused read — which is what a signed-out rail gets — rendered exactly
+   * like an org with no rooms, and a person cannot tell those apart by looking.
+   * The read says which, so the rail says which.
+   */
+  const nothing = rooms.length === 0
+  const note = fault
+    ? { text: 'Could not read your rooms.', tone: '#f87171' }
+    : pending
+      ? { text: 'Reading…', tone: 'rgba(255,255,255,0.35)' }
+      : nothing
+        ? { text: 'No rooms yet.', tone: 'rgba(255,255,255,0.35)' }
+        : null
 
   return (
     <YStack gap="$2" paddingVertical="$1">
@@ -89,6 +105,17 @@ export const ChannelSection = () => {
             <Plus size={11} />
           </button>
         </XStack>
+
+        {note ? (
+          <SizableText
+            size="$1"
+            paddingHorizontal="$2"
+            paddingBottom="$1"
+            style={{ color: note.tone, fontSize: 11 }}
+          >
+            {note.text}
+          </SizableText>
+        ) : null}
 
         {channels.rows.map((chan) => {
           const isActive = chan.id === activeRoomId

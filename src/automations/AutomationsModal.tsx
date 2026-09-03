@@ -274,7 +274,7 @@ export const AutomationsModal = () => {
             <Clock size={18} color="#34d399" />
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
-                Scheduled Tasks & Automations
+                Automations
               </div>
               <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
                 Flows this org owns, and what each one is armed to start on.

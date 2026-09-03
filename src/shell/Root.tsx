@@ -156,7 +156,7 @@ export const Root = () => {
       <SkillsModal />
       <ConnectorsModal />
 
-      {/* Scheduled Tasks & Automations Modal */}
+      {/* Automations */}
       <AutomationsModal />
     </Screen>
   )

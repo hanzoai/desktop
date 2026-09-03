@@ -2,8 +2,8 @@
  * Artifacts & Interactive Sandbox Execution Canvas.
  *
  * Side-by-side (desktop) and sliding sheet (mobile) artifact viewer supporting
- * live code editing, browser iframe previews, and execution in local k3s clusters
- * or Hanzo Cloud gVisor microVM enclaves.
+ * live code editing, browser previews, and execution in a leased sandbox — an
+ * ORIGIN says where it runs and a RUNTIME says what isolates it.
  */
 import {
   Check,

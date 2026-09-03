@@ -38,7 +38,10 @@ export const ProjectModal = () => {
 
   if (!isOpen) return null
 
-  const activeOrg = organizations.find((o) => o.id === activeOrgId) || organizations[0]
+  // UNDEFINED when the org read was refused or answered nothing, which is what
+  // a signed-out window gets — and reading `.name` off it crashed the modal
+  // into the error boundary. A screen with no org is an ordinary screen.
+  const activeOrg = organizations.find((o) => o.id === activeOrgId) ?? organizations[0]
   // The list already IS this org's — it was read `?owner=<org>` — so filtering
   // it again would only ever hide rows the server said belong here.
   const filteredProjects = projects
@@ -184,10 +187,11 @@ export const ProjectModal = () => {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
-                    Active Organization: <span style={{ color: '#60a5fa' }}>{activeOrg.name}</span>
+                    Active Organization:{' '}
+                    <span style={{ color: '#60a5fa' }}>{activeOrg?.name ?? '—'}</span>
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
-                    Isolated repositories, worktrees, sandbox runtime pods, and agent swarms.
+                    A scope inside your organization. IAM owns it; work is separated by it.
                   </div>
                 </div>
               </div>

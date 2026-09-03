@@ -104,10 +104,10 @@ export const TaskQueueModal = () => {
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
-                Durable Task Queue & CI/CD Pipelines
+                Runs
               </div>
               <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                Persistent background task orchestration running against local Node, k3s, and Hanzo Cloud.
+                The org's live agent sessions, and what each one is doing.
               </div>
             </div>
           </div>
