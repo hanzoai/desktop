@@ -64,6 +64,27 @@ const held = new Map<string, AiClient>()
  * Built on first use rather than at module scope, for the same reason the IAM
  * instance is: it closes over one, and that one reads `window`.
  */
+/**
+ * Where the estate is, when it is not where the SDK assumes.
+ *
+ * A named address wins: `VITE_HANZO_API` points a run at a local cloud, and
+ * `VITE_HANZO_IAM` moves the bearer with it — WHERE the estate is and WHO is
+ * calling it are separate questions, and naming only the first answered 401 on
+ * every call.
+ *
+ * Unnamed, a DEV run is the origin serving this document. The SDK's default is
+ * absolute, and api.hanzo.ai grants CORS to the hosts a brand states and to no
+ * loopback origin, so an unset variable sends every estate call cross-origin to
+ * a preflight that fails. That is what makes a browser run read as signed out
+ * when it is signed in — every read refused, for a reason that is neither the
+ * server's nor this org's. The `/v1` proxy in `vite.config.ts` is what the
+ * header above it says it is, and it can only carry a same-origin path. A built
+ * app keeps the SDK's default. The machine is unaffected: it names its own.
+ */
+const estate = (): string | undefined =>
+  (import.meta.env.VITE_HANZO_API as string) ||
+  (import.meta.env.DEV ? window.location.origin : undefined)
+
 export const client = (origin: string = ESTATE): AiClient => {
   const there = held.get(origin)
   if (there) return there
@@ -73,13 +94,7 @@ export const client = (origin: string = ESTATE): AiClient => {
       : createAiClient({
           publishableKey: brand.publishableKey,
           auth: iam(),
-          // WHERE the estate is and WHO is calling it are separate questions.
-          // Naming a local cloud used to drop the bearer with it, so every call
-          // to that cloud answered 401 — and VITE_HANZO_IAM exists precisely so
-          // the identity moves with the API rather than instead of it.
-          ...(import.meta.env.VITE_HANZO_API
-            ? { baseUrl: import.meta.env.VITE_HANZO_API as string }
-            : {}),
+          ...(estate() ? { baseUrl: estate() as string } : {}),
         })
   held.set(origin, made)
   return made
