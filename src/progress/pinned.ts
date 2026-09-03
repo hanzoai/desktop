@@ -12,8 +12,8 @@
  * nothing rather than to a stale copy of how it looked when it was pinned.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import type { Run } from './types'
-import { useRuns } from './store'
+import type { Run } from './types.ts'
+import { useRuns } from './store.ts'
 
 const vault = 'hanzo.desktop.pinned'
 

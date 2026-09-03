@@ -4,7 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { brand, wear } from '@hanzo/chat/brand'
-import { Services } from './Services'
+import { Services } from './Services.tsx'
 
 /**
  * The services window's mount.

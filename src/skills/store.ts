@@ -21,12 +21,12 @@
  */
 
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead } from '@hanzo/chat/data/query'
 import { fromSeconds } from '@hanzo/chat/show'
-import { fold, type Listed } from './fold'
-import type { Skill } from './types'
+import { fold, type Listed } from './fold.ts'
+import type { Skill } from './types.ts'
 
 export type { Skill }
 

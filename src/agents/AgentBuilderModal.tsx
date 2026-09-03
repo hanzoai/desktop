@@ -14,11 +14,11 @@ import { Bot, Save, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 
-import { useTools } from '../tools/store'
-import { keys } from '../data/keys'
+import { useTools } from '../tools/store.ts'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { useRead } from '@hanzo/chat/data/query'
-import { refresh } from './store'
+import { refresh } from './store.ts'
 
 export interface AgentBuilderProps {
   isOpen: boolean

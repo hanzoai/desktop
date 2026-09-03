@@ -11,9 +11,9 @@
  */
 import { X } from '@hanzogui/lucide-icons-2'
 
-import { Progressing } from './Bar'
-import { pin, usePinned } from './pinned'
-import { useLiveRuns } from './store'
+import { Progressing } from './Bar.tsx'
+import { pin, usePinned } from './pinned.ts'
+import { useLiveRuns } from './store.ts'
 
 export const Watching = ({ live = true }: { live?: boolean }) => {
   const { runs, ids } = usePinned()

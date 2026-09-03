@@ -13,9 +13,9 @@
  * pretends otherwise — `~/data/missing` is what the rail's controls report.
  */
 import { client } from '@hanzo/chat/data/origin'
-import { keys } from './keys'
+import { keys } from './keys.ts'
 import { useRead } from '@hanzo/chat/data/query'
-import type { Convo } from './types'
+import type { Convo } from './types.ts'
 
 /**
  * Every conversation, newest first.

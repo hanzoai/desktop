@@ -20,13 +20,13 @@
  * refuses to be — so a provider that has only the token path answers 400 saying
  * a token is required, and that sentence is what the card shows.
  */
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import { visit } from '@hanzo/chat/data/shell'
 import { atom, useAtom } from '@hanzo/chat/data/store'
 import { fromStamp } from '@hanzo/chat/show'
-import type { Provider } from './types'
+import type { Provider } from './types.ts'
 
 export type { Provider }
 

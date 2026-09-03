@@ -13,8 +13,8 @@
  */
 import { ChevronRight } from '@hanzogui/lucide-icons-2'
 
-import { Progressing } from './Bar'
-import { rollUp, type Node } from './types'
+import { Progressing } from './Bar.tsx'
+import { rollUp, type Node } from './types.ts'
 
 const Row = ({ node, depth }: { node: Node; depth: number }) => {
   const { run, children } = node

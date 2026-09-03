@@ -3,7 +3,7 @@ import { RouterProvider } from 'react-router/dom'
 
 import { Session } from '@hanzo/chat/data/session'
 import { shell } from '@hanzo/chat/data/shell'
-import { router } from './routes'
+import { router } from './routes.tsx'
 import { consent, usePref } from '@hanzo/chat/settings/prefs'
 import { Welcome } from '@hanzo/chat/shell/Welcome'
 

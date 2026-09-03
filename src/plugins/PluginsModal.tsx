@@ -14,9 +14,9 @@
 import { Blocks, Boxes, PenLine } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
-import { More, Sheet, State } from '../shell/Sheet'
+import { More, Sheet, State } from '../shell/Sheet.tsx'
 import { ago, useShown } from '@hanzo/chat/show'
-import { pluginsStore, usePlugins } from './store'
+import { pluginsStore, usePlugins } from './store.ts'
 
 export const PluginsModal = () => {
   const { isOpen, plugins, pending, fault } = usePlugins()

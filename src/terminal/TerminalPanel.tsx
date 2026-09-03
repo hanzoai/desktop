@@ -22,7 +22,7 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type CSSProperties, type FormEvent } from 'react'
 
 import { origins } from '@hanzo/chat/data/origin'
-import { terminalStore, useEnd, useRun, useTerminal, type Kind } from './store'
+import { terminalStore, useEnd, useRun, useTerminal, type Kind } from './store.ts'
 
 /** Where the Tabs workspace lives. It is a destination, not an origin. */
 const TABS = 'https://tabs.hanzo.ai/app'

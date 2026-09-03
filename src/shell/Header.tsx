@@ -1,6 +1,6 @@
 import { Header as Bar, HeaderButton } from '@hanzo/ui/chat'
 import { PanelLeft } from '@hanzogui/lucide-icons-2'
-import { PresenceStack } from '../presence/PresenceStack'
+import { PresenceStack } from '../presence/PresenceStack.tsx'
 
 export interface HeaderProps {
   title: string

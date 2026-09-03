@@ -9,7 +9,7 @@
  * what it is.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import { fromSeconds } from '@hanzo/chat/show'
@@ -21,7 +21,7 @@ import type {
   Overlay,
   TodoItem,
   WorkspaceAppId,
-} from './types'
+} from './types.ts'
 
 export type { MeetingSession, NoteDocument, Overlay, TodoItem, WorkspaceAppId }
 

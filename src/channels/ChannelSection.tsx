@@ -10,7 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useShown } from '@hanzo/chat/show'
-import { channelsStore, useChannels, type ChatRoom } from './store'
+import { channelsStore, useChannels, type ChatRoom } from './store.ts'
 
 /** One "N more" affordance, so no list here is cut without saying so. */
 const More = ({ of }: { of: { more: number; total: number; grow: () => void } }) =>

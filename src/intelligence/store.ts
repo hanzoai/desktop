@@ -15,7 +15,7 @@
  * every one but the last was a question already finished being asked.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend, useSettled } from '@hanzo/chat/data/query'
 

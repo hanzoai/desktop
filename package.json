@@ -1,6 +1,6 @@
 {
   "name": "@hanzo/desktop",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "license": "MIT",
   "description": "Hanzo Desktop — the client, local and cloud, on @hanzo/gui + @hanzo/ui.",

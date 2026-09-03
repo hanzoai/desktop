@@ -18,7 +18,7 @@ import {
   usePanel,
   useRemember,
   useSymbols,
-} from './store'
+} from './store.ts'
 
 export const IntelligenceModal = () => {
   // Two tabs, two hooks. Only the strip is about both.

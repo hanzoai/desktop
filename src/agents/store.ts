@@ -4,10 +4,10 @@
  * One read, one key, one cache entry, and every surface that names an agent
  * reads it here rather than keeping a second roster.
  */
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { invalidate, useRead, useSend } from '@hanzo/chat/data/query'
-import type { AgentDefinition } from './types'
+import type { AgentDefinition } from './types.ts'
 
 export type { AgentDefinition }
 

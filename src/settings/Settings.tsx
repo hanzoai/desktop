@@ -16,12 +16,12 @@ import {
 import { selected } from '@hanzo/ui/glass'
 import { useState, type ReactNode } from 'react'
 
-import { Account, type AccountProps } from './Account'
+import { Account, type AccountProps } from './Account.tsx'
 import { General } from '@hanzo/chat/settings/General'
 import { Look } from '@hanzo/chat/settings/Look'
-import { Node } from './Node'
+import { Node } from './Node.tsx'
 import { shell } from '@hanzo/chat/data/shell'
-import type { Served } from '../data/types'
+import type { Served } from '../data/types.ts'
 
 export interface SettingsProps {
   open: boolean

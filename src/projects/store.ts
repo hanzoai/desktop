@@ -12,10 +12,10 @@
  * the server and everything a reader believes about the screen.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
-import type { Organization, Project, UserIdentity } from './types'
+import type { Organization, Project, UserIdentity } from './types.ts'
 
 export type { Organization, Project, UserIdentity }
 

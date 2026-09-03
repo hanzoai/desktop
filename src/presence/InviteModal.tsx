@@ -11,7 +11,7 @@ import {
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
 import { useSession } from '@hanzo/chat/data/session'
-import { multiplayerStore, useInvite, useMultiplayer } from './store'
+import { multiplayerStore, useInvite, useMultiplayer } from './store.ts'
 
 export const InviteModal = ({ conversationId }: { conversationId?: string | null }) => {
   const { isInviteOpen, participants } = useMultiplayer()

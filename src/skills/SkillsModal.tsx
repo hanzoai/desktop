@@ -13,11 +13,11 @@
 import { GraduationCap, PenLine } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
-import { More, Sheet, State } from '../shell/Sheet'
+import { More, Sheet, State } from '../shell/Sheet.tsx'
 import { ago } from '@hanzo/chat/show'
 import { useShown } from '@hanzo/chat/show'
-import { useToggleTool } from '../tools/store'
-import { skillsStore, useSkills } from './store'
+import { useToggleTool } from '../tools/store.ts'
+import { skillsStore, useSkills } from './store.ts'
 
 export const SkillsModal = () => {
   const { isOpen, skills, pending, fault } = useSkills()

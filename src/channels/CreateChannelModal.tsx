@@ -4,7 +4,7 @@
 import { Hash, Lock, X } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { channelsStore, useChannels, useOpenRoom } from './store'
+import { channelsStore, useChannels, useOpenRoom } from './store.ts'
 
 export const CreateChannelModal = () => {
   const { isCreateOpen } = useChannels()

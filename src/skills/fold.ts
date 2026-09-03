@@ -11,7 +11,7 @@
  * body; dropping a shadowed one hides a thing somebody wrote, with no sign on
  * the screen that anything is missing.
  */
-import type { Skill } from './types'
+import type { Skill } from './types.ts'
 
 /** One row of the registry view. A skill rides the same shape as every tool. */
 export interface Listed {

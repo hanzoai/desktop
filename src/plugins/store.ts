@@ -16,11 +16,11 @@
  * the difference between an inventory and a list of what happened to answer.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead } from '@hanzo/chat/data/query'
 import { fromSeconds } from '@hanzo/chat/show'
-import type { Authored as Written, Mounted as Mount, PluginExtension } from './types'
+import type { Authored as Written, Mounted as Mount, PluginExtension } from './types.ts'
 
 export type { PluginExtension }
 

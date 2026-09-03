@@ -12,12 +12,12 @@
  * what a chat header should do, and no other route removes one.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import { useSession } from '@hanzo/chat/data/session'
 import { tint } from '@hanzo/chat/show'
-import type { Participant } from './types'
+import type { Participant } from './types.ts'
 
 /** Whether the invite sheet is showing. */
 export const inviting = atom(false)

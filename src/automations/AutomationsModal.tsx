@@ -19,7 +19,7 @@ import {
   useRunFlow,
   useVersion,
   type Flow,
-} from './store'
+} from './store.ts'
 
 /**
  * One flow's row.

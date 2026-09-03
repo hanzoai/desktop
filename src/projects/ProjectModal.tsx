@@ -18,7 +18,7 @@ import {
   useOrgPeople,
   useOrgProjects,
   useOrgs,
-} from './store'
+} from './store.ts'
 
 export const ProjectModal = () => {
   // Three tabs, three hooks; the org is the one thing they share.

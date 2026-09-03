@@ -9,10 +9,10 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { invalidate } from '@hanzo/chat/data/query'
-import { keys } from '../data/keys'
-import { useToggleTool } from '../tools/store'
-import { mcpStore, useMcp } from './store'
-import type { Connected } from './types'
+import { keys } from '../data/keys.ts'
+import { useToggleTool } from '../tools/store.ts'
+import { mcpStore, useMcp } from './store.ts'
+import type { Connected } from './types.ts'
 
 export const McpModal = () => {
   const { isOpen, servers, activeServerId } = useMcp()

@@ -18,8 +18,8 @@ import {
   useOverlay,
   useWorkspace,
   workspaceAppsStore,
-} from './store'
-import type { WorkspaceAppId } from './types'
+} from './store.ts'
+import type { WorkspaceAppId } from './types.ts'
 
 export const AppWorkspaceModal = () => {
   // Four products, four hooks. What they share is the tab strip, which is a

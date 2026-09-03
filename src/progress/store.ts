@@ -21,12 +21,12 @@ import { useEffect } from 'react'
 
 import type { Session } from '@hanzo/ai'
 
-import { keys } from '../data/keys'
+import { keys } from '../data/keys.ts'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { peek, reason, useRead, useSend, write } from '@hanzo/chat/data/query'
-import { progressOf, type Node, type Progress, type Run } from './types'
+import { progressOf, type Node, type Progress, type Run } from './types.ts'
 
-export * from './types'
+export * from './types.ts'
 
 /** What the SDK's `Session` omits. The wire has carried it all along. */
 type Reported = Session & {

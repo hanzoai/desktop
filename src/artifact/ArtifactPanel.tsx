@@ -38,7 +38,7 @@ const PICKER: CSSProperties = {
   cursor: 'pointer',
 }
 
-import { artifactStore, useArtifact, useRunCode, useStopCode } from './store'
+import { artifactStore, useArtifact, useRunCode, useStopCode } from './store.ts'
 
 const TAB_BUTTON_STYLE = (active: boolean): CSSProperties => ({
   display: 'inline-flex',

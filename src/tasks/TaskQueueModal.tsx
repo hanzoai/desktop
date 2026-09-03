@@ -12,13 +12,13 @@
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import { ago, fromStamp, useShown } from '@hanzo/chat/show'
-import { Progressing } from '../progress/Bar'
-import { Subtasks } from '../progress/Subtasks'
-import { useLiveRuns, useTree } from '../progress/store'
-import { pin, usePinned } from '../progress/pinned'
+import { Progressing } from '../progress/Bar.tsx'
+import { Subtasks } from '../progress/Subtasks.tsx'
+import { useLiveRuns, useTree } from '../progress/store.ts'
+import { pin, usePinned } from '../progress/pinned.ts'
 import { Pin } from '@hanzogui/lucide-icons-2'
-import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store'
-import type { DurableTask, TaskStatus } from './types'
+import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store.ts'
+import type { DurableTask, TaskStatus } from './types.ts'
 
 // A session's status is exactly four words. There is no 'queued' and no
 // 'retrying': a run is open or it is not, and a finished one stays finished.

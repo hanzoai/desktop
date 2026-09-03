@@ -14,7 +14,7 @@ import { row, rows } from '@hanzo/ui/glass'
 import { ConfirmDelete, DialogTemplate } from '@hanzo/ui/product'
 import { useState } from 'react'
 
-import type { User } from '../data/types'
+import type { User } from '../data/types.ts'
 
 /** Where a Hanzo identity is managed. One address, and it is not this app's. */
 const IAM = 'https://hanzo.id/account'

@@ -20,7 +20,7 @@
  */
 import type { CSSProperties } from 'react'
 
-import type { Progress } from './types'
+import type { Progress } from './types.ts'
 
 /**
  * The indeterminate stripe's motion, inserted once.

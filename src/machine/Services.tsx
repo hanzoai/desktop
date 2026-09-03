@@ -2,7 +2,7 @@ import { Button, H2, Paragraph, ScrollView, Separator, SizableText, XStack, YSta
 import { row, rows } from '@hanzo/ui/glass'
 import { useState } from 'react'
 
-import { useLogs, useRun, useServices } from '../data/machine'
+import { useLogs, useRun, useServices } from '../data/machine.ts'
 import type { Service } from '@hanzo/chat/data/shell'
 
 /** What a service is called, where the shell's name is a handle. */
