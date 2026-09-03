@@ -12,13 +12,14 @@ import { history, type Conversation, type Payload } from '~/compose/submit'
 import { useModels } from '~/data/config'
 import { useConvo } from '~/data/convos'
 import { requireLogin } from '~/data/gate'
+import { keys } from '~/data/keys'
 import { useTurns } from '~/data/messages'
-import { why } from '~/data/missing'
+import { invalidate } from '~/data/query'
 import * as store from '~/data/store'
 import type { Message, Part } from '~/data/types'
 import { InviteModal } from '~/presence/InviteModal'
 import { Model } from '~/settings/Model'
-import { origins } from '~/data/origin'
+import { client, origins } from '~/data/origin'
 import { catalog } from '~/settings/models'
 import { model as preferred, usePref } from '~/settings/prefs'
 import { Header } from '~/shell/Header'
@@ -154,6 +155,45 @@ export const Chat = () => {
    * rather than a toast, because it is the answer to the question above it and
    * a message that scrolls away takes the explanation with it.
    */
+  /**
+   * Write the turn that just streamed.
+   *
+   * `/v1/chat/completions` is the vendor-compatible face and records nothing, so
+   * a streamed conversation has an answer and no history until something writes
+   * one. `threads.record` is that write, into the SAME store the rail reads —
+   * without an id it opens a thread and answers the one it opened, which is how
+   * a first turn earns the address the browser then moves to.
+   *
+   * A write that fails leaves the address alone on purpose. The turn is on
+   * screen either way, and an id in the bar is what says this conversation was
+   * filed; putting one there for a write that did not land would say it twice
+   * and be wrong once.
+   *
+   * It is the ESTATE that is written to, whichever origin answered. A turn the
+   * engine on this machine served is still this account's conversation, and the
+   * rail reads one list — writing it where the model ran would file half a
+   * history somewhere the rail never looks.
+   */
+  const keep = useCallback(
+    async (payload: Payload, reply: Reply) => {
+      const said = spoken(reply)
+      if (!said) return
+      const thread = await client()
+        .threads.record(
+          [
+            { role: 'user', content: payload.text },
+            { role: 'assistant', content: said },
+          ],
+          id ?? undefined,
+        )
+        .catch(() => null)
+      if (!thread) return
+      invalidate(keys.convos)
+      if (!id) navigate(`/c/${thread}`, { replace: true })
+    },
+    [id, navigate],
+  )
+
   const ask = useCallback(
     (payload: Payload, said: readonly Message[]) => {
       const local = `${payload.messageId}~`
@@ -173,18 +213,19 @@ export const Chat = () => {
           },
           ended: (whyEnded, fault) => {
             if (whyEnded === 'denied') requireLogin('anonymous')
-            if (whyEnded === 'failed') reply = faulted(reply, fault ?? why.write)
+            if (whyEnded === 'failed') reply = faulted(reply, fault ?? 'The model did not answer.')
             if (whyEnded === 'stopped') reply = stopped(reply)
             paint()
             store.busy.set(false)
             store.stop.set(null)
+            if (whyEnded === 'done') void keep(payload, reply)
           },
         },
       )
 
       store.stop.set({ cancel: close })
     },
-    [],
+    [keep],
   )
 
   /**
@@ -390,11 +431,6 @@ export const Chat = () => {
                   onTrouble={(say) => store.failure.set({ code: 'local', text: say })}
                 />
 
-                {messages.length > 0 ? (
-                  <Paragraph fontSize="$1" color="$color11" textAlign="center" paddingTop="$2">
-                    {why.write}
-                  </Paragraph>
-                ) : null}
 
                 {brand.footer ? (
                   <Paragraph fontSize="$1" color="$color11" textAlign="center" paddingTop="$2">
