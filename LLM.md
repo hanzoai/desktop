@@ -849,3 +849,38 @@ ways that do not look like concurrency:
   entry points import `@hanzo/font/css` and nothing declared the package. A CSS
   side-effect import carries no types, so only a bundle catches it. Run the
   build, not just the typecheck, before calling anything shipped.
+
+
+## Run it. tsc and the build do not open a modal
+
+Everything in this file up to here was verified by `tsc`, `vite build` and
+`node --test`. All three were green while `ProjectModal` **crashed into the
+error boundary the moment it opened** — with the org read refused there is no
+org, and it read `.name` off `undefined`. No static check opens a modal, and the
+suite has no renderer, so nothing in the pipeline could have caught it.
+
+Driving the app found four more, and every one of them is the same class this
+whole pass is about — a screen that cannot say which nothing it is showing:
+
+- the rail dropped `pending` and `fault`, so three empty headings were what a
+  REFUSED read looked like, identical to an org with no rooms
+- a task queue titled "running against local Node, k3s, and Hanzo Cloud", which
+  reads agent sessions and touches none of them
+- a palette entry offering to "expose local machine to team via Cloudflare",
+  which is the tunnel fabrication that was deleted from the panel and left in
+  the menu that opens it
+- a project described as "repositories, worktrees, sandbox runtime pods", which
+  is an IAM scope
+
+    npx vite --port 5199 --strictPort        # desktop2 has no dev port of its own
+                                             # 5173 is chat2 and 1420 is desktop
+
+Then open every modal — ⌘\ ⌘M ⌘B ⌘Q ⌘T ⌘P ⌘X ⌘A — and read the text. **Signed
+out is the useful state**, not a distraction: every read is refused, so a
+surface that cannot distinguish refused from empty says so immediately. In the
+browser the API calls fail CORS from `127.0.0.1`, which produces exactly that
+condition for free.
+
+`errors` is not enough on its own — it returned `count: 0` for a component React
+had already replaced with the boundary. Read the rendered TEXT, and read the
+console for the `TypeError` React logged before it recovered.
