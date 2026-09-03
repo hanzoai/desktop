@@ -21,7 +21,7 @@ import { General } from '@hanzo/chat/settings/General'
 import { Look } from '@hanzo/chat/settings/Look'
 import { Node } from './Node'
 import { shell } from '@hanzo/chat/data/shell'
-import type { Served } from '~/data/types'
+import type { Served } from '../data/types'
 
 export interface SettingsProps {
   open: boolean

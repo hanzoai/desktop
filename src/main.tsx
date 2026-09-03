@@ -7,7 +7,7 @@ import '@hanzo/font/css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { App } from '~/app'
+import { App } from './app'
 import { brand, wear } from '@hanzo/chat/brand'
 import { unlock } from '@hanzo/chat/data/vault'
 

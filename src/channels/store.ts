@@ -18,7 +18,7 @@
  *   A zero would be a claim, and an invented number is what was here before.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import type { ChatRoom, RoomType } from './types'

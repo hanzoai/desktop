@@ -14,8 +14,8 @@
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import type { CSSProperties } from 'react'
 
-import { useAgents } from '~/agents/store'
-import { useTools } from '~/tools/store'
+import { useAgents } from '../agents/store'
+import { useTools } from '../tools/store'
 
 /** Which half of the list a trigger opens at. */
 export type Lane = 'all' | 'tool'

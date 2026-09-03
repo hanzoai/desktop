@@ -1,7 +1,7 @@
 import { Button, Paragraph, SizableText, XStack, YStack } from '@hanzo/ui'
 import { row, rows } from '@hanzo/ui/glass'
 
-import { manage, useNode, useRun, useService } from '~/data/machine'
+import { manage, useNode, useRun, useService } from '../data/machine'
 
 /**
  * One fact about the node: what it is called, and what it says.

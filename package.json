@@ -1,14 +1,24 @@
 {
   "name": "@hanzo/desktop",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.2",
   "type": "module",
   "license": "MIT",
   "description": "Hanzo Desktop — the client, local and cloud, on @hanzo/gui + @hanzo/ui.",
   "packageManager": "pnpm@11.24.0",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./dist/*.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "pack:lib": "tsc -p tsconfig.build.json",
+    "prepack": "pnpm pack:lib",
     "typecheck": "tsc --noEmit",
     "test": "node --test --experimental-strip-types 'src/**/*.test.ts'",
     "preview": "vite preview",

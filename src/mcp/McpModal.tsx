@@ -9,8 +9,8 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { invalidate } from '@hanzo/chat/data/query'
-import { keys } from '~/data/keys'
-import { useToggleTool } from '~/tools/store'
+import { keys } from '../data/keys'
+import { useToggleTool } from '../tools/store'
 import { mcpStore, useMcp } from './store'
 import type { Connected } from './types'
 

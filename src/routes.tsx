@@ -2,9 +2,9 @@ import { createBrowserRouter, Navigate } from 'react-router'
 
 import { Boundary } from '@hanzo/chat/shell/Boundary'
 import { Callback } from '@hanzo/chat/shell/Callback'
-import { Chat } from '~/shell/Chat'
+import { Chat } from './shell/Chat'
 import { Login } from '@hanzo/chat/shell/Login'
-import { Root } from '~/shell/Root'
+import { Root } from './shell/Root'
 
 /**
  * Where the app is mounted, from the document that served it.

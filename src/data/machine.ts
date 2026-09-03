@@ -10,7 +10,7 @@
  * `invalidate(keys.machine)` after starting or stopping anything: the node's
  * identity is only true while the node that answered is the one running.
  */
-import { keys } from '~/data/keys'
+import { keys } from './keys'
 import { useRead, useSend } from '@hanzo/chat/data/query'
 import { call, services, shell, type Service } from '@hanzo/chat/data/shell'
 

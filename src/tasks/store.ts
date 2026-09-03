@@ -11,7 +11,7 @@
  * fifty transcripts, and the key is what expresses that rather than a flag.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import type { DurableTask, TaskEvent, TaskPhase, TaskProgress, TaskStatus } from './types'

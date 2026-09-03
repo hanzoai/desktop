@@ -6,12 +6,12 @@ import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { Composer } from '@hanzo/ui/chat'
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
-import { Insert, type Lane } from '~/compose/Insert'
-import { Starters, type Starter } from '~/compose/Starters'
+import { Insert, type Lane } from './Insert'
+import { Starters, type Starter } from './Starters'
 import { useDraft } from '@hanzo/chat/compose/draft'
 import type { Handoff } from '@hanzo/chat/compose/link'
 import { payload, type Conversation, type Draft, type Payload } from '@hanzo/chat/compose/submit'
-import type { Attachment } from '~/data/types'
+import type { Attachment } from '../data/types'
 
 const COLUMN = 768
 const CEILING = 240

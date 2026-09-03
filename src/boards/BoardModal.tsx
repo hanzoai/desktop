@@ -6,9 +6,9 @@
  */
 import { ArrowRight, GitBranch, Kanban, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
-import { Watching } from '~/progress/Watching'
+import { Watching } from '../progress/Watching'
 import { boardStore, useBoard, useMoveCard, useOpenCard, type BoardCard } from './store'
-import { useRunAgent } from '~/agents/store'
+import { useRunAgent } from '../agents/store'
 
 const COLUMNS: { id: BoardCard['column']; title: string; color: string }[] = [
   { id: 'backlog', title: 'Backlog', color: 'rgba(255, 255, 255, 0.4)' },

@@ -18,7 +18,7 @@
  * the honest degradation rather than dropping it from a list of what is armed.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import type { AutomationTrigger, Flow, Version } from './types'

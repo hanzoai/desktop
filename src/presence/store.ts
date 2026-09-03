@@ -12,7 +12,7 @@
  * what a chat header should do, and no other route removes one.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client } from '@hanzo/chat/data/origin'
 import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import { useSession } from '@hanzo/chat/data/session'

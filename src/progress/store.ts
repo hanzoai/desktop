@@ -21,7 +21,7 @@ import { useEffect } from 'react'
 
 import type { Session } from '@hanzo/ai'
 
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { peek, reason, useRead, useSend, write } from '@hanzo/chat/data/query'
 import { progressOf, type Node, type Progress, type Run } from './types'

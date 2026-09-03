@@ -4,7 +4,7 @@
 import { Terminal, UserPlus } from '@hanzogui/lucide-icons-2'
 import { XStack } from '@hanzo/ui'
 import { multiplayerStore, useMultiplayer } from './store'
-import { terminalStore, useTerminal } from '~/terminal/store'
+import { terminalStore, useTerminal } from '../terminal/store'
 
 export const PresenceStack = () => {
   const { participants } = useMultiplayer()

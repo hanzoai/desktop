@@ -16,10 +16,10 @@
  * always was; what a guest may do is decided server-side from the absence of a
  * bearer, which is where it belongs and where it was already decided.
  */
-import { keys } from '~/data/keys'
+import { keys } from './keys'
 import { client, origins } from '@hanzo/chat/data/origin'
 import { useRead } from '@hanzo/chat/data/query'
-import type { Served } from '~/data/types'
+import type { Served } from './types'
 
 /** Who publishes a model, when it says. The menu's fallback group. */
 const OTHER = 'other'

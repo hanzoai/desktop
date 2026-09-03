@@ -12,7 +12,7 @@
  * it — a toggle per panel is two statements of one fact.
  */
 import { atom, useAtom } from '@hanzo/chat/data/store'
-import { keys } from '~/data/keys'
+import { keys } from '../data/keys'
 import { client, ESTATE } from '@hanzo/chat/data/origin'
 import { reason, useRead } from '@hanzo/chat/data/query'
 import type { Connected, Exposed } from './types'
