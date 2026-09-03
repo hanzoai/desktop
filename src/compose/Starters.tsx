@@ -136,7 +136,7 @@ export const Starters = ({ starters, disabled = false, onPick }: StartersProps) 
           >
             <Icon size={16} color="rgba(255, 255, 255, 0.85)" />
           </div>
-          <div style={{ display: 'grid', gap: 2, minWidth: 0 }}>
+          <div style={{ display: 'grid', alignContent: 'start', gap: 2, minWidth: 0 }}>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: '#ffffff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {label}
             </span>

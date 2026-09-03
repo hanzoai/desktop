@@ -102,7 +102,7 @@ export const CreateChannelModal = () => {
 
         <form
           onSubmit={(e) => void handleSubmit(e)}
-          style={{ display: 'grid', gap: 14 }}
+          style={{ display: 'grid', alignContent: 'start', gap: 14 }}
         >
           {opening.fault ? (
             <SizableText size="$1" color="#f87171">

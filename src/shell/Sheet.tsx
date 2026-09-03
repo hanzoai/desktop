@@ -72,7 +72,7 @@ export const Sheet = ({
         backgroundColor: '#0c0c0e',
         boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
         overflow: 'hidden',
-        display: 'grid'
+        display: 'grid', alignContent: 'start'
       }}
       onClick={(e) => e.stopPropagation()}
     >

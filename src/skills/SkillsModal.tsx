@@ -57,7 +57,7 @@ export const SkillsModal = () => {
       onSearch={setSearch}
       hint="Search name or summary..."
     >
-      <div style={{ display: 'grid', gap: 8 }}>
+      <div style={{ display: 'grid', alignContent: 'start', gap: 8 }}>
         <State fault={fault} pending={pending} empty={matched.length === 0} />
         {flipping.fault ? (
           <div style={{ fontSize: 12, color: '#f87171' }}>{flipping.fault}</div>

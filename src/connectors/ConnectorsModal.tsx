@@ -84,13 +84,12 @@ export const ConnectorsModal = () => {
               border: one.connected
                 ? '1px solid rgba(52, 211, 153, 0.3)'
                 : '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
+              display: 'grid',
+              alignContent: 'space-between',
               gap: 10,
             }}
           >
-            <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ display: 'grid', alignContent: 'start', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>{one.name}</span>
                 {one.category ? (

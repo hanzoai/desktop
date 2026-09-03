@@ -81,14 +81,13 @@ export const PluginsModal = () => {
                 plugin.kind === 'mounted' && plugin.enabled
                   ? '1px solid rgba(167, 139, 250, 0.3)'
                   : '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'space-between',
+              display: 'grid',
+              alignContent: 'space-between',
               gap: 10,
               gridColumn: reading === plugin.id ? '1 / -1' : undefined,
             }}
           >
-            <div style={{ display: 'grid', gap: 6 }}>
+            <div style={{ display: 'grid', alignContent: 'start', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div
                   style={{

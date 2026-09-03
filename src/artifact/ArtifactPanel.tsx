@@ -164,7 +164,7 @@ export const ArtifactPanel = () => {
       style={{
         backdropFilter: 'blur(32px) saturate(190%)',
         WebkitBackdropFilter: 'blur(32px)',
-        display: 'grid',
+        display: 'grid', alignContent: 'start',
         zIndex: 30
       }}
     >
@@ -423,8 +423,7 @@ export const ArtifactPanel = () => {
               lineHeight: 1.6,
               overflowY: 'auto',
               boxSizing: 'border-box',
-              display: 'flex',
-              flexDirection: 'column',
+              display: 'grid', alignContent: 'start',
               gap: 4,
             }}
           >

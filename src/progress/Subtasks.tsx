@@ -25,7 +25,7 @@ const Row = ({ node, depth }: { node: Node; depth: number }) => {
   const shown = rolled === null ? run.progress : { ...run.progress, pct: rolled }
 
   return (
-    <div style={{ display: 'grid', gap: 6 }}>
+    <div style={{ display: 'grid', alignContent: 'start', gap: 6 }}>
       <div
         style={{
           display: 'flex',
@@ -37,7 +37,7 @@ const Row = ({ node, depth }: { node: Node; depth: number }) => {
         {depth > 0 ? (
           <ChevronRight size={11} color="rgba(255,255,255,0.25)" style={{ flexShrink: 0 }} />
         ) : null}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'grid', alignContent: 'start', gap: 3 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span
               style={{
@@ -75,7 +75,7 @@ const Row = ({ node, depth }: { node: Node; depth: number }) => {
 
 export const Subtasks = ({ tree }: { tree: Node | null }) =>
   tree === null ? null : (
-    <div style={{ display: 'grid', gap: 8 }}>
+    <div style={{ display: 'grid', alignContent: 'start', gap: 8 }}>
       <Row node={tree} depth={0} />
     </div>
   )

@@ -100,7 +100,7 @@ export const ProjectModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -182,7 +182,7 @@ export const ProjectModal = () => {
             </div>
           ) : null}
           {activeTab === 'projects' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
@@ -249,14 +249,13 @@ export const ProjectModal = () => {
                         borderRadius: 12,
                         background: isSelected ? 'rgba(96, 165, 250, 0.08)' : 'rgba(255, 255, 255, 0.03)',
                         border: isSelected ? '1px solid rgba(96, 165, 250, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
+                        display: 'grid',
+                        alignContent: 'space-between',
                         cursor: 'pointer',
                         gap: 10,
                       }}
                     >
-                      <div style={{ display: 'grid', gap: 4 }}>
+                      <div style={{ display: 'grid', alignContent: 'start', gap: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>{p.name}</span>
                           {isSelected && <Check size={14} color="#60a5fa" />}
@@ -285,7 +284,7 @@ export const ProjectModal = () => {
 
           {/* TAB 2: ORGANIZATIONS */}
           {activeTab === 'orgs' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', gap: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
@@ -334,7 +333,7 @@ export const ProjectModal = () => {
               </form>
 
               {/* Orgs List */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 8 }}>
                 {organizations.map((org) => {
                   const isSelected = org.id === activeOrgId
                   return (
@@ -393,7 +392,7 @@ export const ProjectModal = () => {
 
           {/* TAB 3: USERS & IDENTITIES */}
           {activeTab === 'users' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', gap: 14 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
                   User & Identity Switcher
@@ -404,7 +403,7 @@ export const ProjectModal = () => {
               </div>
 
               {/* Users List */}
-              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 8 }}>
                 {/* A roster, not a switcher. Who you are is the validated
                     principal on the token; picking a row here changed nothing
                     on the server and everything a reader believed. */}

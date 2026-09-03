@@ -70,7 +70,7 @@ export const AppWorkspaceModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -146,7 +146,7 @@ export const AppWorkspaceModal = () => {
           {/* 1. TASKS.HANZO.AI */}
           {activeApp === 'tasks' && (
             <div style={{ flex: 1, display: 'flex', padding: 18, gap: 16 }}>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ flex: 1, display: 'grid', alignContent: 'start', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>
@@ -182,8 +182,7 @@ export const AppWorkspaceModal = () => {
                     borderRadius: 12,
                     border: '1px solid rgba(255, 255, 255, 0.08)',
                     padding: 14,
-                    display: 'flex',
-                    flexDirection: 'column',
+                    display: 'grid', alignContent: 'start',
                     gap: 8,
                     overflowY: 'auto',
                   }}
@@ -256,7 +255,7 @@ export const AppWorkspaceModal = () => {
                   width: 240,
                   borderRight: '1px solid rgba(255, 255, 255, 0.08)',
                   padding: 12,
-                  display: 'grid',
+                  display: 'grid', alignContent: 'start',
                   gap: 8
                 }}
               >
@@ -284,7 +283,7 @@ export const AppWorkspaceModal = () => {
                   </button>
                 </div>
 
-                <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 6 }}>
                   {notes.map((note) => {
                     const isSelected = note.id === activeNote?.id
                     return (
@@ -294,7 +293,7 @@ export const AppWorkspaceModal = () => {
                         onClick={() => workspaceAppsStore.selectNote(note.id)}
                         className="tap"
                         style={{
-                          display: 'grid',
+                          display: 'grid', alignContent: 'start',
                           gap: 4,
                           padding: '8px 10px',
                           borderRadius: 6,
@@ -317,7 +316,7 @@ export const AppWorkspaceModal = () => {
               </div>
 
               {/* Note Editor */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 16, gap: 10 }}>
+              <div style={{ flex: 1, display: 'grid', alignContent: 'start', padding: 16, gap: 10 }}>
                 <div
                   style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                 >
@@ -369,7 +368,7 @@ export const AppWorkspaceModal = () => {
 
           {/* 3. The org's backlog, across every project */}
           {activeApp === 'todo' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', padding: 18, gap: 14 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>Backlog</div>
                 <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -440,8 +439,7 @@ export const AppWorkspaceModal = () => {
                 style={{
                   flex: 1,
                   overflowY: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
+                  display: 'grid', alignContent: 'start',
                   gap: 8,
                 }}
               >
@@ -561,7 +559,7 @@ export const AppWorkspaceModal = () => {
 
           {/* 4. Where a room's call happens */}
           {activeApp === 'meet' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 18, gap: 16 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', padding: 18, gap: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>Call</div>
                 <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -584,7 +582,7 @@ export const AppWorkspaceModal = () => {
                     borderRadius: 12,
                     backgroundColor: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'grid',
+                    display: 'grid', alignContent: 'start',
                     gap: 10
                   }}
                 >
@@ -621,7 +619,7 @@ export const AppWorkspaceModal = () => {
 
           {/* 5. The org's overlay on the Zero Trust fabric */}
           {activeApp === 'tunnel' && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 18, gap: 16 }}>
+            <div style={{ flex: 1, display: 'grid', alignContent: 'start', padding: 18, gap: 16 }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#ffffff' }}>Network</div>
                 <div style={{ fontSize: 12, color: 'rgba(255, 255, 255, 0.5)' }}>
@@ -638,7 +636,7 @@ export const AppWorkspaceModal = () => {
                   {pending ? 'Reading…' : 'This org holds no overlay network.'}
                 </div>
               ) : (
-                <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ display: 'grid', alignContent: 'start', gap: 12 }}>
                   <div
                     style={{
                       padding: 16,
@@ -667,7 +665,7 @@ export const AppWorkspaceModal = () => {
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gap: 8, overflowY: 'auto' }}>
+                  <div style={{ display: 'grid', alignContent: 'start', gap: 8, overflowY: 'auto' }}>
                     {overlay.routers.map((r) => (
                       <div
                         key={r.id}

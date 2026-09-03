@@ -85,7 +85,7 @@ const Row = ({
                 </div>
 
                 <div
-                  style={{ display: 'grid', gap: 3, minWidth: 0 }}
+                  style={{ display: 'grid', alignContent: 'start', gap: 3, minWidth: 0 }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 13.5, fontWeight: 600, color: '#ffffff' }}>
@@ -254,7 +254,7 @@ export const AutomationsModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -297,7 +297,7 @@ export const AutomationsModal = () => {
         </div>
 
         {/* Content Area */}
-        <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: 18, gap: 14 }}>
+        <div style={{ flex: 1, minHeight: 0, display: 'grid', alignContent: 'start', padding: 18, gap: 14 }}>
           {/* Create Job Form */}
           <form onSubmit={(e) => void handleCreateJob(e)} style={{ display: 'flex', gap: 8 }}>
             <input
@@ -339,7 +339,7 @@ export const AutomationsModal = () => {
           </form>
 
           {/* Jobs List */}
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'grid', alignContent: 'start', gap: 10 }}>
             {fault || running.fault || arming.fault || opening.fault ? (
               <div style={{ fontSize: 12, color: '#f87171' }}>
                 {fault || running.fault || arming.fault || opening.fault}

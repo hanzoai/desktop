@@ -50,7 +50,7 @@ export const McpModal = () => {
         style={{
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'grid'
+          display: 'grid', alignContent: 'start'
         }}
         onClick={(e: any) => e.stopPropagation()}
       >

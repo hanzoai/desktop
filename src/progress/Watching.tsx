@@ -26,7 +26,7 @@ export const Watching = ({ live = true }: { live?: boolean }) => {
   return (
     <div
       style={{
-        display: 'grid',
+        display: 'grid', alignContent: 'start',
         gap: 8,
         padding: '10px 16px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
@@ -59,7 +59,7 @@ export const Watching = ({ live = true }: { live?: boolean }) => {
           <div
             key={run.id}
             style={{
-              display: 'grid',
+              display: 'grid', alignContent: 'start',
               gap: 5,
               padding: '8px 10px',
               borderRadius: 8,
