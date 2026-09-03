@@ -884,3 +884,73 @@ condition for free.
 `errors` is not enough on its own — it returned `count: 0` for a component React
 had already replaced with the boundary. Read the rendered TEXT, and read the
 console for the `TypeError` React logged before it recovered.
+
+
+## Progress: the run's own word, an estimate, or nothing
+
+`src/progress` is the one place this app draws "how far along". The server side
+was already complete and well shaped; the client had a three-pixel sliver.
+
+**An agent reports by APPENDING A TURN**, not by patching a field:
+
+    POST /v1/agents/sessions/{id}/events
+    {"kind":"progress","payload":{"pct":60,"phase":"running","activity":"…"}}
+
+The server moves the session's progress from that turn, marks it the run's OWN
+word rather than a model's estimate, and pushes the updated row onto
+`sessions/stream`. **That is why it is an event and not a PATCH**: one write and
+every watcher already knows, with nothing polling. `useReport` is the verb,
+`useLiveRuns` is the feed — each `session` frame is written into the same cache
+key `useRuns` reads, so a bar moves with no second store and no component doing
+work of its own.
+
+`GET /v1/agents/sessions/{id}/progress` is the other half: a MODEL ESTIMATE read
+off the transcript, `estimated: true`. Both are useful and they are not the same
+claim.
+
+### Four states, and an empty bar is not one of them
+
+| the wire says | drawn |
+|---|---|
+| `pct: 62`, estimated false | a green track filled to 62% |
+| `pct: 62`, estimated true | the same, VIOLET, labelled `est` |
+| **`pct` absent** | an indeterminate stripe, and `—` rather than a number |
+| `phase: blocked` | amber, held wherever it got to |
+
+The third row is the whole point. `pct` is documented ABSENT rather than zero
+for an indeterminate run, so `progressOf` keeps it `null` — and an empty track
+and a null track are opposite claims a person cannot tell apart by looking. A
+`done` run draws full whatever its last number was: it finished, it is not still
+two-fifths short.
+
+### Subtasks nest, and a parent is believed over its parts
+
+`sessions.tree(id)` pulls a whole flow in ONE indexed read — every node shares a
+root id — so depth costs nothing per node. Each node draws its own bar.
+
+`rollUp` is a FALLBACK and only that: a parent that reported its own progress is
+believed over any mean of its children, because it is the only one that knows
+how much of its goal a child represents. Where a parent has said nothing the row
+shows the mean of the children that CAN say, labelled `rolled up` so the two
+claims stay distinguishable. **Children that cannot say are left out of the mean
+rather than counted as zero** — a run nobody has heard from is not a run that
+has done nothing. `progress/types.test.ts` fails on both `?? 0` shortcuts;
+mutation-checked.
+
+### Pinning is local, and says so
+
+Nothing on the wire records that somebody is watching a run, so `progress/pinned`
+is an atom on this machine and the board's strip is headed
+`WATCHING · pinned on this machine`. It keeps IDS ONLY and resolves them against
+the live list, so a pinned bar and the same bar in the queue cannot disagree,
+and a pin to a run that has ended resolves to nothing rather than to a stale copy
+— which the strip reports rather than quietly showing fewer.
+
+### The SDK lags the wire on one field
+
+`client.sessions` is the cloud client and covers list/get/tree/steer/stream. But
+the wire's `sessionView` carries `progress` and **`@hanzo/ai@0.6.16` — which is
+the latest published — omits it from `Session`**, so the fold widens the type
+locally rather than inventing the value or dropping the feature. The append verb
+has no method there either and goes through `client.http`. Both are upstream
+fixes; check whether they have landed before copying the pattern.
