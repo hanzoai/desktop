@@ -164,9 +164,8 @@ export const ArtifactPanel = () => {
       style={{
         backdropFilter: 'blur(32px) saturate(190%)',
         WebkitBackdropFilter: 'blur(32px)',
-        display: 'flex',
-        flexDirection: 'column',
-        zIndex: 30,
+        display: 'grid',
+        zIndex: 30
       }}
     >
       {/* Header Bar */}

@@ -76,8 +76,7 @@ export const BoardModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -348,10 +347,9 @@ export const BoardModal = () => {
                         borderRadius: 10,
                         border: '1px solid rgba(255, 255, 255, 0.09)',
                         backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                        display: 'flex',
-                        flexDirection: 'column',
+                        display: 'grid',
                         gap: 8,
-                        backdropFilter: 'blur(12px)',
+                        backdropFilter: 'blur(12px)'
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

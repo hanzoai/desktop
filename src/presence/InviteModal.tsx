@@ -250,7 +250,7 @@ export const InviteModal = ({ conversationId }: { conversationId?: string | null
           <SizableText size="$1" fontWeight="600" color="$faint">
             Members in this Chat ({participants.length})
           </SizableText>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
+          <div style={{ display: 'grid', gap: 6, maxHeight: 180, overflowY: 'auto' }}>
             {participants.map((p) => (
               <XStack
                 key={p.id}

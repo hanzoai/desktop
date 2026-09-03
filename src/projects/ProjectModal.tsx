@@ -100,8 +100,7 @@ export const ProjectModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -257,7 +256,7 @@ export const ProjectModal = () => {
                         gap: 10,
                       }}
                     >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'grid', gap: 4 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <span style={{ fontSize: 13.5, fontWeight: 700, color: '#ffffff' }}>{p.name}</span>
                           {isSelected && <Check size={14} color="#60a5fa" />}

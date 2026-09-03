@@ -108,7 +108,7 @@ export const Bar = ({ of, height = 4 }: { of: Progress; height?: number }) => {
  * colour alone is not something everybody can read.
  */
 export const Progressing = ({ of }: { of: Progress }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%' }}>
+  <div style={{ display: 'grid', gap: 4, width: '100%' }}>
     <Bar of={of} />
     <div
       style={{

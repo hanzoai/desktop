@@ -26,12 +26,11 @@ export const Watching = ({ live = true }: { live?: boolean }) => {
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'grid',
         gap: 8,
         padding: '10px 16px',
         borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-        background: 'rgba(255, 255, 255, 0.015)',
+        background: 'rgba(255, 255, 255, 0.015)'
       }}
     >
       <div
@@ -60,13 +59,12 @@ export const Watching = ({ live = true }: { live?: boolean }) => {
           <div
             key={run.id}
             style={{
-              display: 'flex',
-              flexDirection: 'column',
+              display: 'grid',
               gap: 5,
               padding: '8px 10px',
               borderRadius: 8,
               background: 'rgba(255, 255, 255, 0.03)',
-              border: '1px solid rgba(255, 255, 255, 0.07)',
+              border: '1px solid rgba(255, 255, 255, 0.07)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

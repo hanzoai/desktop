@@ -88,7 +88,7 @@ export const PluginsModal = () => {
               gridColumn: reading === plugin.id ? '1 / -1' : undefined,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'grid', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <div
                   style={{

@@ -90,7 +90,7 @@ export const ConnectorsModal = () => {
               gap: 10,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'grid', gap: 6 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>{one.name}</span>
                 {one.category ? (

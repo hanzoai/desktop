@@ -70,8 +70,7 @@ export const AppWorkspaceModal = () => {
           backgroundColor: '#0c0c0e',
           boxShadow: '0 24px 64px rgba(0, 0, 0, 0.8)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
+          display: 'grid'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -257,9 +256,8 @@ export const AppWorkspaceModal = () => {
                   width: 240,
                   borderRight: '1px solid rgba(255, 255, 255, 0.08)',
                   padding: 12,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 8,
+                  display: 'grid',
+                  gap: 8
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -296,8 +294,7 @@ export const AppWorkspaceModal = () => {
                         onClick={() => workspaceAppsStore.selectNote(note.id)}
                         className="tap"
                         style={{
-                          display: 'flex',
-                          flexDirection: 'column',
+                          display: 'grid',
                           gap: 4,
                           padding: '8px 10px',
                           borderRadius: 6,
@@ -306,7 +303,7 @@ export const AppWorkspaceModal = () => {
                           color: '#ffffff',
                           cursor: 'pointer',
                           textAlign: 'left',
-                          width: '100%',
+                          width: '100%'
                         }}
                       >
                         <div style={{ fontSize: 12, fontWeight: 600, color: '#ffffff' }}>{note.title}</div>
@@ -587,9 +584,8 @@ export const AppWorkspaceModal = () => {
                     borderRadius: 12,
                     backgroundColor: 'rgba(255, 255, 255, 0.03)',
                     border: '1px solid rgba(255, 255, 255, 0.08)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 10,
+                    display: 'grid',
+                    gap: 10
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -642,7 +638,7 @@ export const AppWorkspaceModal = () => {
                   {pending ? 'Reading…' : 'This org holds no overlay network.'}
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'grid', gap: 12 }}>
                   <div
                     style={{
                       padding: 16,
@@ -671,7 +667,7 @@ export const AppWorkspaceModal = () => {
                     </span>
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto' }}>
+                  <div style={{ display: 'grid', gap: 8, overflowY: 'auto' }}>
                     {overlay.routers.map((r) => (
                       <div
                         key={r.id}
