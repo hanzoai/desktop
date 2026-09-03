@@ -6,6 +6,7 @@
  */
 import { ArrowRight, GitBranch, Kanban, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState, type FormEvent } from 'react'
+import { Watching } from '~/progress/Watching'
 import { boardStore, useBoard, useMoveCard, useOpenCard, type BoardCard } from './store'
 import { useRunAgent } from '~/agents/store'
 
@@ -108,10 +109,10 @@ export const BoardModal = () => {
             </div>
             <div>
               <div style={{ fontSize: 15, fontWeight: 700, color: '#ffffff' }}>
-                Sprint Boards & Agent Task Automation
+                Board
               </div>
               <div style={{ fontSize: 11.5, color: 'rgba(255, 255, 255, 0.5)' }}>
-                Track issues and assign tasks directly to autonomous Swarm agents.
+                The org's issues, and the runs pinned above them.
               </div>
             </div>
           </div>
@@ -154,6 +155,10 @@ export const BoardModal = () => {
             </button>
           </div>
         </div>
+
+        {/* The runs pinned to this board, above the columns. It draws nothing
+            when nothing is pinned. */}
+        <Watching live={isOpen} />
 
         {/* WHICH board, and what the read is doing. Empty is the org's whole
             board, which is what the route answers when nothing is bound. */}

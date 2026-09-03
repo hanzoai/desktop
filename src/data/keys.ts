@@ -91,6 +91,13 @@ export const keys = {
   /** The org's live agent sessions, and one session's transcript. */
   sessions: ['sessions'] as Key,
   session: (id: string) => ['sessions', 'one', id] as Key,
+  /**
+   * One run's subagent tree.
+   *
+   * Nested under the session it is rooted at, so a run going stale takes its
+   * own tree with it and no other.
+   */
+  tree: (id: string) => ['sessions', 'one', id, 'tree'] as Key,
 
   /** The org's agents. */
   agents: ['agents'] as Key,

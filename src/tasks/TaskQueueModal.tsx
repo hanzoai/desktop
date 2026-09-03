@@ -12,6 +12,11 @@
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 import { ago, fromStamp, useShown } from '~/show'
+import { Progressing } from '~/progress/Bar'
+import { Subtasks } from '~/progress/Subtasks'
+import { useLiveRuns, useTree } from '~/progress/store'
+import { pin, usePinned } from '~/progress/pinned'
+import { Pin } from '@hanzogui/lucide-icons-2'
 import { taskQueueStore, useOpenRun, useSteerRun, useTaskQueue } from './store'
 import type { DurableTask, TaskStatus } from './types'
 
@@ -35,6 +40,13 @@ export const TaskQueueModal = () => {
   // Two writes, each with its own pending and its own refusal.
   const opening = useOpenRun()
   const steering = useSteerRun()
+  // Bars fill from the live feed while the queue is open: a `progress` turn an
+  // agent appends moves the row server-side and arrives here as a frame, so
+  // nothing polls.
+  useLiveRuns(isOpen)
+  const { tree } = useTree(activeTaskId ?? '')
+  // Which runs this window is following. A pin is local; see progress/pinned.
+  const { ids: watching } = usePinned()
   const [name, setName] = useState('')
   // A run list grows with the ORG, not with the screen, and /v1/agents/sessions
   // takes a limit of 50 — so this bounds what is DRAWN and says what it holds
@@ -252,8 +264,36 @@ export const TaskQueueModal = () => {
                       </span>
                     </div>
 
-                    <span style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
-                      {ago(fromStamp(t.startedAt))}
+                    <span
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                    >
+                      <span style={{ fontSize: 10.5, color: 'rgba(255, 255, 255, 0.4)' }}>
+                        {ago(fromStamp(t.startedAt))}
+                      </span>
+                      {/* Pinning puts this run's bar on the board. It is a
+                          <span> because the row is already a button. */}
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title={watching.includes(t.id) ? 'Stop watching' : 'Watch on the board'}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          pin.toggle(t.id)
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key !== 'Enter' && e.key !== ' ') return
+                          e.stopPropagation()
+                          e.preventDefault()
+                          pin.toggle(t.id)
+                        }}
+                        style={{
+                          display: 'inline-flex',
+                          cursor: 'pointer',
+                          color: watching.includes(t.id) ? '#60a5fa' : 'rgba(255,255,255,0.25)',
+                        }}
+                      >
+                        <Pin size={11} />
+                      </span>
                     </span>
                   </div>
 
@@ -261,30 +301,12 @@ export const TaskQueueModal = () => {
                     {t.title}
                   </div>
 
-                  {/* A bar only where there is a share to draw. A null pct is
-                      "indeterminate", which an empty bar would read as zero. */}
-                  {t.status === 'running' && t.progress.pct !== null ? (
-                    <div
-                      style={{
-                        width: '100%',
-                        height: 3,
-                        borderRadius: 2,
-                        background: 'rgba(255, 255, 255, 0.08)',
-                        overflow: 'hidden',
-                        marginTop: 2,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${t.progress.pct}%`,
-                          height: '100%',
-                          // A model's guess is drawn differently from a run's
-                          // own word, because they are different claims.
-                          background: t.progress.estimated ? '#a78bfa' : '#34d399',
-                          transition: 'width 0.3s ease',
-                        }}
-                      />
-                    </div>
+                  {/* Every OPEN run gets a bar, including one whose share is
+                      unknown — that draws indeterminate rather than empty, and
+                      the two mean opposite things. A finished run does not need
+                      one; its status already says so. */}
+                  {t.status === 'running' || t.status === 'paused' ? (
+                    <Progressing of={t.progress} />
                   ) : null}
                 </button>
               )
@@ -357,6 +379,11 @@ export const TaskQueueModal = () => {
                         </span>
                       ) : null}
                     </div>
+
+                    {/* The selected run's own bar, full width, above its tree. */}
+                    <div style={{ paddingTop: 6 }}>
+                      <Progressing of={activeTask.progress} />
+                    </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 6 }}>
@@ -422,6 +449,33 @@ export const TaskQueueModal = () => {
                     )}
                   </div>
                 </div>
+
+                {/* THE SUBTASKS, each with its own bar.
+                    Only drawn where a run actually fanned out — a leaf run
+                    would otherwise get a tree of one, restating its own bar. */}
+                {tree && tree.children.length > 0 ? (
+                  <div
+                    style={{
+                      padding: 12,
+                      borderRadius: 10,
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: '1px solid rgba(255, 255, 255, 0.06)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                        color: 'rgba(255,255,255,0.35)',
+                        paddingBottom: 8,
+                      }}
+                    >
+                      SUBTASKS
+                    </div>
+                    <Subtasks tree={tree} />
+                  </div>
+                ) : null}
 
                 {/* Log Stream */}
                 <div
