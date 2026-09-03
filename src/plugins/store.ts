@@ -15,11 +15,11 @@
  * looking like it reports a fact. Asking for the configured-but-off ones too is
  * the difference between an inventory and a list of what happened to answer.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead } from '~/data/query'
-import { fromSeconds } from '~/show'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { reason, useRead } from '@hanzo/chat/data/query'
+import { fromSeconds } from '@hanzo/chat/show'
 import type { Authored as Written, Mounted as Mount, PluginExtension } from './types'
 
 export type { PluginExtension }

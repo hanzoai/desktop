@@ -16,7 +16,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
-import { brand, brands } from '~/brand'
+import { brand, brands } from '@hanzo/chat/brand'
 
 export interface AccountProps {
   name: string

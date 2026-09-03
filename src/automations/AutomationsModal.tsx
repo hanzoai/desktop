@@ -9,7 +9,7 @@
  */
 import { Clock, GitBranch, Play, Plus, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago } from '~/show'
+import { ago } from '@hanzo/chat/show'
 import {
   automationsStore,
   useArmFlow,

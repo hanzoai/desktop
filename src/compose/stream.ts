@@ -6,8 +6,8 @@
  * unauthenticated or offline.
  */
 import type { ChatCompletionChunk, ChatCompletionMessage } from '@hanzo/ai'
-import { client } from '~/data/origin'
-import { pick } from '~/settings/models'
+import { client } from '@hanzo/chat/data/origin'
+import { pick } from '@hanzo/chat/settings/models'
 
 /** How a turn ended. The shell answers each differently, so it is told which. */
 export type Ended =

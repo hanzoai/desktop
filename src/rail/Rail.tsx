@@ -7,9 +7,9 @@ import { useState, type ReactNode } from 'react'
 
 import { ChannelSection } from '~/channels/ChannelSection'
 import type { Convo } from '~/data/types'
-import { Find } from './Find'
-import { Hits } from './Hits'
-import { List } from './List'
+import { Find } from '@hanzo/chat/rail/Find'
+import { Hits } from '@hanzo/chat/rail/Hits'
+import { List } from '@hanzo/chat/rail/List'
 
 /**
  * The left column — the SET, as a place on the page.

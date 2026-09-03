@@ -12,9 +12,9 @@
  * There is no route to write to and no SDK method to call, so nothing here
  * pretends otherwise — `~/data/missing` is what the rail's controls report.
  */
-import { client } from '~/data/origin'
+import { client } from '@hanzo/chat/data/origin'
 import { keys } from '~/data/keys'
-import { useRead } from '~/data/query'
+import { useRead } from '@hanzo/chat/data/query'
 import type { Convo } from '~/data/types'
 
 /**

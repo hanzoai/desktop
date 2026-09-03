@@ -11,12 +11,12 @@
  * member redeems. Removing somebody is NOT here — deleting an IAM user is not
  * what a chat header should do, and no other route removes one.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
-import { useSession } from '~/data/session'
-import { tint } from '~/show'
+import { client } from '@hanzo/chat/data/origin'
+import { reason, useRead, useSend } from '@hanzo/chat/data/query'
+import { useSession } from '@hanzo/chat/data/session'
+import { tint } from '@hanzo/chat/show'
 import type { Participant } from './types'
 
 /** Whether the invite sheet is showing. */

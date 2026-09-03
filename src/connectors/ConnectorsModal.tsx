@@ -17,7 +17,7 @@ import { Plug, Unplug } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
 import { More, Sheet, State } from '~/shell/Sheet'
-import { ago, useShown } from '~/show'
+import { ago, useShown } from '@hanzo/chat/show'
 import { connectorsStore, useConnect, useConnectors, useDisconnect } from './store'
 
 export const ConnectorsModal = () => {

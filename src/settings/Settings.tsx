@@ -17,10 +17,10 @@ import { selected } from '@hanzo/ui/glass'
 import { useState, type ReactNode } from 'react'
 
 import { Account, type AccountProps } from './Account'
-import { General } from './General'
-import { Look } from './Look'
+import { General } from '@hanzo/chat/settings/General'
+import { Look } from '@hanzo/chat/settings/Look'
 import { Node } from './Node'
-import { shell } from '~/data/shell'
+import { shell } from '@hanzo/chat/data/shell'
 import type { Served } from '~/data/types'
 
 export interface SettingsProps {

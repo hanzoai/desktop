@@ -8,9 +8,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Insert, type Lane } from '~/compose/Insert'
 import { Starters, type Starter } from '~/compose/Starters'
-import { useDraft } from '~/compose/draft'
-import type { Handoff } from '~/compose/link'
-import { payload, type Conversation, type Draft, type Payload } from '~/compose/submit'
+import { useDraft } from '@hanzo/chat/compose/draft'
+import type { Handoff } from '@hanzo/chat/compose/link'
+import { payload, type Conversation, type Draft, type Payload } from '@hanzo/chat/compose/submit'
 import type { Attachment } from '~/data/types'
 
 const COLUMN = 768

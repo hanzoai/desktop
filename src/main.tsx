@@ -8,8 +8,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { App } from '~/app'
-import { brand, wear } from '~/brand'
-import { unlock } from '~/data/vault'
+import { brand, wear } from '@hanzo/chat/brand'
+import { unlock } from '@hanzo/chat/data/vault'
 
 /**
  * The mount. Three lines, and the second one is the whole design system.

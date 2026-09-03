@@ -11,10 +11,10 @@
  * skills panel both change, so its writer is `~/tools/store` and both import
  * it — a toggle per panel is two statements of one fact.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead } from '~/data/query'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { reason, useRead } from '@hanzo/chat/data/query'
 import type { Connected, Exposed } from './types'
 
 /** Servers are the org's, so they are read from the estate rather than per origin. */

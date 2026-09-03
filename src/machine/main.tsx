@@ -3,7 +3,7 @@ import '@hanzo/font/css'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { brand, wear } from '~/brand'
+import { brand, wear } from '@hanzo/chat/brand'
 import { Services } from '~/machine/Services'
 
 /**

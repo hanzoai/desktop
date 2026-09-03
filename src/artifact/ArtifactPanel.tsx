@@ -23,7 +23,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react'
 
 import type { SandboxRuntime } from '@hanzo/ai'
 
-import { origins } from '~/data/origin'
+import { origins } from '@hanzo/chat/data/origin'
 
 /** Both pickers, so the two questions read as siblings rather than as ranks. */
 const PICKER: CSSProperties = {

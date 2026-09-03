@@ -16,8 +16,8 @@ import { useState, type FormEvent } from 'react'
 
 import { useTools } from '~/tools/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { useRead } from '~/data/query'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { useRead } from '@hanzo/chat/data/query'
 import { refresh } from './store'
 
 export interface AgentBuilderProps {

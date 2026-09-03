@@ -17,10 +17,10 @@
  *   Unread. Nothing on the wire says what has been read, so no count is shown.
  *   A zero would be a claim, and an invented number is what was here before.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import type { ChatRoom, RoomType } from './types'
 
 export type { ChatRoom, RoomType }

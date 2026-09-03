@@ -10,7 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { useSession } from '~/data/session'
+import { useSession } from '@hanzo/chat/data/session'
 import { multiplayerStore, useInvite, useMultiplayer } from './store'
 
 export const InviteModal = ({ conversationId }: { conversationId?: string | null }) => {

@@ -15,7 +15,7 @@ import { Blocks, Boxes, PenLine } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
 import { More, Sheet, State } from '~/shell/Sheet'
-import { ago, useShown } from '~/show'
+import { ago, useShown } from '@hanzo/chat/show'
 import { pluginsStore, usePlugins } from './store'
 
 export const PluginsModal = () => {

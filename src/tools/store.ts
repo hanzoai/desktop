@@ -30,8 +30,8 @@
  * list. A machine with no engine is a shorter menu, not a broken one.
  */
 import { keys } from '~/data/keys'
-import { client, ESTATE, origins } from '~/data/origin'
-import { useRead, useSend } from '~/data/query'
+import { client, ESTATE, origins } from '@hanzo/chat/data/origin'
+import { useRead, useSend } from '@hanzo/chat/data/query'
 
 export interface Tool {
   name: string

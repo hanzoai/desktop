@@ -11,8 +11,8 @@
  * identity is only true while the node that answered is the one running.
  */
 import { keys } from '~/data/keys'
-import { useRead, useSend } from '~/data/query'
-import { call, services, shell, type Service } from '~/data/shell'
+import { useRead, useSend } from '@hanzo/chat/data/query'
+import { call, services, shell, type Service } from '@hanzo/chat/data/shell'
 
 /**
  * The node's account of itself, from `/v1/node/health_check`.

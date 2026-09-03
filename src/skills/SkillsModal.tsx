@@ -14,8 +14,8 @@ import { GraduationCap, PenLine } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
 
 import { More, Sheet, State } from '~/shell/Sheet'
-import { ago } from '~/show'
-import { useShown } from '~/show'
+import { ago } from '@hanzo/chat/show'
+import { useShown } from '@hanzo/chat/show'
 import { useToggleTool } from '~/tools/store'
 import { skillsStore, useSkills } from './store'
 

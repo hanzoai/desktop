@@ -25,3 +25,4 @@ minimumReleaseAgeExclude:
   - '@hanzo/ai@0.6.16'
   - '@hanzo/font@1.9.3'
   - '@hanzo/ui@8.27.4'
+  - '@hanzo/chat@1.0.5'

@@ -11,7 +11,7 @@
  */
 import { ListTodo, Play, RotateCcw, X } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago, fromStamp, useShown } from '~/show'
+import { ago, fromStamp, useShown } from '@hanzo/chat/show'
 import { Progressing } from '~/progress/Bar'
 import { Subtasks } from '~/progress/Subtasks'
 import { useLiveRuns, useTree } from '~/progress/store'

@@ -9,7 +9,7 @@ import {
   Users,
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
-import { useShown } from '~/show'
+import { useShown } from '@hanzo/chat/show'
 import { channelsStore, useChannels, type ChatRoom } from './store'
 
 /** One "N more" affordance, so no list here is cut without saying so. */

@@ -5,8 +5,8 @@
  * reads it here rather than keeping a second roster.
  */
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { invalidate, useRead, useSend } from '~/data/query'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { invalidate, useRead, useSend } from '@hanzo/chat/data/query'
 import type { AgentDefinition } from './types'
 
 export type { AgentDefinition }

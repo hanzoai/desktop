@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Hanzo Desktop \u2014 the client, local and cloud, on @hanzo/gui + @hanzo/ui.",
+  "description": "Hanzo Desktop — the client, local and cloud, on @hanzo/gui + @hanzo/ui.",
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@hanzo/ai": "catalog:",
+    "@hanzo/chat": "^1.0.5",
     "@hanzo/font": "catalog:",
     "@hanzo/gui": "catalog:",
     "@hanzo/iam": "catalog:",

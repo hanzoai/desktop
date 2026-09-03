@@ -8,11 +8,11 @@
  * this window has — losing it on reload would be the other way of lying about
  * what it is.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
-import { fromSeconds } from '~/show'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { reason, useRead, useSend } from '@hanzo/chat/data/query'
+import { fromSeconds } from '@hanzo/chat/show'
 import type {
   IssuePriority,
   IssueStatus,

@@ -1,9 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 
-import { Boundary } from '~/shell/Boundary'
-import { Callback } from '~/shell/Callback'
+import { Boundary } from '@hanzo/chat/shell/Boundary'
+import { Callback } from '@hanzo/chat/shell/Callback'
 import { Chat } from '~/shell/Chat'
-import { Login } from '~/shell/Login'
+import { Login } from '@hanzo/chat/shell/Login'
 import { Root } from '~/shell/Root'
 
 /**

@@ -11,7 +11,7 @@
  * queue cannot disagree — and a pin to a run that has since ended resolves to
  * nothing rather than to a stale copy of how it looked when it was pinned.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import type { Run } from './types'
 import { useRuns } from './store'
 

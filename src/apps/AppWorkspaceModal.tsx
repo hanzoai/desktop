@@ -8,7 +8,7 @@
  */
 import { CheckSquare, ExternalLink, FileText, ListTodo, Plus, Shield, Video, X, Zap } from '@hanzogui/lucide-icons-2'
 import { useState } from 'react'
-import { ago, useShown } from '~/show'
+import { ago, useShown } from '@hanzo/chat/show'
 import {
   useBacklog,
   useCall,

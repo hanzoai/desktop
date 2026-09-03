@@ -11,10 +11,10 @@
  */
 import { IAM } from '@hanzo/iam'
 
-import { brand, clientId } from '~/brand'
+import { brand, clientId } from '@hanzo/chat/brand'
 import { callbackPath, loginPath } from '~/data/api'
-import { shell } from '~/data/shell'
-import { vault } from '~/data/vault'
+import { shell } from '@hanzo/chat/data/shell'
+import { vault } from '@hanzo/chat/data/vault'
 
 /**
  * What a session asks for.

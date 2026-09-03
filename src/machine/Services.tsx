@@ -3,7 +3,7 @@ import { row, rows } from '@hanzo/ui/glass'
 import { useState } from 'react'
 
 import { useLogs, useRun, useServices } from '~/data/machine'
-import type { Service } from '~/data/shell'
+import type { Service } from '@hanzo/chat/data/shell'
 
 /** What a service is called, where the shell's name is a handle. */
 const TITLE: Record<string, string> = {

@@ -14,9 +14,9 @@
  */
 import type { Leased, SandboxRuntime } from '@hanzo/ai'
 
-import { atom, useAtom } from '~/data/store'
-import { client, ESTATE } from '~/data/origin'
-import { useSend } from '~/data/query'
+import { atom, useAtom } from '@hanzo/chat/data/store'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { useSend } from '@hanzo/chat/data/query'
 
 export type ArtifactTab = 'code' | 'preview' | 'terminal'
 

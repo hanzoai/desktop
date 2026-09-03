@@ -11,10 +11,10 @@
  * validated principal on the token; a picker that changes it changes nothing on
  * the server and everything a reader believes about the screen.
  */
-import { atom, useAtom } from '~/data/store'
+import { atom, useAtom } from '@hanzo/chat/data/store'
 import { keys } from '~/data/keys'
-import { client, ESTATE } from '~/data/origin'
-import { reason, useRead, useSend } from '~/data/query'
+import { client, ESTATE } from '@hanzo/chat/data/origin'
+import { reason, useRead, useSend } from '@hanzo/chat/data/query'
 import type { Organization, Project, UserIdentity } from './types'
 
 export type { Organization, Project, UserIdentity }

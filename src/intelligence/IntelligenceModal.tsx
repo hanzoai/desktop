@@ -10,7 +10,7 @@ import {
 } from '@hanzogui/lucide-icons-2'
 import { SizableText, XStack, YStack } from '@hanzo/ui'
 import { useState, type FormEvent } from 'react'
-import { useShown } from '~/show'
+import { useShown } from '@hanzo/chat/show'
 import {
   intelligenceStore,
   useForget,
@@ -37,8 +37,6 @@ export const IntelligenceModal = () => {
   const remembering = useRemember()
   const forgetting = useForget()
 
-  if (!isOpen) return null
-
   const handleAddMemory = async (e: FormEvent) => {
     e.preventDefault()
     if (!newContent.trim()) return
@@ -60,6 +58,10 @@ export const IntelligenceModal = () => {
   // a symbol search is capped at 50 server-side. This bounds what is DRAWN.
   const shownMemories = useShown(filteredMemories, 60)
   const shownSymbols = useShown(filteredSymbols, 60)
+
+  // Every hook above runs on every render. A guard placed before them makes the
+  // count depend on whether the panel is open, which is what React refuses.
+  if (!isOpen) return null
 
   return (
     <div

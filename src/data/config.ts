@@ -17,8 +17,8 @@
  * bearer, which is where it belongs and where it was already decided.
  */
 import { keys } from '~/data/keys'
-import { client, origins } from '~/data/origin'
-import { useRead } from '~/data/query'
+import { client, origins } from '@hanzo/chat/data/origin'
+import { useRead } from '@hanzo/chat/data/query'
 import type { Served } from '~/data/types'
 
 /** Who publishes a model, when it says. The menu's fallback group. */
