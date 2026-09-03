@@ -247,7 +247,7 @@ export const AgentBuilderModal = ({ isOpen, onClose }: AgentBuilderProps) => {
               }}
             >
               <option value="">Pick a model…</option>
-              {(models.data ?? []).map((m) => (
+              {Array.from(models.data ?? []).map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.id}
                 </option>
