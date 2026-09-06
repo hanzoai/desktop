@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Hanzo Chat",
+  "productName": "Hanzo",
   "version": "../package.json",
   "identifier": "ai.hanzo.desktop",
   "build": {
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Hanzo Chat",
+        "title": "Hanzo",
         "width": 1280,
         "height": 840,
         "minWidth": 640,
