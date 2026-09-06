@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Hanzo</title>
+    <style>
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      /* Neutral dark ground matches the @hanzo/gui dark $background so there is
+         no first-paint flash before the Tamagui tree mounts. */
+      body {
+        background: #080808;
+      }
+      /* Purple is the one accent (Hanzo v2): text selection only, not primary. */
+      ::selection {
+        background: rgba(139, 92, 246, 0.28);
+      }
+      /* Every menu in this window is portalled through @hanzo/gui's Portal,
+         whose host is `pointerEvents="box-none"`. react-native-web implements
+         that as `pointer-events: none` on the host plus `auto` on its DIRECT
+         child — and @hanzo/ui's FloatingMenu puts a PortalTheme wrapper in
+         between, so the `auto` lands on the wrapper and the panel below it
+         inherits `none`. Measured in Chromium: the model picker and the sidebar
+         context menu both opened, painted, positioned correctly, and could not
+         be clicked at all; `elementFromPoint` over a menu row returned the page
+         behind it. `pointer-events` is inherited, so re-asserting it on the
+         panel restores the whole subtree, and there is exactly one menu
+         mechanism in this window for it to reach. Remove this when the
+         upstream Portal stops swallowing its own menus. */
+      [role='menu'] {
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

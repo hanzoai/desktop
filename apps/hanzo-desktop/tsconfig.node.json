@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    // Emit only .d.ts, never vite.config.js — a compiled vite.config.js shadows
+    // vite.config.ts in Vite's config resolution (.js is tried before .ts),
+    // silently reverting every config change. Declaration-only keeps composite
+    // happy without recreating that footgun.
+    "emitDeclarationOnly": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["vite.config.ts"]
+}

@@ -1,0 +1,19 @@
+/* The artifacts sandbox renders on the SAME base as every other window — the one
+   hanzo-ui style sheet — not a second Inter/light-shadcn theme of its own. */
+@import '../../../../../libs/hanzo-ui/src/styles/styles.css';
+
+html {
+  @apply scroll-smooth;
+}
+
+body {
+  font-synthesis-weight: none;
+  text-rendering: optimizeLegibility;
+}
+
+html,
+body,
+#root {
+  overscroll-behavior: none;
+  @apply min-h-full w-full;
+}

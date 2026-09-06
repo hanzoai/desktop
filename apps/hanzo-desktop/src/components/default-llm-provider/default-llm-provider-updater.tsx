@@ -1,0 +1,54 @@
+import { useMutation } from '@tanstack/react-query';
+import { useEffect } from 'react';
+
+import { hanzoNodeSetDefaultLlmProvider } from '../../lib/hanzo-node-manager/hanzo-node-manager-client';
+import { useAuth } from '../../store/auth';
+
+interface DefaultLlmProviderUpdaterProps {
+  defaultAgentId: string;
+}
+
+/**
+ * Component that updates the default LLM provider in the backend.
+ * This component doesn't render anything, it just calls the API endpoint when mounted.
+ */
+export const DefaultLlmProviderUpdater: React.FC<
+  DefaultLlmProviderUpdaterProps
+> = ({ defaultAgentId }) => {
+  const auth = useAuth((state) => state.auth);
+
+  const { mutate } = useMutation({
+    mutationFn: async (llmProvider: string) => {
+      if (!auth?.node_address || !auth?.api_v2_key) {
+        throw new Error('Node address and API key are required');
+      }
+      return hanzoNodeSetDefaultLlmProvider(
+        llmProvider,
+        auth.node_address,
+        auth.api_v2_key,
+      );
+    },
+    // The local node (`/v2/set_preferences`) may still be starting up when this
+    // mounts; retry transient network failures instead of surfacing them.
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    onError: (error) => {
+      // Transient node-not-ready failures are expected during startup; log
+      // quietly so they don't read as a hard failure in the console.
+      console.warn(
+        'Could not set default LLM provider (will retry on next load):',
+        error,
+      );
+    },
+  });
+
+  useEffect(() => {
+    if (auth?.node_address && auth?.api_v2_key && defaultAgentId) {
+      mutate(defaultAgentId);
+    }
+  }, [auth, defaultAgentId, mutate]);
+
+  return null;
+};
+
+export default DefaultLlmProviderUpdater;

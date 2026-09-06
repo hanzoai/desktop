@@ -1,0 +1,35 @@
+{
+  "productName": "Lux Desktop",
+  "identifier": "com.lux.desktop",
+  "bundle": {
+    "icon": [
+      "icons/lux/32x32.png",
+      "icons/lux/128x128.png",
+      "icons/lux/128x128@2x.png",
+      "icons/lux/icon.icns",
+      "icons/lux/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/luxfi/desktop/releases/latest/download/latest.json"
+      ]
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "lux"
+        ]
+      }
+    }
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Lux Cloud"
+      }
+    ]
+  },
+  "mainBinaryName": "lux-desktop"
+}

@@ -1,0 +1,98 @@
+import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
+import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useScanLocalModels } from '@hanzo/desktop-node-state/v2/queries/scanLocalModels/useScanLocalModels';
+import { useMap } from '@hanzo/desktop-ui/hooks';
+import { useEffect } from 'react';
+
+import { useAuth } from '../../store/auth';
+import { GetStartedStatus, GetStartedSteps } from './onboarding';
+
+export const useOnboardingSteps = () => {
+  const currentStepsMap = useMap<GetStartedSteps, GetStartedStatus>();
+  const auth = useAuth((state) => state.auth);
+
+  const { nodeInfo, isSuccess } = useGetHealth(
+    { nodeAddress: auth?.node_address ?? '' },
+    { enabled: !!auth },
+  );
+
+  // The local engine serves its own models; the "Download first model" step is
+  // satisfied once the engine reports at least one local model.
+  const { data: localModels } = useScanLocalModels(
+    { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
+    { enabled: !!auth },
+  );
+
+  const { data: agents } = useGetAgents({
+    nodeAddress: auth?.node_address ?? '',
+    token: auth?.api_v2_key ?? '',
+  });
+
+  const { data: inboxesPagination } = useGetInboxesWithPagination({
+    nodeAddress: auth?.node_address ?? '',
+    token: auth?.api_v2_key ?? '',
+  });
+
+  const { data: myToolList } = useGetTools(
+    {
+      nodeAddress: auth?.node_address ?? '',
+      token: auth?.api_v2_key ?? '',
+    },
+    {
+      select: (data) =>
+        data.filter(
+          (tool) => 'author' in tool && tool.author === auth?.hanzo_identity,
+        ) ?? [],
+    },
+  );
+
+  useEffect(() => {
+    if (isSuccess && nodeInfo?.status === 'ok') {
+      currentStepsMap.set(
+        GetStartedSteps.SetupHanzoNode,
+        GetStartedStatus.Done,
+      );
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (localModels && localModels.length > 0) {
+      currentStepsMap.set(
+        GetStartedSteps.DownloadFirstModel,
+        GetStartedStatus.Done,
+      );
+    }
+  }, [localModels]);
+
+  useEffect(() => {
+    if ((agents ?? [])?.length > 0) {
+      currentStepsMap.set(GetStartedSteps.CreateAIAgent, GetStartedStatus.Done);
+    }
+  }, [agents]);
+
+  useEffect(() => {
+    const inboxes =
+      inboxesPagination?.pages.flatMap((page) => page.inboxes) ?? [];
+
+    const hasMoreThan1ChatWithAgent = inboxes.find(
+      (inbox) => inbox?.provider_type === 'Agent',
+    );
+
+    if (hasMoreThan1ChatWithAgent) {
+      currentStepsMap.set(
+        GetStartedSteps.CreateAIChatWithAgent,
+        GetStartedStatus.Done,
+      );
+    }
+  }, [inboxesPagination]);
+
+  useEffect(() => {
+    if (myToolList?.length && myToolList.length > 0) {
+      currentStepsMap.set(GetStartedSteps.CreateTool, GetStartedStatus.Done);
+    }
+  }, [myToolList]);
+
+  return currentStepsMap;
+};

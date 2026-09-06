@@ -1,14 +1,74 @@
-node_modules
-dist
-*.tsbuildinfo
-*.log
-.env
-.env.local
-.DS_Store
+# See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# Claude Code session state (worktrees, transcripts)
+# compiled output
+dist
+tmp
+/out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+.env
+
+# System Files
+.DS_Store
+Thumbs.db
+
+qr_code_device_0.png
+
+apps/hanzo-desktop/src-tauri/storage
+apps/hanzo-desktop/src-tauri/node_storage
+
+apps/hanzo-desktop/src-tauri/external-binaries
+launch.json
+temp
+apps/hanzo-app/android/.gradle
+apps/hanzo-desktop/src-tauri/gen
+output.txt
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*
+.with-cache
+
+CLAUDE.md
+tsconfig.node.tsbuildinfo
+
 .claude/
 
-# Rust build output and generated capability schemas
-src-tauri/target/
-src-tauri/gen/schemas/
+# compiled vite config shadows the .ts source — never track it
+apps/*/vite.config.js
+apps/*/vite.config.d.ts
+
+# pnpm only — pnpm-lock.yaml is the tracked lockfile.
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Playwright smoke artifacts (screenshots, traces)
+apps/hanzo-desktop/e2e-tests/.artifacts/
+apps/hanzo-desktop/test-results/
+apps/hanzo-desktop/e2e-tests/.film/

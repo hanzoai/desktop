@@ -1,0 +1,90 @@
+import { useStartEmbeddingMigration } from '@hanzo/desktop-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
+import { useGetEmbeddingMigrationStatus } from '@hanzo/desktop-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { toast } from 'sonner';
+import { useAuth } from '../../store/auth';
+import { useSettings } from '../../store/settings';
+import { useHanzoNodeGetDefaultEmbeddingModelQuery } from '../hanzo-node-manager/hanzo-node-manager-client';
+import { embeddingModelMismatchToast } from './embedding-migration-toasts';
+
+export const useEmbeddingStartupCheck = () => {
+  const auth = useAuth((state) => state.auth);
+  const hasShownToastRef = useRef<boolean>(false);
+  const isInitialCheckRef = useRef<boolean>(true);
+
+  const isPromptDismissed = useSettings(
+    (state) => state.embeddingModelMismatchPromptDismissed,
+  );
+  const setPromptDismissed = useSettings(
+    (state) => state.setEmbeddingModelMismatchPromptDismissed,
+  );
+
+  const { data: defaultEmbeddingModel } =
+    useHanzoNodeGetDefaultEmbeddingModelQuery({
+      staleTime: Infinity, // Static value, never changes
+    });
+
+  const { data: embeddingMigrationStatus } = useGetEmbeddingMigrationStatus(
+    { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
+    {
+      enabled: !!auth,
+      refetchOnMount: true,
+      refetchOnWindowFocus: false,
+      staleTime: Infinity,
+    },
+  );
+
+  const { mutateAsync: startEmbeddingMigration } = useStartEmbeddingMigration({
+    onSuccess: () => {
+      setPromptDismissed(true);
+    },
+    onError: (error) => {
+      toast.error('Failed to start embedding migration', {
+        description: error.response?.data?.message ?? error.message,
+      });
+    },
+  });
+
+  const handleMigrateToDefault = useCallback(async () => {
+    if (!auth || !defaultEmbeddingModel) return;
+    await startEmbeddingMigration({
+      nodeAddress: auth.node_address,
+      token: auth.api_v2_key,
+      force: true,
+      embedding_model: defaultEmbeddingModel,
+    });
+  }, [auth, defaultEmbeddingModel, startEmbeddingMigration]);
+
+  useEffect(() => {
+    // Only run this check once on initial load
+    if (
+      !isInitialCheckRef.current ||
+      !embeddingMigrationStatus ||
+      !defaultEmbeddingModel ||
+      hasShownToastRef.current ||
+      isPromptDismissed
+    ) {
+      return;
+    }
+
+    const currentModel = embeddingMigrationStatus.current_embedding_model;
+
+    // Embedding-update popup intentionally suppressed. The local Hanzo engine
+    // probes its live vector dimension at runtime (set_active_vector_dimensions),
+    // so the node adapts to whatever embedder is configured (zen 1024, gemma
+    // 768, ...) and boots on the right defaults without prompting the user.
+    void currentModel;
+    void handleMigrateToDefault;
+    void setPromptDismissed;
+    hasShownToastRef.current = true;
+
+    isInitialCheckRef.current = false;
+  }, [
+    embeddingMigrationStatus,
+    defaultEmbeddingModel,
+    handleMigrateToDefault,
+    setPromptDismissed,
+    isPromptDismissed,
+  ]);
+};

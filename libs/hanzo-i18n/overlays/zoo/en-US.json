@@ -1,0 +1,137 @@
+{
+  "desktop": {
+    "welcome": "Welcome to Zoo",
+    "welcomeDescription": "<b>Zoo AI lets you build AI agents in minutes — fast, private, and secure.</b> Run locally, collaborate through a decentralized network, and create AI workflows effortlessly. ",
+    "localAI": "Zoo Local AI",
+    "benefits": {
+      "local": "<b>Local:</b> With a local Zoo, you gain complete control over your data in a secure environment."
+    }
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Zoo Identity"
+    }
+  },
+  "quickAsk": {
+    "emptyStateTitle": "Ask Zoo AI"
+  },
+  "chat": {
+    "emptyStateTitle": "Ask Zoo AI",
+    "emptyStateDescription": "For quick questions, press ⌘ + Shift + J to use Zoo Spotlight"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "Uploading your files transforms them to be AI-ready and available to use in Zoo."
+    },
+    "shareFolderWarning": {
+      "text": "You must register a Zoo identity before you can share folders over the Zoo Network."
+    }
+  },
+  "hanzoNode": {
+    "restartNode": "Please restart your Zoo Node",
+    "unavailable": "Your Zoo Node is unavailable",
+    "notifications": {
+      "startingNode": "Starting your local Zoo Node",
+      "runningNode": "Your local Zoo Node is running",
+      "stoppedNode": "Your local Zoo Node was stopped",
+      "stopNode": "Stopping your local Zoo Node",
+      "removedNote": "Your local Zoo Node storage was removed",
+      "syncedOllama": "Local Ollama models synchronized with your Zoo Node",
+      "errorSyncOllama": "Error synchronizing your local Ollama models with your Zoo Node"
+    },
+    "manager": "Zoo Node Manager",
+    "resetNodeWarning": {
+      "description": "Your Zoo Node is currently locked by existing keys. To connect again, you can reset all your Zoo Node data.",
+      "option2": "<b>Reset Data:</b> Permanently delete all your Zoo Node data.",
+      "option3": "<b>Reset All:</b> Permanently delete all your Zoo Node data including the encryption and signing keys."
+    }
+  },
+  "onboardingChecklist": {
+    "getStartedText": "Get Started with Zoo",
+    "setupHanzoDesktop": "Setup Zoo Desktop",
+    "setupHanzoDesktopDescription": "Setup Zoo Desktop to get started"
+  },
+  "settings": {
+    "layout": {
+      "hanzoNode": "Zoo Node Manager"
+    },
+    "hanzoIdentity": {
+      "label": "Zoo Identity",
+      "updatedIdentity": "Zoo Identity updated successfully.",
+      "registerIdentity": "Register your Zoo Identity",
+      "goToHanzoIdentity": "Go to My Zoo Identity",
+      "success": "Zoo Identity updated successfully",
+      "error": "Error updating Zoo Identity",
+      "checkIdentityInSync": "Verify Zoo Identity"
+    },
+    "quickAccessButton": {
+      "label": "Show Zoo Quick Access Button"
+    },
+    "hanzoVersion": "Zoo Desktop Version:",
+    "remoteAccess": {
+      "description": "Easily and securely connect to your Zoo node from anywhere using ngrok. No complex setup—just  <a>create a free ngrok account</a>, copy your <b>ngrok auth token</b> from the dashboard, and paste it below to enable secure remote access.",
+      "success": "Connected! Your Zoo node is now accessible remotely via ngrok"
+    }
+  },
+  "exportConnection": {
+    "restoreText": "Use it with your passphrase to restore the connection to your Zoo Node"
+  },
+  "common": {
+    "login": "Login with Zoo",
+    "logInHanzoHosting": "Log In To Zoo Hosting",
+    "signUpHanzoHosting": "Sign up For Zoo Hosting"
+  },
+  "quickConnection": {
+    "connectingToNode": "Connecting to your local Zoo Node"
+  },
+  "analytics": {
+    "title": "Help us improve Zoo"
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "Connect your first AI to start asking Zoo AI. Try connecting OpenAI"
+    }
+  },
+  "galxe": {
+    "success": {
+      "registerDesktopInstallation": "Your Zoo Desktop installation was registered successfully. It may take some hours to be registered in Galxe quest."
+    },
+    "errors": {
+      "registerDesktopInstallation": "Error registering your Zoo Desktop installation. Please ensure your EVM Address was not used previously to register a different installation."
+    }
+  },
+  "mcpServers": {
+    "addDescription": "Configure a new MCP server to connect with your Zoo Node",
+    "listDescription": "List of MCP servers connected to your Zoo Node"
+  },
+  "tools": {
+    "create": {
+      "hanzoCodeGenerator": "Zoo Code Generator",
+      "hanzoFreeTrial": "Zoo Free Trial"
+    },
+    "visitStore": "Visit the Zoo Store to discover and install additional tools to enhance your workflow"
+  },
+  "disconnect": {
+    "modalTitle": "Disconnect Zoo"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "We're having trouble connecting to your Zoo Node. Your node may be offline, or your internet connection may be down."
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "If your client does not support SSE, you can run the Zoo MCP server as a separate process using this command:"
+  },
+  "feedback": {
+    "description": "We value your feedback! Please let us know your thoughts about Zoo and how we can improve your experience."
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "Add an agent to your collection using a Zoo ID. Example: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Enter the Zoo ID of the agent you want to add.",
+    "registerHanzoIdentity": "Register Zoo Identity",
+    "registerHanzoIdentityDescription": "Create your unique identity on the Zoo network to use and publish agents"
+  },
+  "mcpPage": {
+    "helpfulLinks": "You can find helpful MCPs to connect with Zoo at smithery.ai and composio.dev."
+  }
+}
