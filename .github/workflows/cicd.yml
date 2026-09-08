@@ -1,0 +1,43 @@
+# The gate, on our own runners.
+#
+# One file covers both planes: github.com reads .github/workflows, and so does
+# git.hanzo.ai, so there is no second copy to drift. Nothing runs on a
+# GitHub-hosted machine — the label below is served by self-hosted runners on
+# evo (x86_64) and spark (arm64).
+name: CI/CD
+on:
+  push:
+    branches: [main]
+    tags: ['v*', '[0-9]+.[0-9]+.[0-9]+']
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: [hanzo-build-linux-amd64]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+
+      # The install runs its scripts on purpose: a tree without them is not the
+      # tree that gets built.
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
