@@ -1,0 +1,83 @@
+{
+  "identifier": "main",
+  "description": "permissions that were migrated from v1",
+  "local": true,
+  "windows": ["main", "spotlight"],
+  "permissions": [
+    "core:default",
+    "dialog:allow-save",
+    "fs:allow-download-write",
+    "shell:allow-open",
+    "core:window:allow-start-dragging",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install",
+    "updater:allow-download-and-install",
+    "process:allow-restart",
+    "log:default",
+    "dialog:allow-open",
+    "notification:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$HOME/Downloads/*"
+        }
+      ]
+    },
+    "opener:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "https://mcp.composio.dev" },
+        { "url": "https://chatgpt.com/*" },
+        { "url": "https://api.anthropic.com/*" },
+        { "url": "https://claude.ai/*" },
+        { "url": "https://api.hanzo.ai/*" }
+      ],
+      "deny": []
+    },
+    {
+      "identifier": "fs:allow-read-text-file",
+      "allow": [
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
+    },
+    {
+      "identifier": "fs:allow-read-dir",
+      "allow": [
+        { "path": "$HOME/.codex" },
+        { "path": "$HOME/.codex/**" },
+        { "path": "$HOME/.claude" },
+        { "path": "$HOME/.claude/**" },
+        { "path": "$HOME/.hanzo" },
+        { "path": "$HOME/.hanzo/**" }
+      ]
+    }
+  ],
+  "commands.allow": [
+    "hanzo_node_is_running",
+    "hanzo_node_get_options",
+    "hanzo_node_set_options",
+    "hanzo_node_spawn",
+    "hanzo_node_kill",
+    "hanzo_node_remove_storage",
+    "hanzo_node_set_default_options",
+    "hanzo_node_get_ollama_api_url",
+    "hanzo_node_get_default_model",
+    "hardware_get_summary",
+    "galxe_generate_proof",
+    "retrieve_logs",
+    "machine_health",
+    "machine_list",
+    "machine_get",
+    "machine_create",
+    "machine_start",
+    "machine_stop",
+    "machine_delete",
+    "machine_exec",
+    "machine_events_subscribe"
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "analytics": {
+    "title": "Ayúdanos a mejorar Zoo"
+  },
+  "chat": {
+    "emptyStateDescription": "Para preguntas rápidas, presiona ⌘ + Shift + J para usar Zoo Spotlight",
+    "emptyStateTitle": "Pregunta a Zoo IA"
+  },
+  "chatDM": {
+    "form": {
+      "hanzoIdentity": "Identidad Zoo"
+    }
+  },
+  "common": {
+    "logInHanzoHosting": "Iniciar Sesión en Zoo Hosting",
+    "hanzoPrivate": "Zoo Privado (Local)",
+    "signUpHanzoHosting": "Registrarse en Zoo Hosting"
+  },
+  "desktop": {
+    "benefits": {
+      "local": "<b>Local:</b> Con un Zoo local, obtienes control total sobre tus datos en un entorno seguro."
+    },
+    "localAI": "IA Local de Zoo",
+    "welcome": "Bienvenido a Zoo"
+  },
+  "disconnect": {
+    "modalTitle": "Desconectar Zoo"
+  },
+  "errors": {
+    "nodeUnavailable": {
+      "description": "Estamos teniendo problemas para conectar con tu Nodo Zoo. Tu nodo puede estar desconectado o tu conexión a internet puede estar caída."
+    }
+  },
+  "exportConnection": {
+    "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo Zoo"
+  },
+  "feedback": {
+    "description": "¡Valoramos tus comentarios! Por favor, háznos saber tus pensamientos sobre Zoo y cómo podemos mejorar tu experiencia."
+  },
+  "galxe": {
+    "errors": {
+      "registerDesktopInstallation": "Error al registrar tu instalación de Zoo Desktop. Por favor, asegúrate de que tu Dirección EVM no se haya utilizado previamente para registrar una instalación diferente."
+    },
+    "success": {
+      "registerDesktopInstallation": "Tu instalación de Zoo Desktop se registró exitosamente. Puede tardar algunas horas en registrarse en la búsqueda Galxe."
+    }
+  },
+  "llmProviders": {
+    "notFound": {
+      "description": "Conecta tu primera IA para empezar a preguntar a Zoo IA. Intenta conectar OpenAI"
+    }
+  },
+  "mcpClients": {
+    "customDescriptionSecondary": "Si tu cliente no soporta SSE, puedes ejecutar el servidor Zoo MCP como un proceso separado utilizando este comando:"
+  },
+  "mcpPage": {
+    "helpfulLinks": "Puedes encontrar MCPs útiles para conectar con Zoo en smithery.ai y composio.dev."
+  },
+  "mcpServers": {
+    "addDescription": "Configura un nuevo servidor MCP para conectarte con tu Nodo Zoo",
+    "listDescription": "Lista de servidores MCP conectados a tu Nodo Zoo"
+  },
+  "networkAgentsPage": {
+    "addAgentFromIdDescription": "Agrega un agente a tu colección utilizando un ID de Zoo. Ejemplo: @@official.sep-hanzo/main/agent/youtube_expert",
+    "addAgentFromIdHelper": "Ingresa el ID de Zoo del agente que deseas agregar.",
+    "registerHanzoIdentity": "Registrar Identidad Zoo",
+    "registerHanzoIdentityDescription": "Crea tu identidad única en la red Zoo para usar y publicar agentes"
+  },
+  "onboardingChecklist": {
+    "getStartedText": "Comienza con Zoo",
+    "setupHanzoDesktop": "Configurar Zoo Desktop",
+    "setupHanzoDesktopDescription": "Configura Zoo Desktop para comenzar"
+  },
+  "quickAsk": {
+    "emptyStateTitle": "Pregunta a Zoo AI"
+  },
+  "quickConnection": {
+    "connectingToNode": "Conectando a tu Nodo Zoo local"
+  },
+  "settings": {
+    "layout": {
+      "hanzoNode": "Administrador de Nodo Zoo"
+    },
+    "quickAccessButton": {
+      "label": "Mostrar Botón de Acceso Rápido de Zoo"
+    },
+    "remoteAccess": {
+      "description": "Conéctate de manera fácil y segura a tu nodo Zoo desde cualquier lugar usando ngrok. Sin configuraciones complejas: solo <a>crea una cuenta gratuita en ngrok</a>, copia tu <b>token de autenticación de ngrok</b> desde el panel de control y pégalo a continuación para habilitar el acceso remoto seguro.",
+      "success": "¡Conectado! Tu nodo Zoo ahora es accesible de forma remota a través de ngrok"
+    },
+    "hanzoIdentity": {
+      "checkIdentityInSync": "Verificar Identidad de Zoo",
+      "error": "Error al actualizar la Identidad Zoo",
+      "goToHanzoIdentity": "Ir a Mi Identidad Zoo",
+      "label": "Identidad Zoo",
+      "registerIdentity": "Registrar tu Identidad Zoo",
+      "success": "Identidad Zoo actualizada exitosamente",
+      "updatedIdentity": "Identidad Zoo actualizada con éxito."
+    },
+    "hanzoVersion": "Versión de Zoo Desktop:"
+  },
+  "hanzoNode": {
+    "manager": "Gestor de Nodos de Zoo",
+    "notifications": {
+      "errorSyncOllama": "Error al sincronizar los modelos locales de Ollama con tu Nodo Zoo",
+      "removedNote": "Se eliminó el almacenamiento de tu Nodo Zoo local",
+      "runningNode": "Tu Nodo Zoo local está en funcionamiento",
+      "startingNode": "Iniciando tu Nodo Zoo local",
+      "stopNode": "Deteniendo tu Nodo Zoo local",
+      "stoppedNode": "Tu Nodo Zoo local se detuvo",
+      "syncedOllama": "Los modelos locales de Ollama se han sincronizado con tu Nodo Zoo"
+    },
+    "resetNodeWarning": {
+      "description": "Tu nodo Zoo está actualmente bloqueado por claves existentes. Para volver a conectarte, puedes restablecer todos los datos de tu nodo Zoo.",
+      "option2": "<b>Restablecer datos:</b> Eliminar permanentemente todos los datos de tu Nodo Zoo.",
+      "option3": "<b>Restablecer todo:</b> Eliminar permanentemente todos los datos de tu Nodo Zoo, incluyendo las claves de encriptación y firma."
+    },
+    "restartNode": "Por favor, reinicia tu Nodo Zoo",
+    "unavailable": "Tu Nodo Zoo no está disponible"
+  },
+  "tools": {
+    "create": {
+      "hanzoCodeGenerator": "Generador de código Zoo",
+      "hanzoFreeTrial": "Prueba gratuita de Zoo"
+    },
+    "visitStore": "Visita la tienda Zoo para descubrir e instalar herramientas adicionales que mejoren tu flujo de trabajo"
+  },
+  "vectorFs": {
+    "actions": {
+      "uploadFileText": "Subir tus archivos los transforma para estar listos en AI y disponibles para usar en Zoo."
+    },
+    "shareFolderWarning": {
+      "text": "Debes registrar una identidad de Zoo antes de poder compartir carpetas en la Red de Zoo."
+    }
+  }
+}

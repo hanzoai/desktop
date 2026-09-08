@@ -1,0 +1,38 @@
+# hanzoai/desktop — the Hanzo Desktop app (Tauri shell + React front end, pnpm
+# workspace: apps/hanzo-desktop plus the libs/ packages it composes).
+#
+# Gate only. The shipped artifact here is a signed per-platform desktop bundle
+# cut by the release lane, not a container, so there is no `images:` and nothing
+# to deploy.
+#
+# `pnpm typecheck` (tsc --noEmit against the app's own tsconfig.app.json) is the
+# real gate for this tree: the app is TypeScript end to end and its libs are
+# consumed as source through the workspace, so a break in libs/hanzo-ui or
+# libs/hanzo-message-ts surfaces here rather than in whoever imports it next.
+# The install runs its scripts on purpose — postinstall applies the
+# vite-plugin-wasm patch and the libsodium-sumo symlink, and a tree without them
+# is not the tree that gets built.
+test:
+  # ONE number, ONE place, never behind what shipped.
+  #
+  # This repo declares its version by hand — there is no image and no builder to
+  # derive it from, so the human writes it and the tag must then match. That gate
+  # existed: `.github/workflows/release-prod.yml` failed a release whose tag and
+  # package.json disagreed. It was deleted with the rest of GitHub CI on
+  # 2026-07-27 and never re-homed, so since then nothing has asserted it.
+  #
+  # It also holds the file to being the ONLY declaration: tauri.conf.json must
+  # keep POINTING at it rather than restating a number, Cargo.toml must stay the
+  # inert 0.0.0 the pointer overrides, and apps/hanzo-desktop/package.json must
+  # declare none (it carried a second copy that agreed only by luck). Each is a
+  # place a bundle could come to report a version this repo never released.
+  - name: version-drift
+    run: |
+      set -e
+      git fetch --tags --force --quiet || true
+      scripts/version.sh check
+  - name: typecheck
+    run: |
+      set -e
+      pnpm install --frozen-lockfile
+      pnpm typecheck

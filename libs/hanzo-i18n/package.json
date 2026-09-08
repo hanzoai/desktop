@@ -1,0 +1,19 @@
+{
+  "name": "@hanzo/desktop-i18n",
+  "version": "0.0.1",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.mjs",
+      "require": "./index.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "dependencies": {
+    "i18next": "catalog:",
+    "i18next-browser-languagedetector": "catalog:",
+    "i18next-resources-to-backend": "catalog:",
+    "react-i18next": "catalog:"
+  }
+}

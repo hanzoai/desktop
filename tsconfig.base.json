@@ -1,0 +1,33 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2022",
+    "module": "esnext",
+    "lib": ["es2022", "dom", "WebWorker"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "@hanzo/desktop-brand-config": ["./libs/brand-config/src/index.ts"],
+      "@hanzo/desktop-i18n": ["./libs/hanzo-i18n/src/index.ts"],
+      "@hanzo/desktop-logo": ["./libs/hanzo-logo/src/index.ts"],
+      "@hanzo/desktop-message-ts/*": ["./libs/hanzo-message-ts/src/*.ts"],
+      "@hanzo/desktop-node-state": ["./libs/hanzo-node-state/src/index.ts"],
+      "@hanzo/desktop-node-state/*": ["./libs/hanzo-node-state/src/*.ts"],
+      "@hanzo/desktop-ui": ["./libs/hanzo-ui/src/index.ts"],
+      "@hanzo/desktop-ui/assets": ["./libs/hanzo-ui/src/assets/index.ts"],
+      "@hanzo/desktop-ui/helpers": ["./libs/hanzo-ui/src/helpers/index.ts"],
+      "@hanzo/desktop-ui/hooks": ["./libs/hanzo-ui/src/hooks/index.ts"],
+      "@hanzo/desktop-ui/utils": ["./libs/hanzo-ui/src/utils.ts"],
+      "@hanzo/desktop-ui/network": ["./libs/hanzo-ui/src/network/index.ts"],
+      "@hanzo/desktop-ui/wallet": ["./libs/hanzo-ui/src/wallet/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

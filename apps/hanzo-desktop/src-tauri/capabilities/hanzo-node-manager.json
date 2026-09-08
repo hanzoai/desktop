@@ -1,0 +1,34 @@
+{
+  "identifier": "hanzo-node-manager",
+  "description": "permissions that were migrated from v1",
+  "local": true,
+  "windows": ["hanzo-node-manager"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "log:default",
+    "dialog:allow-save",
+    "fs:allow-download-write",
+    "dialog:allow-open",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$HOME/Downloads/*"
+        }
+      ]
+    }
+  ],
+  "commands.allow": [
+    "hanzo_node_is_running",
+    "hanzo_node_get_options",
+    "hanzo_node_set_options",
+    "hanzo_node_spawn",
+    "hanzo_node_kill",
+    "hanzo_node_remove_storage",
+    "hanzo_node_set_default_options",
+    "hanzo_node_get_ollama_api_url",
+    "hanzo_node_get_default_model",
+    "retrieve_logs"
+  ]
+}

@@ -1,0 +1,63 @@
+import { ModelPrefix } from '@hanzo/desktop-message-ts/api/jobs/index';
+
+import MODEL_CATALOG from '../lib/hanzo-node-manager/model-catalog.json';
+
+export const HANZO_DOCS_URL = 'https://docs.hanzo.ai';
+
+export const MODELS_WITH_THINKING_SUPPORT = {
+  // Local-engine models with thinking support. Keyed by the node's wire model
+  // string, i.e. `<localEnginePrefix>:<model>` (the prefix is the node's serde
+  // tag for the local-engine provider variant).
+  ...Object.fromEntries(
+    MODEL_CATALOG.filter((model) => model.thinking)
+      .map((model) => model.tags)
+      .flat()
+      .map((tags) => [
+        `${ModelPrefix.LocalEngine}:${tags.name}`,
+        { forceEnabled: true, reasoningLevel: false },
+      ]),
+  ),
+
+  // Claude models
+  'claude:claude-opus-4-1-20250805': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-opus-4-1': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-opus-4-20250514': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-opus-4-0': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-sonnet-4-20250514': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-sonnet-4-0': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-3-7-sonnet-20250219': { forceEnabled: false, reasoningLevel: true },
+  'claude:claude-3-7-sonnet-latest': { forceEnabled: false, reasoningLevel: true },
+  
+  // DeepSeek models
+  'deepseek:deepseek-reasoner': { forceEnabled: true, reasoningLevel: false },
+
+  // Groq models
+  'groq:openai/gpt-oss-20b': { forceEnabled: false, reasoningLevel: true },
+  'groq:openai/gpt-oss-120b': { forceEnabled: false, reasoningLevel: true },
+  'groq:qwen/qwen3-32b': { forceEnabled: false, reasoningLevel: false },
+  'groq:deepseek-r1-distill-llama-70b': { forceEnabled: false, reasoningLevel: false },
+
+  // OpenAI models
+  'openai:gpt-5': { forceEnabled: false, reasoningLevel: true },
+  'openai:gpt-5-mini': { forceEnabled: false, reasoningLevel: true },
+  'openai:gpt-5-nano': { forceEnabled: false, reasoningLevel: true },
+  'openai:o1': { forceEnabled: false, reasoningLevel: true },
+  'openai:o1-mini': { forceEnabled: false, reasoningLevel: true },
+  'openai:o3': { forceEnabled: false, reasoningLevel: true },
+  'openai:o3-mini': { forceEnabled: false, reasoningLevel: true },
+  'openai:o4': { forceEnabled: false, reasoningLevel: true },
+  'openai:o4-mini': { forceEnabled: false, reasoningLevel: true },  
+
+  // Gemini models
+  'gemini:gemini-2.5-pro': { forceEnabled: false, reasoningLevel: true },
+  'gemini:gemini-2.5-flash': { forceEnabled: false, reasoningLevel: true },
+  'gemini:gemini-2.5-flash-preview-05-20': { forceEnabled: false, reasoningLevel: true },
+  'gemini:gemini-2.5-flash-lite': { forceEnabled: false, reasoningLevel: true },
+  'gemini:gemini-2.5-flash-lite-preview-06-17': { forceEnabled: false, reasoningLevel: true },
+  'gemini:gemini-2.0-flash-exp': { forceEnabled: false, reasoningLevel: true },
+
+  // Hanzo Backend
+  'hanzo-backend:free_text_inference': { forceEnabled: false, reasoningLevel: true },
+  'hanzo-backend:standard_text_inference': { forceEnabled: false, reasoningLevel: true },
+  'hanzo-backend:premium_text_inference': { forceEnabled: false, reasoningLevel: true },
+} as const;

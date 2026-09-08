@@ -1,76 +1,276 @@
-# Hanzo Desktop
+<p align="center"><img src=".github/hero.svg" alt="desktop" width="880"></p>
 
-The chat, as an application on your machine, and the things only a machine can
-offer: a model that runs here, a secret kept in the operating system's own
-store, and the local services that make both possible.
+<h1 align="center">
+<img width="36" height="36" src="assets/icon.png"/>
+  Hanzo
+  </h1>
+<div align="center">
 
-Tauri carries it. The interface is the same one the browser gets — `@hanzo/ui`
-components on the `@hanzo/gui` runtime, `@hanzo/ai` for every call to a server —
-so what is written below is only what the desktop adds.
+> Create Powerful AI Agents using local or remote AIs
 
-## Where a model runs
+</div>
 
-Two places answer the same wire, so there is one client shape for both: the
-estate at its own address under the visitor's IAM token, and the engine on this
-machine under the key it was started with. A model's address is `origin/model`,
-which means choosing a model chooses where it runs, and nothing downstream of
-the picker knows there is more than one place.
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows-compatible-success?logo=windows&logoColor=white" alt="Windows compatible">
+  <img src="https://img.shields.io/badge/Linux-compatible-success?logo=linux&logoColor=white" alt="Linux compatible">
+  <img src="https://img.shields.io/badge/macOS-Apple Silicon compatible-success?logo=apple&logoColor=white" alt="macOS Apple Silicon compatible">
+</p>
 
-The engine's key is not decoration. Started without one it serves any caller
-that can reach the port, and that port is bound on every interface — so the
-shell mints a key, starts the engine with it, and holds it. The estate and the
-machine are then the same shape: an address, and a credential.
+<p align="center">
+  <a href="https://github.com/hanzoai/desktop/stargazers"><img src="https://img.shields.io/github/stars/hanzoai/desktop?style=social" alt="GitHub stars"></a>
+  <a href="https://discord.gg/CJCyAsm9Vr"><img src="https://img.shields.io/badge/Discord-join-7289DA?logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://x.com/hanzoai"><img src="https://img.shields.io/twitter/follow/hanzoai?style=social" alt="Twitter Follow"></a>
+</p>
 
-`src/data/origin.ts` is the whole of it. The machine is declared only in the
-desktop, because the web build has no engine to ask and asking anyway costs a
-failed request on every load.
+<p align="center">
+  <strong>Build collaborative AI agents that work together, handle payments, and automate complex workflows</strong>
+  <br/>
+  Hanzo is a free, open-source platform that democratizes AI agent creation.
+  No coding required – just drag, drop, and deploy intelligent agents that can work across platforms and handle real-world tasks.
+</p>
 
-## What the shell keeps alive
+<p align="center">
+  <a href="#-features">Features</a> •
+  <a href="#-demo">Demo</a> •
+  <a href="#-examples">Examples</a> •
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-development">Development</a> •
+  <a href="https://docs.hanzo.ai">Documentation</a>
+</p>
 
-A service is a binary, its arguments, its environment, and the URL that answers
-when it is serving. Three are declared in `src-tauri/src/service.rs`:
+---
 
-| service | what it is | answers on |
-| --- | --- | --- |
-| `engine` | the model that runs here | `127.0.0.1:36900` |
-| `embedding` | the embedder beside it | `127.0.0.1:36901` |
-| `node` | the chain node | `127.0.0.1:3690`, socket `3691`, peers `9552` |
+## 🚀 Features
 
-The shell starts them, holds the handles, reports whether each answers, and
-stops what it started. A second window shows that list, so what the machine is
-running is visible without a chat window open, and the tray keeps the app
-somewhere when no window is: show it, open that list, start a new chat, quit.
+**🎯 No-Code Agent Builder** – Create specialized AI agents in minutes through an intuitive visual interface. No programming experience needed.
 
-Secrets go to the operating system's store, one vault per installed app, keyed
-by the bundle identifier — so two brands on one machine cannot read each
-other's, and a development build cannot read a shipped one's.
+**🤖 Multi-Agent Orchestration** – Deploy teams of agents that collaborate, share context, and coordinate complex multi-step workflows automatically.
 
-## The bridge
+**💰 Crypto-Native Architecture** – Built-in support for decentralized payments, DeFi interactions, and autonomous economic agents that can transact independently.
 
-There is no Tauri package in `package.json`, and that is deliberate. The shell
-is reached through the IPC object Tauri stamps on `window` before the first
-script runs, which is what lets `shell()` answer whether this is the desktop
-without a request and without a dependency — the same source therefore builds
-for the browser, where it simply knows the machine is not there. Every command
-the app can name is registered in `src-tauri/src/main.rs`, and there are seven.
+**🔗 Universal Protocol Support** – Seamlessly integrates with Model Context Protocol (MCP), making your agents compatible with Claude, Cursor, and the broader AI ecosystem.
 
-The other direction is a navigation: the shell says where the app should be by
-rewriting the document's address, which is what a link does and needs nothing
-from the bridge. Sign-in goes out to the system browser for the same reason —
-an issuer's login screen inside an app's own webview is a credential prompt with
-no address bar to check.
+**⚡ Hybrid Deployment** – Run everything locally for maximum privacy, connect to cloud models for enhanced capabilities, or combine both approaches as needed.
 
-## Verifying
+**🔐 Security-First Design** – Your crypto keys, sensitive data, and computations remain under your control with local-first architecture.
 
-```sh
-CI=true pnpm install --no-frozen-lockfile
-pnpm dev            # the interface alone, in a browser, on localhost:3090
-pnpm tauri dev      # the application, shell and all
-pnpm typecheck
-pnpm test           # 35 assertions, node --test, no framework
-pnpm tauri build
+**🌐 Cross-Platform Compatibility** – Works on Windows, macOS, and Linux with consistent performance and user experience.
+
+## 🎬 Demo
+
+[![Hanzo Desktop — 31s demo](assets/hero-poster.png)](https://github.com/hanzoai/desktop/raw/main/assets/hero.mp4)
+
+_Click to play — 31s, recorded from this commit's own frontend: onboarding,
+the workspace, the Zen models, light and back, then every section. The still is
+a frame of that same film,
+so the poster cannot promise a screen the video does not show. Regenerate both
+with `pnpm film && pnpm film:masters`. (GitHub plays video inline only for
+assets uploaded through its own attachment flow, hence the poster-and-link.)_
+
+## 📋 Examples
+
+**💹 Autonomous Trading Bot** – Deploy an agent that monitors social sentiment, analyzes market trends, and executes trades based on predefined strategies.
+
+**📧 Intelligent Email Assistant** – Create an agent that categorizes incoming emails, drafts contextual responses, and automatically schedules follow-ups.
+
+**📊 Data Intelligence Agent** – Build agents that scrape web data, perform trend analysis, and generate comprehensive reports with actionable insights.
+
+**🔄 Workflow Automation Hub** – Orchestrate multiple specialized agents that handle different components of complex business processes seamlessly.
+
+**🏦 DeFi Portfolio Manager** – Set up agents that monitor your crypto investments, rebalance portfolios, and execute yield farming strategies.
+
+## 🚀 Quick Start
+
+### One-Click Installation
+
+1. **Download** the latest release for your platform from our [releases page](https://github.com/hanzoai/desktop/releases)
+2. **Install** and launch Hanzo
+3. **Create** your first AI agent using our step-by-step guided interface
+
+### System Requirements
+
+- **Memory**: 4GB RAM minimum (8GB recommended)
+- **Storage**: 2GB free space
+- **OS**: Windows 10+, macOS 10.15+, or Linux (Ubuntu 20.04+)
+
+---
+
+## 🛠 Development
+
+### Architecture Overview
+
+Hanzo is built as a modern monorepo using **NX** for orchestration and dependency management. The architecture consists of:
+
+**Core Applications:**
+
+- **hanzo-desktop** – Cross-platform Tauri application with React frontend
+
+**Shared Libraries:**
+
+- **hanzo-message-ts** – Message protocols and network communication with Hanzo Node
+- **hanzo-node-state** – React Query-based state management for node data
+- **hanzo-ui** – Reusable React components with design system
+- **hanzo-artifacts** – Styled UI primitives built on Radix and Tailwind CSS
+- **hanzo-i18n** – Internationalization utilities powered by i18next
+
+**Technology Stack:**
+
+- **Frontend**: React 18, TypeScript, Tailwind CSS, Radix UI
+- **Desktop**: Tauri (Rust + React)
+- **State Management**: Zustand (UI state) + React Query (server state)
+- **Build System**: Vite, NX monorepo
+- **Testing**: Vitest, React Testing Library
+
+### 🚀 Getting Started
+
+#### 1. Clone and Setup
+
+```bash
+git clone https://github.com/hanzoai/desktop
+cd desktop
+nvm use
+npm ci
 ```
 
-`pnpm dev` is worth keeping in reach: everything except the machine works there,
-`shell()` answers false, and the origin list is one entry long — which is also
-the proof that the desktop's additions are additions and not a fork.
+#### 2. Fetch the side binaries
+
+The app spawns a Hanzo Node beside itself, so the node binary and the embedding
+model have to be on disk before Tauri can bundle them. One command, every
+platform — it reads your OS and architecture, and takes the release from
+`apps/hanzo-desktop/src-tauri/pins`:
+
+```bash
+cd apps/hanzo-desktop && pnpm download-binaries
+```
+
+`pnpm dev` and `pnpm build` run it for you; the command above is for fetching
+ahead of time, or after changing the pin. To move to a different node release,
+edit `pins` — no other file names a version.
+
+### 📦 Essential Commands
+
+#### Development Server
+
+```bash
+# Run desktop app (recommended for development)
+npx nx serve:tauri hanzo-desktop
+```
+
+#### Building
+
+```bash
+# Build desktop application
+npx nx build hanzo-desktop
+
+# Create development build
+NODE_OPTIONS="--max_old_space_size=8192" npx nx build hanzo-desktop --config="./src-tauri/tauri.conf.development.json"
+
+# Build all projects
+npx nx run-many --target=build
+```
+
+#### Third party data and repository management
+
+```bash
+# Update the built-in Ollama models repository. This repository contains model definitions, tags and metadata for all supported AI models. The command below regenerates the repository files to ensure compatibility with the latest Ollama version and model updates
+npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
+
+# Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Hanzo. It ensures the app catalog stays up-to-date with the latest official releases.
+deno run -A ./ci-scripts/composio-repository/main.ts
+
+# Generate translations for all languages (EN, ES, etc.)
+# This command uses AI to automatically generate translations for all supported languages based on the primary i18n source file (English).
+# It ensures consistent translations across the entire application while maintaining natural language quality.
+
+npx nx run hanzo-i18n:i18n
+```
+
+#### Testing & Quality
+
+```bash
+# Run tests
+npx nx test [project-name]
+npx nx run-many --target=test
+
+# Lint code
+npx nx lint [project-name]
+npx nx run-many --target=lint
+```
+
+### 🏗 Project Structure
+
+```
+desktop/
+├── apps/
+│   └── hanzo-desktop/          # Main desktop application
+├── libs/
+│   ├── hanzo-message-ts/       # Core messaging protocol
+│   ├── hanzo-node-state/       # State management
+│   ├── hanzo-ui/               # Component library
+│   ├── hanzo-artifacts/        # UI primitives
+│   └── hanzo-i18n/             # Internationalization
+├── ci-scripts/                   # Build and deployment scripts
+└── tools/                        # Development utilities
+```
+
+### 🎨 UI Development Guidelines
+
+**Component Libraries:**
+
+- **Radix UI** – Unstyled, accessible component primitives
+- **Tailwind CSS** – Utility-first styling and responsive design
+- **Shadcn/ui** – Pre-built component patterns
+
+**State Management:**
+
+- **Zustand** – Client-side UI state management
+- **React Query** – Server state, caching, and synchronization
+
+### 🌍 Internationalization
+
+<p align="start">
+  <img src="https://img.shields.io/badge/English-supported-success?logo=alphabet&logoColor=white" alt="English supported">
+  <img src="https://img.shields.io/badge/Español-supported-success?logo=alphabet&logoColor=white" alt="Spanish supported">
+  <img src="https://img.shields.io/badge/中文-supported-success?logo=alphabet&logoColor=white" alt="Chinese supported">
+  <img src="https://img.shields.io/badge/粵語-supported-success?logo=alphabet&logoColor=white" alt="Cantonese supported">
+  <img src="https://img.shields.io/badge/日本語-supported-success?logo=alphabet&logoColor=white" alt="Japanese supported">
+  <img src="https://img.shields.io/badge/한국어-supported-success?logo=alphabet&logoColor=white" alt="Korean supported">
+  <img src="https://img.shields.io/badge/Bahasa Indonesia-supported-success?logo=alphabet&logoColor=white" alt="Indonesian supported">
+  <img src="https://img.shields.io/badge/Türkçe-supported-success?logo=alphabet&logoColor=white" alt="Turkish supported">
+</p>
+
+Hanzo supports multiple languages through our i18n system:
+
+```bash
+# Add new translation keys
+# Edit files in libs/hanzo-i18n/locales/
+
+# Generate updated translation types
+npx nx run hanzo-i18n:i18n
+
+# Supported languages: en-US, es-ES, zh-CN, zh-HK, ko-KR, ja-JP, id-ID, tr-TR
+```
+
+### 🤝 Contributing
+
+1. **Fork** the repository
+2. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+3. **Commit** your changes: `git commit -m 'Add amazing feature'`
+4. **Push** to the branch: `git push origin feature/amazing-feature`
+5. **Open** a Pull Request
+
+### 📚 Additional Resources
+
+- **[Official Documentation](https://docs.hanzo.ai)** – Comprehensive guides and API reference
+- **[Discord Community](https://discord.gg/CJCyAsm9Vr)** – Get help and connect with other developers
+- **[Twitter Updates](https://x.com/hanzoai)** – Latest news and announcements
+
+---
+
+<p align="center">
+  <strong>Built with ❤️ by the Hanzo community</strong>
+  <br/>
+  <a href="https://github.com/hanzoai/desktop/blob/main/LICENSE">Apache License</a> •
+  <a href="https://github.com/hanzoai/desktop/issues">Report Bug</a> •
+  <a href="https://github.com/hanzoai/desktop/issues">Request Feature</a>
+</p>

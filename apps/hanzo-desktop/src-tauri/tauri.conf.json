@@ -1,0 +1,124 @@
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build:ci",
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420"
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "appimage", "deb", "nsis", "msi", "dmg"],
+    "externalBin": [
+      "external-binaries/hanzo-node/hanzo-node",
+      "external-binaries/hanzo-node/hanzo-tools-runner-resources/deno",
+      "external-binaries/hanzo-node/hanzo-tools-runner-resources/uv"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": ["llm-models/"],
+    "macOS": {
+      "minimumSystemVersion": "12.0"
+    },
+    "createUpdaterArtifacts": "v1Compatible"
+  },
+  "productName": "Hanzo Desktop",
+  "mainBinaryName": "hanzo-desktop",
+  "version": "../../../package.json",
+  "identifier": "com.hanzo.desktop",
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4OURBNzhCM0Q2RTMwMzIKUldReU1HNDlpNmVkR01uQXpJaS9Dd2gvRlpsbDVYQmg0MlJSUnNib2tSOW5qRG5zSVdsMW0zZm8K",
+      "endpoints": [
+        "https://github.com/hanzoai/desktop/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "basicUi"
+      }
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["hanzo"]
+      }
+    }
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net; media-src 'self' data: blob: https:; worker-src 'self' blob:; frame-src 'self' blob: http://127.0.0.1:* http://localhost:*; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:* https: wss:; object-src 'none'; base-uri 'self'; form-action 'self'"
+    },
+    "windows": [
+      {
+        "transparent": true,
+        "title": "Hanzo",
+        "width": 1280,
+        "height": 840,
+        "resizable": true,
+        "dragDropEnabled": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "create": false
+      },
+      {
+        "fullscreen": false,
+        "label": "spotlight",
+        "transparent": true,
+        "title": "Spotlight",
+        "width": 800,
+        "height": 490,
+        "resizable": true,
+        "dragDropEnabled": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "url": "src/windows/spotlight/index.html",
+        "center": true,
+        "skipTaskbar": true,
+        "shadow": true,
+        "decorations": false,
+        "visible": false,
+        "closable": false,
+        "parent": null,
+        "create": false
+      },
+      {
+        "fullscreen": false,
+        "label": "coordinator",
+        "transparent": true,
+        "title": "Coordinator",
+        "width": 720,
+        "height": 470,
+        "resizable": false,
+        "dragDropEnabled": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "url": "src/windows/coordinator/index.html",
+        "center": true,
+        "skipTaskbar": false,
+        "shadow": false,
+        "decorations": false,
+        "visible": false,
+        "closable": false,
+        "parent": null,
+        "create": false
+      },
+      {
+        "label": "hanzo-node-manager",
+        "url": "src/windows/hanzo-node-manager/index.html",
+        "transparent": true,
+        "title": "Hanzo Node Manager",
+        "width": 1280,
+        "height": 840,
+        "resizable": true,
+        "dragDropEnabled": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "create": false
+      }
+    ],
+    "macOSPrivateApi": true
+  }
+}

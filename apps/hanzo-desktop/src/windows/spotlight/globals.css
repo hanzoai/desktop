@@ -1,0 +1,12 @@
+@import '../../../../../libs/hanzo-ui/src/styles/styles.css';
+
+html,
+body,
+#root {
+  overscroll-behavior: none;
+  @apply size-full overflow-hidden rounded-xl;
+}
+
+#root {
+  @apply bg-bg-default text-text-default border-divider rounded-xl border shadow-xl;
+}

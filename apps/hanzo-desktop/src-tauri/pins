@@ -1,0 +1,34 @@
+# The external releases this app bundles as Tauri sidecars.
+#
+# download-binaries.sh reads this file, and nothing else in the repo names a
+# version. Every value here has to name an artifact download.hanzo.ai actually
+# serves for all five targets — a pin that answers 404 is a clean checkout that
+# builds on the machine it was pinned from and nowhere else.
+#
+# Check one before changing it:
+#
+#   for a in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu \
+#            aarch64-apple-darwin x86_64-apple-darwin x86_64-pc-windows-msvc; do
+#     curl -o /dev/null -w "$a %{http_code}\n" -r 0-0 \
+#       https://download.hanzo.ai/hanzo-node/binaries/production/$a/$VERSION.zip
+#   done
+
+# hanzo-node — the daemon the app spawns and drives over HTTP. The archive
+# carries the three binaries tauri.conf.json declares: hanzo-node, and deno and
+# uv under hanzo-tools-runner-resources.
+#
+# v1.15.0 is the newest release published for all five targets. It answers the
+# node API under /v2, while libs/hanzo-message-ts calls /v1/node — the prefix
+# node serves from v1.19.2 on. Moving this pin needs a v1.19.2+ archive on
+# download.hanzo.ai first; none exists yet, and the newer tags built an amd64
+# container image and no binary.
+#
+# Two of the five archives carry deno and uv for the machine that BUILT them
+# rather than the machine that runs them: aarch64-unknown-linux-gnu ships
+# x86-64 tool runtimes, and x86_64-apple-darwin ships arm64 ones. Those were
+# the two cross-compiled targets — the Rust binary honours --target, the tool
+# runtimes came from the host. hanzo-node itself is right in all five. `file`
+# on each member is what shows this; the archive listing and the download both
+# look perfect. Whoever publishes the next set should build each target
+# natively, and check all three members, not just the node.
+HANZO_NODE_VERSION=v1.15.0

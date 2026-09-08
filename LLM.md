@@ -1,956 +1,863 @@
-# desktop2
-
-Hanzo Desktop, rebuilt. Replaces `~/work/hanzo/desktop`, which is a fork of
-Shinkai's Tauri app (`dcSpark/shinkai-local-ai-agents`) — that lineage is being
-dropped, not ported. Seeded from `~/work/hanzo/chat2` with its history, so the
-web client and the desktop are one source with two shells.
-
-Vite 8 + React 19, entry `index.html` → `src/main.tsx`, presented through
-`@hanzo/ui` on `@hanzo/gui`. No CSS pipeline, no tailwind, shadcn, radix or
-base-ui, and no `cn()` — a hard rule inherited from chat2 and still true.
-
-`pnpm build` is the web target. `src-tauri/` wraps that same `dist` for the
-desktop; there is no second frontend and no workspace to keep in step.
-
-## The one idea this repo adds to chat2
-
-**An origin is a place that answers `/v1/models` and `/v1/chat/completions`.**
-There are two — the estate at `api.hanzo.ai` under the visitor's IAM token, and
-the engine on this machine — and they speak the SAME wire. Measured:
-
-    POST 127.0.0.1:36900/v1/chat/completions
-      {"model":"zenlm/zen-eco-4b-agent-gguf","messages":[…]}
-    -> {"choices":[{"message":{"content":"Greetings!",…
-
-So the desktop does NOT need hanzo-node's job protocol (`create_job` →
-`job_message` → a WebSocket carrying `Stream` frames), which is what the old
-desktop spoke. No pairing, no `api_v2_key`, no keychain that can lock the app
-out of a node it spawned itself.
-
-### The API is `/v1`. There is no `/v2`
-
-One version, and it never moves. Where `/v2` appears below it is naming a
-retired prefix to say it is gone, not offering a second surface.
-
-### Two node binaries, opposite route prefixes
-
-This is the trap that reads as "the node is broken". The same handlers are
-mounted under DIFFERENT prefixes by two builds, so a client that works against
-one 404s against the other, health check included.
-
-`hanzod` built from `~/work/hanzo/node` mounts them under `/v1/node`
-(`node_api_router.rs:156`). Measured, with a bogus path as the control so the
-404s mean something:
-
-    :9450/v1/node/health_check   200
-    :9450/v2/health_check        404
-    :9450/bogus-control-xyz      404
-
-The prebuilt `hanzo-node` the old desktop bundles is the mirror image: `/v2`
-answers and `/v1/node` 404s. So the old desktop's `src/hanzo/node.ts`, its
-CLAUDE.md, and `libs/hanzo-message-ts` are each correct about one binary and
-wrong about the other — and which one you have is decided by whether the app
-bundled it or you built it.
-
-Nothing here depends on that, because chat goes to the engine's OpenAI surface.
-The prefix only matters to the shell's health probe, which is why that lives in
-`src-tauri/src/service.rs` next to the thing it starts.
-
-A model's address is **`origin/model`**. Choosing a model chooses where it runs;
-`compose/stream.ts` splits the address once and asks that origin's client.
-Nothing else in the app knows there is more than one place.
-
-    src/data/origin.ts    the table, and the client per origin. Start here.
-    src/data/config.ts    /v1/models, asked once per origin
-    src/settings/models.ts  the address's algebra, and the picker's catalog
-
-An origin that does not answer contributes nothing and refuses nothing — the
-engine is not always running, and a machine with no engine is a shorter menu,
-not a broken screen. The machine is only declared in the Tauri shell
-(`data/shell.ts` `shell()` reads `window.__TAURI_INTERNALS__`), so the web build
-never makes a localhost request it cannot complete.
-
-## Why the picker was empty (fixed here)
-
-chat2's `catalog()` read `endpoints` and `specs`, from `/v1/chat/endpoints` and
-`/v1/chat/config`. **Neither route exists.** Both call sites passed only
-`models`, and `catalog` read that solely inside a `flatMap` over the always-empty
-`endpoints` — so it returned `[]` on every call in the app. It is a pure
-function, so this is provable in one line rather than argued:
-
-    catalog({ models: { hanzo: ['zen5-flash'] } })   // was []  ->  now 1 entry
-
-The vocabulary of those two dead routes (`Spec`, `Preset`, `Endpoint`,
-`Endpoints`) is deleted. `Served` is what `/v1/models` actually answers, two
-levels deep: origin, then the `owned_by` the route already carries.
-
-Second half of the same bug: `shell/Chat.tsx` called `pick(address)` and put the
-BARE model on the conversation, so the origin was thrown away before the turn
-reached the wire. The address now travels whole and `run` is the one place it
-comes apart.
-
-`submit.ts` had `DEFAULT_MODEL = 'deepseek-chat'` as the fallback when a
-conversation named none. A model the deployment does not serve is not a safer
-answer than none, so the screen resolves the default from the catalog instead.
-
-## The free lane is this machine, not a free cloud model
-
-Measured against api.hanzo.ai on 2026-09-01, with a bogus key as the control:
-
-    GET  /v1/models              no auth 200 · pk- 200 · bogus pk- 200
-    POST /v1/chat/completions    no auth 401 · pk- 403
-
-The 403 says it outright: *"Publishable keys (pk-) can only access read-only
-endpoints (/v1/models, /v1/embeddings, /health). Use a secret key (sk-)."* So a
-`pk-` can never buy a turn — that is the design, not a version gap, and chat2's
-note that publishable keys would open anonymous chat is wrong.
-
-There is also **no `enso-free`**. The live catalogue is 22 models, none named
-enso, none priced at zero; the enso tier names were replaced by real model
-names. Nothing in the catalogue is free.
-
-What IS free is the engine on this machine: no account, no metering, and it
-answers. That is the signed-out product, and it is the reason the desktop
-exists. Two consequences in the code:
-
-* **The menu is not gated on a session.** `/v1/models` answers 200 with no
-  credential, so an empty picker for a visitor was THIS client declining to ask.
-  `useModels()` takes no `enabled` any more.
-* **The sign-in gate stands aside when the machine can answer.** It was
-  deliberately undismissable — Escape refused, no cancel — on the reasoning that
-  a refusal has nothing behind it. With a local origin that is false, so the
-  gate offers "Not now" exactly when `origins()` includes the machine, and is
-  the wall it was when it does not.
-
-## Pointing at a local cloud
-
-`hanzo up` stands the whole estate up on this machine. Two variables move the
-app onto it, and they move together:
-
-    VITE_HANZO_API=http://127.0.0.1:18080   # where the API is
-    VITE_HANZO_IAM=http://127.0.0.1:18080   # where identity is
-
-Measured against a local cloud on 2026-09-01: `/v1/health` 200, `/v1/models`
-200 with **86 models** — more than production's 22. **Its 200s prove nothing on
-their own**: `GET /bogus-control-xyz` also answers 200, serving the SPA
-fallback, so compare the BODY against a bogus-path control every time.
-
-Chat there is refused the same way as production — `POST /v1/chat/completions`
-with no bearer is 401 — so a local cloud still needs a local sign-in.
-
-**On the web the redirect URI is `window.location.origin`, always.** It used to
-be the literal `http://localhost:3000/auth/callback` whenever the hostname was
-loopback, with the client swapped to `hanzo-app` to match. That is correct for
-exactly one dev server and silently wrong for every other: a session started on
-5173 came back to a page on 3000 that was not running. A round trip returns to
-the document that began it, so the origin serving it is the only answer a page
-can give. What that moves onto the ISSUER is registering the loopback origins
-it will serve — which is a registration, in one place, rather than a literal
-compiled into the client.
-
-The desktop is the one place that answer does not apply, because its document
-has no address an issuer can reach. It goes out to the browser and comes back
-through `hanzo://oauth/<brand>`; `data/iam.ts` `back()` makes that one decision,
-and the parity section below has the measurements.
-
-## The engine's key
-
-The engine listens on `0.0.0.0:36900` and, started without a key, serves anyone
-who can reach the port — which from that bind address is the whole network. So
-the machine origin carries a credential like the estate does: the shell mints
-one, starts the engine with it, and holds it in `settings/prefs.ts` (`key`).
-Same shape, no special case, and the SDK needs a credential anyway —
-`HttpClient.resolveToken()` throws `AuthError` when none is configured.
-
-## Parity — what the old app ACTUALLY ships
-
-Measured against `~/work/hanzo/desktop`, not read off its file tree, because the
-file tree is misleading in one decisive way:
-
-**Its router is never mounted.** `index.html` loads `src/main.tsx`, which is
-`createRoot → <Gui> → <HanzoApp>`. `src/App.tsx` is the only file that mounts
-`<Router><AppRoutes/></Router>`, and it has ZERO importers. So all 40 declared
-routes, ~50 page files and ~4,300 Tailwind class sites never render — including
-the wallet page, the mining dashboard, agents, tools, MCP, files, crons, and the
-machines/containers/kubernetes trio.
-
-Second, independent kill: `libs/hanzo-message-ts` asks `/v1/node/*` on **135**
-call sites and `/v2/*` on 2 — and the node it BUNDLES answers `/v2/health_check`
-200 and `/v1/node/health_check` 404, the mirror of `hanzod` above. So every
-`hanzo-node-state` hook 404s even if the router were mounted. Fixing either
-alone changes nothing.
-
-What ships today is `src/hanzo/` — seven files, ~900 lines. That, and only that,
-is the parity bar:
-
-- [x] Welcome / consent screen — `shell/Welcome.tsx`, shown by `app.tsx`'s
-      `Entry` in the desktop until `prefs.consent` is set
-- [x] IAM OAuth + PKCE sign-in (`hanzo://oauth/<brand>` deep link — the one deep
-      link that works) — `data/iam.ts` `back()`, `data/session.tsx` `leave()`,
-      `shell/Root.tsx` hears `url`
-- [x] Conversation list and history — `data/convos.ts`, `data/messages.ts`,
-      `rail/List.tsx`
-- [x] Chat: stream, stop, retry — `compose/stream.ts:61` and `:95`,
-      `shell/Chat.tsx` `retry`
-- [x] Model selection — `settings/Model.tsx`, in the composer and in General
-- [x] Settings: node address, identity, version, status; open node manager —
-      `settings/Node.tsx`. Reset-and-pair has no counterpart: see below
-- [x] Node manager window — `machine/Services.tsx` in its own document, all
-      three services with their logs. Options and model tools are node-protocol
-      surfaces this app does not speak
-- [x] Tray: show, services, new chat, quit — `src-tauri/src/tray.rs`
-- [x] Keychain-backed secret storage — `src-tauri/src/secret.rs`, holding the
-      session (`data/vault.ts`)
-- [x] Local node spawn / kill / health on boot and exit — `service::boot` at
-      setup, `Registry::clear` on `RunEvent::Exit`
-
-Everything else in that repo is backend with no reachable UI, or UI wired to an
-API the node does not serve. Four defects worth not reproducing:
-
-- 26 of 83 Tauri commands are never called from the frontend; 10 of those are
-  `node_*` aliases of the `hanzo_node_*` originals — two names for one thing.
-- `mining/claim.rs` `claim_all` has **zero callers**: 561 lines, and rewards
-  accrue to a local JSON file that is never submitted anywhere. Mining also
-  starts automatically at boot with no consent and pays a per-install dev
-  wallet, because the re-home hook is dead too.
-- Eight sidebar links have no matching route and silently redirect to
-  `/terms-conditions`; five of them are the newest Hanzo features.
-- `main.rs` registers `control+shift+*` accelerators that
-  `global_shortcuts/mod.rs` only matches for `SUPER|SHIFT`, so on Linux and
-  Windows both hotkeys are registered and inert.
-- A successful sign-in does not advance the app — `startLogin` is
-  fire-and-forget and nothing calls `onGetStarted()` — and onboarding is
-  `useState(false)`, so Welcome reappears on every launch.
-
-### The shell speaks one way in each direction
-
-`data/shell.ts` is the whole bridge: `call` asks the shell to do something, `on`
-hears about something it did, and both ride the IPC object Tauri stamps on
-`window` before the first script runs — which is also what makes `shell()`
-answerable without a request. Nothing else in the app invokes a command, and
-`origin.ts` reads `shell()` from here rather than testing `window` a second time.
-
-The Rust side registers seven commands and no more: `manage`, `keep`, `secret`,
-`logs`, `spawn`, `status`, `stop`. The old app registered 83, of which 26 had no
-caller — so the rule here is that a command with no caller is deleted, and
-`forget` was, on the day the keychain facade turned out to clear itself through
-`removeItem`.
-
-### The desktop is a different OAuth client, and this is measured
-
-`clientId` is `<org>-app` in the shell and `<org>-chat` on the web, because a
-different redirect, a different distribution and a different consent screen make
-a different APPLICATION rather than a second copy of one. Which registrations
-exist is a fact about the issuer, so it is probed rather than assumed — against
-hanzo.id, with an unknown client and an unregistered redirect as the two
-controls:
-
-    hanzo-app  + hanzo://oauth/hanzo               302
-    hanzo-chat + https://hanzo.chat/auth/callback  302
-    hanzo-chat + hanzo://oauth/hanzo               400
-    hanzo-chat + hanzo://bogus-control-xyz         400
-    bogus-client-xyz + hanzo://oauth/hanzo         400
-
-So `hanzo://oauth/hanzo` is registered on `hanzo-app` and nowhere else, and
-`hanzo-desktop` is not a client at all — 400 on every redirect. A better name
-for that registration is an issuer change, not a client one.
-
-The round trip goes OUT to the system browser (`data/shell.ts` `open`, over the
-opener plugin) because the webview has no address an issuer can return to and
-because a login screen inside an app's own webview is a credential prompt with
-no address bar to check. It comes back as a deep link the operating system hands
-to the process, which `main.rs` emits whole and `Root` completes with
-`land(url)` — the same `handleCallback` the web callback route runs, one
-optional argument apart.
-
-Signing out in the desktop clears the token THIS app holds and stops. The
-issuer's session lives in the browser, which has its own tabs, and ending it
-from here would sign somebody out everywhere because they signed out of a chat
-window.
-
-### Three things the old app had that have nothing to be here
-
-**Reset-and-pair.** It existed because the node minted an `api_v2_key` on
-`initial_registration`, the app kept it, and a machine with no keyring lost it
-on restart — locking the app out of a node it had started itself. Chat does not
-go through the node here, so there is no key to mint and nothing to lose. The
-verb on the Node screen is Restart, and restart is stop-then-start because the
-shell ADOPTS a service that is already serving, so a start on its own would find
-the old one and do nothing.
-
-**Spotlight.** A second always-on-top window with its own composer, summoned by
-a global accelerator. The tray item is "New chat", which raises the one window
-and announces `ask`; `Root` starts a fresh conversation. What the old app got
-for the extra window was a second surface and the register-versus-match bug
-above — four accelerators registered, two matched.
-
-**A keyring fallback.** `secure_storage.rs` falls back to a process-local
-`HashMap` when `Entry::new` fails, which answers every call and forgets on exit
-— a working keychain right up to the restart that loses the secret. `secret.rs`
-refuses instead, and `data/vault.ts` reads that refusal as "this machine has no
-better store than the browser's" and hands the SDK no `storage` at all, so it
-uses the one the web build already uses. A rung down, named, rather than a
-pretence.
-
-### Two documents, because two windows
-
-`index.html` and `services.html`, both declared in `vite.config.ts` — naming one
-input turns the default off, so both are named. The services window is a
-document rather than a route because it outlives wherever the main window
-happens to be, and it holds no session and no router: what a process on this
-machine is doing is a question with no account and no address.
-
-Everything it shows is the shell's own answer. `status` reports each service's
-name, whether it answers, whether this app started it, and WHERE — so the port
-is stated once, in `service.rs`, and `settings/Node.tsx` shows the origin it was
-given rather than a number written down twice. Logs are files the services write
-beside their storage, read when they are looked at: nothing streams and nothing
-polls, and a log that is a file is still there after the crash that makes it
-worth reading.
-
-## Rooms come from `/v1/team/rooms`, and three things do not exist
-
-The rail's rooms were nine literals — `#general`, `#dev-swarm`, DMs with agents,
-each with an invented last message, an invented unread count, and a `lastActivity`
-that was the STRING "Just now". The MCP servers beside them were five more, with
-fixed versions and `status: 'connected'` written into the source.
-
-Measured on a local cloud, with `/v1/bogus-control-xyz` as the control (404), so
-the codes mean something:
-
-    GET  /v1/team/rooms            403   exists, wants a principal
-    POST /v1/team/rooms            403   so does create — see below
-    GET  /v1/team/rooms/x/messages 403   and messages
-    GET  /v1/channels              403   exists — but it is NOT this
-    GET  /v1/presence              404   does not exist
-    GET  /v1/bogus-control-xyz     404   the control
-
-`teamRoom` carries `id, name, topic, workspace, direct, private, archived,
-members, bindings, life`. So a room already knows whether it is private, whether
-it is a DM, and which workspace it belongs to. There is no `team` resource on the
-SDK client, so the read goes through `client.http.collection('rooms', …)` — the
-transport the SDK exposes for exactly this, and the unwrap for the `{rooms: […]}`
-envelope the route answers with.
-
-**`/v1/channels` is a different product and must not be confused with this.** It
-is the messaging TRANSPORTS an org has connected — Slack, Discord, Teams,
-Telegram — and `/v1/channels/inbox` is what arrived on them. The SDK says it
-plainly: inbound only, no send route, and `rooms()` there is arithmetic on a page
-you already hold rather than a request. Wiring the rail to it would put somebody
-else's Slack ids in a sidebar that is meant to show this org's rooms.
-
-### What the server does not do, and what each would take
-
-Nothing below is stubbed in the client. A client that pretends is how the nine
-literals happened.
-
-- **Creation EXISTS, and reading the document said otherwise.** A local cloud's
-  `/v1/openapi.json` listed `GET` alone on `/v1/team/rooms`, so a first pass
-  deleted the create modal as unreachable. PROBING THE ROUTE says the opposite:
-  `POST /v1/team/rooms` answers **403** on production and on that same local
-  cloud, against a `/v1/bogus-control-xyz` that answers 404 — and `apps/team`
-  registers it at `room.go:122`, with `/rooms/{id}/messages` beside it. The
-  document was stale, the route was not. Probe the route; a spec is an artifact
-  with its own release lag.
-
-  What create takes is `teamRoomNew`: a name is the whole required request, and
-  public is the DEFAULT because "a room nobody can find is the more surprising of
-  the two". `space` is deliberately not sent by this client — an org with one has
-  no choice to make, and an org with several must be asked rather than guessed
-  for. There is no `direct` field, so a DM is not something the route opens.
-
-- **No cross-org anything.** The route's own summary is "every room of the
-  CALLER'S org, across the workspaces it owns". Public channels that everyone can
-  see and join, and browsing other orgs' public channels, therefore need TWO
-  routes that do not exist: a listing that spans orgs and filters on `private ==
-  false`, and a join that adds the caller to a room their org does not own. The
-  second is the one carrying the real decision — membership today is an org-scoped
-  list, and a joiner from elsewhere is a principal the room's own tenant boundary
-  currently has no way to admit.
-
-- **No unread.** Nothing on the wire says what has been read, so no count is
-  shown. A zero is a claim, and an invented number is what was there before.
-
-## Activation is per TOOL, not per server
-
-The MCP modal had an "Enable MCP" button per server. The estate has no such
-switch: `tools.activation()` answers which TOOLS are on and `tools.activate()`
-sets them, so the switch belongs on the tool rows and that is where it went.
-
-`activate` takes the WHOLE set — the SDK is explicit that a name absent from
-`enabled` is off afterwards — so a toggle reads the live set, changes one name,
-and sends all of it. Sending only the name somebody clicked turns off the rest.
-
-## Two traps inherited from chat2, still true
-
-**`@hanzo/ui` needs `react-hook-form` even with no forms.** Declared an
-*optional* peer, but `dist/index.js` re-exports `Form`, which imports it
-statically. Any consumer of the barrel needs it installed or the build fails
-four `MISSING_EXPORT` errors.
-
-**`pnpm install` needs `--no-frozen-lockfile`,** and `CI=true` (the TTY check
-aborts the modules purge otherwise).
-
-## Remotes
-
-`git.hanzo.ai/hanzoai/desktop2` is the git of record; GitHub is the mirror. The
-forge repo **is not created yet** — its API answers 404 and push-to-create is
-refused for organizations, so it needs making in the web UI.
-
-A `url.https://git.hanzo.ai/hanzoai/.insteadof = https://github.com/hanzoai/`
-rewrite is set globally, so a `https://github.com/hanzoai/…` remote reaches the
-FORGE, not GitHub. Rewrites are applied once and do not chain, which is why the
-`git@github.com:hanzoai/desktop2.git` form resolves to real GitHub: it matches
-the OTHER rewrite (`url.https://github.com/.insteadof = git@github.com:`) and
-the result is not rewritten again.
-
-## Verifying
-
-    npx tsc --noEmit                                  # noUnusedLocals: dead code fails
-    node --test --experimental-strip-types 'src/**/*.test.ts'   # 27 assertions
-
-`tsconfig.json` has `noUnusedLocals`/`noUnusedParameters`, so un-exporting a
-symbol makes tsc name it if nothing uses it. That is the lever for pruning.
-
-
-## Every store reads. The eleven that did not, and what they claimed
-
-Eleven surfaces held literal tables and rendered them as measurements. Each is
-now a read, and what could not be read was DELETED rather than defaulted — the
-rule throughout being that an invented number is worse than a missing one,
-because a screen gives no sign which it is showing.
-
-| surface | reads | what was invented |
-|---|---|---|
-| plugins | `/v1/tools/plugins` + `/authored` | a marketplace: version, author, download count, star rating |
-| automations | `/v1/auto/flows`, `/runs` | a cron line, an agent, a run count; `runNow` faked the result on a timer |
-| tasks | `/v1/agents/sessions` | hand-written logs, artifact lists, a progress number |
-| projects | `/v1/iam/{organizations,projects}` | org tiers, member counts, two stock people, runtime targets |
-| agents | `client.agents.list()` | five personas with prompts, capabilities and dead avatar URLs |
-| workspace | `/v1/todo`, `/v1/meet/call`, `/v1/network` | a meeting roster, a transcript, an `aiSummary`, a tunnel URL and an `enclaveKey` |
-| artifact | `client.sandboxes` | a boot sequence, a compile time, an ingress URL, a 0.18ms p99 |
-| boards | `/v1/todo/board` | four cards with branches and agents; a "review" column that does not exist |
-| intelligence | `/v1/ai/memory/list`, `/v1/code/search` | confidence scores; a symbol index at fixed line numbers |
-| channels | `/v1/team/rooms` | nine rooms with unread counts and a "Just now" that was a string |
-| presence | `people.list` | three people with a `status` of online or idle |
-
-### What the exercise taught, beyond the counts
-
-**A store that writes nothing is the loudest kind of lie, and it is silent.**
-`AgentBuilderModal` built an object and handed it to an optional `onSave` that
-the one place mounting it never passed, so every agent anyone defined there was
-discarded without a word. `boardStore.moveCard` and `taskQueueStore.retryTask`
-were the same shape one level down: they edited an array, the screen updated,
-and nothing left the process.
-
-**Read the source before writing a body.** `POST /v1/ai/memory/remember` is
-behind ai's wildcard, so the document names the route and declares no body. The
-shape came out of the pinned module (`controllers/memory.go`: `{id, name,
-content, kind, metadata}`, and identity is force-set server-side and never read
-from the body). Guessing would have stored an empty memory and reported success,
-which is the failure `apps/captable` records for the same reason.
-
-**Two schemas can spell one column differently, and one of them is right.**
-`issueView`, `issueHit`, `issueEdit` and `newIssue` all say `canceled`, one L. A
-`cancelled` written from memory would have been refused with a 400 by a select
-option that looked correct.
-
-**Null is not zero, and the wire keeps them apart on purpose.**
-`sessionProgress.pct` is ABSENT rather than 0 when a run's progress is
-indeterminate, so `pct` is `number | null` here and a null draws NO BAR — an
-empty one reads as "nothing has happened yet", which is the one thing it does
-not mean. The same route marks its answer `estimated` when a model produced it,
-and the card says so: an estimate rendered as a measurement tells somebody a
-stuck run is fine.
-
-**A dead host answers everything, including a control.** The five agent avatars
-pointed at `cdn.hanzo.ai/avatars/<id>.png`, which answers 525 — as does
-`cdn.hanzo.ai/bogus-control-xyz.png`. Without the control the 525 reads as five
-missing files rather than a host that does not work.
-
-**A crossed axis shows up as three options where there are two questions.** The
-artifact panel offered "Local k3s / Hanzo Cloud / gVisor Enclave" as one picker,
-which is a place, a place and an isolation. It is two controls now, the same
-split `~/terminal` already made: WHERE it runs is an origin, WHAT isolates it is
-a runtime, and a microVM is a runtime.
-
-**Collapse a branch-per-column into a table and the wrong column cannot exist.**
-The board had three hand-written "move forward" buttons, and the middle one
-moved a card to `review` — a column the board does not have. One button over one
-`onward` map made that unrepresentable.
-
-
-## One way to hold state, and it is two questions
-
-A value is either THIS WINDOW'S or THE SERVER'S, and the two have different
-primitives because they have different failure modes. There is no third.
-
-| the question | the primitive | where |
-|---|---|---|
-| what this window owns — is the panel open, which tab, which origin, the draft | `atom` + `useAtom` | `data/store.ts` |
-| what the server owns — the rooms, the board, the roster | `useRead(key, read)` | `data/query.ts` |
-| a change to the server | `useSend(call, [keys…])` | `data/query.ts` |
-| that is no longer true | `invalidate(key)` | `data/query.ts` |
-
-Both read through `useSyncExternalStore`, so a component reading a cached answer
-and one reading a live atom behave identically under a concurrent render. There
-is no provider to mount, which is why `invalidate()` can be reached from a
-callback route with no hook.
-
-**Thirteen stores each hand-rolled all of it**, and the header of `store.ts` had
-said "nothing else in the app subscribes to anything by hand" the whole time —
-so the rule was written down and thirteen files falsified it. What that cost,
-measured before deleting it: 13 listener sets, 12 character-identical copies of
-one error helper, 12 `put` reducers, 3 copies of `ago` and 2 of `tint`. 2456
-lines of store became 1922.
-
-`query.ts` was itself part of the problem: it named FOUR verbs and shipped two.
-`usePages` was never written and `useSend` was named while every store rolled
-its own. **A verb a doc promises and a file does not define is worse than a
-missing one, because the next author writes their own rather than looking.**
-
-### Three things the move bought that the old shape could not express
-
-**A filter belongs in the KEY.** The board's narrowing and the projects org are
-part of `keys.board(key)` and `keys.projects(owner)`, so switching either is a
-different cache entry rather than a re-read of one. The previous answer stays on
-screen while the next arrives, and going back costs nothing. A `state.key` field
-plus one reader can do neither.
-
-**A key expresses what does NOT get read.** A session's transcript is
-`keys.session(id)`, read only for the run on screen — which is how "a list of
-fifty runs does not need fifty transcripts" becomes a fact about the code rather
-than a flag somebody must remember.
-
-**A stale-key list beats calling your own reader.** Every hand-rolled write ended
-`await read()`. Naming the keys instead (`useSend(call, [keys.flows])`) says what
-the write CHANGED, which is a different statement from what this panel happens to
-show — and only the first one stays true when a second panel shows the same rows.
-
-### The exception, and why it is not a third way
-
-`terminal` and `artifact` hold a LEASE, and a lease is a handle this window
-HOLDS rather than a value it fetched: re-reading it would rent a second computer
-and dropping it from a cache would strand the first. The accumulated output is
-the same shape one level down — no key can be invalidated to recover a log. Both
-are atoms plus `useSend`, never `useRead`. The test for the next one: **if
-fetching it twice would create two of something, it is not a read.**
-
-### Time is unix milliseconds inside this app
-
-The estate sends three spellings — RFC 3339 on a session, unix SECONDS on a
-board issue, unix MILLISECONDS on a flow — so `show.ts` converts at the boundary
-where a store folds the wire (`fromStamp`, `fromSeconds`) and every clock past
-that point is one number. `ago` therefore takes a number and nothing else: given
-all three it could not tell which it was handed, and `1_700_000_000` is a
-plausible answer in either unit and fifty-four years apart between them.
-
-## Everything talks to the unified API, and that is checked rather than assumed
-
-Audited across the whole tree: **30 of 30 calls resolve to a path in
-`api.hanzo.ai`'s own OpenAPI document**, including the five whose leaf is
-computed (`/sessions/{id}/{pause|resume|stop}`,
-`/flows/{id}/{enable|disable}`) — expanded to every value the code can produce
-and checked one at a time, since a regex reads those as missing.
-
-- **One data host.** `client(ESTATE)` is the SDK's default base, overridable by
-  `VITE_HANZO_API` for a local cloud; `client(MACHINE)` is the engine on
-  `127.0.0.1:36900`. Nothing else is dialled.
-- **No `/api/` prefix anywhere**, and every data path is `/v1/*`.
-- **Auth is Hanzo IAM**, per brand (`hanzo.id`, `lux.id`, `zoolabs.id`). No
-  second auth, no bespoke session.
-- `tasks.hanzo.ai` and `tabs.hanzo.ai` appear ONLY inside `window.open` and an
-  `<a href>` — destinations a person clicks, not endpoints. Re-check with
-  `grep -rn "https://" src` before believing a new host is a call.
-
-Re-run the audit by extracting every `path:` literal and matching it against
-`GET /v1/openapi.json`, normalising `${…}` to `{x}`. A path that does not match
-is either a typo or a route the fleet does not serve, and both are worth failing.
-
-
-## What holds at scale, and the one thing that does not
-
-Audited for what breaks when an org is large and a session is long. Everything
-below was measured, and the client-side half is fixed.
-
-**Nothing polls.** There is not one `setInterval` in the app. Every read happens
-because a panel opened or a key was invalidated, and a failed read is NOT
-retried — `useRead`'s freshness window covers a failed entry too, deliberately,
-so a fleet having a bad minute does not get a retry storm from every desktop at
-once. `invalidate()` is what re-reads, and that only happens after a write this
-client made. This is the single best scale property the app has; do not add a
-poll without a reason that survives being multiplied by every customer.
-
-### Four things grew without limit, and all four are bounded now
-
-| what | was | now |
-|---|---|---|
-| the query cache | `invalidate` was the ONLY thing that removed an entry — one entry, one reader CLOSURE and one era counter per key ever read | bounded at 256 settled entries; a watched, in-flight or pending entry is never evicted |
-| the terminal scrollback | every line for the life of the window | 2000, oldest dropped |
-| the artifact log | the same | the same |
-| the DOM | one node per row, for whatever the server sent | `useShown`, which reports what it withholds |
-
-The cache one was the sharpest because `keys.symbols(query)` mints a key per
-KEYSTROKE, so a long search typed a leak one character at a time and nothing
-failed — a leak is a screen that keeps working. `useSettled` fixed the cause
-(the key lags the typing, the box does not) and the bound fixed the class.
-
-**`data/query.test.ts` proves the bound and was mutation-checked**: with
-`reclaim` disabled, two tests fail. It also says in as many words which arm it
-CANNOT reach — the three eviction protections need a renderer, and `node --test`
-has none. A test file that looks complete and covers two of five branches is
-worse than one that names the gap.
-
-### A truncated list must say so
-
-`useShown` reports `total` and `more` and that is the load-bearing half, not the
-slice. **A list silently cut at thirty is the silent-empty failure one level
-over**: a person concludes their org has thirty rooms when it has three thousand,
-and nothing on the screen distinguishes those. Never render `shown.rows` without
-rendering `shown.more`.
-
-The same rule caught a real one in the notepad: `localStorage` is a few megabytes
-and notes are unbounded, so `setItem` eventually throws — and the catch swallowed
-it, which made the newest note look saved and lose it on the next reload. It is a
-value now and the editor says "not being saved" while somebody is typing, rather
-than on the reload that loses the work.
-
-### THE REMAINING SCALE BLOCKER IS SERVER-SIDE, and it is most of the API
-
-Measured against `api.hanzo.ai`'s own document: of the **505 GETs that answer a
-list** (counting enveloped ones, not just bare arrays), **432 — 85% — accept no
-bound at all.** No `limit`, no `cursor`, no `page`. They answer with everything
-the org has.
-
-Worst by product: `ai` 46, `o11y` 37, `iam` 26, `platform` 14, `billing` 14,
-`pricing` 14, `visor` 13. Eight of the twelve this app reads are among them —
-`/v1/team/rooms`, `/v1/todo/board`, `/v1/iam/projects`, `/v1/ai/memory/list`,
-`/v1/agents`, `/v1/network`, `/v1/network/routers`, `/v1/tools/plugins`.
-
-**No client flag fixes this.** `useShown` bounds the DOM, which stops the app
-freezing; it does not stop the server assembling and serialising ten thousand
-rows, or the wire carrying them, or the client parsing them. An org with ten
-thousand rooms gets a ten-thousand-room JSON body on every rail read. That is a
-cloud change — a `limit`/`cursor` on those routes — and it is the one thing
-standing between this and an org of any size.
-
-Re-measure it rather than trusting the number: fetch `/v1/openapi.json`, keep
-every GET whose 200 carries an array at any depth (an envelope counts), and
-report those whose parameters name none of limit/cursor/page/offset/after.
-**Check membership by NAME, not by absence from a filtered list** — the first
-version of this measurement classified `/v1/ai/memory/list` as bounded because
-its enveloped response was never classified as a list at all, so it fell out of
-the candidate set and its absence from the naked list read as success.
-
-
-## The tool plane serves three views, and this app now reads all three
-
-`apps/tools` says it plainly: the plane also serves the CALLER's own tools — its
-connectors, skills, agents and external MCP servers — and its three views
-"skills, plugins and the org's external MCP servers" are the SAME registry
-narrowed, over rows this app opens and no other does. Two of the three were
-here; skills was not, and finding it took reading the route table rather than
-guessing a path.
-
-**Skills are not at `/v1/skills`, and they are not only at `/.well-known`.**
-`/.well-known/agent-skills/index.json` answers 200 unauthenticated and is real —
-it is the estate's PUBLISHED catalogue of its own products, generated by
-`plugin/gen-skills`, listing a skill count per product and the MCP address. It
-is documentation of the fleet, not this org's rows, and nothing here reads it:
-the authenticated view is a superset of it and carries the two things the
-document cannot, which are this org's own skills and the activation flag. One
-way, and it is the one that answers per caller.
-
-| view | route | envelope |
-|---|---|---|
-| the registry, narrowed to one source | `/v1/tools/skills` | `{source, tools: […]}` |
-| the editable half, with bodies | `/v1/tools/skills/authored` | `{skills: […]}` |
-| what this deployment mounted | `/v1/tools/plugins?all=true` | `{plugins: […]}` |
-| what this org built | `/v1/tools/plugins/authored` | `{plugins: […]}` |
-| the provider catalogue | `/v1/integrations` | `{providers: […]}` |
-
-**The skills envelope is `tools`, not `skills`.** It is the tool registry viewed
-through one source, so it keeps the registry's envelope, and unwrapping the key
-the route is named after would answer `[]` — an empty org, reported as success,
-which is the failure this file already records twice.
-
-### Four things measured that a guess gets wrong
-
-**`/v1/tools/plugins` answers only what is RUNNING unless `all=true`.** The card
-draws an on/off mark and tints its border by `enabled`, and every row came back
-enabled, so the off state was unreachable: a mark that looks like it reports a
-fact and reports a constant. One query parameter is the difference between an
-inventory and a list of whatever happened to answer.
-
-**An authored plugin's `source` is its TypeScript.** The type here said "where
-it was built from" and the card rendered it as one line of provenance with
-`wordBreak: 'break-all'` — so a plugin with a program in it would have put the
-whole program in a caption. It is opened, one at a time, like a skill's body.
-
-**The registry prefixes a skill and the authored view does not**: `triage` is
-registered `skill_triage`, by BOTH providers, and that prefixed name is what
-activation is sent under. So a skill carries two names and both matter — join on
-the bare one, activate with the other. `skills/fold.ts` is pure so this is
-provable rather than argued, and `fold.test.ts` is mutation-checked: breaking
-the prefix strip fails three of its four assertions.
-
-**`available` and `connected` are independent.** Available is whether THIS
-DEPLOYMENT holds the provider's app credentials, so `connect` can succeed at
-all; connected is whether this org has a live connection. Folding them into one
-status offers Connect on a provider whose connect answers 503, and a button
-whose only outcome is a refusal is worse than no button because its presence
-reads as a promise. The card says "not configured here", which is the reason.
-
-### Connect leaves and does not come back
-
-`POST /v1/integrations/{provider}/connect` picks its credential path by the
-PRESENCE of a `token` key: absent starts three-legged OAuth and answers with a
-consent URL, present seals a customer's own API token. This client never sends
-one — a credential prompt inside an app's own window is what sign-in already
-refuses to be — so a provider offering only the token path answers with the
-sentence saying so, and the card shows that sentence.
-
-The consent trip redirects to the CONSOLE, not here, so `useConnect` names no
-stale key: nothing has changed yet, and claiming the catalogue is stale would
-re-read it for the same answer and flicker as though something had happened.
-Disconnect is the opposite — it finishes on the estate, it is idempotent, and it
-names `keys.connectors`.
-
-### The composer's `/` menu was called Skills and can never contain one
-
-`compose/skills.ts` read `tools.list({activated: true})` and dropped everything
-with `dispatchable === false`. Both skill providers register EVERY entry
-`Dispatchable: false`, because a skill is discovery metadata an agent reads
-rather than something a turn calls — so the filter excluded, by construction,
-the entire category the file was named after. It is `tools/store.ts` now, the
-menu says Tools, and `keys.skills` belongs to the thing that is skills.
-
-Activation moved there with it. It is ONE set on the estate that the MCP panel
-and the skills panel both change, and `activate` takes the WHOLE set, so a
-writer per panel is two statements of one fact and the second one switches off
-what the first turned on. The stale list names every view of that set rather
-than the panel that clicked.
-
-### One frame, and nine panels that still hand-roll it
-
-`shell/Sheet.tsx` is the scrim, the frame, the title, the kind tabs and the
-search box, plus `State` (the fault/reading/empty decision, which is one
-decision and was three conditions per panel) and `More` (what `useShown` is
-withholding). Plugins, skills and connectors draw in it. The other nine modals
-predate it and still carry their own copy; converting them is a diff nobody
-needs today, but nothing should be written a tenth time.
-
-## What the cloud serves and nothing here calls
-
-Measured off `/v1/openapi.json`, GETs only, webhooks and OAuth callbacks removed
-because those are the provider calling us and no client should ever hold them.
-Route counts are readable surfaces, not verbs.
-
-The sharpest gap is not a route, it is a PRODUCT: **the money.** `billing` 28,
-`pricing` 25, `plan` 14 — balance, credits, ledger, invoices, usage, usage
-rollup, tier, subscriptions, entitlements — and this app spends credits on every
-turn while showing none of it. A person cannot see what a conversation cost,
-what is left, or which plan they are on.
-
-Then, by size: `o11y` 172, `ai` 104 (of which this reads memory alone), `iam` 54
-(three routes read), `commerce` 51, `platform` 20, `git` 20, `visor` 18.
-
-Adjacent to what was just built, and small enough to finish:
-
-- **The user-scoped connector plane is untouched — nine routes.**
-  `/v1/integrations/connectors`, `/connectors/providers`, `/connectors/{id}`,
-  `/{id}/refresh`, `/{id}/token`, `/{provider}/credential`, `/{provider}/device`
-  and its poll. It is a PERSON's own credentials where `/v1/integrations` is the
-  ORG's, and the two must not be drawn as one list — `connectorProviderView`
-  carries `methods`, which is how a card could finally say whether a provider
-  takes OAuth or a token, a thing the org catalogue does not report.
-- **A third connector plane**, `/v1/knowledge/connectors` and its catalog, for
-  knowledge sources. No client anywhere.
-- **`/v1/tools/catalog`** and `/catalog/{id}` — the fleet's tool catalogue.
-- **Authoring has no client on either side.** `POST /v1/tools/skills` and
-  `DELETE /v1/tools/skills/{id}`; `POST /v1/tools/plugins/build` and
-  `DELETE /v1/tools/plugins/authored/{id}`. Reading and activating are here
-  deliberately: a destructive verb with no way to create is a trap, so the pair
-  arrives together or not at all.
-- **`/v1/integrations/{provider}/verify`**, which re-checks a stored credential
-  and reports `active:false` with a reason as a 200 rather than an error —
-  written for a console to render, and nothing renders it.
-- **The provider-specific surfaces**: `/v1/integrations/github/{installations,
-  repos,search,fork}`, `/linear/*`, `/gitlab/projects`. Connecting GitHub works;
-  nothing then reads a repository.
-
-`/v1/tools/call` is served and has no client here on purpose — a turn dispatches
-through the chat completion, and a second way to call a tool is a second way.
-
-
-## Type by the producer, not by the reader
-
-Two types here declared fields their own producer could not fill, and both were
-found the same way: read the fold, and see what it writes a placeholder for.
-
-`AutomationJob` declared `name`, `trigger`, `triggerName` and `valid`, and the
-list read filled them with `''`, `'empty'` and `valid: false` — that last one
-asserting *the builder rejected this flow* about every flow the org has, because
-`GET /v1/auto/flows` carries no version and has no populate parameter. It is
-`Flow` (the row) and `Version` (the per-flow read) now, and the second is
-returned as `Version | null` so "not read yet" and "read, and it has no trigger"
-stay different answers.
-
-`PluginExtension` was one record with optional halves, so the fold wrote
-`prefixes: []` and `enabled: true` for an authored plugin — which has neither
-concept. As a discriminated union the wrong access does not compile, **and the
-compiler immediately found five live ones**: a filter searching prefixes on an
-authored row, a card border drawn from a switch that kind does not have, two
-source reads on a mount, and a footer that drew every authored plugin as
-permanently "on".
-
-**A type whose producer must lie to satisfy it is describing two things.** The
-test is mechanical: `grep` the folds for a field set to a constant, and ask
-whether that constant is a fact or a filler.
-
-## A hook that reads two things is usually a place, not a value
-
-`useWorkspaceApps` returned seventeen fields covering the notepad, the backlog,
-the call and the overlay network. `useIntelligence` read memories and the code
-index. `useProjects` read orgs, projects and people. In every case what the
-parts shared was a MODAL — a place — so a note being typed re-rendered on a
-network read, and one `fault` field held two unrelated failures.
-
-Split by tab, not by count. `useTaskQueue` still reads two things and stayed
-that way on purpose: the queue shows the selected run's transcript, so it is ONE
-view composing two sources rather than two views sharing a strip.
-`useAutomations` reads the flows alone, because a row's NAME and its LAST RUN
-are both per-flow keys the ROW reads (`useVersion`, `useLastRun`) — a flow
-nobody drew is a flow nobody fetched, and an org-wide page of runs can only say
-whether a flow is among the newest fifty of them.
-
-Where a value is genuinely shared, give it its own hook rather than passing it
-around: `useOrgs` is read by `useOrgProjects` and `useOrgPeople`, because the org
-really does select both.
-
-## Two sessions edit this checkout at once
-
-This repository is worked by more than one agent at a time, and it shows up in
-ways that do not look like concurrency:
-
-- **`git add -A` takes the other session's staged work.** It happened twice.
-  Once it took a rename of `compose/skills.ts` WITHOUT the import updates, so
-  that commit did not build although the working tree did — the dangling-
-  reference shape, with no conflict to warn you. **Use `git commit -- <paths>`**,
-  which ignores the index for everything else. `git add` then `git commit` is
-  not enough: the peer can stage between the two.
-- **Work you pushed can be gone.** The plugin union was reverted by a peer's
-  rewrite of the same files hours later — not carelessly: that rewrite carried
-  three findings this pass had missed (`all=true`, without which the route
-  returns only RUNNING subsystems so `enabled` can never read false; `source` is
-  authored TypeScript rather than a location; `builtAt` in this app's clock).
-  The answer is to re-apply over theirs, keeping both, not to revert.
-- **`tsc` green is not `build` green.** Main was red for a while because two
-  entry points import `@hanzo/font/css` and nothing declared the package. A CSS
-  side-effect import carries no types, so only a bundle catches it. Run the
-  build, not just the typecheck, before calling anything shipped.
-
-
-## Run it. tsc and the build do not open a modal
-
-Everything in this file up to here was verified by `tsc`, `vite build` and
-`node --test`. All three were green while `ProjectModal` **crashed into the
-error boundary the moment it opened** — with the org read refused there is no
-org, and it read `.name` off `undefined`. No static check opens a modal, and the
-suite has no renderer, so nothing in the pipeline could have caught it.
-
-Driving the app found four more, and every one of them is the same class this
-whole pass is about — a screen that cannot say which nothing it is showing:
-
-- the rail dropped `pending` and `fault`, so three empty headings were what a
-  REFUSED read looked like, identical to an org with no rooms
-- a task queue titled "running against local Node, k3s, and Hanzo Cloud", which
-  reads agent sessions and touches none of them
-- a palette entry offering to "expose local machine to team via Cloudflare",
-  which is the tunnel fabrication that was deleted from the panel and left in
-  the menu that opens it
-- a project described as "repositories, worktrees, sandbox runtime pods", which
-  is an IAM scope
-
-    npx vite --port 5199 --strictPort        # desktop2 has no dev port of its own
-                                             # 5173 is chat2 and 1420 is desktop
-
-Then open every modal — ⌘\ ⌘M ⌘B ⌘Q ⌘T ⌘P ⌘X ⌘A — and read the text. **Signed
-out is the useful state**, not a distraction: every read is refused, so a
-surface that cannot distinguish refused from empty says so immediately. In the
-browser the API calls fail CORS from `127.0.0.1`, which produces exactly that
-condition for free.
-
-`errors` is not enough on its own — it returned `count: 0` for a component React
-had already replaced with the boundary. Read the rendered TEXT, and read the
-console for the `TypeError` React logged before it recovered.
-
-
-## Progress: the run's own word, an estimate, or nothing
-
-`src/progress` is the one place this app draws "how far along". The server side
-was already complete and well shaped; the client had a three-pixel sliver.
-
-**An agent reports by APPENDING A TURN**, not by patching a field:
-
-    POST /v1/agents/sessions/{id}/events
-    {"kind":"progress","payload":{"pct":60,"phase":"running","activity":"…"}}
-
-The server moves the session's progress from that turn, marks it the run's OWN
-word rather than a model's estimate, and pushes the updated row onto
-`sessions/stream`. **That is why it is an event and not a PATCH**: one write and
-every watcher already knows, with nothing polling. `useReport` is the verb,
-`useLiveRuns` is the feed — each `session` frame is written into the same cache
-key `useRuns` reads, so a bar moves with no second store and no component doing
-work of its own.
-
-`GET /v1/agents/sessions/{id}/progress` is the other half: a MODEL ESTIMATE read
-off the transcript, `estimated: true`. Both are useful and they are not the same
-claim.
-
-### Four states, and an empty bar is not one of them
-
-| the wire says | drawn |
-|---|---|
-| `pct: 62`, estimated false | a green track filled to 62% |
-| `pct: 62`, estimated true | the same, VIOLET, labelled `est` |
-| **`pct` absent** | an indeterminate stripe, and `—` rather than a number |
-| `phase: blocked` | amber, held wherever it got to |
-
-The third row is the whole point. `pct` is documented ABSENT rather than zero
-for an indeterminate run, so `progressOf` keeps it `null` — and an empty track
-and a null track are opposite claims a person cannot tell apart by looking. A
-`done` run draws full whatever its last number was: it finished, it is not still
-two-fifths short.
-
-### Subtasks nest, and a parent is believed over its parts
-
-`sessions.tree(id)` pulls a whole flow in ONE indexed read — every node shares a
-root id — so depth costs nothing per node. Each node draws its own bar.
-
-`rollUp` is a FALLBACK and only that: a parent that reported its own progress is
-believed over any mean of its children, because it is the only one that knows
-how much of its goal a child represents. Where a parent has said nothing the row
-shows the mean of the children that CAN say, labelled `rolled up` so the two
-claims stay distinguishable. **Children that cannot say are left out of the mean
-rather than counted as zero** — a run nobody has heard from is not a run that
-has done nothing. `progress/types.test.ts` fails on both `?? 0` shortcuts;
-mutation-checked.
-
-### Pinning is local, and says so
-
-Nothing on the wire records that somebody is watching a run, so `progress/pinned`
-is an atom on this machine and the board's strip is headed
-`WATCHING · pinned on this machine`. It keeps IDS ONLY and resolves them against
-the live list, so a pinned bar and the same bar in the queue cannot disagree,
-and a pin to a run that has ended resolves to nothing rather than to a stale copy
-— which the strip reports rather than quietly showing fewer.
-
-### The SDK lags the wire on one field
-
-`client.sessions` is the cloud client and covers list/get/tree/steer/stream. But
-the wire's `sessionView` carries `progress` and **`@hanzo/ai@0.6.16` — which is
-the latest published — omits it from `Session`**, so the fold widens the type
-locally rather than inventing the value or dropping the feature. The append verb
-has no method there either and goes through `client.http`. Both are upstream
-fixes; check whether they have landed before copying the pattern.
+# Hanzo Desktop
+
+## Project
+
+Desktop AI agent app. React + Vite + Tauri (Rust backend).
+
+## Structure
+
+```
+apps/hanzo-desktop/
+  src/               # React frontend
+  src-tauri/         # Rust Tauri backend
+  public/            # Static assets
+libs/
+  hanzo-ui/          # Shared UI components
+  hanzo-i18n/        # Internationalization
+  hanzo-message-ts/  # Message/job API types
+```
+
+## UI stack — the 8.x convergence (state, not aspiration)
+
+One framework, every platform: **@hanzo/gui** (8.2.1, a hard fork of Tamagui with
+~184 `@tamagui/*` packages renamed `@hanzogui/*`) with **@hanzo/ui** (8.4.13) as
+the shared component layer. Both ship zero Tailwind, zero Radix, zero shadcn.
+The runtime config is `apps/hanzo-desktop/gui.config.ts`; every window mounts it
+through `src/gui.tsx`.
+
+`libs/hanzo-ui/src/components/index.ts` is the seam and reads as one:
+
+- **From `@hanzo/ui`** — Radix-free and gui-native: Accordion, AlertDialog,
+  Avatar, Badge, Card, Checkbox, Collapsible, Command, Dialog, DropdownMenu,
+  HoverCard, Label, Popover, Progress, RadioGroup, Resizable, ScrollArea,
+  Select, Separator, Slider, Switch, Tabs, Textarea, ToggleGroup, Tooltip.
+- **From `./gui-repairs`** — the same upstream components with ONE prop
+  corrected, re-exported from there INSTEAD of from `@hanzo/ui` so a call site
+  cannot reach the unrepaired original. Each repair states the condition under
+  which it gets deleted.
+- **Still local** — no upstream equivalent yet: breadcrumb, drawer, form,
+  sheet, toggle, plus the non-Radix locals (button, input, table, …).
+
+A name must never appear in more than one of those — that is a fork, and the
+file exists to prevent it. **context-menu is done** (its 15 parts come from
+`@hanzo/ui`, the Radix fork and `@radix-ui/react-context-menu` are gone), so
+drawer, sheet and toggle are the Radix gaps that remain — and `@hanzo/ui`
+publishes no equivalent for any of the three. `pagination` went at the same
+time: seven exported parts and no consumer anywhere in the tree.
+
+Four dependencies outlived the components that used them —
+`@radix-ui/react-{dropdown-menu,scroll-area,select}` and `cmdk` were still
+declared after their forks had already moved upstream. Step 3 of the method
+below is the one that gets skipped; run `grep -rn '@radix-ui/'` over `apps` and
+`libs` and compare it against `package.json` before calling a deletion finished.
+
+The version numbers are load-bearing and move TOGETHER: `@hanzo/ui` peers
+`@hanzo/gui >= 8.1.0`, so the gui family had to reach 8.1.1 before @hanzo/ui
+could leave 8.0.39. The five backends above (accordion, alert-dialog,
+hover-card, radio-group, toggle-group) landed in **8.0.68** specifically — they
+are absent from 8.0.64/65/66. `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`
+has to name the exact @hanzo/ui version or the install silently keeps the old
+one — and on a version published within the release-age window the install does
+not keep the old one quietly, it FAILS the supply-chain check and names the
+offending entry, which is the good outcome.
+
+### What 8.0.115 would cost, measured
+
+Do not take the bump for tidiness. Against 8.0.68 it adds the ContextMenu family
+as per-member `./primitives/*` files (the barrel already exported all 15 on
+8.0.68, which is what this app migrated through), `Spinner`, the `MenuRow` and
+`Workbench` product components, and a `./tw` export. Nothing else — the
+`./product`, `./product/*`, `./primitives` and `./primitives/*` entries all
+predate 8.0.68, so nothing here is unblocked by moving.
+
+What it changes is **Popover placement, silently**. 8.0.115 splits the fact in
+two the way the compound API spells it — `placement` on the root carries the
+SIDE, `align` on Content carries the rest — and joins them through a new
+`place(side, align = 'center')` that takes `side.split('-')[0]`. A composed
+`placement="bottom-start"` on the root therefore resolves to `bottom`: the
+alignment is dropped, no type error, no warning. **Fifteen call sites in this
+app pass a composed placement to a Popover** and every one of them would go
+centre-aligned. `HoverCard` already behaved this way on 8.0.68 (the two copies
+of the helper had diverged, which is why it was hoisted into one leaf), and
+Tooltip and DropdownMenu pass `placement` straight through and are unaffected.
+
+So the bump is a fifteen-call-site edit — `placement="bottom"` on the root plus
+`align="start"` on the Content — not a version number. `ui-primitives.test.tsx`
+catches it: the Popover placement spec is the one that fails, and it fails for
+the right reason.
+
+**The tree is past that version now, and the cost did not appear.** It runs
+@hanzo/gui 8.2.1 / @hanzo/ui 8.4.13, where a composed `placement="bottom-start"`
+Popover still publishes `data-placement="bottom-start"` — the Popover,
+DropdownMenu and Tooltip placement specs all pass, and 45 composed placements
+across `apps` and `libs` needed no split. The spec that was meant to fail for the
+right reason does not fail. Keep the mechanism above; check it against the specs
+before assuming it applies to a given version.
+
+What that jump DID change is **Separator**. It is a gui `styled(View)` with a
+`vertical` variant now — it takes no `orientation` prop and emits no
+`data-orientation`, so a spec asserting that attribute cannot pass on any input.
+Orientation is observable only as geometry: `vertical` puts the 1px rule on the
+right edge (`_brw-1px`), the default puts it on the bottom
+(`_borderBottomWidth-1px`). The spec renders both and compares them, because a
+silently-dropped `vertical` renders as horizontal and would otherwise pass.
+
+What is in `gui-repairs`, and why:
+
+- **`asChild` press composition** (trap 5) — Dialog/Popover trigger + close,
+  Collapsible and Tooltip triggers. 54 controls were inert (17 DialogClose,
+  19 DialogTrigger, 10 PopoverTrigger, 7 PopoverClose, 1 CollapsibleTrigger),
+  plus 70 TooltipTriggers whose press handler was dropped. NOT
+  DropdownMenuTrigger: @hanzogui/menu implements `asChild` itself and binds a
+  real `onPointerDown`, so it opens either way (measured raw and wrapped).
+- **`DialogFooter`** — gui bakes a plain row; the fork was
+  `flex flex-col-reverse sm:flex-row sm:justify-end`.
+- **Command listbox/option/combobox semantics** — gui renders
+  `<li role="listitem">` with only `data-selected`. `aria-selected` has to MIRROR
+  that attribute (one MutationObserver per list) because the cursor lives in
+  gui's Command context and nothing exports it; the same mirror publishes the
+  input's `aria-activedescendant`, which is what actually announces the
+  selection since focus stays in the input.
+
+Two controls have no gui expression and were changed rather than degraded:
+gui's `SelectTrigger` is a `ListItem` with children of its own, so `asChild`
+fails `React.Children.only`; it also drops `className` and `title`, and its
+height floor is 44px. An icon-only picker therefore cannot be a Select trigger —
+the agent side-chat's chat-history control is a `DropdownMenu` (navigation, not
+form input). Separately, and PRE-EXISTING: a `Tooltip` wrapping a
+`DropdownMenuTrigger` stops the menu opening at all, measured on the raw
+@hanzo/ui parts in both nesting orders — `ai-update-selection-tool.tsx` still
+has that shape and its menu is dead.
+
+**Tailwind is still here** and is the large remaining piece: ~4,300 `className=`
+sites in `apps/hanzo-desktop/src` and ~580 in `libs/`, plus the token set in
+`libs/hanzo-ui/src/styles/styles.css`. It cannot be deleted component-by-
+component; it goes when the markup does.
+
+### Migrating a component — the five traps
+
+@hanzo/gui **silently drops props it does not recognise**. No throw, no type
+error — just an element that never got the style or the handler. So:
+
+1. **A green `vite build` proves nothing.** Assert the props reach the DOM.
+   `src/__tests__/ui-primitives.test.tsx` renders each migrated primitive through
+   the app's own barrel and checks roles, aria state, `htmlFor`, `className`,
+   fired callbacks. `e2e-tests/ui-convergence.spec.ts` does the same against the
+   built bundle in Chromium.
+2. **Tailwind loses ties.** Tamagui injects its stylesheet at RUNTIME, i.e. after
+   the bundled CSS, so a utility class that collides with a gui style prop
+   (`w-[500px]` vs Popover's hardcoded `width: 288`) is overridden. Express those
+   as gui props; keep only non-colliding utilities as classes.
+3. **Floating props move from the child to the ROOT.** Radix puts `side`/`align`
+   on Content; gui takes one `placement` on the root — and @hanzo/ui *accepts*
+   `align` before discarding it. Radix tooltips default to `top`, gui's popper to
+   `bottom`, so hoisted placements are written out explicitly.
+4. **Names differ where you would not look.** `delayDuration` → `delay`.
+   `[&>div]:` child selectors do not reach gui's indicator (it wraps it in a
+   theme span) — `Progress` has `indicatorClassName` for that.
+   `lineHeight={1.1}` renders as `1.1px`. Tailwind `sm:` is **`$sm`**: this app
+   runs `@hanzogui/config/v5`, whose media keys are `sm`/`md`/`lg`/`xl` (`sm` =
+   minWidth 640, the same edge Tailwind uses) plus a `max-*` family. There is no
+   `gtSm` in v5 — `$gtSm` is dropped in silence, so it is a trap and not an
+   idiom. A media style always beats a base style, so a media default cannot be
+   overridden by a plain prop; a component offering one has to stand it down
+   explicitly (`DialogFooter` does). Inside a media object only SHORTHANDS type
+   (`items`/`justify`, not `alignItems`/`justifyContent`) even though both
+   resolve at runtime. On a `ScrollView`, `role` is dropped and
+   `accessibilityRole` is what react-native-web emits as the DOM `role`.
+5. **`asChild` is press-dead on the web.** A gui composite part composes its
+   behaviour as an `onPress`, and `createComponent` only translates that to a DOM
+   `onClick` when `asChild` is `'web'` / `'except-style-web'` — see
+   `getWebEvents(events, webStyle)` in @hanzogui/web. With a plain `asChild` the
+   handler reaches the child as `onPress`, React drops it, and the control is
+   inert while looking perfect: the child renders, its own onClick still fires,
+   and the dialog never opens or closes. `libs/hanzo-ui/src/components/gui-repairs.tsx`
+   normalises `true` → `'web'` once for every part that has a press.
+
+Testing gui components under jsdom needs `src/test-setup.ts`'s matchMedia (gui
+reads it at module load), ResizeObserver (tabs) and IntersectionObserver
+(slider) polyfills, and vitest's `server.deps.inline` for `@hanzogui/*` —
+externalised, `resolve.alias` never applies and Node's CJS loader hits
+react-native-svg's unbuilt TypeScript.
+
+### Every menu in the main window was unclickable, and nothing said so
+
+Measured in Chromium, on untouched `main`: open the model picker in
+`src/hanzo/Shell.tsx` and its rows paint, position correctly against the
+trigger, and **cannot be clicked at all** — `getComputedStyle(panel)
+.pointerEvents === 'none'`, and `elementFromPoint` over a row returns the page
+behind it. Same for the sidebar's `ContextMenu`. Every menu in the converged
+shell was decorative.
+
+Cause: `@hanzo/ui`'s `FloatingMenu` portals through `@hanzo/gui`'s `Portal`,
+whose host is `pointerEvents="box-none"`. react-native-web implements that as
+`pointer-events: none` on the host plus `auto` on its DIRECT child — and
+`FloatingMenu` puts a `PortalTheme` wrapper in between, so the `auto` lands on
+the wrapper and the panel below inherits `none`. The repair is one inherited
+rule in `apps/hanzo-desktop/index.html` (`[role='menu'] { pointer-events: auto }`),
+which reaches every menu because there is exactly one menu mechanism here.
+Delete it when the upstream Portal stops swallowing its own menus.
+
+Second defect in the same component: `FloatingMenu` focuses its PANEL inside
+the same layout effect that computes the panel's position, so at that moment
+the panel is still `visibility: hidden` and cannot take focus. A menu opened
+from the keyboard therefore left focus on the trigger and the arrow keys went
+nowhere. `src/hanzo/PanelControls.tsx` focuses the first `[role="menuitem"]` on
+open instead — which is what the ARIA menu-button pattern asks for anyway.
+
+Third: **`tag` is not typed on gui primitives in 8.x.** `<XStack tag="button">`
+works at runtime and is a type error, so anything wanting real button semantics
+goes through the gui `Button` (which types `aria-*`, `data-*`, `role`,
+`tabIndex` fine) rather than a hand-rolled pressable stack.
+
+Fourth, and it is an install fault rather than a code one: the root
+`node_modules/@hanzo/ui` symlink once pointed at **8.0.8** while
+`apps/hanzo-desktop` resolved **8.0.39**, and the two dists differ (8.0.8 menu
+rows are 30px, 8.0.39's are 32 plus a touch-target pad). Both resolve to 8.0.68
+today, but keep reading dist from the APP's resolution
+(`node -e "require.resolve('@hanzo/ui/package.json')"` run from
+`apps/hanzo-desktop`) rather than the hoisted root — the split is a property of
+hoisting, not of a particular version, and it comes back silently.
+
+## Deleting a fork — the method, and what it costs
+
+Fourteen shadcn/Radix forks have been deleted this way (badge, button-no, card,
+command, dialog, dropdown-menu, resizable, scroll-area, select, textarea, then
+accordion, alert-dialog, hover-card, radio-group, toggle-group). The method:
+
+1. Move the name ABOVE the line in `libs/hanzo-ui/src/components/index.ts`,
+   delete the local file, fix the call sites. A name on both sides is a fork.
+2. Assert it in `src/__tests__/ui-primitives.test.tsx` THROUGH the app's own
+   barrel — role, aria state, `htmlFor`, and that callbacks FIRE. That file is
+   the only evidence that counts; a green `vite build` proves nothing.
+3. Drop the now-unreferenced `@radix-ui/react-*` dependency. If it is still in
+   `package.json`, the deletion is not finished.
+
+**Where the line falls.** gui bakes a design recipe as runtime style props, and
+its stylesheet is injected AFTER the bundled CSS, so a colliding Tailwind
+utility always loses. Converting every collision is not the goal — converting
+the ones that change MEANING is:
+
+- **Convert** what breaks structure or behaviour: `sr-only` radios (gui bakes
+  16px width/height, so four hidden radios painted inside their cards),
+  `grid grid-cols-4` (gui's frame is `.is_View{display:flex}`, so the row
+  collapsed to a column), `justify-between` on an AlertDialogFooter (gui bakes
+  `justify:flex-end`), a segmented control's `rounded-none first:rounded-s-lg`
+  (gui bakes `rounded:$3`), `border-b-0` on an AccordionItem (gui bakes
+  `borderBottomWidth:1`), `inline-flex w-auto` on a pill trigger (gui bakes
+  `width:100%`), `w-[300px]` on a HoverCardContent (gui bakes `width:256`).
+- **Accept** what is only a different-but-valid appearance inside gui's own
+  system: panel padding, surface colour, and the type scale that `ink()` applies
+  to STRING children. `ink()` wraps only strings and numbers — an element child
+  passes through untouched, which is the escape hatch when a label really must
+  keep its own class.
+
+Two call-site shapes stop type-checking on the way and both are real: gui's
+`RadioGroup` speaks `(value: string)`, not a narrowed union, and gui's
+`ToggleGroup` types `onValueChange` as a union over `single | multiple`, so the
+single-select parameter has to be spelled `(value: string)` or it is implicitly
+`any`.
+
+**`asChild` is no longer press-dead on 8.0.68.** Measured on the RAW,
+unrepaired `@hanzo/ui` DialogTrigger and on AlertDialogTrigger, both with a
+plain `asChild`: both open. `gui-repairs`' Repair 1 therefore no longer fixes a
+reproducible defect — it normalises `true` → `'web'`, which is now a no-op. It
+is kept because standing it down is its own audit across 124 controls, and NO
+new repair was added for AlertDialogTrigger: a repair whose defect cannot be
+reproduced is speculative code.
+
+**`disabled` on a gui Button is not the DOM attribute.** `AlertDialogAction
+disabled` publishes `aria-disabled="true"` and `pointer-events:none`, and Enter
+does not activate it — but the DOM `disabled` property stays `false` and the
+control keeps `tabindex="0"`. Assert the aria/behaviour, never `.disabled`.
+
+## Window chrome — one store, one square, one focus ring
+
+The main window's chrome lives in `src/hanzo/` and nowhere else:
+
+- **`panels.ts`** is the ONE persisted store for panel state — zustand
+  `persist` under the key `panels`, the same idiom as `store/settings.ts`
+  (which stays untouched: it belongs to the app's other five windows).
+  `openTab` / `closeTab` are the only ways a dock tab is created or destroyed,
+  so the companions menu, the strip's `+` and ⌘1–⌘5 are one code path.
+- **`ChromeButton.tsx`** is the ONE chrome square. Every square control in the
+  chrome — the cluster, the strip's `+` and `×`, a tab's `×` — is this
+  component with a `size` and a `bleed`. 44px is the default because it is the
+  pointer-target floor (Apple HIG 44pt / WCAG 2.5.5); it is deliberately NOT
+  `CONTROL_SIZE`, which is for controls the pointer is already inside a form to
+  reach. `FOCUS_RING` in `theme.ts` is spread by every one of them: a control
+  that hand-rolls its box does not lose its ring, it falls back to the UA's,
+  which is how one row acquires two different focus indicators.
+- **`bleed`** is a negative margin that lets a box grow to a target the pointer
+  can hit without the strip around it growing too. The dock strip's budget is
+  41px (32 content + 4+4 padding + a 1px rule) and the body sits directly above
+  it, so the `+`/`×` are 40 bled by 4 and a tab is pinned to 32 — left to size
+  itself off its line-height a tab came out at 35 and silently spent 3px of
+  conversation.
+- **`TRAFFIC_LIGHTS`** in `theme.ts` reserves the window's top-left corner.
+  `tauri.conf.json` sets `titleBarStyle: "Overlay"` + `hiddenTitle`, so on
+  macOS the traffic lights paint OVER the webview and whatever the app puts in
+  that corner sits under them — the shell's brand mark did. Windows and Linux
+  keep native decorations above the webview, so the reserve is 0 there. It is
+  sniffed off the UA because it is layout read during render (synchronous) and
+  has to be right in the Vite dev browser too, where there is no Tauri to ask.
+- **`sections.ts`** is the ONE section catalog. The sidebar nav, the body's
+  empty state, the dock's tabs and the companions menu all read it; it replaced
+  two parallel objects keyed the same way, where adding a section meant
+  remembering both.
+- The model picker and theme toggle live in the right-hand controls panel and
+  nowhere else. They were a 168px dropdown wedged into the chrome row and a
+  toggle squeezed into the sidebar's foot, which is what left the row no space
+  for window controls.
+
+Verified by measurement, not review — `e2e-tests/window-chrome.spec.ts`, 10
+specs against a real Chromium, because a green `vite build` proves a gui
+component compiled and never that it painted. At 1440×900: cluster 4×44×44
+carrying ONE focus ring between them; menu `role=menu` with 5 rows at 44.0px
+whose right edge is 1379 = the trigger's right edge 1379; Escape closes and
+returns `aria-expanded=false`; shortcut contrast 12.1:1 against the row (label
+19.44:1); dock strip 41px, tab 57×32, tab close 24×24, `+`/`×` 40×40; the grab
+band is 8px over a 1px rule and `elementFromPoint` returns it at all five
+probes across the seam; drag 296 → 447px and the floor holds at 127px (15% of
+an 848px column); `scrollWidth === clientWidth` at 1440 and 900; every panel,
+tab and toggle survives a reload; no console errors.
+
+The strip's budget is the 10th spec, and it was added because the other nine
+could not see it. Those numbers — strip 41, tab 32, `+`/`×` 40 bled by 4, tab
+close 24 bled by 2, and exactly ONE painted hairline at the seam — lived only
+in comments here and in `Dock.tsx`. Proven by drifting the `+` to the cluster's
+44 with no bleed and rebuilding: the strip went to **53**, the body silently
+lost 12px, the button overhung the resize grab, and **all nine other specs
+still passed** — the 24px-floor spec accepts anything ≥24, and no screenshot
+diff runs. The budget spec is the only thing that fails, so it is the only
+thing holding those five numbers.
+
+## Commands
+
+```bash
+npx nx serve hanzo-desktop     # Dev (Tauri, uses tauri.conf.local.json)
+npx nx build hanzo-desktop     # Production build
+npx nx test hanzo-desktop      # Vitest
+npx nx lint hanzo-desktop      # ESLint
+npx nx run hanzo-desktop:typecheck
+npx nx run hanzo-desktop:cargo-check
+```
+
+Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
+
+## Code Style
+
+- 2 spaces, Prettier + Tailwind plugin, single quotes
+- Files/dirs: kebab-case. Components/types: PascalCase. Vars/functions: camelCase
+- Tests: Vitest + @testing-library/react, co-located in `__tests__/`, `*.test.ts(x)`
+- Commits: Conventional (`feat:`, `fix:`, `chore:`, `docs:`)
+
+## Tooling
+
+- Node 20+, npm 10+, Rust toolchain for Tauri
+- `postinstall` runs `patch-package`
+- Env: copy `.env.example`, never commit secrets
+
+## The sidecars, and why a clean checkout could not build
+
+`pnpm dev` and `pnpm build` both run `src-tauri/download-binaries.sh` first,
+because `tauri.conf.json` declares three `externalBin` entries and Tauri will
+not bundle a sidecar it cannot find. `external-binaries/` is gitignored, so a
+fresh clone has nothing and the fetch is not optional.
+
+**One file names a version: `src-tauri/pins`.** The script sources it and
+nothing else in the repo carries a release number. Before that, the number
+lived in three places that disagreed — the script said v1.13.0, the README
+said v1.1.18, and a second downloader in `ci-scripts/` read it from an env var
+the README told you to type. The second downloader is deleted; it was reachable
+only from README prose, still fetched Ollama (retired here), and was the reason
+one number had two homes.
+
+**The host is live and always was.** `download.hanzo.ai` (R2) serves the node
+archives and the embedding model. Its ROOT answers 404 because there is no
+index object, which reads as a dead host if that is all you probe. What 404s is
+a *version*: v1.13.0 was published for three of the five targets, so a clean
+checkout on arm64 Linux or Intel macOS hit `exit 1` and never reached Vite.
+v1.15.0 is published for all five and is what `pins` names.
+
+Two things about that pin are worth knowing before moving it:
+
+- **v1.15.0 answers the node API under `/v2`.** `libs/hanzo-message-ts` calls
+  `/v1/node` — 130 call sites — which node serves from **v1.19.2** on. So the
+  app builds against this pin and its node calls 404 until a v1.19.2+ archive
+  is published. Nothing newer than v1.15.0 has ever been published as a binary;
+  the later tags produced a linux/amd64 container image and nothing else.
+- **Two archives ship the wrong CPU's tool runtimes.** `file` on every member:
+  `aarch64-unknown-linux-gnu` carries **x86-64** deno and uv, and
+  `x86_64-apple-darwin` carries **arm64** ones. Those two were cross-compiled —
+  `cargo build --target` moved the Rust binary, the tool runtimes came from the
+  builder. `hanzo-node` itself is correct in all five. The archive listing, the
+  HTTP status and the unzip all look perfect; only `file` on the extracted
+  members shows it, and on arm64 Linux the app therefore installs and then
+  fails at every tool execution with `exec format error`. Build each target
+  natively, and check all three members.
+
+The `soup` CLI is no longer fetched: the whole `hanzo-ml/` prefix answers 404,
+so the fetch could only ever print a warning. `src/model_tools/soup.rs` still
+finds it via `HANZO_SOUP_BIN`, beside the app executable, or on `PATH`.
+**Two TypeScripts, and which one is the CHECKER.** `pnpm typecheck` runs
+**7.0.2**, the compiler rewritten in Go, invoked BY PATH
+(`node ../../node_modules/typescript-7/bin/tsc`) — two packages here ship a `tsc`
+and which one wins `node_modules/.bin` is pnpm's business, not ours.
+
+The plain `typescript` stays at **5.9.3** because 7 has no JavaScript compiler
+API — it ships a binary and exports a version string, with an `unstable/ast` that
+has type guards and a token scanner but no `createSourceFile`. `eslint.config.mjs`
+reaches typescript-eslint, which *refuses* 7 by version check at module load, so
+7 under that name turns `pnpm lint` from exit 1 (findings) into exit 2 (crashed).
+7 checks, 5 parses; when typescript-eslint ships support, `typescript` moves to 7
+and the alias goes. Do NOT add `@typescript/native-preview` — it is the
+pre-release channel of the same binary, behind stable.
+
+## Release Pipeline
+
+### Workflows
+
+**A gate, but no release lane.** `.hanzo/workflows/cicd.yml` calls
+`hanzoai/ci/.hanzo/workflows/build.yml@v1` on push to main, on a pull request,
+and on both tag shapes this repo uses — `v*` and a bare `1.1.48`, because
+releases here are tagged to match `package.json` exactly and a `v*`-only filter
+would never fire on them. Every knob lives in `/hanzo.yml`, which declares
+`test:` and nothing else: the artifact is a signed per-platform bundle, not a
+container, so there is no `images:` and nothing to deploy. The real gate is
+`pnpm typecheck` (`tsc --noEmit -p tsconfig.app.json`), which catches a break in
+`libs/` here rather than in whoever imports it next.
+
+It runs on the git-runner fleet at git.hanzo.ai — the only pool serving those
+labels. `.github/workflows/` is empty, and a caller placed there could not be
+scheduled at all.
+
+What is still missing is the **release** lane: nothing cuts, signs, notarizes or
+publishes the per-platform bundles, so those come off a developer's machine. The
+secrets below are what such a lane needs — recorded because they are what the
+old one used, not because something reads them today. The version-drift check
+went with it: `release-prod.yml` failed a release whose tag and `package.json`
+disagreed, and since its deletion nothing asserts that.
+
+### Required Secrets
+
+**Apple (macOS signing):** APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID, KEYCHAIN_PASSWORD
+
+**Tauri updates:** TAURI_PRIVATE_KEY, TAURI_KEY_PASSWORD
+
+**Windows EV (Google Cloud KMS):** EV_CODE_SIGNING_CERTIFICATE
+
+**Infrastructure:** R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, SLACK_BOT_TOKEN
+
+**App:** VITE_POSTHOG_API_KEY, SECRET_DESKTOP_INSTALLATION_PROOF_KEY
+
+### Build Artifacts
+- Installers: .AppImage (Linux), .dmg (macOS), .exe (Windows)
+- Update bundles: .tar.gz (macOS/Linux), .nsis.zip (Windows)
+- Signature files: .sig for Tauri auto-updater
+- Uploaded to: GitHub Releases + Cloudflare R2 (download.hanzo.ai)
+- Rollout: rename `updates-next.json` to `updates.json`
+
+### Troubleshooting
+- APPLE_CERTIFICATE must be base64 without newlines
+- Use `base64 --decode > file` not `base64 --decode -o file`
+- Ensure package.json version matches git tag
+- Update check failures are handled gracefully (no user-facing errors)
+
+## Model Tools (hanzo-ml integration)
+
+The Node Manager window has a **Model Tools** tab (`components/hanzo-node-manager/model-tools.tsx`)
+that drives the `hanzoai/ml` features via the Tauri backend (`src-tauri/src/model_tools`):
+
+- **Model soups + BitDelta** — fully wired. Shells out to the `hanzo-ml` `soup`
+  CLI (`hanzo_ml::model_delta`): `average` (uniform/weighted soup), `delta`
+  (base + mean fine-tune delta), `bitdelta-encode` / `bitdelta-apply` (1-bit
+  delta compress/restore). Binary resolved via `HANZO_SOUP_BIN`, a bundled
+  `soup-<arch>` next to the app, or `soup` on PATH. The UI gates on availability.
+- Frontend: `lib/model-tools/model-tools-client.ts` (invoke wrappers + React
+  Query hooks). Tauri commands: `model_tools_soup_*`, `model_tools_bitdelta_*`.
+
+## Machines (Docker Desktop replacement)
+
+Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the
+`hanzod` daemon in `hanzoai/node/machine/`. Hanzo Desktop is a drop-in
+all-in-one Docker Desktop replacement: containers, Kubernetes, and Linux
+machines from one app, one binary backend.
+
+```
+apps/hanzo-desktop/
+  src-tauri/src/machine/    # Tauri commands -> unix socket client
+    socket.rs               # ~/.hanzo/run/machined.sock resolver
+    types.rs                # mirrors machine/proto.go (Machine, ExecFrame, ...)
+  src/pages/machines/       # React UI (list, create dialog, exec stream)
+```
+
+- Tauri commands: `machine_health`, `machine_list`, `machine_create`,
+  `machine_start`, `machine_stop`, `machine_delete`, `machine_exec` (streaming).
+- Wire format is JSON over the daemon's UNIX socket - see
+  `hanzoai/node/machine/proto.go` for the authoritative contract.
+- Brand gating: the Machines / Containers / K8s pages are Hanzo-only by
+  default. Other brands (zoo, liquidity) must set `VITE_ENABLE_MACHINES=true`
+  (or the equivalent runtime flag in `libs/brand-config`) to reveal them.
+  See `libs/brand-config/src/index.ts::isMachinesEnabled`.
+
+### e2e
+
+`e2e-tests/machine-flow.spec.ts` runs against `pnpm dev`, mocks
+`window.__TAURI_INTERNALS__.invoke` for the `machine_*` commands, and asserts
+the create dialog round-trip. CI must pass `VITE_BRAND=hanzo` so the
+Machines route renders.
+
+## GRPO Status
+
+Trainer-free GRPO lives in `hanzo_training::grpo` (a Rust **library** + a runnable
+`grpo_toy` example) — there is no GRPO server/daemon yet. The desktop exposes a
+**developer-preview** entry (`model_tools_grpo_run`, surfaced in the Model Tools
+tab) that runs `cargo run -p hanzo-training --example grpo_toy` from a local
+checkout (`HANZO_ML_DIR`). This is plumbing/demo only.
+
+Productizing GRPO in-app still needs: experience/trajectory storage, agent
+versioning / A/B testing, a real training job pipeline (driving the `Policy`
+trait on a packaged model), feedback→reward mapping, and ML metrics. Foundation
+exists (agent CRUD, message history with tool metadata, Zustand, React Query).
+
+## Network + Wallet (the ONE standard)
+
+Shared components from `@hanzo/ui/network` + `@hanzo/ui/wallet`
+(npm alias `@hanzo/ui` -> `@hanzo/ui-shadcn@^5.7.3`, the 5.x line —
+same standard as the hanzo CLI `network.rs` and the console):
+
+- Model: Network = (env, label, networkID, evmChainID, rpcEndpoint,
+  apiEndpoint). Sovereign L1 => networkID === evmChainID. Hanzo envs:
+  mainnet 36963 / testnet 36964 / devnet 36965 / local 31337; public
+  envs share api.hanzo.ai; RPC per env (rpc.hanzo[-test|-dev].network).
+- `src/lib/network.ts` is the ONE composition point (brand -> network
+  list -> shared store). Endpoint consumers: `lux-wallet/chains.ts`
+  (`brandRpcConfig`/`defaultChainId`) + `hooks/useChainBalance.ts`
+  read the SELECTED network via `getNetwork()`/`useNetwork()`.
+- Wallet: `lux-wallet/ui-adapter.ts` adapts the PQ HD keychain wallet
+  to the shared `<WalletMenu/>` (auto-provisions on first connect;
+  secrets never leave the store/keychain).
+- Mounted in the sidebar footer of `pages/layout/main-layout.tsx`
+  (menuSide="top"). Semantic token aliases live in
+  `libs/hanzo-ui/src/styles/styles.css`.
+
+## Brand + sign-in (the ONE standard)
+
+`libs/brand-config/src/index.ts` is **THE** brand table. Nothing brand-varying
+may be written anywhere else. `getBrand()` resolves `VITE_BRAND` (exported by
+`scripts/brand-build.cjs`, which also swaps the Tauri identifier, icons and
+deep-link scheme) → hostname → hanzo. The app-local tables that used to compete
+with it — `src/brand.config.ts` and `src/config/brand.ts` — are deleted. The
+latter's only live fields were `name`, `productName` and `company`: three
+spellings of one value, all now `getBrand().name`. Its `appId` was a THIRD
+bundle identifier nothing read.
+
+| brand | IdP | client | redirect | callback event | keychain service |
+|---|---|---|---|---|---|
+| hanzo | https://hanzo.id | `hanzo-app` | `hanzo://oauth/hanzo` | `hanzo-iam-callback` | `com.hanzo.desktop` |
+| lux | https://lux.id | `lux-app` | `lux://oauth/lux` | `lux-iam-callback` | `com.lux.desktop` |
+| zoo | https://zoolabs.id | `zoo-app` | `zoo://oauth/zoo` | `zoo-iam-callback` | `com.zoo.desktop` |
+
+- **Login**: `src/hooks/iam-auth.ts` — OAuth 2.0 code + PKCE(S256), public
+  client, no secret. Paths from `src/lib/iam-oidc.ts` (HIP-0111:
+  `/v1/iam/oauth/authorize`, `/v1/iam/oauth/token` — no `/api/`, no legacy
+  `/login/oauth/*`). `createAuthorizeRequest()` is pure and exported so the
+  per-brand URL is directly assertable.
+- **Callback**: `src-tauri/src/deep_links.rs` derives the event from the URL's
+  path segment (`<scheme>://oauth/<brand>` → `<brand>-iam-callback`). Never
+  hardcode a brand there.
+- **Mark**: `libs/hanzo-logo` `<BrandMark brand/>` is the only brand glyph. Do
+  NOT use `@hanzo/ui`'s `BrandMark` — it white-labels the wordmark text only and
+  always paints the Hanzo block-H.
+- **Secrets**: `src/lib/secure-storage.ts` (OS keychain via `secure_storage_*`,
+  in-memory outside Tauri, **never** localStorage). The keychain service name is
+  the running bundle's identifier, resolved in Rust from `app.config()`.
+- **Identifier**: `com.<brand>.desktop`, and it must be the SAME string in
+  `tauri.conf.json`, `tauri.conf.<brand>.json`, `Info.plist` and the brand
+  table. Because the keychain service, the log file name and the `.app` name
+  all derive from the running bundle's identity, a disagreement silently
+  strands a user's saved secrets when they move between build variants — which
+  is what `ai.hanzo.desktop` in the base config did. `src/lib/brand-identity.test.ts`
+  asserts all four agree; the `.dev` / `.local` variants deliberately keep
+  their own suffixed identifier so side-by-side installs don't collide.
+
+Verify a brand end to end with the production bundle:
+
+```bash
+VITE_BRAND=zoo pnpm exec vite build
+pnpm exec vite preview --port 14200 --strictPort &
+VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
+  pnpm exec playwright test brand-sign-in     # asserts host/client/redirect/PKCE + mark
+```
+
+### Gotchas verified the hard way
+
+- `src-tauri/capabilities/main.json` has a `commands.allow` list. It is **inert**
+  — Tauri v2's Capability schema is
+  `[identifier, description, remote, local, windows, webviews, permissions, platforms]`
+  and the generated `gen/schemas/capabilities.json` contains no `commands` key at
+  all. Do not add commands there expecting a gate; there isn't one.
+- `pnpm build:ci`'s `tsc` step is a **no-op**: `tsconfig.json` has
+  `files: []` + `include: []` and only `references`, so plain `tsc` checks
+  nothing. Real typecheck is `pnpm typecheck` (`-p tsconfig.app.json`), which puts
+  TypeScript 7 over 846 app sources and comes back **clean** — 0 errors, measured
+  on the mirror tip and on this branch alike. It was 59, then 47 through the
+  eleven-primitive migration; the gui shorthand style props behind those resolve
+  against the 8.2.1 / `@hanzo/ui` 8.4.13 types. So a non-zero count is now a
+  regression to fix, not a baseline to compare against.
+- `pnpm-workspace.yaml` is BOTH things at once, and needs to stay both. It is
+  pnpm 11's **config home** (overrides, shamefullyHoist, allowBuilds — pnpm 11
+  stopped reading them from .npmrc) *and* a workspace manifest declaring
+  `packages: [apps/*]`, which is what puts the root `node_modules/.bin` on PATH
+  for `pnpm run` inside `apps/hanzo-desktop` (without it the scripts died with
+  `tsc: not found`). Do not delete the file to "restore" non-workspace status;
+  deleting it silently drops every override (real react-native replaces the
+  web-lite alias) and unhoists katex out from under the vite build. Keep the
+  `react-native` override's major in step with the direct
+  `@hanzogui/react-native-web-lite` dependency, or you ship two copies.
+- The main window renders **local `src/`**, not `@hanzo/ai/desktop` — that
+  changed with the @hanzo/gui convergence. `src/pages/*` and `src/routes/*` are
+  dead for the main window but still live for spotlight / coordinator /
+  node-manager, so do not delete them. The wdio specs under `e2e/` other than
+  `login.e2e.ts` still drive those pre-convergence routes.
+- `@hanzo/ai` is now only a package.json dependency, not an import of
+  `src/main.tsx`. Keep it declared regardless (it was once undeclared and an
+  install pruned it).
+- The workspace libs are `@hanzo/desktop-*` (ui, i18n, message-ts, node-state,
+  artifacts, logo, brand-config). The `desktop-` segment is **required**, not
+  cosmetic: `@hanzo/ui` and `@hanzo/logo` are separate published packages this
+  app already depends on and imports, so shortening a lib to a bare `@hanzo/ui`
+  or `@hanzo/logo` collides with a real dependency. Note the two `ui` sources
+  are unrelated — `@hanzo/desktop-ui` is `libs/hanzo-ui/`, `@hanzo/ui` is npm.
+  Nothing resolves through node_modules (there is no `@hanzo/desktop-*` there):
+  the specifiers exist only as `tsconfig.base.json` paths, which vite reads via
+  `tsconfigPaths()`. To rename one, change the paths key and the lib's
+  package.json `name` — those two carry the whole graph.
+- `NOTICE` and the `LICENSE` copyright line credit Shinkai / Mariana Layer Labs.
+  They are the Apache-2.0 §4(d) attribution for the code this repo forked and
+  must **stay**. They are the one intentional exception to "no upstream
+  references"; every other Shinkai mention has been removed, so a grep hit
+  outside those two files is real residue.
+- **grep cannot read pixels, and that is how seven videos survived that purge.**
+  Every `.mp4` in the tree was Shinkai-branded in its FRAMES while its filename
+  was Hanzo: `hanzo-tools.mp4` opened on a window titled "Shinkai Tools". The
+  README's demo linked an 84-second GitHub attachment that says Shinkai in 71 of
+  its 84 seconds, behind a genuinely-Hanzo poster image — invisible to a reader
+  of the markdown, unmissable to anyone who clicked. Renaming a file is not
+  rebranding its contents.
+
+  Two leaked something else again: `download-model.mp4` and `octopus.mp4` carry a
+  **runway** watermark on every frame, a third-party generator's mark shipping
+  inside our bundle.
+
+  All seven are deleted, with the `HANZO_TUTORIALS` R2 URLs (four more Shinkai
+  recordings, streamed at runtime, importer commented out) and the dead
+  `assets/videos` barrel — 39 MB of bundle that no code path reached. Re-record
+  before re-adding; do not restore these.
+
+  Audit media the way the text is audited — read the frames:
+
+      ffmpeg -i <file> -vf fps=1 /tmp/f/%03d.png
+      for p in /tmp/f/*.png; do tesseract "$p" - --psm 11; done | grep -ioE 'shinkai|runway'
+
+
+## Video: grep cannot read pixels
+
+Every video this repo shipped was branded for the project it was forked from.
+The filenames said Hanzo, the frames said Shinkai, so a text audit over the tree
+found nothing and one click on the README found all of it. OCR'ing every frame
+of all seven (`ffmpeg -vf fps=1` into `tesseract`) put five on Shinkai and three
+under a Runway watermark. All seven are deleted, along with the dead
+`HANZO_TUTORIALS` R2 URLs and the `libs/hanzo-ui/src/assets/videos` barrel.
+
+`NOTICE` is untouched and must stay: Apache-2.0 §4(d) requires the upstream
+attribution, and a brand leak in a video is a different thing from a licence
+obligation in a text file.
+
+Audit a media file, never grep for it:
+
+    ffmpeg -i <file> -vf fps=1 /tmp/f/%03d.png
+    for p in /tmp/f/*.png; do tesseract "$p" - --psm 11; done | grep -ioE 'shinkai|runway'
+
+### GitHub will not inline a video that lives in the repo
+
+`assets/hero.mp4` is committed and the README links it from a poster, which is
+not a stylistic choice: **GitHub strips a `<video>` tag whose `src` is a repo
+blob.** Inline playback is allowed only for assets uploaded through GitHub's own
+attachment flow (`github.com/user-attachments/assets/…`), and that flow is a
+browser drag-and-drop with no API — which is exactly how the upstream-branded
+clip got there in the first place.
+
+Two traps in checking this:
+
+- **The `/markdown` API disagrees with the repo page.** `gh api /markdown` keeps
+  the `<video>` tag in every form, including with `poster`, `controls` and
+  `playsinline`. The rendered repo page drops it. Testing the API tells you
+  nothing.
+- **`curl` on the page tells you nothing either.** The README HTML arrives
+  inside a client-rendered payload, so grepping for `<video` finds nothing
+  whether it rendered or not. Drive a browser and look — that is what finally
+  settled it, and it is the same lesson as OCR-not-grep one section up.
+
+The poster is frame 5 of the film itself (`ffmpeg -ss 5 -frames:v 1`), so the
+still and the video are one artifact and cannot drift. It replaced a screenshot
+showing a chat composer and four suggestion chips — a screen this build does not
+have, since `Shell.tsx` renders an EmptyState per section until the feature
+pages are ported.
+
+### Re-recording: `pnpm film`
+
+The replacement footage is recorded FROM THE APP, so it cannot show a brand this
+build does not have.
+
+    pnpm film            # both takes -> e2e-tests/.film/**/video.webm
+    pnpm film:masters    # -> hero.mp4 1920x1080 + hero-portrait.mp4 1080x1920
+
+Two takes because `@hanzo/frame`, the hero primitive on the web surfaces, picks
+between two masters by ORIENTATION rather than width — a phone is 0.46 wide-to-
+tall and a 16:9 master covering it shows the middle quarter. The projects in
+`playwright.config.ts` record AT those two sizes, so the output drops straight
+in with no re-crop. Masters are gitignored: a 20 MB binary in git is in git
+forever, which is half of why the originals were so expensive to remove.
+
+Three things worth knowing before editing the shot list:
+
+- **It queries BY ROLE on purpose.** Driving the film the way an assistive
+  client drives the app means an accessibility regression stops the recording
+  instead of shipping. That is not theoretical — see the checkbox below, which
+  this spec is what found.
+- **It does not type a message, and that is the honest shot.** There is no
+  composer in this build (below). The first cut reached for a textbox, found
+  only the header Search, and filmed a chat prompt going into a search field.
+  Add the conversation beat when the composer exists; do not fake it.
+- **`masters.mjs` resolves ffmpeg by RUNNING it**, rather than taking the first
+  on PATH. This machine had an x86-64 ffmpeg parked in `~/.local/bin` ahead of
+  the working arm64 one; `execvp` gets ENOEXEC and hands the ELF to `/bin/sh`,
+  which reports a SYNTAX ERROR — a message that names a shell and a paren and
+  says nothing about architecture. An interactive shell hides it by caching the
+  good path, so it reproduces only from a script.
+
+## Two defects the recorder found, both fixed
+
+**The consent checkbox was a pressable div.** `Welcome.tsx` drew an 18px box
+with a tick inside it and hung `onPress` on the row — no checkbox role, no
+checked state, no focus. It gates BOTH sign-in buttons, so a keyboard or
+screen-reader user was locked out of the app at its first screen, and the whole
+`@hanzo/ui` Checkbox it was reimplementing was already in the barrel. It is now
+that Checkbox plus a `Label` bound by `id`/`htmlFor`, which keeps the caption
+clickable without a press handler wrapping the row.
+
+**Every primary CTA in the shell was inert.** `Shell.tsx` rendered a filled
+header button with no `onPress` and passed `primary={{ label }}` with no
+handler, for all five sections — New chat, Create agent, Add tool, Add files,
+Open node manager. Clicking any of them did nothing, with no console error, so
+the app read as broken rather than unfinished. They are removed; `Docs` stays
+because it goes somewhere.
+
+Restoring one is not a UI change, it is a destination. The main window has no
+router (`main.tsx` is `createRoot` → `Gui` → `HanzoApp`), the feature pages
+under `src/pages/*` are not ported into the shell, and the `hanzo-node-manager`
+window is reachable only from Rust — `windows/mod.rs::recreate_window` carries
+no `#[tauri::command]`, so the frontend cannot open it. Give a section its
+`primary` back in the same change that gives it somewhere to go.
+
+### The tip is not the leak — 53 branches and main's own history still serve them
+
+Deleting the six files on main removed them from ONE commit. Measured after
+that commit landed, on the public repo:
+
+- **53 of 54 pushed branches still carry all six `.mp4`s in their trees**, and
+  they are served, not merely stored:
+  `raw.githubusercontent.com/hanzoai/desktop/ui-standard-8x/apps/hanzo-desktop/public/tutorials/add-ai.mp4`
+  answers **200, 6,143,401 bytes**.
+- **Main's own history serves them too** — the same path at `04d1bc4df`, the
+  commit before the deletion, answers 200.
+
+So the tip-only deletion closed the README and nothing else. The linked
+`user-attachments` asset does 403 now, which is why this looks fixed from the
+rendered page and is not.
+
+Closing it needs two things, in order, and only the second one is irreversible:
+
+1. Strip the six paths from the remaining branch tips (additive commits, no
+   history rewrite, no branch deleted, no work lost).
+2. `git filter-repo` the six paths out of all history and force-push — the same
+   method the liquidity.io purge used across ~32 repos. This rewrites public
+   history, so every clone re-clones and open PRs need rebasing.
+
+**Do not sweep `backup/*`, `rescue/*` or `preserve/*` to shortcut step 1.**
+Twenty-two of the 54 branches are scratch by name, but those three families
+were created by earlier sessions to hold rescued orphan work that has no other
+copy — deleting them to close a branding leak trades a reputational problem for
+a data-loss one.
+
+#### …and the two-step close is NOT worth running here
+
+The section above is right about the measurement and wrong about the remedy.
+Three facts, established after it was written:
+
+- **`NOTICE` already credits Shinkai / Mariana Layer Labs** under Apache-2.0
+  §4(d). This is a correctly-attributed fork, so upstream-branded footage in it
+  is not a disclosure — the defect was presenting that footage as OUR product
+  demo ("Watch Hanzo agents collaborate…"), and deleting it on main fixed
+  exactly that.
+- **`forks=0`, `network=0`.** No fork holds the blobs.
+- **A force-push would not make them unobtainable anyway.** git keeps
+  unreferenced objects reachable by sha until a GC that cannot be triggered from
+  outside; anyone who already cloned has them. Making these bytes genuinely
+  unreachable means asking GitHub Support to purge, not rewriting history.
+
+So the rewrite buys a partial close of a tidiness problem, and costs an
+irreversible rewrite of a public repo that renumbers 54 branches and invalidates
+every clone. Not worth it. Strip the paths opportunistically when a branch is
+touched for another reason, and let the rest age out with the branches.
+
+**The general rule, which does survive:** measure a leak with the transport
+(`curl` on `raw.githubusercontent.com`, across branches AND a pre-deletion sha),
+never with the working tree — and then decide the remedy from what is actually
+exposed and to whom, not from the size of the number the measurement produced.
+
+## Dependency floors live in pnpm-workspace.yaml, one per installed major
+
+`pnpm-workspace.yaml` is where pnpm 11 reads `overrides` — its own header says
+so, and the `pnpm` field in package.json is inert. A first pass that wrote 29
+overrides there resolved to exactly nothing, and the only reason that was caught
+is that the lockfile was re-read afterwards and compared against the floors. A
+green `pnpm install` proves the resolver ran, never that it did what you asked.
+
+Three rules the 116-alert sweep established:
+
+- **One floor per MAJOR that is actually installed.** A blanket
+  `minimatch: '>=10.2.3'` drags every package pinned at `^3` onto a different
+  API. The advisories are already per-major (`< 1.1.16`, `>= 2.0.0 < 2.1.2`,
+  `>= 3.0.0 < 5.0.7`) — mirror that, and skip majors the tree does not contain.
+- **A `pkg@range` selector matches the DECLARED range, not the resolved
+  version.** A dependent asking for `^5.0.0` slips straight past
+  `'brace-expansion@5'`. Where only one vulnerable major is left, a bare
+  selector is unambiguous and leaves the higher copies alone.
+- **Check what a floor cost you.** `js-yaml` and `undici` satisfied theirs by
+  crossing a major (4→5, 7→8). Acceptable here only because every dependent is
+  dev-surface — eslint, cosmiconfig, mocha, webdriver, cheerio.
+
+A floor that resolves to nothing is invisible, so verify against the LOCKFILE
+and not against the install. The first sweep skipped four packages by probing
+"is this major installed?" against the PRE-override lockfile — including a
+critical — and only GitHub's own recount caught it. `serialize-javascript` and
+`uuid` were two of those and both took their floor fine (mocha and
+vite-plugin-top-level-await are the only dependents, build-and-test only).
+
+Not fixable, and each for a stated reason: `dompurify` / `extract-zip`
+/ `image-size` (no patched release exists), and `glib` 0.18.5 in
+`src-tauri/Cargo.lock` (the whole gtk-rs 0.18 stack — atk, cairo-rs, gdk,
+gdk-pixbuf, gdkx11, gio, gtk, javascriptcore-rs — pins it, so 0.20 needs an
+upstream Tauri bump, not a `cargo update`).
+
+**`libs/*` is not a workspace package and must not gain a lockfile.**
+`pnpm-workspace.yaml` lists `apps/*` only; the libs compile from source through
+the tsconfig `paths` mapping and take their dependencies from the root install.
+`libs/hanzo-message-ts` had drifted into carrying its own npm `package-lock.json`
+— a second package manager resolving a tree nothing built against — and it was
+worth 32 alerts including a critical, 29 of them one stale axios while the root
+had already moved to 1.18.1. Deleted. If a lib needs a dependency, add it at the
+root.
