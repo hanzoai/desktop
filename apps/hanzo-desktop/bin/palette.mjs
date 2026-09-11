@@ -59,6 +59,15 @@ const chromatic = new RegExp(
   `\\b(?:${SLOTS.join('|')})-(?:${CHROMATIC.join('|')})-\\d{2,3}\\b`,
   'g',
 );
+/**
+ * The same hue, named the other way this app can name one.
+ *
+ * The shell is written in gui's `$` tokens, not utility classes, so a
+ * `color="$red10"` was invisible here — which is the one file the convention
+ * was written for. A hue is a hue whichever vocabulary reaches for it, so it
+ * counts against the same budget.
+ */
+const token = new RegExp(`\\$(?:${CHROMATIC.join('|')})\\d{1,2}\\b`, 'g');
 /** A colour value written out: `#0a0c10`, `rgb(…)`, `rgba(…)`, `hsl(…)`. */
 const literal = /#[0-9a-fA-F]{3,8}\b|\brgba?\([^)]*\)|\bhsla?\([^)]*\)/g;
 /** Achromatic and unthemeable: counted, never failed. */
@@ -103,15 +112,18 @@ for (const path of sources(SRC)) {
   const text = code(readFileSync(path, 'utf8'));
   for (const [kind, pattern] of [
     ['chromatic', chromatic],
+    ['chromatic', token],
     ['literal', literal],
     ['achromatic', achromatic],
   ]) {
     const hits = text.match(pattern);
     if (!hits) continue;
-    found[kind][name] = hits.length;
+    // Two patterns report the same kind, so this accumulates. Assigning would
+    // let a file that names a hue both ways report only the second count.
+    found[kind][name] = (found[kind][name] ?? 0) + hits.length;
     if (kind === 'chromatic') {
       for (const hit of hits) {
-        const hue = CHROMATIC.find((h) => hit.includes(`-${h}-`));
+        const hue = CHROMATIC.find((h) => hit.includes(`-${h}-`) || hit.startsWith(`$${h}`));
         if (hue) hues[hue] = (hues[hue] ?? 0) + 1;
       }
     }

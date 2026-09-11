@@ -141,7 +141,9 @@ export function Shell({
               width={6}
               height={6}
               rounded={999}
-              bg={chat.ready ? '$green10' : '$color8'}
+              borderWidth={chat.ready ? 0 : 1}
+              borderColor="$color10"
+              bg={chat.ready ? '$color12' : 'transparent'}
             />
             <Text fontSize="$2" color="$color10" numberOfLines={1}>
               {chat.ready ? (chat.where?.version ?? 'Local node') : 'Offline'}
@@ -192,22 +194,28 @@ export function Shell({
                  by height and flex from there. */
               <YStack height="100%" minH={0} data-testid="chat">
                 {chat.fault ? (
+                  /* `status.ts` next door: inversion carries attention and is
+                     spent once, on the one state a person has something to do
+                     about. A node that is not answering is that state. Red
+                     would say nothing — on this palette every hue resolves to
+                     the same grey. */
                   <XStack
                     items="center"
                     justify="space-between"
                     gap="$3"
                     px="$4"
                     py="$2"
-                    bg="$red3"
+                    bg="$color12"
                     borderBottomWidth={1}
-                    borderColor="$borderColor"
+                    borderColor="$color12"
                   >
-                    <Text fontSize="$2" color="$red11" flex={1}>
+                    <Text fontSize="$2" color="$color1" flex={1}>
                       {chat.fault}
                     </Text>
                     <Text
                       fontSize="$2"
-                      color="$red11"
+                      color="$color1"
+                      fontWeight="600"
                       cursor="pointer"
                       textDecorationLine="underline"
                       onPress={chat.repair}

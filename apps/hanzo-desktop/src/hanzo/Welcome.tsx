@@ -91,7 +91,10 @@ export function Welcome({
         </YStack>
 
         {error ? (
-          <Text fontSize="$2" color="$red10">
+          /* `status.ts`: inline text has no fill to invert, and a monochrome
+             palette cannot make one sentence redder than another — so the
+             brightest step plus weight, and the wording carries the rest. */
+          <Text fontSize="$2" color="$color" fontWeight="600">
             {error.message}
           </Text>
         ) : null}
