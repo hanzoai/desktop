@@ -702,9 +702,8 @@ Two traps in checking this:
 
 The poster is frame 5 of the film itself (`ffmpeg -ss 5 -frames:v 1`), so the
 still and the video are one artifact and cannot drift. It replaced a screenshot
-showing a chat composer and four suggestion chips — a screen this build does not
-have, since `Shell.tsx` renders an EmptyState per section until the feature
-pages are ported.
+showing a chat composer and four suggestion chips — the composer is real now,
+the four chips are not, and the footage is recorded from the app either way.
 
 ### Re-recording: `pnpm film`
 
@@ -761,6 +760,21 @@ under `src/pages/*` are not ported into the shell, and the `hanzo-node-manager`
 window is reachable only from Rust — `windows/mod.rs::recreate_window` carries
 no `#[tauri::command]`, so the frontend cannot open it. Give a section its
 `primary` back in the same change that gives it somewhere to go.
+
+**Chat has one.** `src/hanzo/node.ts` is the local node's client — health,
+pairing, providers, conversations, history, a turn, and the socket the answer
+streams on. `src/hanzo/useChat.ts` holds the conversation and draws nothing; it
+answers `messages` and `send`, which is the shape `@hanzo/ui/chat`'s `Chat` is
+built to be spread with, so the picture takes the state and owns none of it.
+The model list comes from the node through `ModelSelector` rather than a
+constant in the shell, and the sidebar's node row says whether it is serving.
+
+Two layout facts fell out of it and hold for anything else mounted there. The
+dock's `Panel` is not a flex parent, so a body fills it by `height`, not
+`flex` — a child asking for `flex: 1` in there takes its content's height,
+which is why the empty card used to sit at the top of the window. And `Chat`'s
+`empty` replaces the thread rather than sitting above it, so it has to take the
+thread's room or the composer floats a third of the way down.
 
 ### The tip is not the leak — 53 branches and main's own history still serve them
 
