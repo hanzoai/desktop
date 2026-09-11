@@ -832,6 +832,32 @@ touched for another reason, and let the rest age out with the branches.
 never with the working tree — and then decide the remedy from what is actually
 exposed and to whom, not from the size of the number the measurement produced.
 
+## The typecheck gate is red, and what is behind it
+
+`pnpm typecheck` reports 108 errors. CI reaches it now — until 2026-09-11 every
+run queued for a runner and was cancelled, so nothing on main had been
+typechecked or built for as long as that had been true. Two things were in the
+way and both are fixed: the reusable defaults to `linux-amd64` and the only
+runner holding that label is evo, which is off the network, so the caller asks
+for `linux-arm64` and runs on spark; and spark's `stable` toolchain could not be
+reinstalled because rustup's manifest for `rust-src` named a file the tree did
+not have.
+
+149 of the original 257 were one signature. `pressable` in
+`libs/hanzo-ui/src/components/gui-repairs.tsx` was written
+`<P extends { asChild?: AsChild }>(Part: ComponentType<P>)`; a gui component's
+type is not a plain function component, so inference had nothing to take P from
+and fell back to the constraint, and the repaired export accepted `asChild` and
+nothing else. Taking the props from the component with `ComponentProps<C>`
+cleared them.
+
+The remaining 108 are the port's backlog, and they are real rather than
+cosmetic. The largest is primereact: v11 is a headless parts API and the tree
+still calls v10 — `primereact/treenode` no longer exists, and `TreeNode` under
+`primereact/tree` is a component rather than the data interface those call sites
+annotate with. `agent-form.tsx` alone carries 17. Porting a page into the shell
+is what clears its share; there is no import that fixes it.
+
 ## Dependency floors live in pnpm-workspace.yaml, one per installed major
 
 `pnpm-workspace.yaml` is where pnpm 11 reads `overrides` — its own header says
