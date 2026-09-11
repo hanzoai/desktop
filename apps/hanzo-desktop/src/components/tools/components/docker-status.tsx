@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@hanzo/desktop-ui';
 import { cn } from '@hanzo/desktop-ui/utils';
+import { status } from '../../../hanzo/status';
 import { useAuth } from '../../../store/auth';
 
 export function DockerStatus() {
@@ -19,27 +20,28 @@ export function DockerStatus() {
     nodeAddress: auth?.node_address ?? '',
   });
 
+  // Three states drawn in yellow, orange and green — three hues that are one
+  // grey on this palette. `hanzo/status.ts` carries the steps instead: Docker
+  // absent is something to do about, installed-but-down is on its way, running
+  // is settled.
   const statusConfig = {
     'not-installed': {
       title: t('dockerStatus.dockerNotInstalled'),
       description: t('dockerStatus.dockerNotInstalledDescription'),
-      color: 'bg-yellow-500',
-      bgColor: 'bg-yellow-500/10',
-      borderColor: 'border-yellow-500/20',
+      dot: status.act.dot,
+      panel: status.act.panel,
     },
     'not-running': {
       title: t('dockerStatus.dockerInstalledButNotRunning'),
       description: t('dockerStatus.dockerInstalledButNotRunningDescription'),
-      color: 'bg-orange-500',
-      bgColor: 'bg-orange-500/10',
-      borderColor: 'border-orange-500/20',
+      dot: status.moving.dot,
+      panel: status.moving.panel,
     },
     running: {
       title: t('dockerStatus.dockerRunning'),
       description: t('dockerStatus.dockerRunningDescription'),
-      color: 'bg-green-500',
-      bgColor: 'bg-green-500/10',
-      borderColor: 'border-green-500/20',
+      dot: status.up.dot,
+      panel: status.up.panel,
     },
   };
 
@@ -54,7 +56,7 @@ export function DockerStatus() {
         }}
       >
         <span
-          className={`h-2 w-2 rounded-full ${config.color} ${config.borderColor}`}
+          className={`h-2 w-2 rounded-full ${config.dot}`}
         />
         <span className="text-text-secondary text-xs">{config.title}</span>
       </TooltipTrigger>
@@ -63,12 +65,7 @@ export function DockerStatus() {
         sideOffset={10}
       >
         <Alert
-          className={cn(
-            'border',
-            config.borderColor,
-            'bg-bg-quaternary',
-            config.bgColor,
-          )}
+          className={cn('border', config.panel)}
         >
           <svg
             className="size-5"

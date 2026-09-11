@@ -1,5 +1,6 @@
 // ToolCreationStatus.tsx
 import { Skeleton } from '@hanzo/desktop-ui';
+import { status as shade } from '../../../hanzo/status';
 import { cn } from '@hanzo/desktop-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LoaderIcon } from 'lucide-react';
@@ -69,13 +70,13 @@ const StatusIndicator = memo(
   }) => (
     <div className="flex items-center gap-3">
       {status === 'pending' ? (
-        <LoaderIcon className="size-4 animate-spin text-cyan-500" />
+        <LoaderIcon className={`size-4 animate-spin ${shade.moving.ink}`} />
       ) : status === 'success' ? (
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-500">
+        <div className={`flex h-5 w-5 items-center justify-center rounded-full ${shade.up.panel}`}>
           ✓
         </div>
       ) : status === 'error' ? (
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500/20 text-red-500">
+        <div className={`flex h-5 w-5 items-center justify-center rounded-full ${shade.act.panel}`}>
           ✗
         </div>
       ) : null}
@@ -103,8 +104,8 @@ const ErrorDisplay = memo(
       initial={{ opacity: 0 }}
       transition={{ duration: 0.5, ease: 'easeInOut' }}
     >
-      <p className="text-red-500">{message}</p>
-      <p className="break-words text-red-500">{error}</p>
+      <p className={shade.act.ink}>{message}</p>
+      <p className={`break-words ${shade.act.ink}`}>{error}</p>
     </motion.div>
   ),
 );
@@ -189,7 +190,7 @@ const MetadataGenerationStep = memo(
         <div className="flex items-center gap-2">
           {toolMetadataStatus === 'pending' && (
             <>
-              <LoaderIcon className="size-4 animate-spin text-cyan-500" />
+              <LoaderIcon className={`size-4 animate-spin ${shade.moving.ink}`} />
               <h3 className="font-medium text-zinc-100">
                 Generating Preview...
               </h3>
@@ -197,7 +198,7 @@ const MetadataGenerationStep = memo(
           )}
           {toolMetadataStatus === 'success' && (
             <>
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-500">
+              <div className={`flex h-5 w-5 items-center justify-center rounded-full ${shade.up.panel}`}>
                 <span className="font-bold">✓</span>
               </div>
               <h3 className="font-medium text-zinc-100">
@@ -206,7 +207,7 @@ const MetadataGenerationStep = memo(
             </>
           )}
           {toolMetadataStatus === 'error' && (
-            <h3 className="font-medium text-red-500">
+            <h3 className={`font-medium ${shade.act.ink}`}>
               Failed to Generate Metadata
             </h3>
           )}
@@ -258,12 +259,12 @@ const SavingToolStep = memo(({ isSavingTool }: { isSavingTool: boolean }) => (
       <div className="flex items-center gap-2">
         {isSavingTool ? (
           <>
-            <LoaderIcon className="size-4 animate-spin text-cyan-500" />
+            <LoaderIcon className={`size-4 animate-spin ${shade.moving.ink}`} />
             <h3 className="font-medium text-zinc-100">Saving Tool...</h3>
           </>
         ) : (
           <>
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-500">
+            <div className={`flex h-5 w-5 items-center justify-center rounded-full ${shade.up.panel}`}>
               <span className="font-bold">✓</span>
             </div>
             <h3 className="font-medium text-zinc-100">

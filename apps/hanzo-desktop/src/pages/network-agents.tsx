@@ -76,6 +76,7 @@ import {
 } from '../components/crypto-wallet/utils';
 import RemoveNetworkAgentButton from '../components/network/remove-network-agent-button';
 import RemoveToolOfferingButton from '../components/network/remove-tool-offering-button';
+import { status } from '../hanzo/status';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 
@@ -573,15 +574,15 @@ const AgentCard = ({
               <Circle
                 className={cn(
                   'h-3 w-3',
-                  nodeStatus === 'online' && 'fill-green-500 text-green-500',
-                  nodeStatus !== 'online' && 'fill-red-500 text-red-500',
+                  nodeStatus === 'online' && `fill-brand ${status.up.ink}`,
+                  nodeStatus !== 'online' && `fill-text-tertiary ${status.quiet.ink}`,
                 )}
               />
               <span
                 className={cn(
                   'text-xs',
-                  nodeStatus === 'online' && 'text-green-600',
-                  nodeStatus !== 'online' && 'text-red-600',
+                  nodeStatus === 'online' && status.up.ink,
+                  nodeStatus !== 'online' && status.quiet.ink,
                 )}
               >
                 {nodeStatus === 'online' ? 'Online' : 'Offline'}
@@ -700,11 +701,11 @@ const AgentCard = ({
                       )}
                     </div>
 
-                    <div className="rounded-md border border-cyan-800 bg-cyan-900/10 p-3">
+                    <div className="border-divider bg-bg-tertiary rounded-md border p-3">
                       <div className="flex gap-2">
-                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
+                        <Info className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-cyan-400">
+                          <p className="text-text-default text-sm font-medium">
                             {t('networkAgentsPage.howPaymentsWork')}
                           </p>
                           <p className="text-text-secondary text-sm">
@@ -906,11 +907,11 @@ export const InstallAgentModal = ({
         )}
         {step === 1 && (
           <div className="space-y-6">
-            <div className="rounded-lg border border-cyan-800 bg-cyan-900/10 p-4">
+            <div className="border-divider bg-bg-tertiary rounded-lg border p-4">
               <div className="flex flex-col gap-2.5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-cyan-400" />
-                  <p className="text-sm font-medium text-cyan-400">
+                  <Sparkles className="text-text-secondary h-4 w-4" />
+                  <p className="text-text-default text-sm font-medium">
                     {t('networkAgentsPage.howPaymentsWork')}
                   </p>
                 </div>
@@ -995,7 +996,7 @@ export const InstallAgentModal = ({
 
         {step === 2 && (
           <div className="py-8 text-center">
-            <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-400" />
+            <CheckCircle className={`mx-auto mb-4 h-12 w-12 ${status.up.ink}`} />
             <h3 className="text-text-default mb-2 text-base font-semibold">
               {t('networkAgentsPage.addedSuccess')}
             </h3>
@@ -1040,7 +1041,7 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
   const { t } = useTranslation();
 
   return (
-    <Alert variant="warning" className="mb-6 border-0 bg-yellow-300/5 p-6">
+    <Alert variant="warning" className="bg-bg-tertiary mb-6 border-0 p-6">
       <div className="flex flex-col gap-4">
         <AlertTitle className="text-text-default text-base font-semibold">
           {t('networkAgentsPage.setupRequired')}
@@ -1050,9 +1051,9 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-start gap-3">
                 {isWalletConnected ? (
-                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-500" />
+                  <CheckCircle2 className={`mt-0.5 size-4 shrink-0 ${status.up.ink}`} />
                 ) : (
-                  <AlertCircle className="mt-0.5 size-4 shrink-0 text-yellow-400" />
+                  <AlertCircle className={`mt-0.5 size-4 shrink-0 ${status.act.ink}`} />
                 )}
                 <div>
                   <p className="text-text-default text-sm font-medium">
@@ -1068,7 +1069,7 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
                   to="/settings/crypto-wallet"
                   className={cn(
                     buttonVariants({ variant: 'outline', size: 'md' }),
-                    'shrink-0 bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black',
+                    'shrink-0', status.act.panel,
                   )}
                 >
                   {t('networkAgentsPage.connectWallet')}
@@ -1093,7 +1094,7 @@ function Disclaimer() {
   if (dismissedCommunityAgentsDisclaimer) return null;
 
   return (
-    <Alert variant="warning" className="mb-6 border-0 bg-orange-300/5 p-6">
+    <Alert variant="warning" className="bg-bg-tertiary mb-6 border-0 p-6">
       <button
         className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-text-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
         onClick={() => setDismissedCommunityAgentsDisclaimer(true)}
@@ -1102,7 +1103,7 @@ function Disclaimer() {
         <span className="sr-only">Close</span>
       </button>
       <div className="flex items-start gap-3">
-        <AlertCircle className="mt-0.5 size-4 shrink-0 text-orange-400" />
+        <AlertCircle className={`mt-0.5 size-4 shrink-0 ${status.act.ink}`} />
         <div>
           <p className="text-text-default text-sm font-medium">
             Community Agents
