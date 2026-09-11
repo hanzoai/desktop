@@ -60,12 +60,20 @@ import {
 
 type AsChild = boolean | 'except-style' | 'except-style-web' | 'web';
 
-const pressable = <P extends { asChild?: AsChild }>(
-  Part: ComponentType<P>,
-  displayName: string,
-) => {
+// Typed from the component rather than from a constraint. Written as
+// `ComponentType<P>` with `P extends { asChild?: AsChild }`, inference has
+// nothing to take P from when the part is a gui component — its type is not a
+// plain function component — so P fell back to the constraint, and the repaired
+// export accepted `asChild` and NOTHING else. Every call site passing children
+// or a className failed to typecheck: 121 errors from this one signature, in
+// files whose markup was correct.
+const pressable = <C extends ComponentType<never>>(Part: C, displayName: string) => {
+  type P = ComponentProps<C> & { asChild?: AsChild };
   const Repaired = ({ asChild, ...rest }: P) => (
-    <Part {...(rest as P)} asChild={asChild === true ? 'web' : asChild} />
+    <Part
+      {...(rest as ComponentProps<C>)}
+      asChild={asChild === true ? 'web' : asChild}
+    />
   );
   Repaired.displayName = displayName;
   return Repaired;
