@@ -1,7 +1,15 @@
-# Canonical caller — every knob lives in /hanzo.yml, none here.
-# Runs on the git-runner fleet at git.hanzo.ai, the only pool serving these
-# labels. github.com resolves only .github/workflows and has no runner for
-# them, so a caller placed there is a gate that cannot be scheduled.
+# Canonical caller — every knob lives in /hanzo.yml, none here, except which
+# machine can run it.
+#
+# The reusable defaults to `linux-amd64` and no runner serving this repo
+# advertises it while online: `evo-amd64` holds that label and the host is off
+# the network, so every job queued until it was cancelled. `spark-arm64` is
+# online at the org and serves `linux-arm64`. A `runs-on` value names a
+# capability rather than a box, and typechecking and building a JavaScript
+# workspace needs no particular architecture — the Tauri bundles are cut by
+# `desktop-release.yml`, which names its own.
+#
+# Put this back to the default when evo is up.
 name: CI/CD
 on:
   push:
@@ -18,3 +26,5 @@ jobs:
   cicd:
     uses: hanzoai/ci/.github/workflows/build.yml@v1
     secrets: inherit
+    with:
+      runner: '["linux-arm64"]'
