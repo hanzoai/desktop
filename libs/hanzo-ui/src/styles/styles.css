@@ -1,3 +1,9 @@
+/* The Gui reset is `all: unset` on p, input, textarea, button, ul, ol, li, pre
+   and dialog. Unlayered it outranks every layer, so a utility class on any of
+   those elements did nothing: `flex gap-2 px-2.5 text-xs` on a button computed
+   inline / normal / 0 / 16px. Imported into base it still resets the element
+   and utilities decide again. */
+@import '@hanzogui/core/reset.css' layer(base);
 @import 'katex/dist/katex.min.css';
 
 @import 'tailwindcss';
