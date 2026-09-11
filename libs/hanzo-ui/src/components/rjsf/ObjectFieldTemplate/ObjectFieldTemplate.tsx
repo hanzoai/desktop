@@ -49,7 +49,7 @@ export default function ObjectFieldTemplate<
     <>
       {title && (
         <TitleFieldTemplate
-          id={titleId<T>(idSchema)}
+          id={titleId(idSchema)}
           registry={registry}
           required={required}
           schema={schema}
@@ -60,7 +60,7 @@ export default function ObjectFieldTemplate<
       {description && (
         <DescriptionFieldTemplate
           description={description}
-          id={descriptionId<T>(idSchema)}
+          id={descriptionId(idSchema)}
           registry={registry}
           schema={schema}
           uiSchema={uiSchema}

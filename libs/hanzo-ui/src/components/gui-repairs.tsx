@@ -67,14 +67,17 @@ type AsChild = boolean | 'except-style' | 'except-style-web' | 'web';
 // export accepted `asChild` and NOTHING else. Every call site passing children
 // or a className failed to typecheck: 121 errors from this one signature, in
 // files whose markup was correct.
-const pressable = <C extends ComponentType<never>>(Part: C, displayName: string) => {
+const pressable = <C extends ComponentType<any>>(Part: C, displayName: string) => {
   type P = ComponentProps<C> & { asChild?: AsChild };
-  const Repaired = ({ asChild, ...rest }: P) => (
-    <Part
-      {...(rest as ComponentProps<C>)}
-      asChild={asChild === true ? 'web' : asChild}
-    />
-  );
+  // The part is called through a widened alias. `C` is what keeps the public
+  // props honest and is not itself a type JSX will accept as a tag, so naming
+  // it in the position of one trades 121 errors at the call sites for five
+  // here.
+  const Part_ = Part as ComponentType<Record<string, unknown>>;
+  const Repaired = (props: P) => {
+    const { asChild, ...rest } = props as P & { asChild?: AsChild };
+    return <Part_ {...rest} asChild={asChild === true ? 'web' : asChild} />;
+  };
   Repaired.displayName = displayName;
   return Repaired;
 };

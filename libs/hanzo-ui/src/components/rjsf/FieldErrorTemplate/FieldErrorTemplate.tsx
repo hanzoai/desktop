@@ -19,7 +19,7 @@ export default function FieldErrorTemplate<
   if (errors.length === 0) {
     return null
   }
-  const id = errorId<T>(idSchema)
+  const id = errorId(idSchema)
 
   return (
     <ul className="list-inside list-none" id={id}>

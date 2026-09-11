@@ -68,7 +68,7 @@ export default function CheckboxesWidget<
               key={option.value}
             >
               <input
-                aria-describedby={ariaDescribedByIds<T>(id)}
+                aria-describedby={ariaDescribedByIds(id)}
                 autoFocus={autofocus && index === 0}
                 checked={checked}
                 className="form-checkbox accent-brand border-0 bg-transparent"

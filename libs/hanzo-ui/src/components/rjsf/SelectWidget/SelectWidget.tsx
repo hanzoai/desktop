@@ -51,7 +51,7 @@ export default function SelectWidget<
 
   return (
     <select
-      aria-describedby={ariaDescribedByIds<T>(id)}
+      aria-describedby={ariaDescribedByIds(id)}
       autoFocus={autofocus}
       className={`w-full border border-gray-100 bg-gray-400 p-2 text-white focus:border-gray-100 focus:outline-hidden ${rawErrors.length > 0 ? 'border-red-500' : 'border-gray-100'} `}
       disabled={disabled || readonly}

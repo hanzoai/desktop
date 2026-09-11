@@ -53,7 +53,7 @@ export default function RadioWidget<
               key={index}
             >
               <input
-                aria-describedby={ariaDescribedByIds<T>(id)}
+                aria-describedby={ariaDescribedByIds(id)}
                 checked={checked}
                 className="border-border-input bg-background text-primary focus:ring-primary focus:ring-2"
                 disabled={disabled || itemDisabled || readonly}

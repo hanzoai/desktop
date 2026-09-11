@@ -42,7 +42,7 @@ export default function TextareaWidget<
   return (
     <div className="flex">
       <textarea
-        aria-describedby={ariaDescribedByIds<T>(id)}
+        aria-describedby={ariaDescribedByIds(id)}
         autoFocus={autofocus}
         className="bg-bg-tertiary w-full border px-3 py-2 break-words text-white"
         disabled={disabled}
