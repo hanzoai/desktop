@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { BrandMark } from '@hanzo/desktop-logo';
-import { Button, Input, Text, XStack, YStack } from '@hanzo/gui';
+import { Input, Text, XStack, YStack } from '@hanzo/gui';
 import {
   ContextMenu,
-  DropdownMenu,
   EmptyState,
   type MenuItemSpec,
   ThemeToggle,
 } from '@hanzo/ui/product';
-import { ChevronDown, ExternalLink } from '@hanzogui/lucide-icons-2';
+import { Chat } from '@hanzo/ui/chat';
+import { ModelSelector } from '@hanzo/ui/models';
+import { ExternalLink } from '@hanzogui/lucide-icons-2';
 
 import { DockGroup } from './Dock';
+import { useChat } from './useChat';
 import { usePanels } from './panels';
 import { PanelControls, SidebarToggle } from './PanelControls';
 import { SECTION, SECTIONS, type SectionKey } from './sections';
@@ -26,12 +28,6 @@ import {
   TRAFFIC_LIGHTS,
   type ThemeMode,
 } from './theme';
-
-const MODELS = [
-  { key: 'zen-nano', label: 'Zen Nano 0.6B' },
-  { key: 'zen-mini', label: 'Zen Mini 4B' },
-  { key: 'zen-omni', label: 'Zen Omni' },
-];
 
 /** The body's readable measure, released by the full-width control. */
 const BODY_MEASURE = 880;
@@ -55,7 +51,7 @@ export function Shell({
   const { brand, docs } = getBrand();
   const [section, setSection] = useState<SectionKey>('chat');
   const [query, setQuery] = useState('');
-  const [model, setModel] = useState('zen-nano');
+  const chat = useChat();
   const sidebarOpen = usePanels((state) => state.sidebarOpen);
   const rightOpen = usePanels((state) => state.rightOpen);
   const maximized = usePanels((state) => state.maximized);
@@ -79,13 +75,6 @@ export function Shell({
       onSelect: () => {},
     },
   ];
-
-  const modelItems: MenuItemSpec[] = MODELS.map((m) => ({
-    key: m.key,
-    label: m.label,
-    selected: m.key === model,
-    onSelect: () => setModel(m.key),
-  }));
 
   return (
     <XStack flex={1} bg="$background">
@@ -145,9 +134,17 @@ export function Shell({
             })}
           </YStack>
 
-          <XStack items="center" px="$2">
-            <Text fontSize="$2" color="$color10">
-              Local node
+          {/* The node, in the words it answers with. A bare "Local node" label
+              said the same thing whether the node was serving or absent. */}
+          <XStack items="center" gap="$2" px="$2">
+            <YStack
+              width={6}
+              height={6}
+              rounded={999}
+              bg={chat.ready ? '$green10' : '$color8'}
+            />
+            <Text fontSize="$2" color="$color10" numberOfLines={1}>
+              {chat.ready ? (chat.where?.version ?? 'Local node') : 'Offline'}
             </Text>
           </XStack>
         </YStack>
@@ -188,33 +185,98 @@ export function Shell({
 
         <YStack flex={1} minH={0}>
           <DockGroup section={section}>
-            <YStack flex={1} minH={0} items="center" justify="center" p="$6">
-              {/* The full-width control releases THIS cap. It is the whole of
-                  what "maximize" means here, so it is one value in one place —
-                  a second cap further down would make the control look broken. */}
-              <YStack
-                data-testid="body-measure"
-                width="100%"
-                maxW={maximized ? undefined : BODY_MEASURE}
-                items="center"
-              >
-                <EmptyState
-                  icon={current.icon}
-                  title={current.title}
-                  description={current.description}
-                  bullets={current.bullets}
-                  /* No primary action, deliberately. Every section body
-                     is an EmptyState standing in until the feature pages are
-                     ported, so there is nothing behind a New chat / Create
-                     agent / Add tool button — and each shipped filled, enabled
-                     and inert, which reads as a broken app rather than an
-                     unfinished one. Docs is kept because it goes somewhere.
-                     Give a section its `primary` back in the same change that
-                     gives it a destination. */
-                  secondary={{ label: 'Docs', href: docs }}
+            {section === 'chat' ? (
+              /* The dock's Panel is not a flex parent, so a child asking for
+                 flex:1 inside it takes its content's height and leaves the
+                 composer floating a third of the way down the window. Fill it
+                 by height and flex from there. */
+              <YStack height="100%" minH={0} data-testid="chat">
+                {chat.fault ? (
+                  <XStack
+                    items="center"
+                    justify="space-between"
+                    gap="$3"
+                    px="$4"
+                    py="$2"
+                    bg="$red3"
+                    borderBottomWidth={1}
+                    borderColor="$borderColor"
+                  >
+                    <Text fontSize="$2" color="$red11" flex={1}>
+                      {chat.fault}
+                    </Text>
+                    <Text
+                      fontSize="$2"
+                      color="$red11"
+                      cursor="pointer"
+                      textDecorationLine="underline"
+                      onPress={chat.repair}
+                    >
+                      Reset and pair
+                    </Text>
+                  </XStack>
+                ) : null}
+                <Chat
+                  messages={chat.messages}
+                  streaming={chat.streaming}
+                  send={chat.send}
+                  stop={chat.stop}
+                  maxWidth={maximized ? 0 : BODY_MEASURE}
+                  /* The composer takes the thread's measure. Left uncapped it
+                     runs to both window edges under a centred column, and the
+                     send control ends up in a corner of its own. */
+                  composer={{
+                    disabled: !chat.ready,
+                    width: '100%',
+                    maxW: maximized ? undefined : BODY_MEASURE,
+                    self: 'center',
+                    mb: '$4',
+                  }}
+                  empty={
+                    /* `empty` stands in for the thread, so it has to take the
+                       thread's room. Handed over bare it sizes to its content
+                       and leaves the composer stranded under it, halfway up a
+                       blank window. */
+                    <YStack flex={1} items="center" justify="center" p="$6">
+                      <EmptyState
+                        icon={current.icon}
+                        title={current.title}
+                        description={current.description}
+                        bullets={current.bullets}
+                        secondary={{ label: 'Docs', href: docs }}
+                      />
+                    </YStack>
+                  }
                 />
               </YStack>
-            </YStack>
+            ) : (
+              <YStack height="100%" minH={0} items="center" justify="center" p="$6">
+                {/* The full-width control releases THIS cap. It is the whole of
+                    what "maximize" means here, so it is one value in one place —
+                    a second cap further down would make the control look broken. */}
+                <YStack
+                  data-testid="body-measure"
+                  width="100%"
+                  maxW={maximized ? undefined : BODY_MEASURE}
+                  items="center"
+                >
+                  <EmptyState
+                    icon={current.icon}
+                    title={current.title}
+                    description={current.description}
+                    bullets={current.bullets}
+                    /* No primary action, deliberately. A section body without a
+                       feature page behind it has nothing for a New agent / Add
+                       tool button to do, and one shipped filled, enabled and
+                       inert reads as a broken app rather than an unfinished
+                       one. Docs is kept because it goes somewhere. Give a
+                       section its `primary` back in the same change that gives
+                       it a destination — as chat just got. */
+                    secondary={{ label: 'Docs', href: docs }}
+                  />
+                </YStack>
+              </YStack>
+            )}
           </DockGroup>
         </YStack>
       </YStack>
@@ -239,25 +301,16 @@ export function Shell({
             <Text fontSize="$2" color="$color10">
               Model
             </Text>
-            <DropdownMenu
-              trigger={
-                <Button
-                  size={CONTROL_SIZE}
-                  rounded={CONTROL_RADIUS}
-                  width={RIGHT_PANEL_WIDTH - 32}
-                  justify="space-between"
-                  borderWidth={1}
-                  borderColor="$borderColor"
-                  bg="transparent"
-                  iconAfter={<ChevronDown size={14} opacity={0.6} />}
-                >
-                  <Text fontSize="$2" color="$color" numberOfLines={1} flex={1}>
-                    {MODELS.find((m) => m.key === model)?.label ?? 'Model'}
-                  </Text>
-                </Button>
-              }
-              items={modelItems}
-              minWidth={RIGHT_PANEL_WIDTH - 32}
+            {/* The catalog is whatever the node reports, so there is no list
+                of model names in this file to go stale. ModelSelector is the
+                one picker every Hanzo surface uses. */}
+            <ModelSelector
+              models={chat.catalog}
+              value={chat.model}
+              onChange={chat.setModel}
+              disabled={!chat.ready}
+              size="sm"
+              placeholder={chat.ready ? 'Select model' : 'Node offline'}
             />
           </YStack>
 
