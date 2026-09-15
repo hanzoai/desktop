@@ -19,8 +19,8 @@ catalogs:
       specifier: 1.0.26
       version: 1.0.26
     '@hanzo/tabs':
-      specifier: 0.1.4
-      version: 0.1.4
+      specifier: 0.1.7
+      version: 0.1.7
     '@hanzo/ui':
       specifier: 8.27.2
       version: 8.27.2
@@ -539,7 +539,7 @@ importers:
         version: 1.0.26(react@19.2.8)
       '@hanzo/tabs':
         specifier: 'catalog:'
-        version: 0.1.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.2(00e8e0bc3cca6d25acb36f02e80a734a))(lucide-react@1.44.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.2(00e8e0bc3cca6d25acb36f02e80a734a))(lucide-react@1.44.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/ui':
         specifier: 'catalog:'
         version: 8.27.2(00e8e0bc3cca6d25acb36f02e80a734a)
@@ -1756,14 +1756,14 @@ packages:
       react:
         optional: true
 
-  '@hanzo/tabs@0.1.4':
-    resolution: {integrity: sha512-3coBM9RP7Qoy9T9MBUEn6/NmRj5ZG+GK1xk/J9tf37NGKPk1sl9FWZRlSkqPV5maFeS5LTuoncCHpEsCQ1qFUg==}
+  '@hanzo/tabs@0.1.7':
+    resolution: {integrity: sha512-s6B0Hldvieo/X4QtKZHH2HS3dLjcHCYhpQsFwmnm2d7/AF88UqOKZb6cv9UFYz3TgkLWRUNFZrg9VR6bKOlq/Q==}
     peerDependencies:
-      '@hanzo/gui': 8.3.1
-      '@hanzo/ui': 8.27.2
+      '@hanzo/gui': ^8.3.1
+      '@hanzo/ui': ^8.27.2
       lucide-react: ^1.33.0
-      react: 19.2.8
-      react-dom: 19.2.8
+      react: ^19.0.0
+      react-dom: ^19.0.0
 
   '@hanzo/ui@8.27.2':
     resolution: {integrity: sha512-/PwUB5hz6eN4fbXtAGh9NKn7Up9vS+fggh0rJhhOQ3/eX+QJXIIljV6fgpFNsaNRLATbJxqe7kOJjH3r8fE4cQ==}
@@ -12502,7 +12502,7 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  '@hanzo/tabs@0.1.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.2(00e8e0bc3cca6d25acb36f02e80a734a))(lucide-react@1.44.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzo/tabs@0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.2(00e8e0bc3cca6d25acb36f02e80a734a))(lucide-react@1.44.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/ui': 8.27.2(00e8e0bc3cca6d25acb36f02e80a734a)

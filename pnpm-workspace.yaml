@@ -180,14 +180,14 @@ minimumReleaseAgeExclude:
   - '@hanzogui/web@8.2.1'
   - '@hanzogui/z-index-stack@8.2.1'
   - '@hanzogui/lucide-icons-2@8.2.1'
-  - '@hanzo/tabs@0.1.4'
+  - '@hanzo/tabs@0.1.7'
 
 catalog:
   '@hanzo/brand': '1.4.8'
   '@hanzo/data': '1.2.4'
   '@hanzo/font': '1.9.2'
   '@hanzo/gui': '8.3.1'
-  '@hanzo/tabs': '0.1.4'
+  '@hanzo/tabs': '0.1.7'
   '@hanzo/logo': '1.0.26'
   '@hanzo/ui': '8.27.2'
   '@hanzo/usage': '0.1.7'
