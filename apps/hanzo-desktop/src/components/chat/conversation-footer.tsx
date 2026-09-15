@@ -1118,7 +1118,6 @@ export const SelectedToolChat = ({
       <div className="text-text-secondary absolute top-3 right-3 flex items-center gap-6 hover:text-white">
         <ToggleGroup
           className="bg-background inline-flex -space-x-px rounded-lg shadow-xs shadow-black/5 rtl:space-x-reverse"
-          gap={0}
           onValueChange={(value: string) => {
             if (value) {
               let text = '';

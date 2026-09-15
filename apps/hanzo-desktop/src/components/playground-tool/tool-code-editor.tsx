@@ -44,6 +44,11 @@ import {
 } from 'prism-react-editor/search';
 import React from 'react';
 
+// prism-react-editor moved its extensions onto an `EditorContext` and stopped
+// re-exporting that context from the package entry, so there is no supported way
+// left to reach the editor from a child. The render-prop below is the shape the
+// version this was written against published, and the two directives are what
+// says so: they fail the build the day the upstream type admits it again.
 const Extensions = ({ editor }: { editor: PrismEditor }) => {
   useBracketMatcher(editor);
   useHighlightBracketPairs(editor);
@@ -59,6 +64,8 @@ const Extensions = ({ editor }: { editor: PrismEditor }) => {
     filter: fuzzyFilter,
   });
 
+  // @ts-expect-error prism-react-editor: IndentGuides is typed as taking no
+  // props, and reads its editor from a context the package does not export.
   return <IndentGuides editor={editor} />;
 };
 
@@ -111,7 +118,12 @@ const ToolCodeEditor = ({
       textareaProps={{ name: name ?? 'editor' }}
       value={value}
     >
-      {(editor) => <Extensions editor={editor} />}
+      {
+        // @ts-expect-error prism-react-editor: EditorProps.children is typed
+        // ReactNode, and the render-prop form this needs is no longer in its
+        // types even though the runtime still calls it.
+        (editor: PrismEditor) => <Extensions editor={editor} />
+      }
     </Editor>
   );
 };

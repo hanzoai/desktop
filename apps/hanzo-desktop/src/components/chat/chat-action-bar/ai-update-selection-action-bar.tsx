@@ -255,7 +255,7 @@ export function AIModelSelectorBase({
         <Command
           className="[&_[cmdk-input-wrapper]]:border-divider h-full [&_[cmdk-input-wrapper]]:pb-1"
           disablePointerSelection
-          onKeyDown={(e) => {
+          onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Escape') {
               setIsDialogOpen(false);
             }

@@ -396,7 +396,7 @@ const CreateWalletDialog = ({ label }: { label: string }) => {
         </Button>
       </DialogTrigger>
       <DialogContent
-        onInteractOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e: Event) => e.preventDefault()}
         showCloseButton={false}
       >
         {view !== 'choose' && view !== 'created' && (

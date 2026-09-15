@@ -1,8 +1,13 @@
 import { Check, DownloadIcon } from 'lucide-react';
 import React, { useState } from 'react';
-import { type IProps, QRCode as ReactQRCode } from 'react-qrcode-logo';
+import { QRCode as ReactQRCode } from 'react-qrcode-logo';
 
 import hanzoLogo from '../assets/images/app-icon.png';
+
+// Taken from the component rather than imported by name. The package declares
+// its props in ./QRCode and does not re-export the type from its entry, so the
+// name this file used to import was never there to import.
+type QRCodeProps = React.ComponentProps<typeof ReactQRCode>;
 import { Button } from './button';
 import { Dialog, DialogContent } from '@hanzo/ui';
 
@@ -12,9 +17,9 @@ export function QRCode({
   id,
   ...props
 }: {
-  value: IProps['value'];
-  size: IProps['size'];
-  id?: IProps['id'];
+  value: QRCodeProps['value'];
+  size: QRCodeProps['size'];
+  id?: QRCodeProps['id'];
 } & React.HTMLAttributes<HTMLDivElement>): React.ReactElement {
   return (
     <div {...props}>
@@ -48,7 +53,7 @@ export function QrCodeModal({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  value: IProps['value'];
+  value: QRCodeProps['value'];
   onSave: (key: string) => void;
   title: React.ReactNode;
   description: React.ReactNode;

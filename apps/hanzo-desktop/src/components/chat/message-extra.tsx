@@ -97,7 +97,7 @@ function Payment({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className="w-full max-w-lg"
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: Event) => {
           e.preventDefault();
         }}
         showCloseButton={false}

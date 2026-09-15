@@ -123,7 +123,7 @@ export function AIModelSelectorBase({
         <Command
           className="[&_[cmdk-input-wrapper]]:border-divider flex size-full max-w-[400px] min-w-[340px] flex-col [&_[cmdk-input-wrapper]]:pb-1"
           disablePointerSelection
-          onKeyDown={(e) => {
+          onKeyDown={(e: React.KeyboardEvent) => {
             if (e.key === 'Escape') {
               setIsPopoverOpen(false);
             }

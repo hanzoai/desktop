@@ -85,14 +85,14 @@ catalogs:
       specifier: ^2.1.0
       version: 2.1.0
     '@rjsf/core':
-      specifier: ^6.8.0
-      version: 6.10.0
+      specifier: ^5.24.13
+      version: 5.24.13
     '@rjsf/utils':
-      specifier: ^6.8.0
-      version: 6.10.0
+      specifier: ^5.24.13
+      version: 5.24.13
     '@rjsf/validator-ajv8':
-      specifier: ^6.8.0
-      version: 6.10.0
+      specifier: ^5.24.13
+      version: 5.24.13
     '@streamdown/code':
       specifier: ^1.1.1
       version: 1.1.1
@@ -355,8 +355,8 @@ catalogs:
       specifier: ^0.8.1
       version: 0.8.1
     primereact:
-      specifier: ^11.1.0
-      version: 11.1.0
+      specifier: ^10.9.9
+      version: 10.9.9
     prism-react-editor:
       specifier: ^3.3.0
       version: 3.4.0
@@ -527,37 +527,37 @@ importers:
         version: 1.4.8(react@19.2.8)
       '@hanzo/data':
         specifier: 'catalog:'
-        version: 1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/gui':
         specifier: 'catalog:'
-        version: 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/logo':
         specifier: 'catalog:'
         version: 1.0.26(react@19.2.8)
       '@hanzo/ui':
         specifier: 'catalog:'
-        version: 8.27.2(02ea5b5ce2f041f0a4effd0a58b75bd9)
+        version: 8.27.2(00e8e0bc3cca6d25acb36f02e80a734a)
       '@hanzo/usage':
         specifier: 'catalog:'
-        version: 0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/voice':
         specifier: 'catalog:'
         version: 0.1.8(react@19.2.8)
       '@hanzogui/config':
         specifier: 'catalog:'
-        version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
+        version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
       '@hanzogui/core':
         specifier: 'catalog:'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/lucide-icons-2':
         specifier: 'catalog:'
-        version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/next-theme':
         specifier: 'catalog:'
         version: 8.3.1(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.63.0)(@types/node@26.4.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/react-native-svg':
         specifier: 'catalog:'
-        version: 8.3.1(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))
+        version: 8.3.1(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))
       '@hanzogui/react-native-web-lite':
         specifier: 'catalog:'
         version: 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -596,13 +596,13 @@ importers:
         version: 2.1.0
       '@rjsf/core':
         specifier: 'catalog:'
-        version: 6.10.0(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@rjsf/utils@6.10.0(react@19.2.8))(react@19.2.8)
+        version: 5.24.13(@rjsf/utils@5.24.13(react@19.2.8))(react@19.2.8)
       '@rjsf/utils':
         specifier: 'catalog:'
-        version: 6.10.0(react@19.2.8)
+        version: 5.24.13(react@19.2.8)
       '@rjsf/validator-ajv8':
         specifier: 'catalog:'
-        version: 6.10.0(@rjsf/utils@6.10.0(react@19.2.8))
+        version: 5.24.13(@rjsf/utils@5.24.13(react@19.2.8))
       '@streamdown/code':
         specifier: 'catalog:'
         version: 1.1.1(react@19.2.8)
@@ -719,7 +719,7 @@ importers:
         version: 11.17.2
       primereact:
         specifier: 'catalog:'
-        version: 11.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 10.9.9(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       prism-react-editor:
         specifier: 'catalog:'
         version: 3.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -746,7 +746,7 @@ importers:
         version: 5.3.3(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-i18next:
         specifier: 'catalog:'
-        version: 17.0.13(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(i18next@26.4.2(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
+        version: 17.0.13(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(i18next@26.4.2(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2)
       react-intersection-observer:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1693,14 +1693,6 @@ packages:
     resolution: {integrity: sha512-eXoD1Q3giJ3TEx2+rtCub/xZX5j4AflWixt3TXsf3dcYrWuChxSVhzRQdDWyibXzPPtn+msCtLX11IvvcHHUzw==}
     hasBin: true
 
-  '@hanzo/event@0.3.36':
-    resolution: {integrity: sha512-cOUlLMVRCqCG/i00Ho7PQkF4EIOkrjtRmd/RDDuPQIK1VhuPSzCHSyqVbM60WzF2J83s1952QVmOGHk2rTn0tQ==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-
   '@hanzo/event@0.3.37':
     resolution: {integrity: sha512-4IjzMBhtuGjtsQjC/PiN+CjMSCgkpyR5lZ+FgQ8gKUJdFkfUxwtmaFv1xFvV9f4raVbNreuY/40xz0Ng9xX7Ww==}
     peerDependencies:
@@ -2200,30 +2192,13 @@ packages:
     peerDependencies:
       react: '>=19'
 
-  '@hanzogui/react-native-use-responder-events@8.2.1':
-    resolution: {integrity: sha512-hHts5aKoxOXAUJuRus25GF2pbs4BA0iGX67P9bkLRQHw2fNlAl9HUjarYOXOS9sxbnEJMMz18AaLduhhp0qZHQ==}
-    peerDependencies:
-      react: '>=19'
-
   '@hanzogui/react-native-use-responder-events@8.3.1':
     resolution: {integrity: sha512-ECd5u7hdpOHoT7dWC5DsZc3Yj2gxwWqcZoOrXF5iI4ZJiKakp/PyM8tzhDS6ijJi4eXDoxfwUWvtc+A1GqMGfg==}
     peerDependencies:
       react: '>=19'
 
-  '@hanzogui/react-native-web-internals@8.2.1':
-    resolution: {integrity: sha512-YGGJlsN2ZIa5t/oZs7MR3jGMnwkUMdMOa4SlRuzupkzaqKuGl3GBVQExDSGc33lfOF2WSyvAltdh1mOaJKgQHw==}
-    peerDependencies:
-      react: '>=19'
-      react-dom: '*'
-
   '@hanzogui/react-native-web-internals@8.3.1':
     resolution: {integrity: sha512-lKHdX8zRvKT01CPlD7peRjcQsfONBxZHOCN4QHVfzWWHK3JWyY3+ilyqMjngtEsuVGidK+rYZBNhCNdA80oLSA==}
-    peerDependencies:
-      react: '>=19'
-      react-dom: '*'
-
-  '@hanzogui/react-native-web-lite@8.2.1':
-    resolution: {integrity: sha512-cAiQum5IPo9VltaMDPIsa1C97VD7q8NkPD3pukeAXWt2a+Z+FO34/OW/0KuD0fQ1k1yI+EJhV10e/nT17QHXjA==}
     peerDependencies:
       react: '>=19'
       react-dom: '*'
@@ -3527,44 +3502,6 @@ packages:
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
 
-  '@primereact/core@11.1.0':
-    resolution: {integrity: sha512-Z2J2DV22ml5UnlzO3gd4wCGBqN0GeNfzgrozF6RqNs2Udu7H6pZQepn1gWjBqt1APKwT9vSIvl8UDgORuAa08A==}
-    peerDependencies:
-      react: '>=19.0.0'
-
-  '@primereact/headless@11.1.0':
-    resolution: {integrity: sha512-ugegpnog1+MXJWuv/kAjICP2IyNeyaWdb+kIf8ISGpRX/GTAKtM7Rn9UyVOOo+/68YjhAFPFtqL7DRrE5fRiLg==}
-
-  '@primereact/hooks@11.1.0':
-    resolution: {integrity: sha512-+VOuOFuv56IhjD08e/zkNHmJf0apwxW7LMQxji7YK2DnqhcwW02mq0I/Tgn4VvscGlMO9v+Hhtf14Bq0Zw8oIA==}
-    peerDependencies:
-      react: '>=19.0.0'
-
-  '@primereact/types@11.1.0':
-    resolution: {integrity: sha512-N//v6G15SajKJSmqIsQALNPlsQ6AP4A6Uxrfwopnf2hNX3l2vdfGnRDznvG8xF1+NluRljnNtAx47lV+SMPhJQ==}
-    peerDependencies:
-      '@primeuix/motion': ^1.0.0
-      '@primeuix/styled': ^1.0.0
-
-  '@primeui/license-manager@1.1.0':
-    resolution: {integrity: sha512-irjhOGs6Xjwh1JhMyXtdUsYCsve6kBySZzDUhS/mWxsjwQm/wSN7oulyP/f5huJKdhZSzaN6rVApwpp4nDWE1g==}
-
-  '@primeuix/locale@0.1.0':
-    resolution: {integrity: sha512-/qLGiwQ/YN83GPSygKEI3cwgZ+rb0R0rNNtQrOGGaHIaG3zpkGS3QbK/qtDUi0leC69jJgY39GDX+gCeUXPKdg==}
-    engines: {node: '>=12.11.0'}
-
-  '@primeuix/motion@1.0.0':
-    resolution: {integrity: sha512-rqpFRKmUVp9BI3YQKdok0rLUwzYShXzuuxy72Kq74xYRV14eR+4+XrIXOdyVs7j7CYV0ajYowiRpJCrVgdrq6A==}
-    engines: {node: '>=12.11.0'}
-
-  '@primeuix/styled@1.0.0':
-    resolution: {integrity: sha512-6SXoeQWwKswSqTv1ygaXNfY7otHo6Rb9mxbKJK5WF8adWlZ6CtwmlNfIP+p8cH/zGccsei/5Bu7IetXlMoZGjQ==}
-    engines: {node: '>=12.11.0'}
-
-  '@primeuix/utils@0.8.2':
-    resolution: {integrity: sha512-4Cz5HY1XHqJwhq1ieml6l5IDkWt41Amdw/t2rAQxNXv7WwAhgb8QrnjJM6scW9h1D0PjQgm9Z3RgNlWCU+WZng==}
-    engines: {node: '>=12.11.0'}
-
   '@promptbook/utils@0.69.5':
     resolution: {integrity: sha512-xm5Ti/Hp3o4xHrsK9Yy3MS6KbDxYbq485hDsFvxqaNA7equHLPdo8H8faTitTeb14QCDfLW4iwCxdVYu5sn6YQ==}
 
@@ -3956,24 +3893,24 @@ packages:
       react-redux:
         optional: true
 
-  '@rjsf/core@6.10.0':
-    resolution: {integrity: sha512-fdyaPnhIe+NzTFZcYcYcp/QqVcAJhhloIsU6vN+hp/IhiGJrzgB9REMVVUlKYNzP37xZ/BsEq7u7RC24KKdLAQ==}
-    engines: {node: '>=20'}
+  '@rjsf/core@5.24.13':
+    resolution: {integrity: sha512-ONTr14s7LFIjx2VRFLuOpagL76sM/HPy6/OhdBfq6UukINmTIs6+aFN0GgcR0aXQHFDXQ7f/fel0o/SO05Htdg==}
+    engines: {node: '>=14'}
     peerDependencies:
-      '@rjsf/utils': ^6.10.0
-      react: '>=18'
+      '@rjsf/utils': ^5.24.x
+      react: ^16.14.0 || >=17
 
-  '@rjsf/utils@6.10.0':
-    resolution: {integrity: sha512-GQa+dr28FgGOaRRhIOX3QEv1GkzoklrZYf4f1bTEDNuAWWWyO1oznw62ryZBj4FI/XKPaE/VyJQlssOSbD5KiQ==}
-    engines: {node: '>=20'}
+  '@rjsf/utils@5.24.13':
+    resolution: {integrity: sha512-rNF8tDxIwTtXzz5O/U23QU73nlhgQNYJ+Sv5BAwQOIyhIE2Z3S5tUiSVMwZHt0julkv/Ryfwi+qsD4FiE5rOuw==}
+    engines: {node: '>=14'}
     peerDependencies:
-      react: '>=18'
+      react: ^16.14.0 || >=17
 
-  '@rjsf/validator-ajv8@6.10.0':
-    resolution: {integrity: sha512-B/cNuPIQNBiJo4ByoJUXwGylu51JA5Jhkj4gsZ794dl85xxfcQ43HKfR1Lg55SoCUOzHc0Sf7zI/0q3R3sKEEQ==}
-    engines: {node: '>=20'}
+  '@rjsf/validator-ajv8@5.24.13':
+    resolution: {integrity: sha512-oWHP7YK581M8I5cF1t+UXFavnv+bhcqjtL1a7MG/Kaffi0EwhgcYjODrD8SsnrhncsEYMqSECr4ZOEoirnEUWw==}
+    engines: {node: '>=14'}
     peerDependencies:
-      '@rjsf/utils': ^6.10.0
+      '@rjsf/utils': ^5.24.x
 
   '@rolldown/binding-android-arm-eabi@1.2.8':
     resolution: {integrity: sha512-tN5aztYkKCte4i5SIrrz5yK/HMjEuCqCSCJa418jOV8tZ1cBY3YF2otxB1ktPxzsLA1BeTqwapK0bfjxNvHJVw==}
@@ -5135,6 +5072,11 @@ packages:
   '@types/react-syntax-highlighter@15.5.13':
     resolution: {integrity: sha512-uLGJ87j6Sz8UaBAooU0T6lWJ0dBmjZgN1PZTrj05TNql2/XpC6+4HhMT5syIdFUUt+FASfCeLLv4kBygNU+8qA==}
 
+  '@types/react-transition-group@4.4.12':
+    resolution: {integrity: sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==}
+    peerDependencies:
+      '@types/react': '*'
+
   '@types/react@19.1.17':
     resolution: {integrity: sha512-Qec1E3mhALmaspIrhWt9jkQMNdw6bReVu64mjvhbhq2NFPftLPVr+l1SZgmw/66WwBNpDh7ao5AT6gF5v41PFA==}
 
@@ -5669,9 +5611,6 @@ packages:
   '@wdio/xvfb@9.31.2':
     resolution: {integrity: sha512-48MqdcrvdC/Jn2YPhW6hjGLzcQqOEt1Q6KELR/TWz3vIJoZwzTngGAdT06voUnZS+PUEcd/vKSo4a6zxQ/mm7g==}
     engines: {node: '>=18.20.0'}
-
-  '@x0k/json-schema-merge@1.0.5':
-    resolution: {integrity: sha512-bPvwYpTkhBOXkvbC8KMNhkgzv+gWu6Yx6FVho3mL+vMf8Fy3gdn9YrlrBrXphznvOHhB85BudH/ywtVRZ/HG3A==}
 
   '@xhmikosr/archive-type@8.1.0':
     resolution: {integrity: sha512-EXOjEbnZFE5c/nFMf4FOrEURVanzHpnkPYmnmr78u02/8hAhE0FMq8p9TK1IM0/bFr5VcyBUY0gfLm8f7dKy+Q==}
@@ -6368,6 +6307,12 @@ packages:
     resolution: {integrity: sha512-6FqVXeETqWPoGcfzrXb37E50NP0LXT8kAMu5ooZayhWWdgEY4lBEEcbQNXtkuKQsGduxiIcI4gOTsxTmuq/bSg==}
     engines: {node: '>= 14'}
 
+  compute-gcd@1.2.1:
+    resolution: {integrity: sha512-TwMbxBNz0l71+8Sc4czv13h4kEqnchV9igQZBi6QUaz09dnz13juGnnaWWJTRsP3brxOoxeB4SA2WELLw1hCtg==}
+
+  compute-lcm@1.1.2:
+    resolution: {integrity: sha512-OFNPdQAXnQhDSKioX8/XYT6sdUlXwpeMjfd6ApxMJfyZ4GxmLR1xvMERctlYhlHwIiz6CSpBc2+qYKjHGZw4TQ==}
+
   concat-stream@1.6.2:
     resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
     engines: {'0': node >= 0.8}
@@ -6893,6 +6838,9 @@ packages:
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
 
+  dom-helpers@5.2.1:
+    resolution: {integrity: sha512-nRCa7CK3VTrM2NmGkIy4cbK7IZlgBE/PYMn55rrXefr5xXDP0LdtfPnblFDoVdcAfslJ7or6iqAUnx0CCGIWQA==}
+
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
 
@@ -7334,10 +7282,6 @@ packages:
   fast-deep-equal@3.1.3:
     resolution: {integrity: sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==}
 
-  fast-equals@6.0.3:
-    resolution: {integrity: sha512-IECu4C0fFZFoUC2cA2rDaNUuVIfWIZMwh3tY+ng924vOuD9OaUFFrcIrVwCKbV7TJDkGmrHfhwZ7R0AnHfVhyw==}
-    engines: {node: '>=6.0.0'}
-
   fast-fifo@1.3.2:
     resolution: {integrity: sha512-/d9sfos4yxzpwkDkuN7k2SqFKtYNmCTzgfEpz82x34IM9/zc8KGxQoXg1liNC/izpRM/MBdt44Nmx41ZWqk+FQ==}
 
@@ -7349,9 +7293,6 @@ packages:
 
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
-
-  fast-uri@4.1.3:
-    resolution: {integrity: sha512-7+72G6vLt7jjNas8SmSATx2qeyRIjxeqO3i4IkmDTxlqYZRKANhOe1bnovcp4WZmvsYrp60WyqPyHqgRiX0yXw==}
 
   fast-uri@4.1.4:
     resolution: {integrity: sha512-dODXrIxlS9JSdgAnhIUKOosKV1oMtU2VtVw87QRaHzyl5jxO290Ii5tEZfCfzfWNHi3jKWwBSdQj0qIyshdZdQ==}
@@ -8417,6 +8358,13 @@ packages:
     resolution: {integrity: sha512-fi0NG4bPjCHunUJffmLd0gxssIgkNmArMvis4iNah6Owg1MCJjWhEcDLmsK6iGkJq3tHwbDkTlce70/tmXN4cQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
+  json-schema-compare@0.2.2:
+    resolution: {integrity: sha512-c4WYmDKyJXhs7WWvAWm3uIYnfyWFoIp+JEoX34rctVvEkMYCPGhXtvmFFXiffBbxfZsvQ0RNnV5H7GvDF5HCqQ==}
+
+  json-schema-merge-allof@0.8.1:
+    resolution: {integrity: sha512-CTUKmIlPJbsWfzRRnOXz+0MjIqvnleIXwFTzz+t9T86HnYX/Rozria6ZVGLktAU9e+NygNljveP+yxqtQp/Q4w==}
+    engines: {node: '>=12.0.0'}
+
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
@@ -8829,22 +8777,13 @@ packages:
   markdown-table@3.0.4:
     resolution: {integrity: sha512-wiYz4+JrLyb/DqW2hkFJxP7Vd7JuTDm77fvbM8VfEQdmSMqcImWeeRbHwZjBjIFki/VaMK2BhFi7oUUZeM5bqw==}
 
-  markdown-to-jsx@9.10.2:
-    resolution: {integrity: sha512-iR9GadlIox0q1uXnpqdxpF02Vb1WDmZ/QIXWjBR5htzjUEEhyIWbM65LuVKavdwJaVo4q95C/F2OOyNjWe91ig==}
-    engines: {node: '>= 18'}
+  markdown-to-jsx@7.7.17:
+    resolution: {integrity: sha512-7mG/1feQ0TX5I7YyMZVDgCC/y2I3CiEhIRQIhyov9nGBP5eoVrOXXHuL5ZP8GRfxVZKRiXWJgwXkb9It+nQZfQ==}
+    engines: {node: '>= 10'}
     peerDependencies:
-      react: '>= 16.0.0'
-      react-native: '*'
-      solid-js: '>=1.0.0'
-      vue: '>=3.0.0'
+      react: '>= 0.14.0'
     peerDependenciesMeta:
       react:
-        optional: true
-      react-native:
-        optional: true
-      solid-js:
-        optional: true
-      vue:
         optional: true
 
   marked@16.4.2:
@@ -9736,11 +9675,16 @@ packages:
     resolution: {integrity: sha512-gjVS5hOP+M3wMm5nmNOucbIrqudzs9v/57bWRHQWLYklXqoXKrVfYW2W9+glfGsqtPgpiz5WwyEEB+ksXIx3gQ==}
     engines: {node: '>=18'}
 
-  primereact@11.1.0:
-    resolution: {integrity: sha512-0/q9fAkF2ULM+2XImBbPpcOTfYatGpqzpCXm9N26fmA2EZxKQyKbQXfJC1mx0dozoFnvllyCwvSYSk59fhIwLw==}
+  primereact@10.9.9:
+    resolution: {integrity: sha512-cM2mI1+usdIhQQQZre85Lv2GaiYrKaRlTUT+xXQSWwhPmel+YwhljNQ210mpjuY30aF3eQg6hU5Yl0VwJp0PWQ==}
+    engines: {node: '>=14.0.0'}
     peerDependencies:
-      react: '>=19.0.0'
-      react-dom: '>=19.0.0'
+      '@types/react': ^17.0.0 || ^18.0.0 || ^19.0.0
+      react: ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   prism-react-editor@3.4.0:
     resolution: {integrity: sha512-Tx1LPwjh8xipdPI8WOUUj23VhkAHBuDI2tzFyZggxbODVpfJTbL3qGP3+QuUWA2QuzLSPt6+XZ8s5Whawj4w9A==}
@@ -10059,6 +10003,12 @@ packages:
     engines: {node: '>= 16.20.2'}
     peerDependencies:
       react: '>= 0.14.0'
+
+  react-transition-group@4.4.5:
+    resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
+    peerDependencies:
+      react: '>=16.6.0'
+      react-dom: '>=16.6.0'
 
   react-use-websocket@4.13.0:
     resolution: {integrity: sha512-anMuVoV//g2N76Wxqvqjjo1X48r9Np3y1/gMl7arX84tAPXdy5R7sB5lO5hvCzQRYjqXwV8XMAiEBOUbyrZFrw==}
@@ -11244,6 +11194,21 @@ packages:
   validate-npm-package-license@3.0.4:
     resolution: {integrity: sha512-DpKm2Ui/xN7/HQKCtpZxoRWBhZ9Z0kqtygG8XCgNQ8ZlDnxuQmWhj566j8fN4Cu3/JmbhsDo7fcAJq4s9h27Ew==}
 
+  validate.io-array@1.0.6:
+    resolution: {integrity: sha512-DeOy7CnPEziggrOO5CZhVKJw6S3Yi7e9e65R1Nl/RTN1vTQKnzjfvks0/8kQ40FP/dsjRAOd4hxmJ7uLa6vxkg==}
+
+  validate.io-function@1.0.2:
+    resolution: {integrity: sha512-LlFybRJEriSuBnUhQyG5bwglhh50EpTL2ul23MPIuR1odjO7XaMLFV8vHGwp7AZciFxtYOeiSCT5st+XSPONiQ==}
+
+  validate.io-integer-array@1.0.0:
+    resolution: {integrity: sha512-mTrMk/1ytQHtCY0oNO3dztafHYyGU88KL+jRxWuzfOmQb+4qqnWmI+gykvGp8usKZOM0H7keJHEbRaFiYA0VrA==}
+
+  validate.io-integer@1.0.5:
+    resolution: {integrity: sha512-22izsYSLojN/P6bppBqhgUDjCkr5RY2jd+N2a3DCAUey8ydvrZ/OkGvFPR7qfOpwR2LC5p4Ngzxz36g5Vgr/hQ==}
+
+  validate.io-number@1.0.3:
+    resolution: {integrity: sha512-kRAyotcbNaSYoDnXvb4MHg/0a1egJdLwS6oJ38TJY7aw9n93Fl/3blIXdyYvPOp55CNxywooG/3BcrwNrBpcSg==}
+
   vaul@1.1.2:
     resolution: {integrity: sha512-ZFkClGpWyI2WUQjdLJ/BaGuV6AVQiJ3uELGk3OYtP+B6yCO7Cmn9vPFXVJkRaGkOJu3m8bQMgtyzNHixULceQA==}
     peerDependencies:
@@ -12387,11 +12352,11 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  '@floating-ui/react-native@0.10.10(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@floating-ui/react-native@0.10.10(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@floating-ui/core': 1.8.0
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
 
   '@floating-ui/utils@0.2.12': {}
 
@@ -12406,10 +12371,10 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/data@1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzo/data@1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/lucide-icons-2': 8.2.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/lucide-icons-2': 8.2.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
     transitivePeerDependencies:
       - react-dom
@@ -12418,12 +12383,6 @@ snapshots:
   '@hanzo/design@0.5.21': {}
 
   '@hanzo/design@0.5.24': {}
-
-  '@hanzo/event@0.3.36(react@19.2.8)':
-    dependencies:
-      '@hanzo/events': 0.2.2
-    optionalDependencies:
-      react: 19.2.8
 
   '@hanzo/event@0.3.37(react@19.2.8)':
     dependencies:
@@ -12437,7 +12396,7 @@ snapshots:
     dependencies:
       next: 16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.63.0)(@types/node@26.4.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
-  '@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/accordion': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/adapt': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12452,10 +12411,10 @@ snapshots:
       '@hanzogui/component-helpers': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/compose-refs': 8.3.1(react@19.2.8)
       '@hanzogui/constants': 8.3.1(react@19.2.8)
-      '@hanzogui/context-menu': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/context-menu': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/create-context': 8.3.1(react@19.2.8)
-      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/dialog': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/element': 8.3.1(react@19.2.8)
       '@hanzogui/elements': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12472,16 +12431,16 @@ snapshots:
       '@hanzogui/label': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/linear-gradient': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/list-item': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/menu': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/menu': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/polyfill-dev': 8.3.1
-      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/portal': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/progress': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/radio-group': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/react-native-media-driver': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/scroll-view': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/select': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/select': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/separator': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/shapes': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/sheet': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12496,7 +12455,7 @@ snapshots:
       '@hanzogui/theme': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/toast': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/toggle-group': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/tooltip': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/tooltip': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-controllable-state': 8.3.1(react@19.2.8)
       '@hanzogui/use-debounce': 8.3.1(react@19.2.8)
       '@hanzogui/use-force-update': 8.3.1(react@19.2.8)
@@ -12519,28 +12478,28 @@ snapshots:
 
   '@hanzo/observe@0.1.8(react@19.2.8)':
     dependencies:
-      '@hanzo/event': 0.3.36(react@19.2.8)
+      '@hanzo/event': 0.3.37(react@19.2.8)
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/products@0.2.6(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzo/products@0.2.6(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     optionalDependencies:
-      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  '@hanzo/ui@8.27.2(02ea5b5ce2f041f0a4effd0a58b75bd9)':
+  '@hanzo/ui@8.27.2(00e8e0bc3cca6d25acb36f02e80a734a)':
     dependencies:
       '@hanzo/appearance': 0.2.2(react@19.2.8)
       '@hanzo/brand': 1.4.8(react@19.2.8)
-      '@hanzo/data': 1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/data': 1.2.4(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/design': 0.5.24
       '@hanzo/font': 1.9.2(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.63.0)(@types/node@26.4.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))
-      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/logo': 1.0.26(react@19.2.8)
-      '@hanzo/products': 0.2.6(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/products': 0.2.6(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/animations-css': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/config': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
-      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzogui/config': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
+      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/telemetry': 8.3.1(react@19.2.8)
       '@hanzogui/toast': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@icons-pack/react-simple-icons': 13.15.1(react@19.2.8)
@@ -12549,7 +12508,7 @@ snapshots:
       react-native-svg: react-native-svg-web@1.0.9(prop-types@15.8.1)(react-native-web@0.21.2(encoding@0.1.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react-native-web: 0.21.2(encoding@0.1.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     optionalDependencies:
-      '@hanzo/usage': 0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/usage': 0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/next-theme': 8.3.1(next@16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.63.0)(@types/node@26.4.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       next: 16.3.4(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.63.0)(@types/node@26.4.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-hook-form: 7.87.0(react@19.2.8)
@@ -12557,10 +12516,10 @@ snapshots:
       - encoding
       - prop-types
 
-  '@hanzo/usage@0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzo/usage@0.1.7(@hanzo/gui@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     optionalDependencies:
-      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/gui': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/lucide-icons-2': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
   '@hanzo/voice@0.1.8(react@19.2.8)':
@@ -12673,14 +12632,14 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/animations-reanimated@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/animations-reanimated@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/animation-helpers': 8.3.1
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-presence': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@react-native/normalize-colors': 0.83.2
       react: 19.2.8
-      react-native-reanimated: 4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
+      react-native-reanimated: 4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8)
     transitivePeerDependencies:
       - react-dom
 
@@ -12819,12 +12778,12 @@ snapshots:
       - react
       - react-dom
 
-  '@hanzogui/config@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/config@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/animations-css': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/animations-motion': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/animations-react-native': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/animations-reanimated': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
+      '@hanzogui/animations-reanimated': 8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8))(react@19.2.8)
       '@hanzogui/colors': 8.3.1
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/font-zen': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12847,12 +12806,12 @@ snapshots:
     dependencies:
       react: 19.2.8
 
-  '@hanzogui/context-menu@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/context-menu@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/polyfill-dev': 8.3.1
-      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-callback-ref': 8.3.1(react@19.2.8)
       '@hanzogui/use-controllable-state': 8.3.1(react@19.2.8)
       '@hanzogui/web': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12891,7 +12850,7 @@ snapshots:
     dependencies:
       react: 19.2.8
 
-  '@hanzogui/create-menu@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/create-menu@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/animate': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/animate-presence': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12903,8 +12862,8 @@ snapshots:
       '@hanzogui/get-token': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/image': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/native': 8.3.1(react@19.2.8)
-      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/portal': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/remove-scroll': 8.3.1(react@19.2.8)
       '@hanzogui/roving-focus': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12976,10 +12935,10 @@ snapshots:
 
   '@hanzogui/fake-react-native@8.3.1': {}
 
-  '@hanzogui/floating@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/floating@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@floating-ui/react-dom': 2.1.6(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@floating-ui/react-native': 0.10.10(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@floating-ui/react-native': 0.10.10(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-event': 8.3.1(react@19.2.8)
       react: 19.2.8
     transitivePeerDependencies:
@@ -13170,32 +13129,32 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/lucide-icons-2@8.2.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/lucide-icons-2@8.2.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/core': 8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/helpers-icon': 8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
-      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/lucide-icons-2@8.3.1(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/helpers-icon': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react: 19.2.8
-      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/menu@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/menu@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/create-menu': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/helpers': 8.3.1(react@19.2.8)
       '@hanzogui/polyfill-dev': 8.3.1
-      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/scroll-view': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-controllable-state': 8.3.1(react@19.2.8)
       '@hanzogui/web': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -13229,7 +13188,7 @@ snapshots:
 
   '@hanzogui/polyfill-dev@8.3.1': {}
 
-  '@hanzogui/popover@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/popover@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/adapt': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/animate': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -13238,11 +13197,11 @@ snapshots:
       '@hanzogui/constants': 8.3.1(react@19.2.8)
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/dismissable': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/focus-scope': 8.3.1(react@19.2.8)
       '@hanzogui/helpers': 8.3.1(react@19.2.8)
       '@hanzogui/polyfill-dev': 8.3.1
-      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/portal': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/remove-scroll': 8.3.1(react@19.2.8)
       '@hanzogui/scroll-view': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -13257,12 +13216,12 @@ snapshots:
       - react-dom
       - react-native
 
-  '@hanzogui/popper@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/popper@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/compose-refs': 8.3.1(react@19.2.8)
       '@hanzogui/constants': 8.3.1(react@19.2.8)
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/get-token': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/stacks': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/start-transition': 8.3.1(react@19.2.8)
@@ -13348,9 +13307,9 @@ snapshots:
       - react
       - react-dom
 
-  '@hanzogui/react-native-svg@8.3.1(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))':
+  '@hanzogui/react-native-svg@8.3.1(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))':
     optionalDependencies:
-      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      react-native-svg: 15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
 
   '@hanzogui/react-native-use-pressable@8.2.1(react@19.2.8)':
     dependencies:
@@ -13360,24 +13319,9 @@ snapshots:
     dependencies:
       react: 19.2.8
 
-  '@hanzogui/react-native-use-responder-events@8.2.1(react@19.2.8)':
-    dependencies:
-      react: 19.2.8
-
   '@hanzogui/react-native-use-responder-events@8.3.1(react@19.2.8)':
     dependencies:
       react: 19.2.8
-
-  '@hanzogui/react-native-web-internals@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      '@hanzogui/normalize-css-color': 8.2.1
-      '@hanzogui/react-native-use-pressable': 8.2.1(react@19.2.8)
-      '@hanzogui/react-native-use-responder-events': 8.2.1(react@19.2.8)
-      '@hanzogui/simple-hash': 8.2.1
-      '@hanzogui/use-element-layout': 8.2.1(react@19.2.8)
-      '@hanzogui/web': 8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
 
   '@hanzogui/react-native-web-internals@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
@@ -13387,18 +13331,6 @@ snapshots:
       '@hanzogui/simple-hash': 8.3.1
       '@hanzogui/use-element-layout': 8.3.1(react@19.2.8)
       '@hanzogui/web': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-
-  '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      '@hanzogui/normalize-css-color': 8.2.1
-      '@hanzogui/react-native-use-pressable': 8.2.1(react@19.2.8)
-      '@hanzogui/react-native-use-responder-events': 8.2.1(react@19.2.8)
-      '@hanzogui/react-native-web-internals': 8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/web': 8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      invariant: 2.2.4
-      memoize-one: 6.0.0
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
@@ -13442,7 +13374,7 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/select@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/select@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/adapt': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/animate-presence': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -13451,7 +13383,7 @@ snapshots:
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/create-context': 8.3.1(react@19.2.8)
       '@hanzogui/dismissable': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/focus-scope': 8.3.1(react@19.2.8)
       '@hanzogui/focusable': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/get-token': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -13730,17 +13662,17 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
-  '@hanzogui/tooltip@8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@hanzogui/tooltip@8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzogui/compose-refs': 8.3.1(react@19.2.8)
       '@hanzogui/core': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/create-context': 8.3.1(react@19.2.8)
-      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/floating': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/get-token': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/helpers': 8.3.1(react@19.2.8)
       '@hanzogui/polyfill-dev': 8.3.1
-      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popover': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@hanzogui/popper': 8.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/stacks': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/text': 8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzogui/use-controllable-state': 8.3.1(react@19.2.8)
@@ -14173,7 +14105,7 @@ snapshots:
 
   '@jest/pattern@30.4.0':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       jest-regex-util: 30.4.0
 
   '@jest/schemas@29.6.3':
@@ -14189,7 +14121,7 @@ snapshots:
       '@jest/schemas': 29.6.3
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -14199,7 +14131,7 @@ snapshots:
       '@jest/schemas': 30.4.1
       '@types/istanbul-lib-coverage': 2.0.6
       '@types/istanbul-reports': 3.0.4
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       '@types/yargs': 17.0.35
       chalk: 4.1.2
 
@@ -14754,54 +14686,6 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@primereact/core@11.1.0(react@19.2.8)':
-    dependencies:
-      '@primereact/hooks': 11.1.0(react@19.2.8)
-      '@primereact/types': 11.1.0(@primeuix/motion@1.0.0)(@primeuix/styled@1.0.0)
-      '@primeui/license-manager': 1.1.0
-      '@primeuix/locale': 0.1.0
-      '@primeuix/motion': 1.0.0
-      '@primeuix/styled': 1.0.0
-      '@primeuix/utils': 0.8.2
-      react: 19.2.8
-
-  '@primereact/headless@11.1.0(react@19.2.8)':
-    dependencies:
-      '@primereact/core': 11.1.0(react@19.2.8)
-      '@primereact/hooks': 11.1.0(react@19.2.8)
-      '@primeui/license-manager': 1.1.0
-      '@primeuix/styled': 1.0.0
-      '@primeuix/utils': 0.8.2
-    transitivePeerDependencies:
-      - react
-
-  '@primereact/hooks@11.1.0(react@19.2.8)':
-    dependencies:
-      '@primeuix/utils': 0.8.2
-      react: 19.2.8
-
-  '@primereact/types@11.1.0(@primeuix/motion@1.0.0)(@primeuix/styled@1.0.0)':
-    dependencies:
-      '@primeuix/motion': 1.0.0
-      '@primeuix/styled': 1.0.0
-
-  '@primeui/license-manager@1.1.0': {}
-
-  '@primeuix/locale@0.1.0':
-    dependencies:
-      '@primeuix/utils': 0.8.2
-
-  '@primeuix/motion@1.0.0':
-    dependencies:
-      '@primeuix/utils': 0.8.2
-
-  '@primeuix/styled@1.0.0':
-    dependencies:
-      '@primeui/license-manager': 1.1.0
-      '@primeuix/utils': 0.8.2
-
-  '@primeuix/utils@0.8.2': {}
-
   '@promptbook/utils@0.69.5':
     dependencies:
       spacetrim: 0.11.59
@@ -15199,30 +15083,31 @@ snapshots:
       react: 19.2.8
       react-redux: 9.3.0(@types/react@19.2.18)(react@19.2.8)(redux@5.0.1)
 
-  '@rjsf/core@6.10.0(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@rjsf/utils@6.10.0(react@19.2.8))(react@19.2.8)':
+  '@rjsf/core@5.24.13(@rjsf/utils@5.24.13(react@19.2.8))(react@19.2.8)':
     dependencies:
-      '@rjsf/utils': 6.10.0(react@19.2.8)
-      markdown-to-jsx: 9.10.2(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@rjsf/utils': 5.24.13(react@19.2.8)
+      lodash: 4.18.1
+      lodash-es: 4.18.1
+      markdown-to-jsx: 7.7.17(react@19.2.8)
+      prop-types: 15.8.1
       react: 19.2.8
-    transitivePeerDependencies:
-      - react-native
-      - solid-js
-      - vue
 
-  '@rjsf/utils@6.10.0(react@19.2.8)':
+  '@rjsf/utils@5.24.13(react@19.2.8)':
     dependencies:
-      '@x0k/json-schema-merge': 1.0.5
-      fast-equals: 6.0.3
-      fast-uri: 4.1.4
+      json-schema-merge-allof: 0.8.1
       jsonpointer: 5.0.1
+      lodash: 4.18.1
+      lodash-es: 4.18.1
       react: 19.2.8
       react-is: 18.3.1
 
-  '@rjsf/validator-ajv8@6.10.0(@rjsf/utils@6.10.0(react@19.2.8))':
+  '@rjsf/validator-ajv8@5.24.13(@rjsf/utils@5.24.13(react@19.2.8))':
     dependencies:
-      '@rjsf/utils': 6.10.0(react@19.2.8)
+      '@rjsf/utils': 5.24.13(react@19.2.8)
       ajv: 8.20.0
       ajv-formats: 2.1.1(ajv@8.20.0)
+      lodash: 4.18.1
+      lodash-es: 4.18.1
 
   '@rolldown/binding-android-arm-eabi@1.2.8':
     optional: true
@@ -16222,6 +16107,10 @@ snapshots:
     dependencies:
       '@types/react': 19.1.17
 
+  '@types/react-transition-group@4.4.12(@types/react@19.2.18)':
+    dependencies:
+      '@types/react': 19.2.18
+
   '@types/react@19.1.17':
     dependencies:
       csstype: 3.2.3
@@ -16256,7 +16145,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -16830,10 +16719,6 @@ snapshots:
     dependencies:
       '@wdio/logger': 9.29.1
 
-  '@x0k/json-schema-merge@1.0.5':
-    dependencies:
-      '@types/json-schema': 7.0.15
-
   '@xhmikosr/archive-type@8.1.0(supports-color@8.1.1)':
     dependencies:
       file-type: 21.3.4(supports-color@8.1.1)
@@ -16991,7 +16876,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 4.1.3
+      fast-uri: 4.1.4
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -17584,6 +17469,19 @@ snapshots:
       normalize-path: 3.0.0
       readable-stream: 4.7.0
 
+  compute-gcd@1.2.1:
+    dependencies:
+      validate.io-array: 1.0.6
+      validate.io-function: 1.0.2
+      validate.io-integer-array: 1.0.0
+
+  compute-lcm@1.1.2:
+    dependencies:
+      compute-gcd: 1.2.1
+      validate.io-array: 1.0.6
+      validate.io-function: 1.0.2
+      validate.io-integer-array: 1.0.0
+
   concat-stream@1.6.2:
     dependencies:
       buffer-from: 1.1.2
@@ -18138,6 +18036,11 @@ snapshots:
   dom-accessibility-api@0.5.16: {}
 
   dom-accessibility-api@0.6.3: {}
+
+  dom-helpers@5.2.1:
+    dependencies:
+      '@babel/runtime': 7.29.7
+      csstype: 3.2.3
 
   dom-serializer@2.0.0:
     dependencies:
@@ -18769,8 +18672,6 @@ snapshots:
 
   fast-deep-equal@3.1.3: {}
 
-  fast-equals@6.0.3: {}
-
   fast-fifo@1.3.2: {}
 
   fast-isnumeric@1.1.4:
@@ -18780,8 +18681,6 @@ snapshots:
   fast-json-stable-stringify@2.1.0: {}
 
   fast-levenshtein@2.0.6: {}
-
-  fast-uri@4.1.3: {}
 
   fast-uri@4.1.4: {}
 
@@ -19931,7 +19830,7 @@ snapshots:
       chalk: 4.1.2
       graceful-fs: 4.2.11
       jest-util: 30.4.1
-      picomatch: 4.0.5
+      picomatch: 4.0.7
       pretty-format: 30.4.1
       slash: 3.0.0
       stack-utils: 2.0.6
@@ -19939,7 +19838,7 @@ snapshots:
   jest-mock@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       jest-util: 30.4.1
 
   jest-regex-util@30.4.0: {}
@@ -19947,7 +19846,7 @@ snapshots:
   jest-util@29.7.0:
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
@@ -19956,11 +19855,11 @@ snapshots:
   jest-util@30.4.1:
     dependencies:
       '@jest/types': 30.4.1
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       chalk: 4.1.2
       ci-info: 4.4.0
       graceful-fs: 4.2.11
-      picomatch: 4.0.5
+      picomatch: 4.0.7
 
   jest-validate@29.7.0:
     dependencies:
@@ -19973,7 +19872,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 22.7.5
+      '@types/node': 26.4.0
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -20024,6 +19923,16 @@ snapshots:
   json-parse-even-better-errors@2.3.1: {}
 
   json-parse-even-better-errors@3.0.2: {}
+
+  json-schema-compare@0.2.2:
+    dependencies:
+      lodash: 4.18.1
+
+  json-schema-merge-allof@0.8.1:
+    dependencies:
+      compute-lcm: 1.1.2
+      json-schema-compare: 0.2.2
+      lodash: 4.18.1
 
   json-schema-traverse@0.4.1: {}
 
@@ -20413,10 +20322,9 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  markdown-to-jsx@9.10.2(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  markdown-to-jsx@7.7.17(react@19.2.8):
     optionalDependencies:
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
 
   marked@16.4.2: {}
 
@@ -21699,12 +21607,14 @@ snapshots:
     dependencies:
       parse-ms: 4.0.0
 
-  primereact@11.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  primereact@10.9.9(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
-      '@primereact/core': 11.1.0(react@19.2.8)
-      '@primereact/headless': 11.1.0(react@19.2.8)
+      '@types/react-transition-group': 4.4.12(@types/react@19.2.18)
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
+      react-transition-group: 4.4.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+    optionalDependencies:
+      '@types/react': 19.2.18
 
   prism-react-editor@3.4.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -21857,7 +21767,7 @@ snapshots:
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
 
-  react-i18next@17.0.13(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(i18next@26.4.2(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2):
+  react-i18next@17.0.13(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(i18next@26.4.2(typescript@7.0.2))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@7.0.2):
     dependencies:
       '@babel/runtime': 7.29.7
       html-parse-stringify: 4.0.1
@@ -21866,7 +21776,7 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.8)
     optionalDependencies:
       react-dom: 19.2.8(react@19.2.8)
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
       typescript: 7.0.2
 
   react-intersection-observer@11.0.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
@@ -21883,17 +21793,17 @@ snapshots:
 
   react-is@19.2.8: {}
 
-  react-native-is-edge-to-edge@1.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  react-native-is-edge-to-edge@1.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
 
-  react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
+  react-native-reanimated@4.5.3(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1))(react@19.2.8):
     dependencies:
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
-      react-native-is-edge-to-edge: 1.3.1(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
-      react-native-worklets: 0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1)
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native-is-edge-to-edge: 1.3.1(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      react-native-worklets: 0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1)
       semver: 7.8.5
 
   react-native-svg-web@1.0.9(prop-types@15.8.1)(react-native-web@0.21.2(encoding@0.1.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
@@ -21902,12 +21812,12 @@ snapshots:
       react: 19.2.8
       react-native-web: 0.21.2(encoding@0.1.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
 
-  react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
+  react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8):
     dependencies:
       css-select: 5.2.2
       css-tree: 1.1.3
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
 
   react-native-web@0.21.2(encoding@0.1.13)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
@@ -21924,7 +21834,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1):
+  react-native-worklets@0.10.3(@babel/core@7.29.7(supports-color@8.1.1))(@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@react-native/metro-config@0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(react@19.2.8)(supports-color@8.1.1):
     dependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
       '@babel/plugin-transform-arrow-functions': 7.29.7(@babel/core@7.29.7(supports-color@8.1.1))
@@ -21940,7 +21850,7 @@ snapshots:
       '@react-native/metro-config': 0.86.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1)
       convert-source-map: 2.0.0
       react: 19.2.8
-      react-native: '@hanzogui/react-native-web-lite@8.2.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
+      react-native: '@hanzogui/react-native-web-lite@8.3.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)'
       semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
@@ -22021,6 +21931,15 @@ snapshots:
       prismjs: 1.30.0
       react: 19.2.8
       refractor: 5.0.0
+
+  react-transition-group@4.4.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      '@babel/runtime': 7.29.7
+      dom-helpers: 5.2.1
+      loose-envify: 1.4.0
+      prop-types: 15.8.1
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
 
   react-use-websocket@4.13.0: {}
 
@@ -23487,6 +23406,21 @@ snapshots:
     dependencies:
       spdx-correct: 3.2.0
       spdx-expression-parse: 3.0.1
+
+  validate.io-array@1.0.6: {}
+
+  validate.io-function@1.0.2: {}
+
+  validate.io-integer-array@1.0.0:
+    dependencies:
+      validate.io-array: 1.0.6
+      validate.io-integer: 1.0.5
+
+  validate.io-integer@1.0.5:
+    dependencies:
+      validate.io-number: 1.0.3
+
+  validate.io-number@1.0.3: {}
 
   vaul@1.1.2(@types/react-dom@19.2.5(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:

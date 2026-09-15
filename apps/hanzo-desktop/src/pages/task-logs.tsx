@@ -293,7 +293,7 @@ const TaskCard = ({
                   {option.name === 'Delete' && <DropdownMenuSeparator />}
                   <DropdownMenuItem
                     key={option.name}
-                    onClick={(event) => {
+                    onClick={(event: React.MouseEvent) => {
                       event.stopPropagation();
                       option.onClick();
                     }}

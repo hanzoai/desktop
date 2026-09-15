@@ -378,7 +378,7 @@ export const PromptEditor = ({
       className="!max-h-[60vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
       height="100%"
       onChangeText={setPromptEditContent}
-      onFocus={(e) => {
+      onFocus={(e: React.FocusEvent) => {
         // gui's TextArea renders a real <textarea>, but types the focus event's
         // target as the union RN allows. It is the field at runtime.
         const el = e.target as unknown as HTMLTextAreaElement;
@@ -486,7 +486,7 @@ export const PromptTryOut = ({
         className="!max-h-[50vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
         height="100%"
         onChangeText={setPromptEditContent}
-        onFocus={(e) => {
+        onFocus={(e: React.FocusEvent) => {
           // gui's TextArea renders a real <textarea>, but types the focus event's
           // target as the union RN allows. It is the field at runtime.
           const el = e.target as unknown as HTMLTextAreaElement;

@@ -28,7 +28,7 @@ export const ToolMetadataSchema = z.object({
     .object(
       {
         type: z.literal('object'),
-        properties: z.record(z.any()),
+        properties: z.record(z.string(), z.any()),
         required: z.array(z.string()),
       },
       { message: 'Configurations are required' },
@@ -38,7 +38,7 @@ export const ToolMetadataSchema = z.object({
     .object(
       {
         type: z.literal('object'),
-        properties: z.record(z.any()),
+        properties: z.record(z.string(), z.any()),
         required: z.array(z.string()),
       },
       { message: 'Parameters are required' },
@@ -48,7 +48,7 @@ export const ToolMetadataSchema = z.object({
     .object(
       {
         type: z.literal('object'),
-        properties: z.record(z.any()).nullable().default({}),
+        properties: z.record(z.string(), z.any()).nullable().default({}),
         required: z.array(z.string()).default([]),
       },
       { message: 'Result are required' },

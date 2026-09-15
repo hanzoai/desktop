@@ -14,7 +14,7 @@ import {
 import { cn } from '@hanzo/desktop-ui/utils';
 import {
   BarChart2,
-  CodesandboxIcon,
+  ScanBoxIcon,
   LaptopMinimal,
   PaintbrushIcon,
   SettingsIcon,
@@ -123,7 +123,7 @@ export function MainNav() {
       onClick: () => {
         void openHanzoNodeManagerWindow();
       },
-      icon: <CodesandboxIcon className="text-text-secondary h-4 w-4" />,
+      icon: <ScanBoxIcon className="text-text-secondary h-4 w-4" />,
     },
     {
       title: t('settings.layout.remoteAccess'),

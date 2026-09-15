@@ -159,7 +159,7 @@ const agentFormSchema = z.object({
   storage_path: z.string(),
   knowledge: z.array(z.string()),
   tools: z.array(z.string()),
-  tools_config_override: z.record(z.record(z.any())).optional(),
+  tools_config_override: z.record(z.string(), z.record(z.string(), z.any())).optional(),
   debugMode: z.boolean(),
   config: z
     .object({
@@ -173,7 +173,7 @@ const agentFormSchema = z.object({
       thinking: z.boolean(),
       reasoning_effort: z.enum(['low', 'medium', 'high']).optional(),
       web_search_enabled: z.boolean().optional(),
-      other_model_params: z.record(z.string()),
+      other_model_params: z.record(z.string(), z.string()),
     })
     .nullable(),
   cronExpression: z.string().optional(),
@@ -3040,7 +3040,7 @@ const ToolConfigModal = ({
     <Dialog onOpenChange={onOpenChange} open={isOpen}>
       <DialogContent
         className="flex max-h-[80vh] min-h-[600px] max-w-screen-md flex-col overflow-y-auto"
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: Event) => {
           e.preventDefault();
         }}
         showCloseButton={false}

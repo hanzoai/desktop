@@ -232,7 +232,7 @@ const VectorFsItem = ({
                 {idx === 2 && <DropdownMenuSeparator />}
                 <DropdownMenuItem
                   key={option.name}
-                  onClick={(event) => {
+                  onClick={(event: React.MouseEvent) => {
                     event.stopPropagation();
                     option.onClick();
                     setSelectedFile(file);

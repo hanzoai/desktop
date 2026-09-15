@@ -311,7 +311,7 @@ export default function ImportToolModal() {
       </DialogTrigger>
       <DialogContent
         className="max-w-[500px]"
-        onInteractOutside={(e) => {
+        onInteractOutside={(e: Event) => {
           e.preventDefault();
         }}
         showCloseButton={false}

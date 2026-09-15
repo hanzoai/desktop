@@ -8,7 +8,10 @@ import { generateKeyPair } from 'curve25519-js';
 //
 // It goes on `hashes`. The older spelling wrote it onto `etc`, which is frozen,
 // so that line threw at module load and took the whole surface with it.
-ed.hashes.sha512 = sha512;
+// Cast, because the field's return type is ed25519's own Bytes-API wrapper over
+// the `Uint8Array` @noble/hashes returns — the same bytes, a different name for
+// them on two TypeScript vintages.
+ed.hashes.sha512 = ((msg: Uint8Array) => sha512(msg)) as typeof ed.hashes.sha512;
 
 type HexString = string;
 

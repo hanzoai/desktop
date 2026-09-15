@@ -1,10 +1,17 @@
+// pyodide's FS typings omit `filesystems`, which its runtime carries: the mount
+// targets (IDBFS, MEMFS) are reached through it, and `FS.mount` takes an
+// `Emscripten.FileSystemType`. Named once rather than cast at each call, so the
+// shape this relies on is stated in one place.
+const fsFilesystems = (fs: unknown) =>
+  (fs as { filesystems: Record<string, Emscripten.FileSystemType> }).filesystems;
+
 import { type PyodideInterface } from 'pyodide';
 
 export type FileSystemEntry = {
   name: string;
   type: 'directory' | 'file';
   content?: string;
-  contents?: FileSystemEntry[];
+  contents?: FileSystemEntry[] | null;
   mtimeMs?: number;
 };
 
@@ -32,7 +39,7 @@ export class PyodideFileSystemService implements IFileSystemService {
   async initialize(): Promise<void> {
     try {
       this.pyodide.FS.mount(
-        this.pyodide.FS.filesystems.IDBFS,
+        fsFilesystems(this.pyodide.FS).IDBFS,
         {},
         this.rootPath
       );
@@ -87,7 +94,7 @@ export class PyodideFileSystemService implements IFileSystemService {
         const fullPath = `${path}/${entry}`;
         const stat = this.pyodide.FS.stat(fullPath);
         const isDirectory = this.pyodide.FS.isDir(stat.mode);
-        const mtimeMs = stat ? stat.mtime * 1000 : 0;
+        const mtimeMs = stat ? stat.mtime.getTime() : 0;
 
         if (isDirectory) {
           return { 
@@ -113,7 +120,9 @@ export class PyodideFileSystemService implements IFileSystemService {
 
   writeFile(path: string, content: string): void {
     try {
-      this.pyodide.FS.writeFile(path, content, { encoding: 'utf8' });
+      // No encoding option: emscripten writes a string as UTF-8, and its own
+      // typings carry flags, mode and canOwn — nothing else.
+      this.pyodide.FS.writeFile(path, content);
     } catch (error) {
       console.error(`Failed to write file ${path}:`, error);
       throw error;

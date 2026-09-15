@@ -371,7 +371,7 @@ export function CreatePromptDrawer({
                           <Textarea
                             autoFocus={true}
                             className="!min-h-[340px] resize-none text-sm"
-                            onKeyDown={(event) => {
+                            onKeyDown={(event: React.KeyboardEvent) => {
                               if (
                                 event.key === 'Enter' &&
                                 (event.metaKey || event.ctrlKey)
@@ -510,7 +510,7 @@ function UpdatePromptDrawer({
                         <div className="space-y-2">
                           <Textarea
                             className="!min-h-[340px] resize-none text-sm"
-                            onKeyDown={(event) => {
+                            onKeyDown={(event: React.KeyboardEvent) => {
                               if (
                                 event.key === 'Enter' &&
                                 (event.metaKey || event.ctrlKey)

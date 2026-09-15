@@ -1,3 +1,10 @@
+// pyodide's FS typings omit `filesystems`, which its runtime carries: the mount
+// targets (IDBFS, MEMFS) are reached through it, and `FS.mount` takes an
+// `Emscripten.FileSystemType`. Named once rather than cast at each call, so the
+// shape this relies on is stated in one place.
+const fsFilesystems = (fs: unknown) =>
+  (fs as { filesystems: Record<string, Emscripten.FileSystemType> }).filesystems;
+
  
 import { loadPyodide, type PyodideInterface } from 'pyodide';
 
@@ -353,7 +360,7 @@ const initialize = async () => {
   // **Mount IDBFS to persist filesystem in IndexedDB**
   try {
     pyodide.FS.mount(
-      pyodide.FS.filesystems.IDBFS,
+      fsFilesystems(pyodide.FS).IDBFS,
       { autoPersist: true },
       '/home/pyodide',
     );

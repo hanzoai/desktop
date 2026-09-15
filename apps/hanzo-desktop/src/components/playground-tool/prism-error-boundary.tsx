@@ -1,16 +1,11 @@
 import { useTranslation } from '@hanzo/desktop-i18n';
 import { type ComponentProps, type ReactNode } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 
 /**
  * Fallback component shown when the Prism editor crashes
  */
-const PrismEditorFallback = ({
-  resetErrorBoundary,
-}: {
-  error: Error;
-  resetErrorBoundary: () => void;
-}) => {
+const PrismEditorFallback = ({ resetErrorBoundary }: FallbackProps) => {
   const { t } = useTranslation();
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-4 p-4 text-center text-xs">
