@@ -4,7 +4,12 @@ import { SizableText, YStack } from '@hanzo/gui';
 import { useAuth } from '../store/auth';
 
 /**
- * Your machines, as terminals, desktops and pages.
+ * Terminals, desktops and pages on the machines you have.
+ *
+ * NOT "Machines". A pane here is a machine's FACE — a shell, its display, a
+ * page it can reach — and the machine itself is compute, which is its own
+ * surface with its own inventory, sizes and bill. One noun for the faces and
+ * another for the hardware, so neither has to be qualified.
  *
  * The same component tabs.hanzo.ai serves, mounted here rather than
  * reimplemented: one tiling of panes, one answer to what a split does, one set
@@ -21,7 +26,7 @@ import { useAuth } from '../store/auth';
  * Signed out there is nothing to list, and that is said rather than drawn as an
  * empty workspace: no machines and no identity are different facts.
  */
-export function Machines() {
+export function Terminals() {
   const token = useAuth((state) => state.auth?.hanzo_token ?? null);
   const { hosts, read, error, mint, launch } = useFleet(token);
 

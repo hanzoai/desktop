@@ -2,14 +2,14 @@ import {
   Bot,
   FolderClosed,
   MessageSquare,
-  Monitor,
   Settings,
+  TerminalSquare,
   Wrench,
 } from '@hanzogui/lucide-icons-2';
 
 export type SectionKey =
   | 'chat'
-  | 'machines'
+  | 'terminals'
   | 'agents'
   | 'tools'
   | 'files'
@@ -47,9 +47,9 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
-    key: 'machines',
-    label: 'Machines',
-    icon: Monitor,
+    key: 'terminals',
+    label: 'Terminals',
+    icon: TerminalSquare,
     /* The empty state is the workspace's own, so these are what the sidebar and
        the companions menu read and nothing draws them as a body. A machine
        arrives by `hanzo link` on it or by starting one here. */
