@@ -2,11 +2,18 @@ import {
   Bot,
   FolderClosed,
   MessageSquare,
+  Monitor,
   Settings,
   Wrench,
 } from '@hanzogui/lucide-icons-2';
 
-export type SectionKey = 'chat' | 'agents' | 'tools' | 'files' | 'settings';
+export type SectionKey =
+  | 'chat'
+  | 'machines'
+  | 'agents'
+  | 'tools'
+  | 'files'
+  | 'settings';
 
 export type Section = {
   key: SectionKey;
@@ -38,6 +45,17 @@ export const SECTIONS: Section[] = [
       'Runs on your machine by default',
       'Bring your own keys for hosted models',
     ],
+  },
+  {
+    key: 'machines',
+    label: 'Machines',
+    icon: Monitor,
+    /* The empty state is the workspace's own, so these are what the sidebar and
+       the companions menu read and nothing draws them as a body. A machine
+       arrives by `hanzo link` on it or by starting one here. */
+    title: 'No machines linked',
+    description: 'Open terminals, desktops and pages on machines you have.',
+    bullets: ['Run `hanzo link` on a machine of yours', 'Or start one in the cloud'],
   },
   {
     key: 'agents',

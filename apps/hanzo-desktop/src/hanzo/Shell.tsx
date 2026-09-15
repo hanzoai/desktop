@@ -16,6 +16,7 @@ import { DockGroup } from './Dock';
 import { useChat } from './useChat';
 import { usePanels } from './panels';
 import { PanelControls, SidebarToggle } from './PanelControls';
+import { Machines } from './Machines';
 import { SECTION, SECTIONS, type SectionKey } from './sections';
 import {
   ACCENT,
@@ -187,7 +188,16 @@ export function Shell({
 
         <YStack flex={1} minH={0}>
           <DockGroup section={section}>
-            {section === 'chat' ? (
+            {section === 'machines' ? (
+              /* The one section whose body is a whole surface rather than a
+                 thread: the same workspace tabs.hanzo.ai serves. It fills the
+                 dock's Panel by height for the same reason chat does — the
+                 Panel is not a flex parent, so a child asking for flex:1
+                 inside it takes its content's height. */
+              <YStack height="100%" minH={0} data-testid="machines">
+                <Machines />
+              </YStack>
+            ) : section === 'chat' ? (
               /* The dock's Panel is not a flex parent, so a child asking for
                  flex:1 inside it takes its content's height and leaves the
                  composer floating a third of the way down the window. Fill it

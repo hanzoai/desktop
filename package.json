@@ -21,6 +21,7 @@
     "@hanzo/data": "catalog:",
     "@hanzo/gui": "catalog:",
     "@hanzo/logo": "catalog:",
+    "@hanzo/tabs": "catalog:",
     "@hanzo/ui": "catalog:",
     "@hanzo/usage": "catalog:",
     "@hanzo/voice": "catalog:",
