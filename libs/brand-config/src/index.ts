@@ -187,8 +187,8 @@ export function getBrandFromHostname(h: string): BrandConfig {
 /**
  * isMachinesEnabled controls whether the Machines / Containers / K8s /
  * Network pages render. Brands that ship the daemon-backed app stack —
- * Hanzo, Lux, Zoo — expose them by default. Other brands (e.g. liquidity)
- * must opt in via VITE_ENABLE_MACHINES=true.
+ * Hanzo, Lux, Zoo — expose them by default. Other brands must opt in via
+ * VITE_ENABLE_MACHINES=true.
  */
 export function isMachinesEnabled(cfg: BrandConfig = getBrand()): boolean {
   if (cfg.brand === 'hanzo' || cfg.brand === 'lux' || cfg.brand === 'zoo') return true;

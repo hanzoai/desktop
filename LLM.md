@@ -497,7 +497,7 @@ apps/hanzo-desktop/
 - Wire format is JSON over the daemon's UNIX socket - see
   `hanzoai/node/machine/proto.go` for the authoritative contract.
 - Brand gating: the Machines / Containers / K8s pages are Hanzo-only by
-  default. Other brands (zoo, liquidity) must set `VITE_ENABLE_MACHINES=true`
+  default. Other brands must set `VITE_ENABLE_MACHINES=true`
   (or the equivalent runtime flag in `libs/brand-config`) to reveal them.
   See `libs/brand-config/src/index.ts::isMachinesEnabled`.
 
@@ -796,9 +796,9 @@ Closing it needs two things, in order, and only the second one is irreversible:
 
 1. Strip the six paths from the remaining branch tips (additive commits, no
    history rewrite, no branch deleted, no work lost).
-2. `git filter-repo` the six paths out of all history and force-push — the same
-   method the liquidity.io purge used across ~32 repos. This rewrites public
-   history, so every clone re-clones and open PRs need rebasing.
+2. `git filter-repo` the six paths out of all history and force-push. This
+   rewrites public history, so every clone re-clones and open PRs need
+   rebasing.
 
 **Do not sweep `backup/*`, `rescue/*` or `preserve/*` to shortcut step 1.**
 Twenty-two of the 54 branches are scratch by name, but those three families

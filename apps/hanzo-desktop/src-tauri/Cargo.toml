@@ -127,7 +127,7 @@ default = ["machine"]
 custom-protocol = ["tauri/custom-protocol"]
 
 # hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
-# Brand-specific configs (zoo, liquidity) can opt out by disabling default-features.
+# Other brands can opt out by disabling default-features.
 machine = []
 
 # Embed the native Hanzo Engine for in-process inference. This runs the canonical
