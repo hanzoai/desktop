@@ -110,6 +110,11 @@ axum = { version = "0.8", optional = true }
 # out the heartbeat window. Already in the dependency tree.
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
+# The ZAP router (commands/browser.rs): Desktop embeds it, as every hanzo-mcp
+# does, and reaches the user's browser through the Hanzo extension. A tag, not
+# crates.io: crates.io stops at 1.1.2, before the extension could join the door
+# without pairing (1.1.4) and before the door took 9998 (1.1.5).
+zapd = { git = "https://github.com/zap-proto/zapd", tag = "v1.1.5" }
 
 # WebKitGTK denies `getUserMedia` unless the app answers its permission-request
 # signal (windows/microphone.rs). Pinned to what tauri-runtime-wry links, so

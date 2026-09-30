@@ -3,6 +3,8 @@
 
 use std::sync::Arc;
 
+#[cfg(unix)]
+use crate::commands::browser::{browser, browsers};
 use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
@@ -92,6 +94,10 @@ fn main() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     }
     let _ = fix_path_env::fix();
+    // Stand for this user's ZAP router, as every hanzo-mcp does, so the
+    // browser commands reach the extension with or without one running.
+    #[cfg(unix)]
+    zapd::embed();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             app.emit("single-instance", Payload { args: argv, cwd })
@@ -170,6 +176,10 @@ fn main() {
             post_request,
             engines_discover,
             engine_probe,
+            #[cfg(unix)]
+            browser,
+            #[cfg(unix)]
+            browsers,
                         retrieve_logs,
             download_logs,
             check_claude_installed,

@@ -477,6 +477,28 @@ that drives the `hanzoai/ml` features via the Tauri backend (`src-tauri/src/mode
 - Frontend: `lib/model-tools/model-tools-client.ts` (invoke wrappers + React
   Query hooks). Tauri commands: `model_tools_soup_*`, `model_tools_bitdelta_*`.
 
+## Browser (the user's real one, over ZAP)
+
+`src-tauri/src/commands/browser.rs`. `main` calls `zapd::embed()`, so Desktop
+stands for this user's ZAP router beside every hanzo-mcp process; the
+browser works with or without one running. The Hanzo extension registers as
+`browser/<host>/<engine>-<id>`.
+
+- `browsers()` — the registered browsers: `{id, caps, attrs}`.
+- `browser(method, params)` — routes to the first one. `method` is the
+  extension's (`hanzo.snapshot`, `hanzo.act` + `op`, `hanzo.read`,
+  `hanzo.screenshot`, `Runtime.evaluate`, `hanzo.navigate`,
+  `Target.getTargets`/`createTarget`/`closeTarget`); `params` are strings.
+  Returns the JSON answer; `ERR:<why>` from the browser becomes the error.
+- Unix only (zapd is fcntl + UDS). Pinned by git tag: crates.io stops at 1.1.2,
+  before the extension joined the door without pairing.
+- Desktop has no tool registry of its own — chat tools run in hanzo-node — so
+  the Tauri commands are the whole surface.
+- Test: `cargo test --bin hanzo-desktop commands::browser` runs a router under a
+  temp `XDG_RUNTIME_DIR`/`XDG_STATE_HOME` with a fake `browser/` node. A
+  checkout builds with `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}'`
+  when the sidecars are not downloaded.
+
 ## Machines (Docker Desktop replacement)
 
 Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the
