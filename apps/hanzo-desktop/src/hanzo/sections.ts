@@ -47,14 +47,16 @@ export const SECTIONS: Section[] = [
     ],
   },
   {
+    // The key stays `terminals`: a dock tab persists its section by key, so renaming
+    // it would orphan every tab a person had open. The product is Hanzo Tabs.
     key: 'terminals',
-    label: 'Terminals',
+    label: 'Tabs',
     icon: TerminalSquare,
     /* The empty state is the workspace's own, so these are what the sidebar and
        the companions menu read and nothing draws them as a body. A machine
        arrives by `hanzo link` on it or by starting one here. */
     title: 'No machines linked',
-    description: 'Open terminals, desktops and pages on machines you have.',
+    description: 'Shells, desktops and pages on the machines you have, in Hanzo Tabs.',
     bullets: ['Run `hanzo link` on a machine of yours', 'Or start one in the cloud'],
   },
   {
