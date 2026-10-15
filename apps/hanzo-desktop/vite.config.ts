@@ -1,7 +1,8 @@
+import { cpSync } from 'fs';
 import { createRequire } from 'module';
 import { dirname, resolve as pathResolve } from 'path';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import wasm from 'vite-plugin-wasm';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import tailwindcss from '@tailwindcss/vite';
@@ -15,6 +16,21 @@ import tailwindcss from '@tailwindcss/vite';
 // lite via absolute paths so every layer (scan, optimize, rollup) resolves it. No
 // Tamagui compiler plugin: the runtime GuiProvider config is enough.
 const req = createRequire(import.meta.url);
+
+// The rooms name their portraits by path (`/agents/<id>.png`, `/bots/<name>.png`)
+// and ship them in @hanzo/rooms' `assets/`. hanzo.ai copies that tree into the
+// root it serves (its scripts/rooms-assets.mjs), and so does this window: into
+// public/ before every serve and build, so a new portrait arrives with the next
+// rooms release and the copy is never committed.
+function rooms(): Plugin {
+  return {
+    name: 'rooms-assets',
+    buildStart() {
+      const from = pathResolve(dirname(req.resolve('@hanzo/rooms')), '..', 'assets');
+      cpSync(from, pathResolve(import.meta.dirname, 'public'), { recursive: true });
+    },
+  };
+}
 const rnwlBase = dirname(
   req.resolve('@hanzogui/react-native-web-lite/package.json'),
 );
@@ -67,7 +83,7 @@ export default defineConfig(() => ({
       },
     ],
   },
-  plugins: [react(), tailwindcss(), tsconfigPaths({ root: '../..' }), wasm()],
+  plugins: [rooms(), react(), tailwindcss(), tsconfigPaths({ root: '../..' }), wasm()],
   esbuild: {
     // Important for wasm plugin
     supported: {
