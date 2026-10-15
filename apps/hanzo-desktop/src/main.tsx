@@ -1,22 +1,29 @@
-// hanzo-desktop — converged onto the canonical Hanzo Tamagui stack: @hanzo/gui
-// (runtime GuiProvider config) + @hanzo/ui v8 product components, the same target
-// as hanzo.app and hanzo.chat. The old @hanzo/ai Tailwind blob (ai.css, ~4.3MB,
-// stock 16px sizing + a Google-Fonts import) is gone; look & tokens are the calm,
-// dark-first monochrome register from @hanzogui/config v5. Brand is a prop.
-import '@hanzogui/core/reset.css';
+// The main window: hanzo.ai's app (@hanzo/rooms App) under this window's host
+// (host.tsx). The stylesheets are the ones hanzo.ai's root layout loads, in its
+// order, so the app looks the same in both; gui writes its own sheet at run time.
+import '@hanzo/design/tokens/fonts.css';
+import '@hanzo/design/tokens/colors.css';
+import '@hanzo/design/tokens/typography.css';
+import '@hanzo/design/tokens/spacing.css';
+import '@hanzo/design/tokens/radius.css';
+import '@hanzo/design/tokens/elevation.css';
+import '@hanzo/design/tokens/motion.css';
+import '@hanzo/design/tokens/z.css';
+import '@hanzo/design/tokens/base.css';
+import '@hanzo/ui/glass.css';
+import '@hanzo/font/css';
+import '@hanzo/ui/styles/motion.css';
+import '@hanzo/ui/styles/document.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Gui } from './gui';
-import { HanzoApp } from './hanzo/HanzoApp';
+import { Host } from './host';
 
 const root = document.querySelector('#root');
 if (!root) throw new Error('root element missing');
 
 createRoot(root as HTMLElement).render(
   <StrictMode>
-    <Gui>
-      <HanzoApp />
-    </Gui>
+    <Host />
   </StrictMode>,
 );

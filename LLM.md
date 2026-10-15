@@ -280,66 +280,29 @@ disabled` publishes `aria-disabled="true"` and `pointer-events:none`, and Enter
 does not activate it — but the DOM `disabled` property stays `false` and the
 control keeps `tabindex="0"`. Assert the aria/behaviour, never `.disabled`.
 
-## Window chrome — one store, one square, one focus ring
+## The main window is hanzo.ai's app
 
-The main window's chrome lives in `src/hanzo/` and nowhere else:
+`src/main.tsx` mounts `Host` (`src/host.tsx`), which draws `@hanzo/rooms/App`,
+the same component hanzo.ai draws at `/`: the column, Chat and Dev. Desktop
+owns only what a host owns:
 
-- **`panels.ts`** is the ONE persisted store for panel state — zustand
-  `persist` under the key `panels`, the same idiom as `store/settings.ts`
-  (which stays untouched: it belongs to the app's other five windows).
-  `openTab` / `closeTab` are the only ways a dock tab is created or destroyed,
-  so the companions menu, the strip's `+` and ⌘1–⌘5 are one code path.
-- **`ChromeButton.tsx`** is the ONE chrome square. Every square control in the
-  chrome — the cluster, the strip's `+` and `×`, a tab's `×` — is this
-  component with a `size` and a `bleed`. 44px is the default because it is the
-  pointer-target floor (Apple HIG 44pt / WCAG 2.5.5); it is deliberately NOT
-  `CONTROL_SIZE`, which is for controls the pointer is already inside a form to
-  reach. `FOCUS_RING` in `theme.ts` is spread by every one of them: a control
-  that hand-rolls its box does not lose its ring, it falls back to the UA's,
-  which is how one row acquires two different focus indicators.
-- **`bleed`** is a negative margin that lets a box grow to a target the pointer
-  can hit without the strip around it growing too. The dock strip's budget is
-  41px (32 content + 4+4 padding + a 1px rule) and the body sits directly above
-  it, so the `+`/`×` are 40 bled by 4 and a tab is pinned to 32 — left to size
-  itself off its line-height a tab came out at 35 and silently spent 3px of
-  conversation.
-- **`TRAFFIC_LIGHTS`** in `theme.ts` reserves the window's top-left corner.
-  `tauri.conf.json` sets `titleBarStyle: "Overlay"` + `hiddenTitle`, so on
-  macOS the traffic lights paint OVER the webview and whatever the app puts in
-  that corner sits under them — the shell's brand mark did. Windows and Linux
-  keep native decorations above the webview, so the reserve is 0 there. It is
-  sniffed off the UA because it is layout read during render (synchronous) and
-  has to be right in the Vite dev browser too, where there is no Tauri to ask.
-- **`sections.ts`** is the ONE section catalog. The sidebar nav, the body's
-  empty state, the dock's tabs and the companions menu all read it; it replaced
-  two parallel objects keyed the same way, where adding a section meant
-  remembering both.
-- The model picker and theme toggle live in the right-hand controls panel and
-  nowhere else. They were a 168px dropdown wedged into the chrome row and a
-  toggle squeezed into the sidebar's foot, which is what left the row no space
-  for window controls.
+- **Session**: `@hanzo/iam`'s `IamProvider` with `storage: keychain`
+  (`src/keychain.ts`), one OS-keychain record (`iam-session`) read before mount
+  and written whole on each change. No token in localStorage.
+- **Sign-in**: `sdk.getSigninUrl()` opens in the system browser; the brand's
+  deep link (`<scheme>://oauth/<brand>`, `deep_links.rs`) brings the code back
+  as `iam.callbackEvent`, `sdk.handleCallback` exchanges it, and the window
+  reloads at `/`. Signed out, `src/Welcome.tsx` is the whole window.
+- **Router**: the window's `history`. `go` (rooms `lib/host`) pushes; `Host`
+  re-renders on push, replace and popstate.
+- **Other origins**: a link to one opens in the system browser (`outward`), and
+  the `away` plugin in `main.rs` turns any navigation off the app's own origin
+  into the same, so sign-out or checkout never replaces the app with a page.
+- **Look**: `gui.config.ts` is `@hanzo/ui/gui-config`'s `monochrome`, hanzo.ai's
+  config, for every window; `main.tsx` loads hanzo.ai's stylesheets in its order.
 
-Verified by measurement, not review — `e2e-tests/window-chrome.spec.ts`, 10
-specs against a real Chromium, because a green `vite build` proves a gui
-component compiled and never that it painted. At 1440×900: cluster 4×44×44
-carrying ONE focus ring between them; menu `role=menu` with 5 rows at 44.0px
-whose right edge is 1379 = the trigger's right edge 1379; Escape closes and
-returns `aria-expanded=false`; shortcut contrast 12.1:1 against the row (label
-19.44:1); dock strip 41px, tab 57×32, tab close 24×24, `+`/`×` 40×40; the grab
-band is 8px over a 1px rule and `elementFromPoint` returns it at all five
-probes across the seam; drag 296 → 447px and the floor holds at 127px (15% of
-an 848px column); `scrollWidth === clientWidth` at 1440 and 900; every panel,
-tab and toggle survives a reload; no console errors.
-
-The strip's budget is the 10th spec, and it was added because the other nine
-could not see it. Those numbers — strip 41, tab 32, `+`/`×` 40 bled by 4, tab
-close 24 bled by 2, and exactly ONE painted hairline at the seam — lived only
-in comments here and in `Dock.tsx`. Proven by drifting the `+` to the cluster's
-44 with no bleed and rebuilding: the strip went to **53**, the body silently
-lost 12px, the button overhung the resize grab, and **all nine other specs
-still passed** — the 24px-floor spec accepts anything ≥24, and no screenshot
-diff runs. The budget spec is the only thing that fails, so it is the only
-thing holding those five numbers.
+The stack is pinned in `pnpm-workspace.yaml`'s catalog to the versions
+hanzo-inc/app pins. Move them together.
 
 ## Commands
 
@@ -654,10 +617,9 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   web-lite alias) and unhoists katex out from under the vite build. Keep the
   `react-native` override's major in step with the direct
   `@hanzogui/react-native-web-lite` dependency, or you ship two copies.
-- The main window renders **local `src/`**, not `@hanzo/ai/desktop` — that
-  changed with the @hanzo/gui convergence. `src/pages/*` and `src/routes/*` are
-  dead for the main window but still live for spotlight / coordinator /
-  node-manager, so do not delete them. The wdio specs under `e2e/` other than
+- The main window renders `@hanzo/rooms/App` (above). `src/pages/*` and
+  `src/routes/*` are dead for the main window but still live for spotlight /
+  coordinator / node-manager, so do not delete them. The wdio specs under `e2e/` other than
   `login.e2e.ts` still drive those pre-convergence routes.
 - `@hanzo/ai` is now only a package.json dependency, not an import of
   `src/main.tsx`. Keep it declared regardless (it was once undeclared and an

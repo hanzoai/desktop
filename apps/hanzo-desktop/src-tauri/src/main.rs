@@ -141,6 +141,22 @@ fn main() {
         )
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
+        // A window never leaves the app for another origin. The main window
+        // is hanzo.ai's app, whose links, sign-out and checkout name pages on
+        // the web; a navigation to one opens in the system browser instead of
+        // replacing the app with a web page.
+        .plugin(
+            tauri::plugin::Builder::<tauri::Wry>::new("away")
+                .on_navigation(|_, url| {
+                    let local = matches!(url.scheme(), "tauri" | "asset" | "ipc" | "data" | "blob" | "about")
+                        || matches!(url.host_str(), Some("tauri.localhost" | "ipc.localhost" | "localhost" | "127.0.0.1"));
+                    if !local {
+                        let _ = tauri_plugin_opener::open_url(url.as_str(), None::<&str>);
+                    }
+                    local
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             hide_spotlight_window_app,

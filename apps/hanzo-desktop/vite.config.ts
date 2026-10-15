@@ -19,17 +19,19 @@ const rnwlBase = dirname(
   req.resolve('@hanzogui/react-native-web-lite/package.json'),
 );
 // The ESM entry, NOT req.resolve('.') — require.resolve picks the "require"
-// condition (dist/cjs/index.cjs), whose CJS shape breaks named imports
-// (ActivityIndicator et al) when Vite's dev server serves it as ESM.
-const rnwl = `${rnwlBase}/dist/esm/index.mjs`;
+// condition (dist/cjs/index.js), whose CJS shape breaks named imports
+// (ActivityIndicator et al) when Vite's dev server serves it as ESM. 8.3.5
+// ships `.js` (8.3.1 shipped `.mjs`), and a module is a file or a directory
+// with an index, so the per-module alias names no extension and Vite finds it.
+const rnwl = `${rnwlBase}/dist/esm/index.js`;
 const guiAliases = [
   {
     find: 'react-native-svg',
-    replacement: `${dirname(req.resolve('@hanzogui/react-native-svg/package.json'))}/dist/esm/index.mjs`,
+    replacement: `${dirname(req.resolve('@hanzogui/react-native-svg/package.json'))}/dist/esm/index.js`,
   },
   {
     find: /^react-native(?:-web)?\/dist\/(?:exports|modules)\/.*\/([^/]+)$/,
-    replacement: `${rnwlBase}/dist/esm/$1.mjs`,
+    replacement: `${rnwlBase}/dist/esm/$1`,
   },
   { find: /^react-native$/, replacement: rnwl },
   {
