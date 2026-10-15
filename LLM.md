@@ -25,6 +25,15 @@ the shared component layer. Both ship zero Tailwind, zero Radix, zero shadcn.
 The runtime config is `apps/hanzo-desktop/gui.config.ts`; every window mounts it
 through `src/gui.tsx`.
 
+gui writes its stylesheet at run time (a `<style data-href="hanzogui-css">`), so
+`style-src` must keep `'unsafe-inline'` working. Tauri hashes the inline
+`<style>` in `index.html` into `style-src` at build time, and a hash in a
+directive switches `'unsafe-inline'` off: the main window then drew every view
+unstyled while the same `dist/` rendered correctly in a browser. So
+`tauri.conf.json` sets `dangerousDisableAssetCspModification: ["style-src"]`;
+scripts keep their hashes and nonces. Check it in the Tauri window, not a
+browser: every `<style>` there has a `.sheet`.
+
 `libs/hanzo-ui/src/components/index.ts` is the seam and reads as one:
 
 - **From `@hanzo/ui`** — Radix-free and gui-native: Accordion, AlertDialog,
