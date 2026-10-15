@@ -58,6 +58,9 @@ export interface BrandConfig {
     clientId: string;
     redirectUri: string;
     callbackEvent: string;
+    // The brand site's own sign-in page, which finishes an app's authorize
+    // request (@hanzo/iam `ask`). Absent, the IAM's page does.
+    page?: string;
   };
 }
 
@@ -95,6 +98,7 @@ const HANZO: BrandConfig = {
     clientId: 'hanzo-app',
     redirectUri: 'hanzo://oauth/hanzo',
     callbackEvent: 'hanzo-iam-callback',
+    page: 'https://hanzo.ai/login',
   },
 };
 

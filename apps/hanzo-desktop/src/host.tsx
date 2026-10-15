@@ -110,9 +110,14 @@ function outward(e: globalThis.MouseEvent): void {
   void openUrl(out);
 }
 
-/** Sign-in in the system browser; the code comes back on the brand's deep link. */
+/**
+ * Sign-in in the system browser, on the brand site's own page when it has one
+ * (hanzo.ai/login), which finishes this app's authorize request; the code comes
+ * back on the brand's deep link.
+ */
 async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
-  const url = await sdk.getSigninUrl();
+  const issuer = new URL(await sdk.getSigninUrl());
+  const url = brand.iam.page ? `${brand.iam.page}${issuer.search}` : issuer.href;
   await new Promise<void>((resolve, reject) => {
     void safeListen<{ state: string; code: string }>(brand.iam.callbackEvent, (event) => {
       const back = new URL(brand.iam.redirectUri);
