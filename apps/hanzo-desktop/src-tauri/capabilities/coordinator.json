@@ -9,7 +9,18 @@
     "core:event:allow-listen",
     "core:event:allow-unlisten",
     "core:event:allow-emit",
-    "log:default"
-  ],
-  "commands.allow": []
+    "log:default",
+    "allow-hanzo-node-get-default-model",
+    "allow-hanzo-node-get-options",
+    "allow-hanzo-node-is-running",
+    "allow-hanzo-node-kill",
+    "allow-hanzo-node-remove-storage",
+    "allow-hanzo-node-set-default-options",
+    "allow-hanzo-node-set-options",
+    "allow-hanzo-node-spawn",
+    "allow-secure-storage-delete",
+    "allow-secure-storage-get",
+    "allow-secure-storage-set",
+    "allow-show-hanzo-node-manager-window"
+  ]
 }

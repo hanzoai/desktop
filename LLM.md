@@ -615,11 +615,18 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
 
 ### Gotchas verified the hard way
 
-- `src-tauri/capabilities/main.json` has a `commands.allow` list. It is **inert**
-  — Tauri v2's Capability schema is
-  `[identifier, description, remote, local, windows, webviews, permissions, platforms]`
-  and the generated `gen/schemas/capabilities.json` contains no `commands` key at
-  all. Do not add commands there expecting a gate; there isn't one.
+- **Commands are permissions.** `src-tauri/build.rs` reads `generate_handler![...]`
+  in `src/main.rs` and registers every command as an app manifest, so each has an
+  `allow-<command>` permission (kebab-case: `hanzo_node_spawn` is
+  `allow-hanzo-node-spawn`) and a window calls only what its capability grants.
+  Without that, Tauri v2 lets every window call every command. `main.json` grants
+  all of them, and the build refuses one it misses or a grant no handler serves;
+  spotlight, coordinator and node-manager grant the commands their own bundles
+  call, measured from the build's module graph. A new command reaches only the
+  main window until a capability names it. Capabilities never share a window:
+  Tauri merges overlapping ones, which is how spotlight once held all of main's
+  permissions. The old `commands.allow` key was inert (not in the v2 schema) and
+  is gone.
 - `pnpm build:ci`'s `tsc` step is a **no-op**: `tsconfig.json` has
   `files: []` + `include: []` and only `references`, so plain `tsc` checks
   nothing. Real typecheck is `pnpm typecheck` (`-p tsconfig.app.json`), which puts

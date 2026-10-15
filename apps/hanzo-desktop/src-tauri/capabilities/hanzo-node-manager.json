@@ -2,7 +2,9 @@
   "identifier": "hanzo-node-manager",
   "description": "permissions that were migrated from v1",
   "local": true,
-  "windows": ["hanzo-node-manager"],
+  "windows": [
+    "hanzo-node-manager"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",
@@ -17,18 +19,27 @@
           "path": "$HOME/Downloads/*"
         }
       ]
-    }
-  ],
-  "commands.allow": [
-    "hanzo_node_is_running",
-    "hanzo_node_get_options",
-    "hanzo_node_set_options",
-    "hanzo_node_spawn",
-    "hanzo_node_kill",
-    "hanzo_node_remove_storage",
-    "hanzo_node_set_default_options",
-    "hanzo_node_get_ollama_api_url",
-    "hanzo_node_get_default_model",
-    "retrieve_logs"
+    },
+    "allow-download-logs",
+    "allow-hanzo-node-get-default-model",
+    "allow-hanzo-node-get-options",
+    "allow-hanzo-node-is-running",
+    "allow-hanzo-node-kill",
+    "allow-hanzo-node-open-storage-location-with-path",
+    "allow-hanzo-node-remove-storage",
+    "allow-hanzo-node-set-default-options",
+    "allow-hanzo-node-set-options",
+    "allow-hanzo-node-spawn",
+    "allow-model-tools-bitdelta-apply",
+    "allow-model-tools-bitdelta-encode",
+    "allow-model-tools-grpo-run",
+    "allow-model-tools-soup-available",
+    "allow-model-tools-soup-average",
+    "allow-model-tools-soup-delta",
+    "allow-retrieve-logs",
+    "allow-secure-storage-delete",
+    "allow-secure-storage-get",
+    "allow-secure-storage-set",
+    "allow-show-hanzo-node-manager-window"
   ]
 }
