@@ -1,5 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
+import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/rooms';
@@ -28,6 +29,9 @@ configure({
   api: brand.cloudApi,
   iam: brand.iam.baseUrl,
   brand: brand.name === 'Hanzo' ? undefined : brand.name,
+  // Signed out, the rooms answer on the brand's publishable key, as the web
+  // does for a guest: the free lane, never the caller's own.
+  key: ORG_KEY[brand.brand],
 });
 
 const IAM = {
@@ -110,6 +114,37 @@ function outward(e: globalThis.MouseEvent): void {
   void openUrl(out);
 }
 
+// The rooms send a signed-out visitor who asks to sign in to /login (or /signup)
+// on the host's own origin: here that is this window, so those two addresses
+// draw the desktop's sign-in rather than a page of the app.
+const DOORS = new Set(['/login', '/signup']);
+
+// A visitor who chose "Not now" opens the app signed out from then on, as the
+// web does for a guest; signing in is one click away in the app itself.
+const GUEST = 'hanzo:guest';
+
+function guest(): boolean {
+  try {
+    return window.localStorage.getItem(GUEST) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function stayGuest(): void {
+  try {
+    window.localStorage.setItem(GUEST, '1');
+  } catch {
+    // The choice is a convenience: without storage the next launch asks again.
+  }
+}
+
+/** Where a sign-in started from /login?next= goes on to, on this origin only. */
+function onward(): string {
+  const next = new URLSearchParams(window.location.search).get('next');
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+}
+
 /**
  * Sign-in in the system browser, on the brand site's own page when it has one
  * (hanzo.ai/login), which finishes this app's authorize request; the code comes
@@ -129,7 +164,7 @@ async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
         .then(() => resolve(), reject);
     }).then(() => openUrl(url), reject);
   });
-  window.location.replace('/');
+  window.location.replace(onward());
 }
 
 function Gate() {
@@ -137,9 +172,11 @@ function Gate() {
   const here = useSyncExternalStore(subscribe, address);
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
+  const [visiting, setVisiting] = useState(guest);
 
   if (isLoading) return null;
-  if (!isAuthenticated) {
+  const path = here.split('?')[0] || '/';
+  if (!isAuthenticated && (DOORS.has(path) || !visiting)) {
     return (
       <Welcome
         busy={busy}
@@ -152,11 +189,20 @@ function Gate() {
             setError(err instanceof Error ? err : new Error(String(err)));
           });
         }}
+        onSkip={() => {
+          stayGuest();
+          setBusy(false);
+          setVisiting(true);
+          if (DOORS.has(path)) window.history.replaceState(null, '', onward());
+        }}
       />
     );
   }
+  if (isAuthenticated && DOORS.has(path)) {
+    window.history.replaceState(null, '', onward());
+    return null;
+  }
 
-  const path = here.split('?')[0] || '/';
   return (
     <Rooms router={router} path={path} route={path} Link={Anchor}>
       <App />

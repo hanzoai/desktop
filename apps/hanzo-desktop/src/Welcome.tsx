@@ -1,20 +1,23 @@
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { BrandMark } from '@hanzo/desktop-logo';
-import { Text, YStack } from '@hanzo/gui';
+import { Button, Text, YStack } from '@hanzo/gui';
 import { PrimaryButton } from '@hanzo/ui/product';
 import { ArrowRight } from '@hanzogui/lucide-icons-2';
 
-// What a signed-out window shows: the brand, one line, and sign-in. Sign-in
-// opens the brand's page in the system browser, where the terms are agreed to
-// and every factor works, and comes back on the brand's deep link (host.tsx).
+// What a signed-out window shows: the brand, one line, sign-in, and not now.
+// Sign-in opens the brand's page in the system browser, where the terms are
+// agreed to and every factor works, and comes back on the brand's deep link
+// (host.tsx). Not now opens the app signed out, as the web does for a guest.
 export function Welcome({
   busy,
   error,
   onSignIn,
+  onSkip,
 }: {
   busy: boolean;
   error: Error | null;
   onSignIn: () => void;
+  onSkip: () => void;
 }) {
   const { brand, name, productName } = getBrand();
 
@@ -42,6 +45,10 @@ export function Welcome({
         >
           {busy ? 'Finish signing in in your browser…' : `Sign in with ${name}`}
         </PrimaryButton>
+
+        <Button size="$2" rounded={10} chromeless onPress={onSkip}>
+          Not now
+        </Button>
 
         {error ? (
           <Text fontSize="$2" color="$color" fontWeight="600">
