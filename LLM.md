@@ -283,8 +283,19 @@ control keeps `tabindex="0"`. Assert the aria/behaviour, never `.disabled`.
 ## The main window is hanzo.ai's app
 
 `src/main.tsx` mounts `Host` (`src/host.tsx`), which draws `@hanzo/rooms/App`,
-the same component hanzo.ai draws at `/`: the column, Chat and Dev. Desktop
-owns only what a host owns:
+the same component hanzo.ai draws at `/`, `/chat` and `/dev`: the rail of apps,
+the sidebar, Chat and Dev in one inset panel. Desktop owns only what a host
+owns:
+
+- **The window's bar**: `<App bar={BAR} />`. There is no browser around this
+  window, so the app draws the bar one would: the sidebar's toggle, Back and
+  Forward through the router below (⌘[ ⌘] on a Mac, Alt+← Alt+→ elsewhere),
+  40px tall. macOS paints its traffic lights over the page's top-left
+  (`titleBarStyle: Overlay`), so the bar keeps 78px clear there; Windows and
+  Linux keep their native title bar above the page and need none. The bar
+  carries `data-tauri-drag-region`, which `core:window:allow-start-dragging`
+  in capabilities/main.json lets drag the window.
+  `e2e-tests/window-chrome.spec.ts` measures it against the Vite frontend.
 
 - **Session**: `@hanzo/iam`'s `IamProvider` with `storage: keychain`
   (`src/keychain.ts`), one OS-keychain record (`iam-session`) read before mount

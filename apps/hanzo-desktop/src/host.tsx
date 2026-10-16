@@ -4,7 +4,7 @@ import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/rooms';
-import { App } from '@hanzo/rooms/App';
+import { App, type Bar } from '@hanzo/rooms/App';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
@@ -33,6 +33,17 @@ configure({
   // does for a guest: the free lane, never the caller's own.
   key: ORG_KEY[brand.brand],
 });
+
+// THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
+// the app draws the bar a browser would: the sidebar toggle, Back and Forward
+// through the router below. macOS paints its traffic lights over the page's
+// top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
+// 78px clear there; Windows and Linux keep their native title bar above the
+// page and need none. The bar drags the window.
+const BAR: Bar = {
+  inset: /Mac/.test(navigator.userAgent) ? 78 : 0,
+  drag: { 'data-tauri-drag-region': true },
+};
 
 const IAM = {
   serverUrl: brand.cloudApi,
@@ -205,7 +216,7 @@ function Gate() {
 
   return (
     <Rooms router={router} path={path} route={path} Link={Anchor}>
-      <App />
+      <App bar={BAR} />
     </Rooms>
   );
 }
