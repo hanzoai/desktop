@@ -73,8 +73,9 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@hanzo/rooms@0.1.59'
-  - '@hanzo/build@0.2.55'
+  - '@hanzo/rooms@0.1.69'
+  - '@hanzo/build@0.2.59'
+  - '@hanzo/studio@0.1.0'
   - '@hanzo/voice@0.1.6'
   - '@hanzo/ui@8.4.13 || 8.27.88'
   - '@hanzo/gui@8.2.1'
@@ -191,7 +192,7 @@ catalog:
   '@hanzo/ai': '0.6.23'
   '@hanzo/appearance': '0.2.9'
   '@hanzo/brand': '1.4.8'
-  '@hanzo/build': '0.2.55'
+  '@hanzo/build': '0.2.59'
   '@hanzo/composer': '0.2.0'
   '@hanzo/data': '1.2.4'
   '@hanzo/design': '0.5.35'
@@ -201,7 +202,8 @@ catalog:
   '@hanzo/iam': '0.21.29'
   '@hanzo/personas': '1.0.5'
   '@hanzo/plans': '1.8.17'
-  '@hanzo/rooms': '0.1.59'
+  '@hanzo/rooms': '0.1.69'
+  '@hanzo/studio': '0.1.0'
   '@hanzo/tabs': '0.1.7'
   '@hanzo/logo': '1.0.26'
   '@hanzo/pay': '0.1.2'
