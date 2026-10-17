@@ -299,7 +299,22 @@ owns:
 
 - **Session**: `@hanzo/iam`'s `IamProvider` with `storage: keychain`
   (`src/keychain.ts`), one OS-keychain record (`iam-session`) read before mount
-  and written whole on each change. No token in localStorage.
+  and written whole on each change. No token in localStorage, so the rooms are
+  told where it is (`configure({ session: keychain })`, @hanzo/rooms 0.1.71+):
+  their organization gate and every call read the token there. The keychain is
+  real only with the `keyring` crate's store features (Cargo.toml): keyring 3
+  has no default store, and without them it was the mock, whose entries die
+  with each `Entry`, so a sign-in was lost on the reload that finishes it.
+- **Proving the packaged app on Linux**: unpack the `.deb` and drive
+  `usr/bin/hanzo-desktop` through `tauri-driver` + `WebKitWebDriver` under
+  `xvfb-run`, inside `dbus-run-session` with `gnome-keyring-daemon --unlock
+  --components=secrets` and scratch `XDG_*_HOME` dirs. Sign in for real: press
+  "Sign in with Hanzo", build hanzo.ai/login's address from the request the
+  app made (`hanzo_iam_state` and `hanzo_iam_code_verifier` in the webview's
+  localStorage, S256), sign a throwaway in there in a browser, and hand the
+  code from the `hanzo://oauth/hanzo` redirect to the app as its callback
+  event (`plugin:event|emit`, `hanzo-iam-callback`). The OS opener cannot be
+  caught: it goes through the desktop portal, not `xdg-open` on PATH.
 - **Sign-in**: `sdk.getSigninUrl()` opens in the system browser; the brand's
   deep link (`<scheme>://oauth/<brand>`, `deep_links.rs`) brings the code back
   as `iam.callbackEvent`, `sdk.handleCallback` exchanges it, and the window
