@@ -16,8 +16,8 @@ catalogs:
       specifier: 1.4.8
       version: 1.4.8
     '@hanzo/build':
-      specifier: 0.2.59
-      version: 0.2.59
+      specifier: 0.2.60
+      version: 0.2.60
     '@hanzo/composer':
       specifier: 0.2.0
       version: 0.2.0
@@ -52,11 +52,11 @@ catalogs:
       specifier: 1.8.17
       version: 1.8.17
     '@hanzo/rooms':
-      specifier: 0.1.69
-      version: 0.1.69
+      specifier: 0.1.71
+      version: 0.1.71
     '@hanzo/studio':
-      specifier: 0.1.0
-      version: 0.1.0
+      specifier: 0.1.3
+      version: 0.1.3
     '@hanzo/tabs':
       specifier: 0.1.7
       version: 0.1.7
@@ -581,7 +581,7 @@ importers:
         version: 1.4.8(react@19.2.8)
       '@hanzo/build':
         specifier: 'catalog:'
-        version: 0.2.59(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+        version: 0.2.60(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/composer':
         specifier: 'catalog:'
         version: 0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
@@ -617,10 +617,10 @@ importers:
         version: 1.8.17
       '@hanzo/rooms':
         specifier: 'catalog:'
-        version: 0.1.69(14fec21e988277c3d7b72afa18a58f70)
+        version: 0.1.71(a6de8a01344bde2989c4fa6618b987fc)
       '@hanzo/studio':
         specifier: 'catalog:'
-        version: 0.1.0(a86722197c70f1e444a6b98910de1901)
+        version: 0.1.3(899c32ae5480fa2c6776750997e561ff)
       '@hanzo/tabs':
         specifier: 'catalog:'
         version: 0.1.7(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(lucide-react@1.44.0(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1807,8 +1807,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/build@0.2.59':
-    resolution: {integrity: sha512-ioDirtA5HFczx37Ue3QiO3ALDexlHMsMWrN7793qdie9kub5/a+uNiZWJffyZ4pUkDmF84RkyIQ9UPyFSwTxtg==}
+  '@hanzo/build@0.2.60':
+    resolution: {integrity: sha512-0qVlSQCO8pVYDr0z4s2tEJgG64Z2cEn4+/dBfwG7bZYWK+2rW/F4Iatz/F5cOJf0rHocp2SA0AgjCxjD3VkA8Q==}
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/composer': '>=0.2.0'
@@ -1937,8 +1937,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/rooms@0.1.69':
-    resolution: {integrity: sha512-hFW/ovrTYw1t+7A7dk+2pfHHUOVeKcROx5p4QNNDQSp9ZUgBg94pZ4JAekJTrRkfmOaHT2uBw3NZBiwNlBkCGw==}
+  '@hanzo/rooms@0.1.71':
+    resolution: {integrity: sha512-Zt/A3fGdwT1nxUKCMS3p1+sv65fsxAbYBgHUBKe700ePlpXy1iApJuuADqOtHcBPGcdNDCArjXXrrGqLFobJLQ==}
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/ai': '>=0.6.23'
@@ -1958,11 +1958,11 @@ packages:
       react: '>=19.2.8'
       react-dom: '>=19.2.8'
 
-  '@hanzo/studio@0.1.0':
-    resolution: {integrity: sha512-kQax9UyGnK6VGmeronnSwHVg6k0o5qZJdJfn1PcuQ+7OqI7g1UqAIXKQaUbsgap5qFQbWZgBhghC5XN4HR94cw==}
+  '@hanzo/studio@0.1.3':
+    resolution: {integrity: sha512-YeXXPm2DIUlEIjthKBPKeBtzUOsUCQ0ZZsf791V7g1qiZ+a3T3T0LpuXLamAg4nO1BAdn239hsbaI3URKRzfJA==}
     engines: {node: '>=22.18'}
     peerDependencies:
-      '@hanzo/build': '>=0.2.56'
+      '@hanzo/build': '>=0.2.60'
       '@hanzo/composer': '>=0.2.0'
       '@hanzo/gui': '>=8.3.5'
       '@hanzo/ui': '>=8.27.77'
@@ -12617,7 +12617,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/build@0.2.59(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+  '@hanzo/build@0.2.60(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@hanzo/composer': 0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/gui': 8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -12774,18 +12774,18 @@ snapshots:
       '@hanzogui/lucide-icons-2': 8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       react: 19.2.8
 
-  '@hanzo/rooms@0.1.69(14fec21e988277c3d7b72afa18a58f70)':
+  '@hanzo/rooms@0.1.71(a6de8a01344bde2989c4fa6618b987fc)':
     dependencies:
       '@hanzo/ai': 0.6.23(react@19.2.8)
       '@hanzo/appearance': 0.2.9(react@19.2.8)
-      '@hanzo/build': 0.2.59(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/build': 0.2.60(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/composer': 0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/event': 0.3.57(react@19.2.8)
       '@hanzo/gui': 8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/iam': 0.21.29(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/logo': 1.0.26(react@19.2.8)
       '@hanzo/personas': 1.0.5
-      '@hanzo/studio': 0.1.0(a86722197c70f1e444a6b98910de1901)
+      '@hanzo/studio': 0.1.3(899c32ae5480fa2c6776750997e561ff)
       '@hanzo/ui': 8.27.88(c490e3c4cb707fda3652c8a426566a13)
       '@hanzo/usage': 0.1.18(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/voice': 0.1.18(react@19.2.8)
@@ -12796,9 +12796,9 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
       simple-icons: 16.30.0
 
-  '@hanzo/studio@0.1.0(a86722197c70f1e444a6b98910de1901)':
+  '@hanzo/studio@0.1.3(899c32ae5480fa2c6776750997e561ff)':
     dependencies:
-      '@hanzo/build': 0.2.59(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      '@hanzo/build': 0.2.60(@hanzo/composer@0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(@hanzo/ui@8.27.88(c490e3c4cb707fda3652c8a426566a13))(@hanzo/voice@0.1.18(react@19.2.8))(@hanzogui/lucide-icons-2@8.3.5(react-dom@19.2.8(react@19.2.8))(react-native-svg@15.15.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/composer': 0.2.0(@hanzo/gui@8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@hanzo/gui': 8.3.5(@hanzogui/react-native-web-lite@8.3.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hanzo/ui': 8.27.88(c490e3c4cb707fda3652c8a426566a13)

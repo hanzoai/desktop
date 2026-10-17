@@ -32,6 +32,9 @@ configure({
   // Signed out, the rooms answer on the brand's publishable key, as the web
   // does for a guest: the free lane, never the caller's own.
   key: ORG_KEY[brand.brand],
+  // The session is in the keychain, never the webview's localStorage: the rooms
+  // read the token, its expiry and its claims there.
+  session: keychain,
 });
 
 // THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
