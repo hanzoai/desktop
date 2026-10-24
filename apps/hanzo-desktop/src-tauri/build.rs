@@ -92,6 +92,7 @@ fn main() {
     println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.13");
     println!("cargo:rerun-if-changed=src/main.rs");
     println!("cargo:rerun-if-changed=capabilities");
+    println!("cargo:rerun-if-changed=tauri.conf.json");
 
     let src = std::fs::read_to_string("src/main.rs").expect("src/main.rs");
     let commands = handlers(&src);

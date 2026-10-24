@@ -67,9 +67,10 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
         if window_config.label == Window::Coordinator.as_str() {
             window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
         }
-        #[cfg(target_os = "linux")]
-        {
-            if window_config.label == Window::Main.as_str() {
+        if window_config.label == Window::Main.as_str() {
+            window_config.url = tauri::WebviewUrl::External("http://localhost:3000/login".parse().unwrap());
+            #[cfg(target_os = "linux")]
+            {
                 window_config.transparent = false;
                 window_config.decorations = true;
             }

@@ -55,7 +55,7 @@
     "windows": [
       {
         "label": "main",
-        "url": "http://localhost:3000",
+        "url": "http://localhost:3000/login",
         "transparent": false,
         "title": "Hanzo",
         "width": 1280,
