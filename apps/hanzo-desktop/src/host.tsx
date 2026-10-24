@@ -20,7 +20,9 @@ import { safeListen } from './utils/tauri-check';
 // window's history), and links to other origins (the system browser).
 
 const brand = getBrand();
-const SITE = 'https://hanzo.ai';
+const SITE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3000'
+  : 'https://hanzo.ai';
 
 configure({
   site: SITE,
@@ -181,14 +183,51 @@ async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
   window.location.replace(onward());
 }
 
+function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      width: '100vw',
+      backgroundColor: '#050505',
+      color: '#f5f5f5',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
+      <div style={{
+        width: '38px',
+        height: '38px',
+        border: '3px solid rgba(255,255,255,0.12)',
+        borderTopColor: '#ffffff',
+        borderRadius: '50%',
+        animation: 'spin 0.8s linear infinite'
+      }} />
+      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      <div style={{ marginTop: '16px', fontSize: '14px', fontWeight: 500, letterSpacing: '-0.2px', opacity: 0.88 }}>
+        {message}
+      </div>
+    </div>
+  );
+}
+
 function Gate() {
-  const { isLoading, isAuthenticated, sdk } = useIam();
+  const { isLoading: iamLoading, isAuthenticated, sdk } = useIam();
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const here = useSyncExternalStore(subscribe, address);
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
   const [visiting, setVisiting] = useState(guest);
 
-  if (isLoading) return null;
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadingTimedOut(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const isLoading = iamLoading && !loadingTimedOut;
+
+  if (isLoading) return <LoadingScreen message="Loading Hanzo AI…" />;
   const path = here.split('?')[0] || '/';
   if (!isAuthenticated && (DOORS.has(path) || !visiting)) {
     return (
@@ -229,12 +268,24 @@ export function Host() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    void openKeychain().then(() => setReady(true));
+    const fallback = setTimeout(() => setReady(true), 1200);
+    void openKeychain()
+      .then(() => {
+        clearTimeout(fallback);
+        setReady(true);
+      })
+      .catch(() => {
+        clearTimeout(fallback);
+        setReady(true);
+      });
     document.addEventListener('click', outward, true);
-    return () => document.removeEventListener('click', outward, true);
+    return () => {
+      clearTimeout(fallback);
+      document.removeEventListener('click', outward, true);
+    };
   }, []);
 
-  if (!ready) return null;
+  if (!ready) return <LoadingScreen message="Starting Hanzo Desktop…" />;
   return (
     <GuiProvider config={config} defaultTheme={scheme}>
       <IamProvider config={IAM}>

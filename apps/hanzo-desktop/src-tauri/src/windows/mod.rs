@@ -67,11 +67,26 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
         if window_config.label == Window::Coordinator.as_str() {
             window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
         }
+        #[cfg(target_os = "linux")]
+        {
+            if window_config.label == Window::Main.as_str() {
+                window_config.transparent = false;
+                window_config.decorations = true;
+            }
+        }
         match WebviewWindowBuilder::from_config(&app_handle, &window_config) {
             Ok(builder) => match builder.build() {
                 Ok(window) => {
                     log::info!("window {} created", label);
                     microphone::permit(&window);
+                    if focus {
+                        log::info!("focusing newly created window {}", label);
+                        if window.is_minimized().unwrap_or_default() {
+                            let _ = window.unminimize();
+                        }
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
                     Ok(window)
                 }
                 Err(e) => {
@@ -102,9 +117,18 @@ pub fn show_spotlight_window(app_handle: AppHandle) {
 pub fn open_main_window_with_path(app_handle: AppHandle, path: String) {
     match recreate_window(app_handle.clone(), Window::Main, true) {
         Ok(window) => {
+            let target_url = if path.starts_with("http://") || path.starts_with("https://") {
+                path.clone()
+            } else {
+                format!("http://localhost:3000{}", if path.starts_with('/') { path.clone() } else { format!("/{}", path) })
+            };
+            if let Ok(parsed_url) = target_url.parse() {
+                let _ = window.navigate(parsed_url);
+            }
             if let Err(e) = app_handle.emit_to(Window::Main.as_str(), "navigate-to-path", path) {
                 log::error!("failed to emit 'navigate-to-path': {}", e);
             }
+            let _ = window.show();
             if let Err(e) = window.set_focus() {
                 log::error!("failed to set focus: {}", e);
             }

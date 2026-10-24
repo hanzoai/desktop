@@ -352,6 +352,14 @@ fn main() {
                     }
                     drop(hanzo_node_manager_guard);
 
+                    // Ensure local hanzo-site service is reachable on port 3000
+                    if std::net::TcpStream::connect("127.0.0.1:3000").is_err() {
+                        log::info!("local hanzo-site not reachable on port 3000, ensuring systemd user service is up...");
+                        let _ = std::process::Command::new("systemctl")
+                            .args(["--user", "start", "hanzo-site.service"])
+                            .spawn();
+                    }
+
                     let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
                     let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);

@@ -54,14 +54,16 @@
     },
     "windows": [
       {
-        "transparent": true,
+        "label": "main",
+        "url": "http://localhost:3000",
+        "transparent": false,
         "title": "Hanzo",
         "width": 1280,
         "height": 840,
         "resizable": true,
         "dragDropEnabled": false,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
+        "decorations": true,
+        "center": true,
         "create": false
       },
       {

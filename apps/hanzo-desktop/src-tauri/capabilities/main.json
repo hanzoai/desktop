@@ -7,6 +7,7 @@
   ],
   "permissions": [
     "core:default",
+    "deep-link:default",
     "dialog:allow-save",
     "fs:allow-download-write",
     "shell:allow-open",
@@ -45,6 +46,12 @@
         },
         {
           "url": "https://api.hanzo.ai/*"
+        },
+        {
+          "url": "https://hanzo.ai/*"
+        },
+        {
+          "url": "https://hanzo.id/*"
         }
       ],
       "deny": []
