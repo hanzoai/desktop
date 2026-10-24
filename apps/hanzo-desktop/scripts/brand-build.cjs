@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const SUPPORTED = ['hanzo', 'zoo', 'lux'];
+const SUPPORTED = ['hanzo', 'zoo', 'lux', 'team'];
 const brand = process.argv[2];
 if (!brand || !SUPPORTED.includes(brand)) {
   console.error('usage: brand-build.cjs <' + SUPPORTED.join('|') + '>');

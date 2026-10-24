@@ -55,7 +55,7 @@
     "windows": [
       {
         "label": "main",
-        "url": "http://localhost:3000/login",
+        "url": "http://localhost:3000/login?next=/chat",
         "transparent": true,
         "title": "Hanzo",
         "width": 1280,

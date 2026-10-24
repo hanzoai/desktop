@@ -158,7 +158,7 @@ function stayGuest(): void {
 /** Where a sign-in started from /login?next= goes on to, on this origin only. */
 function onward(): string {
   const next = new URLSearchParams(window.location.search).get('next');
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/';
+  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 }
 
 /**

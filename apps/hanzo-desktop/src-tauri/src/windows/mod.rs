@@ -68,7 +68,13 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
             window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
         }
         if window_config.label == Window::Main.as_str() {
-            window_config.url = tauri::WebviewUrl::External("http://localhost:3000/login".parse().unwrap());
+            let brand = option_env!("BRAND").unwrap_or("hanzo");
+            let default_url = if brand == "team" {
+                "https://hanzo.team"
+            } else {
+                "http://localhost:3000/login?next=/chat"
+            };
+            window_config.url = tauri::WebviewUrl::External(default_url.parse().unwrap());
             window_config.transparent = true;
             window_config.decorations = false;
         }
