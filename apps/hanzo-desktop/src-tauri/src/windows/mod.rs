@@ -69,11 +69,8 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
         }
         if window_config.label == Window::Main.as_str() {
             window_config.url = tauri::WebviewUrl::External("http://localhost:3000/login".parse().unwrap());
-            #[cfg(target_os = "linux")]
-            {
-                window_config.transparent = false;
-                window_config.decorations = true;
-            }
+            window_config.transparent = true;
+            window_config.decorations = false;
         }
         match WebviewWindowBuilder::from_config(&app_handle, &window_config) {
             Ok(builder) => match builder.build() {
