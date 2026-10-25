@@ -11,7 +11,8 @@ use crate::{
 
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let quit_menu_item = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
-    let show_menu_item = MenuItemBuilder::with_id("show", "Show").build(app)?;
+    let show_menu_item = MenuItemBuilder::with_id("show", "Hanzo AI").build(app)?;
+    let team_menu_item = MenuItemBuilder::with_id("team", "Hanzo Team").build(app)?;
     let hanzo_spotlight_menu_item = MenuItemBuilder::with_id("hanzo_spotlight", "Hanzo Spotlight")
         .accelerator("CmdOrCtrl+Shift+J")
         .build(app)?;
@@ -25,6 +26,7 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let menu = MenuBuilder::new(app)
         .items(&[
             &show_menu_item,
+            &team_menu_item,
             &hanzo_node_manager_menu_item,
             &hanzo_spotlight_menu_item,
             &quit_menu_item,
@@ -52,7 +54,10 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .menu(&menu)
         .on_menu_event(move |tray, event| match event.id().as_ref() {
             "show" => {
-                recreate_window(tray.app_handle().clone(), Window::Main, true);
+                let _ = recreate_window(tray.app_handle().clone(), Window::Main, true);
+            }
+            "team" => {
+                let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
             }
             "open_hanzo_node_manager_window" => {
                 recreate_window(tray.app_handle().clone(), Window::HanzoNodeManager, true);

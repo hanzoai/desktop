@@ -69,10 +69,11 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
         }
         if window_config.label == Window::Main.as_str() {
             let brand = option_env!("BRAND").unwrap_or("hanzo");
-            let default_url = if brand == "team" {
-                "https://hanzo.team"
-            } else {
-                "http://localhost:3000/login?next=/chat"
+            let default_url = match brand {
+                "team" => "https://hanzo.team",
+                "studio" => "http://localhost:3000/studio",
+                "bot" => "http://localhost:3000/bots",
+                _ => "http://localhost:3000/login?next=/chat",
             };
             window_config.url = tauri::WebviewUrl::External(default_url.parse().unwrap());
             window_config.transparent = true;

@@ -2,6 +2,20 @@
   "identifier": "main",
   "description": "The main window: every plugin permission it uses and every command the app registers (build.rs refuses a command it does not grant).",
   "local": true,
+  "remote": {
+    "urls": [
+      "http://localhost:3000/*",
+      "http://127.0.0.1:3000/*",
+      "http://localhost:1420/*",
+      "http://127.0.0.1:1420/*",
+      "https://hanzo.ai/*",
+      "https://*.hanzo.ai/*",
+      "https://hanzo.team/*",
+      "https://*.hanzo.team/*",
+      "https://hanzo.id/*",
+      "https://*.hanzo.id/*"
+    ]
+  },
   "windows": [
     "main"
   ],
