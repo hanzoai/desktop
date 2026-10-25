@@ -74,3 +74,4 @@ bun.lockb
 apps/hanzo-desktop/e2e-tests/.artifacts/
 apps/hanzo-desktop/test-results/
 apps/hanzo-desktop/e2e-tests/.film/
+/dist-release/
