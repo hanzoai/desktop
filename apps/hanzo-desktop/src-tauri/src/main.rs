@@ -100,6 +100,7 @@ fn main() {
     zapd::embed();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            let _ = recreate_window(app.clone(), Window::Main, true);
             app.emit("single-instance", Payload { args: argv, cwd })
                 .unwrap();
         }))
