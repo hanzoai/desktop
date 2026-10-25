@@ -246,7 +246,7 @@ const TermsAndConditionsPage = () => {
         <Checkbox
           checked={termsAndConditionsAccepted}
           id="terms"
-          onCheckedChange={(checked) =>
+          onCheckedChange={(checked: any) =>
             setTermsAndConditionsAccepted(checked as boolean)
           }
         />

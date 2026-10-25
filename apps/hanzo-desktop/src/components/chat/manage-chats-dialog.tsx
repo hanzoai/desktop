@@ -341,7 +341,7 @@ export function ManageChatsDialog({
                       checked={isSelected}
                       className="shrink-0"
                       onCheckedChange={() => handleToggleSelect(inbox.inbox_id)}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e: any) => e.stopPropagation()}
                     />
                     <div className="flex flex-1 cursor-pointer items-center gap-3 overflow-hidden">
                       <span className="text-text-default truncate text-sm font-medium">

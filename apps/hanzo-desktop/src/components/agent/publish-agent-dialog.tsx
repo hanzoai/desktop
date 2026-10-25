@@ -464,7 +464,7 @@ export default function PublishAgentDialog() {
                   <Checkbox
                     id="terms"
                     checked={acceptedTerms}
-                    onCheckedChange={(checked) =>
+                    onCheckedChange={(checked: any) =>
                       setAcceptedTerms(checked as boolean)
                     }
                   />

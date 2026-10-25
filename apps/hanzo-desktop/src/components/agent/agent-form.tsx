@@ -1924,7 +1924,7 @@ function AgentForm({ mode }: AgentFormProps) {
                                   checked={
                                     selectedKeys?.[file.path]?.checked ?? false
                                   }
-                                  onCheckedChange={(checked) => {
+                                  onCheckedChange={(checked: any) => {
                                     const newKeys = { ...selectedKeys };
                                     if (checked) {
                                       newKeys[file.path] = { checked: true };
@@ -2417,7 +2417,7 @@ function AgentForm({ mode }: AgentFormProps) {
                                     toolsList?.length
                                 }
                                 id="all"
-                                onCheckedChange={(checked) => {
+                                onCheckedChange={(checked: any) => {
                                   const isAllConfigFilled = toolsList
                                     ?.map((tool) => tool.config)
                                     .filter((item) => !!item)

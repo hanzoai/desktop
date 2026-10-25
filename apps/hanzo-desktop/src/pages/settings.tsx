@@ -663,7 +663,7 @@ const SettingsPage = () => {
                 <Switch
                   checked={gpu.connected}
                   disabled={!gpu.signedIn}
-                  onCheckedChange={(checked) => void gpu.toggle(checked)}
+                  onCheckedChange={(checked: any) => void gpu.toggle(checked)}
                   className="data-[state=unchecked]:bg-gray-400"
                 />
               </div>

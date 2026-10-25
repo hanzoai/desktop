@@ -339,7 +339,7 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
           <div className="flex gap-3">
             <Switch
               checked={form.watch('customPrompt') === ARTIFACTS_SYSTEM_PROMPT}
-              onCheckedChange={(checked) => {
+              onCheckedChange={(checked: any) => {
                 form.setValue(
                   'customPrompt',
                   checked ? ARTIFACTS_SYSTEM_PROMPT : '',
