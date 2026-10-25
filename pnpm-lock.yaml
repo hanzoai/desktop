@@ -10,8 +10,8 @@ catalogs:
       specifier: 0.6.23
       version: 0.6.23
     '@hanzo/app':
-      specifier: 0.2.20
-      version: 0.2.20
+      specifier: 0.2.21
+      version: 0.2.21
     '@hanzo/appearance':
       specifier: 0.2.9
       version: 0.2.9
@@ -575,7 +575,7 @@ importers:
         version: 0.6.23(react@19.2.8)
       '@hanzo/app':
         specifier: 'catalog:'
-        version: 0.2.20(ecb6f46fc6c8a43a0486e6a53a802711)
+        version: 0.2.21(ecb6f46fc6c8a43a0486e6a53a802711)
       '@hanzo/appearance':
         specifier: 'catalog:'
         version: 0.2.9(react@19.2.8)
@@ -1788,8 +1788,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/app@0.2.20':
-    resolution: {integrity: sha512-PhmZyl+MwtFYQBocADpyKcxdZqAfMBTG3r009BxuW4Gdq2suopH9LTmUdtRJQ/JIwOu1FUsa9qa/wa1O4DDxLw==}
+  '@hanzo/app@0.2.21':
+    resolution: {integrity: sha512-HJ+Z/Ud6OEaWyFaD9Au7V/Ii234if9h1DHXI98+RP058pmQ+KMi2w5Jl4f5flFIQY5E0zywzJ9GkC7vleXamtQ==}
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/ai': '>=0.6.23'
@@ -12626,7 +12626,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/app@0.2.20(ecb6f46fc6c8a43a0486e6a53a802711)':
+  '@hanzo/app@0.2.21(ecb6f46fc6c8a43a0486e6a53a802711)':
     dependencies:
       '@hanzo/ai': 0.6.23(react@19.2.8)
       '@hanzo/appearance': 0.2.9(react@19.2.8)

@@ -14,6 +14,12 @@ pub struct LocalEntry {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct LocalWorkspaceInfo {
+    pub name: String,
+    pub path: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct DevRunResult {
     pub session_id: String,
     pub output: String,
@@ -28,6 +34,94 @@ pub async fn local_workspace_open_dialog(app: tauri::AppHandle) -> Result<Option
         let _ = tx.send(path_str);
     });
     rx.await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn local_workspace_open_file_dialog(app: tauri::AppHandle) -> Result<Option<String>, String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    app.dialog().file().pick_file(move |file| {
+        let path_str = file.map(|f| f.to_string());
+        let _ = tx.send(path_str);
+    });
+    rx.await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn local_workspace_clone_repo(repo: String, target_dir: Option<String>) -> Result<LocalWorkspaceInfo, String> {
+    let clean_repo = repo.trim().to_string();
+    if clean_repo.is_empty() {
+        return Err("Repository cannot be empty".to_string());
+    }
+
+    let url = if clean_repo.starts_with("http://") || clean_repo.starts_with("https://") || clean_repo.starts_with("git@") {
+        clean_repo.clone()
+    } else {
+        format!("https://github.com/{}.git", clean_repo)
+    };
+
+    let repo_name = clean_repo
+        .split('/')
+        .last()
+        .unwrap_or("repo")
+        .trim_end_matches(".git")
+        .to_string();
+
+    let dest = match target_dir {
+        Some(d) => PathBuf::from(d),
+        None => {
+            let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
+            home.join("HanzoWorkspaces").join(&repo_name)
+        }
+    };
+
+    if dest.exists() {
+        return Ok(LocalWorkspaceInfo {
+            name: repo_name,
+            path: dest.to_string_lossy().to_string(),
+        });
+    }
+
+    if let Some(parent) = dest.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+
+    let output = Command::new("git")
+        .arg("clone")
+        .arg(&url)
+        .arg(&dest)
+        .output()
+        .map_err(|e| format!("Failed to invoke git: {}", e))?;
+
+    if !output.status.success() {
+        let err = String::from_utf8_lossy(&output.stderr).to_string();
+        return Err(format!("git clone failed: {}", err));
+    }
+
+    Ok(LocalWorkspaceInfo {
+        name: repo_name,
+        path: dest.to_string_lossy().to_string(),
+    })
+}
+
+#[tauri::command]
+pub async fn local_workspace_import_file(source_path: String, target_dir: String) -> Result<LocalEntry, String> {
+    let src = Path::new(&source_path);
+    if !src.exists() {
+        return Err(format!("Source file does not exist: {}", source_path));
+    }
+    let file_name = src.file_name().ok_or("Invalid source file name")?;
+    let dest = Path::new(&target_dir).join(file_name);
+    fs::copy(src, &dest).map_err(|e| format!("Failed to copy file: {}", e))?;
+    let metadata = fs::metadata(&dest).map_err(|e| e.to_string())?;
+    Ok(LocalEntry {
+        name: file_name.to_string_lossy().to_string(),
+        path: dest.to_string_lossy().to_string(),
+        is_dir: false,
+        size: metadata.len(),
+        last_modified: metadata.modified().ok().and_then(|t| {
+            t.duration_since(std::time::UNIX_EPOCH).ok().map(|d| d.as_secs())
+        }),
+    })
 }
 
 #[tauri::command]

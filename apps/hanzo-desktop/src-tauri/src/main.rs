@@ -46,7 +46,8 @@ use crate::commands::secure_storage::{
 };
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
 use crate::commands::local_workspace::{
-    local_workspace_open_dialog, local_workspace_list, local_workspace_read_file,
+    local_workspace_open_dialog, local_workspace_open_file_dialog, local_workspace_clone_repo,
+    local_workspace_import_file, local_workspace_list, local_workspace_read_file,
     local_workspace_write_file, local_workspace_create_file, local_workspace_create_dir,
     local_workspace_delete, local_workspace_run_dev,
 };
@@ -232,6 +233,9 @@ fn main() {
             secure_storage_get,
             secure_storage_delete,
             local_workspace_open_dialog,
+            local_workspace_open_file_dialog,
+            local_workspace_clone_repo,
+            local_workspace_import_file,
             local_workspace_list,
             local_workspace_read_file,
             local_workspace_write_file,

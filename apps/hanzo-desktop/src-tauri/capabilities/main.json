@@ -162,6 +162,9 @@
       ]
     },
     "allow-local-workspace-open-dialog",
+    "allow-local-workspace-open-file-dialog",
+    "allow-local-workspace-clone-repo",
+    "allow-local-workspace-import-file",
     "allow-local-workspace-list",
     "allow-local-workspace-read-file",
     "allow-local-workspace-write-file",
