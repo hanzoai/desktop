@@ -12,3 +12,4 @@ pub mod mining;
 pub mod secure_storage;
 pub mod spotlight_commands;
 pub mod studio;
+pub mod local_workspace;

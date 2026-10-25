@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# @hanzo/rooms assets, copied in by vite.config.ts at every serve and build
+# @hanzo/app assets, copied in by vite.config.ts at every serve and build
 public/agents
 public/bots
+public/personas

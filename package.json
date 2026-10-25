@@ -32,7 +32,7 @@
     "@hanzo/pay": "catalog:",
     "@hanzo/personas": "catalog:",
     "@hanzo/plans": "catalog:",
-    "@hanzo/rooms": "catalog:",
+    "@hanzo/app": "catalog:",
     "@hanzo/studio": "catalog:",
     "@hanzo/tabs": "catalog:",
     "@hanzo/ui": "catalog:",

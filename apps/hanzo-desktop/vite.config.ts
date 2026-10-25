@@ -18,7 +18,7 @@ import tailwindcss from '@tailwindcss/vite';
 const req = createRequire(import.meta.url);
 
 // The rooms name their portraits by path (`/agents/<id>.png`, `/bots/<name>.png`)
-// and ship them in @hanzo/rooms' `assets/`. hanzo.ai copies that tree into the
+// and ship them in @hanzo/app' `assets/`. hanzo.ai copies that tree into the
 // root it serves (its scripts/rooms-assets.mjs), and so does this window: into
 // public/ before every serve and build, so a new portrait arrives with the next
 // rooms release and the copy is never committed.
@@ -26,7 +26,7 @@ function rooms(): Plugin {
   return {
     name: 'rooms-assets',
     buildStart() {
-      const from = pathResolve(dirname(req.resolve('@hanzo/rooms')), '..', 'assets');
+      const from = pathResolve(dirname(req.resolve('@hanzo/app')), '..', 'assets');
       cpSync(from, pathResolve(import.meta.dirname, 'public'), { recursive: true });
     },
   };

@@ -45,6 +45,11 @@ use crate::commands::secure_storage::{
     init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
 };
 use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::commands::local_workspace::{
+    local_workspace_open_dialog, local_workspace_list, local_workspace_read_file,
+    local_workspace_write_file, local_workspace_create_file, local_workspace_create_dir,
+    local_workspace_delete, local_workspace_run_dev,
+};
 use crate::mining::MiningManager;
 use crate::model_tools::{
     model_tools_bitdelta_apply, model_tools_bitdelta_encode, model_tools_grpo_run,
@@ -226,6 +231,14 @@ fn main() {
             secure_storage_set,
             secure_storage_get,
             secure_storage_delete,
+            local_workspace_open_dialog,
+            local_workspace_list,
+            local_workspace_read_file,
+            local_workspace_write_file,
+            local_workspace_create_file,
+            local_workspace_create_dir,
+            local_workspace_delete,
+            local_workspace_run_dev,
             #[cfg(feature = "machine")]
             machine::commands::machine_health,
             #[cfg(feature = "machine")]

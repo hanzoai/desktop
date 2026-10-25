@@ -3,8 +3,8 @@ import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
-import { configure, Look, Rooms, type Link, type Router } from '@hanzo/rooms';
-import { App, type Bar } from '@hanzo/rooms/App';
+import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
+import { App, type Bar } from '@hanzo/app/App';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
 

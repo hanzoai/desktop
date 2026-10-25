@@ -1,7 +1,7 @@
 /**
  * The main window's chrome — measured, not reviewed.
  *
- * The window is hanzo.ai's app (@hanzo/rooms App) with the bar a browser would
+ * The window is hanzo.ai's app (@hanzo/app App) with the bar a browser would
  * have given it (host.tsx `BAR`): the sidebar's toggle, Back and Forward at the
  * top-left, the bar dragging the window. The rail below it leads with Chat,
  * Dev, Library, Scheduled tasks, Customize, then More. Runs against the Vite
