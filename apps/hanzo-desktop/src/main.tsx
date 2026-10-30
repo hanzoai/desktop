@@ -17,13 +17,13 @@ import '@hanzo/ui/styles/document.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { Host } from './host';
+import { Main } from './host';
 
 const root = document.querySelector('#root');
 if (!root) throw new Error('root element missing');
 
 createRoot(root as HTMLElement).render(
   <StrictMode>
-    <Host />
+    <Main />
   </StrictMode>,
 );

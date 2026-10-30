@@ -3,8 +3,8 @@ import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
-import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
-import { App, type Bar } from '@hanzo/app/App';
+import { configure, Host, Look, type Link, type Router } from '@hanzo/app';
+import { App, type Titlebar } from '@hanzo/app/App';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
@@ -13,8 +13,8 @@ import { keychain, open as openKeychain, written } from './keychain';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
 
-// The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
-// at `/`, hosted here the way hanzo.ai and hanzo.team host the rooms. What is
+// The main window is hanzo.ai's app: the same @hanzo/app `App` hanzo.ai draws
+// at `/`, hosted here the way hanzo.ai and hanzo.team host the app. What is
 // the desktop's own is only what a host owns: where the session lives (the OS
 // keychain), how sign-in comes back (the brand's deep link), the router (the
 // window's history), and links to other origins (the system browser).
@@ -31,11 +31,11 @@ configure({
   api: brand.cloudApi,
   iam: brand.iam.baseUrl,
   brand: brand.name === 'Hanzo' ? undefined : brand.name,
-  // Signed out, the rooms answer on the brand's publishable key, as the web
+  // Signed out, the app answers on the brand's publishable key, as the web
   // does for a guest: the free lane, never the caller's own.
   key: ORG_KEY[brand.brand],
-  // The session is in the keychain, never the webview's localStorage: the rooms
-  // read the token, its expiry and its claims there.
+  // The session is in the keychain, never the webview's localStorage: the app
+  // reads the token, its expiry and its claims there.
   session: keychain,
 });
 
@@ -45,7 +45,7 @@ configure({
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
 // page and need none. The bar drags the window.
-const BAR: Bar = {
+const BAR: Titlebar = {
   inset: /Mac/.test(navigator.userAgent) ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
 };
@@ -59,7 +59,7 @@ const IAM = {
   storage: keychain,
 };
 
-// THE ROUTER IS HISTORY. The rooms move the app with `history.pushState`
+// THE ROUTER IS HISTORY. @hanzo/app moves the app with `history.pushState`
 // (lib/host `go`), so the window re-renders on every push and replace as well
 // as on popstate. A push to another origin cannot happen in a webview; it opens
 // in the browser instead.
@@ -130,7 +130,7 @@ function outward(e: globalThis.MouseEvent): void {
   void openUrl(out);
 }
 
-// The rooms send a signed-out visitor who asks to sign in to /login (or /signup)
+// The app sends a signed-out visitor who asks to sign in to /login (or /signup)
 // on the host's own origin: here that is this window, so those two addresses
 // draw the desktop's sign-in rather than a page of the app.
 const DOORS = new Set(['/login', '/signup']);
@@ -257,13 +257,13 @@ function Gate() {
   }
 
   return (
-    <Rooms router={router} path={path} route={path} Link={Anchor}>
+    <Host router={router} path={path} route={path} Link={Anchor}>
       <App bar={BAR} />
-    </Rooms>
+    </Host>
   );
 }
 
-export function Host() {
+export function Main() {
   const scheme = useScheme();
   const [ready, setReady] = useState(false);
 

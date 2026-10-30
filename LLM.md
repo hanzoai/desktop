@@ -282,15 +282,15 @@ control keeps `tabindex="0"`. Assert the aria/behaviour, never `.disabled`.
 
 ## The main window is hanzo.ai's app
 
-`src/main.tsx` mounts `Host` (`src/host.tsx`), which draws `@hanzo/rooms/App`,
-the same component hanzo.ai draws at `/`, `/chat` and `/dev`: the rail of apps,
-the sidebar, Chat and Dev in one inset panel. Desktop owns only what a host
-owns:
+`src/main.tsx` mounts `Main` (`src/host.tsx`), which draws `@hanzo/app/App`
+inside `@hanzo/app`'s `Host`, the same component hanzo.ai draws at `/`, `/chat`
+and `/dev`: the rail of apps, the sidebar, Chat and Dev in one inset panel.
+Desktop owns only what a host owns:
 
-- **The window's bar**: `<App bar={BAR} />`. There is no browser around this
-  window, so the app draws the bar one would: the sidebar's toggle, Back and
-  Forward through the router below (⌘[ ⌘] on a Mac, Alt+← Alt+→ elsewhere),
-  40px tall. macOS paints its traffic lights over the page's top-left
+- **The window's bar**: `<App bar={BAR} />`, `BAR` a `Titlebar`. There is no
+  browser around this window, so the app draws the bar one would: the
+  sidebar's toggle, Back and Forward through the router below (⌘[ ⌘] on a
+  Mac, Alt+← Alt+→ elsewhere), 40px tall. macOS paints its traffic lights over the page's top-left
   (`titleBarStyle: Overlay`), so the bar keeps 78px clear there; Windows and
   Linux keep their native title bar above the page and need none. The bar
   carries `data-tauri-drag-region`, which `core:window:allow-start-dragging`
@@ -299,9 +299,9 @@ owns:
 
 - **Session**: `@hanzo/iam`'s `IamProvider` with `storage: keychain`
   (`src/keychain.ts`), one OS-keychain record (`iam-session`) read before mount
-  and written whole on each change. No token in localStorage, so the rooms are
-  told where it is (`configure({ session: keychain })`, @hanzo/rooms 0.1.71+):
-  their organization gate and every call read the token there. The keychain is
+  and written whole on each change. No token in localStorage, so the app is
+  told where it is (`configure({ session: keychain })`):
+  its organization gate and every call read the token there. The keychain is
   real only with the `keyring` crate's store features (Cargo.toml): keyring 3
   has no default store, and without them it was the mock, whose entries die
   with each `Entry`, so a sign-in was lost on the reload that finishes it.
@@ -319,7 +319,7 @@ owns:
   deep link (`<scheme>://oauth/<brand>`, `deep_links.rs`) brings the code back
   as `iam.callbackEvent`, `sdk.handleCallback` exchanges it, and the window
   reloads at `/`. Signed out, `src/Welcome.tsx` is the whole window.
-- **Router**: the window's `history`. `go` (rooms `lib/host`) pushes; `Host`
+- **Router**: the window's `history`. `go` (@hanzo/app `lib/host`) pushes; `Main`
   re-renders on push, replace and popstate.
 - **Other origins**: a link to one opens in the system browser (`outward`), and
   the `away` plugin in `main.rs` turns any navigation off the app's own origin
@@ -643,7 +643,7 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   web-lite alias) and unhoists katex out from under the vite build. Keep the
   `react-native` override's major in step with the direct
   `@hanzogui/react-native-web-lite` dependency, or you ship two copies.
-- The main window renders `@hanzo/rooms/App` (above). `src/pages/*` and
+- The main window renders `@hanzo/app/App` (above). `src/pages/*` and
   `src/routes/*` are dead for the main window but still live for spotlight /
   coordinator / node-manager, so do not delete them. The wdio specs under `e2e/` other than
   `login.e2e.ts` still drive those pre-convergence routes.

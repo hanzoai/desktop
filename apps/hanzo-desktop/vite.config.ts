@@ -17,11 +17,11 @@ import tailwindcss from '@tailwindcss/vite';
 // Tamagui compiler plugin: the runtime GuiProvider config is enough.
 const req = createRequire(import.meta.url);
 
-// The rooms name their portraits by path (`/agents/<id>.png`, `/bots/<name>.png`)
-// and ship them in @hanzo/app' `assets/`. hanzo.ai copies that tree into the
+// @hanzo/app names its portraits by path (`/agents/<id>.png`, `/bots/<name>.png`)
+// and ships them in its `assets/`. hanzo.ai copies that tree into the
 // root it serves (its scripts/rooms-assets.mjs), and so does this window: into
 // public/ before every serve and build, so a new portrait arrives with the next
-// rooms release and the copy is never committed.
+// @hanzo/app release and the copy is never committed.
 function rooms(): Plugin {
   return {
     name: 'rooms-assets',
