@@ -2410,6 +2410,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "869b0adbda23651a9c5c0c3d270aac9fcb52e8622a8f2b17e57802d7791962f2"
 
 [[package]]
+name = "enso"
+version = "0.1.1"
+dependencies = [
+ "hanzo-router",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "enum-as-inner"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3558,7 +3567,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "clap",
@@ -3590,7 +3599,7 @@ checksum = "b9dc246ef72490c348c62b93c06989605dc074e285657501c0aaa02d73c5b408"
 
 [[package]]
 name = "hanzo-audio"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "apodize",
@@ -3679,7 +3688,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-engine"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "ahash",
  "akin",
@@ -3822,7 +3831,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-llm-mcp"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3842,7 +3851,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-macros"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "darling 0.23.0",
  "proc-macro2",
@@ -3946,7 +3955,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-paged-attn"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "cudaforge",
@@ -3962,7 +3971,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-quant"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "byteorder",
  "cudaforge",
@@ -4002,7 +4011,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-sandbox"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "itoa",
@@ -4018,7 +4027,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-server-core"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "axum",
@@ -4026,6 +4035,7 @@ dependencies = [
  "data-url",
  "dirs 6.0.0",
  "either",
+ "enso",
  "futures",
  "hanzo-3d",
  "hanzo-engine",
@@ -4048,7 +4058,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-train"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "anyhow",
  "hanzo-ml",
@@ -4085,7 +4095,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-vision"
-version = "1.7.100"
+version = "1.7.95"
 dependencies = [
  "hanzo-ml",
  "image",

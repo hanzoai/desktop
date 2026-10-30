@@ -14,7 +14,7 @@
  * synthetic event carries the modifiers but keeps `isComposing` on the native
  * one, and reading the wrong object puts the IME bug straight back.
  */
-import { ChatInputArea } from '@hanzo_network/hanzo-ui';
+import { ChatInputArea } from '@hanzo/desktop-ui';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRef, useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';

@@ -120,8 +120,6 @@ export class PyodideFileSystemService implements IFileSystemService {
 
   writeFile(path: string, content: string): void {
     try {
-      // No encoding option: emscripten writes a string as UTF-8, and its own
-      // typings carry flags, mode and canOwn — nothing else.
       this.pyodide.FS.writeFile(path, content);
     } catch (error) {
       console.error(`Failed to write file ${path}:`, error);

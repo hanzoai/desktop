@@ -136,7 +136,6 @@ describe('PyodideFileSystemService', () => {
       expect(mockPyodide.FS.writeFile).toHaveBeenCalledWith(
         '/test/file.txt',
         'content',
-        { encoding: 'utf8' },
       );
     });
 
