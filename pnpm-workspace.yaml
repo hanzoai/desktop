@@ -73,13 +73,10 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@hanzo/app@0.2.21'
-  - '@hanzo/app@0.2.20'
+  - '@hanzo/app@0.3.0'
+  - '@hanzo/ai@0.7.0'
   - '@hanzo/iam@0.21.35'
-  - '@hanzo/build@0.2.81'
-  - '@hanzo/studio@0.1.3'
   - '@hanzo/voice@0.1.19'
-  - '@hanzo/ui@8.29.0'
   - '@hanzo/gui@8.2.1'
   - '@hanzogui/accordion@8.2.1'
   - '@hanzogui/adapt@8.2.1'
@@ -191,27 +188,27 @@ minimumReleaseAgeExclude:
   - '@hanzo/mod@0.1.0'
 
 catalog:
-  # The main window is hanzo.ai's app (@hanzo/rooms App), so this block pins
+  # The main window is hanzo.ai's app (@hanzo/app App), so this block pins
   # the same stack hanzo-inc/app's catalog does. Move them together.
-  '@hanzo/ai': '0.6.23'
-  '@hanzo/appearance': '0.2.9'
+  '@hanzo/ai': '0.7.0'
+  '@hanzo/appearance': '0.2.12'
   '@hanzo/brand': '1.4.8'
-  '@hanzo/build': '0.2.81'
+  '@hanzo/build': '0.2.86'
   '@hanzo/composer': '0.2.0'
   '@hanzo/data': '1.2.4'
   '@hanzo/design': '0.5.35'
-  '@hanzo/event': '0.3.57'
+  '@hanzo/event': '0.3.63'
   '@hanzo/font': '1.9.3'
   '@hanzo/gui': '8.3.5'
   '@hanzo/iam': '0.21.35'
   '@hanzo/personas': '1.0.5'
   '@hanzo/plans': '1.8.17'
-  '@hanzo/app': '0.2.21'
-  '@hanzo/studio': '0.1.3'
+  '@hanzo/app': '0.3.0'
+  '@hanzo/studio': '0.1.8'
   '@hanzo/tabs': '0.1.7'
   '@hanzo/logo': '1.0.26'
   '@hanzo/pay': '0.1.2'
-  '@hanzo/ui': '8.29.0'
+  '@hanzo/ui': '8.29.26'
   '@hanzo/usage': '0.1.18'
   '@hanzo/voice': '0.1.19'
   '@hanzogui/config': '8.3.5'
