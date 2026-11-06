@@ -1,0 +1,120 @@
+/* Hanzo Desktop Window Shell — Linux & Cross-Platform Rounded Corners + Deep Black Matte Palette */
+:root,
+:root:not(.light),
+.dark,
+.t_dark {
+  --desktop-window-radius: 14px;
+  --pane-floor: #090909;
+  --background: #0d0d0d;
+  --pane-fill: #111111;
+  --card: #121212;
+  --popover: #121212;
+  --muted: #161616;
+  --secondary: #1f1f1f;
+  --composer-fill: #181818;
+  --composer-ground: #181818;
+  --composer-edge: rgba(255, 255, 255, 0.095);
+  --composer-drop: 0 8px 28px -8px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --desktop-sidebar-bg: var(--pane-floor, #090909);
+  --desktop-stage-bg: var(--background, #0d0d0d);
+  --desktop-composer-bg: var(--composer-fill, #181818);
+  --desktop-border-subtle: rgba(255, 255, 255, 0.085);
+  --foreground: #eceae5;
+  --muted-foreground: #9e9c96;
+  color-scheme: dark;
+}
+
+::selection {
+  background: var(--selection, rgba(139, 92, 246, 0.28));
+}
+
+html[data-maximized="true"] {
+  --desktop-window-radius: 0px;
+}
+
+html {
+  background: transparent !important;
+  background-color: transparent !important;
+  overflow: hidden;
+}
+
+body {
+  background: var(--desktop-stage-bg) !important;
+  background-color: var(--desktop-stage-bg) !important;
+  color: #eceae5 !important;
+  border-radius: var(--desktop-window-radius) !important;
+  clip-path: inset(0 round var(--desktop-window-radius));
+  overflow: hidden !important;
+  margin: 0;
+  height: 100dvh;
+  width: 100vw;
+  position: relative;
+}
+
+#root {
+  background: transparent !important;
+  border-radius: var(--desktop-window-radius) !important;
+  overflow: hidden !important;
+  height: 100dvh;
+  width: 100vw;
+}
+
+html:not([data-maximized="true"]) body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  border-radius: var(--desktop-window-radius);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  pointer-events: none;
+  z-index: 2147483646;
+}
+
+[data-slot="window"] {
+  border-radius: var(--desktop-window-radius) !important;
+  overflow: hidden !important;
+  background-color: var(--desktop-stage-bg) !important;
+}
+
+[data-slot="chat-empty-flow"] [data-slot="chat"] {
+  height: auto !important;
+  grid-template-rows: auto auto !important;
+}
+
+[data-slot="chat-empty-flow"] [data-slot="composer"],
+[data-slot="chat-empty-flow"] [data-slot="composer-foot"] {
+  width: 656px !important;
+  max-width: 656px !important;
+  margin-inline: auto !important;
+}
+
+[data-slot="composer"],
+[data-slot="composer"].glass {
+  background: var(--desktop-composer-bg) !important;
+  background-color: var(--desktop-composer-bg) !important;
+  border-color: rgba(255, 255, 255, 0.095) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 28px -8px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.04) !important;
+}
+
+[data-slot="composer"]:focus-within,
+[data-slot="composer"].glass:focus-within {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-slot="composer-field"] {
+  color: #eceae5 !important;
+}
+
+[data-slot="composer-field"]::placeholder {
+  color: #7c7a74 !important;
+}
+
+[data-slot="composer-foot"] [data-slot="chip-select"] span,
+[data-slot="composer-foot"] [data-slot="mind"] span,
+[data-slot="composer-foot"] [data-slot="mode"] span {
+  color: #d8d6d0 !important;
+}
+
+[data-slot="composer-foot"] [data-slot="effort"] span {
+  color: #8c8a84 !important;
+}
