@@ -1,0 +1,1164 @@
+diff --git a/dist/App.js b/dist/App.js
+index 692678e..9ab382f 100644
+--- a/dist/App.js
++++ b/dist/App.js
+@@ -61,7 +61,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+ // so the builder's own plans are never drawn.
+ import { useI18n } from '@hanzo/i18n/react';
+ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+-import { ArrowLeft, ArrowRight, RefreshCw } from 'lucide-react';
++import { ArrowLeft, ArrowRight, Cloud, RefreshCw, Server, SquareTerminal } from 'lucide-react';
+ import { AiProvider } from '@hanzo/ai/react';
+ import { XStack, YStack } from '@hanzo/gui';
+ import { Builder, HostProvider, PrefsProvider, route, tabs } from '@hanzo/build';
+@@ -139,8 +139,8 @@ function Window({ bar, betas }) {
+     const here = path ?? '/';
+     const at = place(here) ?? HOME;
+     const mode = at.mode;
+-    // Tabs, Betas and the hosted apps are their panes alone: no sidebar beside them, and no Dev places in a phone's menu.
+-    const alone = mode === 'tabs' || mode === 'beta' || mode === 'hosted';
++    // The hosted apps are their panes alone: no sidebar beside them, and no Dev places in a phone's menu.
++    const alone = mode === 'hosted';
+     // The hosted app the address names (lib/hosted), for the rail to light.
+     const inside = at.mode === 'hosted' ? at.id : null;
+     const where = at.mode === 'dev' ? at.at : null;
+@@ -261,7 +261,14 @@ function Window({ bar, betas }) {
+         pick(o);
+         window.location.assign(mode === 'dev' ? app('') : mode === 'studio' ? studio('') : mode === 'tabs' ? TERMINALS : inside ? hosted(inside) : talk());
+     };
+-    const sidebar = mode === 'beta' || mode === 'hosted' ? [] : mode === 'studio' ? places(maker, (p) => maker.go(p)) : mode === 'dev' && raised(where) === 'customize'
++    const sidebar = mode === 'beta' || mode === 'hosted' ? [] : mode === 'tabs' ? [{
++        id: 'tabs',
++        links: [
++            { id: 'terminals', label: t('Terminals'), active: true, icon: _jsx(SquareTerminal, { size: 16, "aria-hidden": true }), onPress: toTabs },
++            { id: 'machines', label: t('Machines'), active: false, icon: _jsx(Server, { size: 16, "aria-hidden": true }), onPress: () => move(app('-/machines')) },
++            { id: 'environments', label: t('Environments'), active: false, icon: _jsx(Cloud, { size: 16, "aria-hidden": true }), onPress: () => move(app('-/environments')) },
++        ],
++    }] : mode === 'studio' ? places(maker, (p) => maker.go(p)) : mode === 'dev' && raised(where) === 'customize'
+         ? tabs(host, (p) => host.go(p), t).map((group) => ({ ...group, links: [...group.links, {
+                     id: 'learning', label: t('Learning'), active: learning, icon: _jsx(RefreshCw, { size: 16, "aria-hidden": true }),
+                     onPress: () => { shut(); setLearning(true); },
+diff --git a/dist/Betas.js b/dist/Betas.js
+index df06a48..4a786c7 100644
+--- a/dist/Betas.js
++++ b/dist/Betas.js
+@@ -163,7 +163,7 @@ export function BetasList({ go }) {
+ /** The Betas list in a dialog, from the rail's More. */
+ export function BetasDialog({ open, onOpenChange, go }) {
+     const { t } = useI18n();
+-    return (_jsx(Dialog, { open: open, onOpenChange: onOpenChange, children: _jsxs(DialogContent, { maxW: 520, rounded: "$6", gap: "$3", children: [_jsx(DialogTitle, { children: t('Betas') }), _jsx(Text, { fontSize: "$2", color: "$color11", children: t('Apps we have not opened to everyone yet. Ask for the ones you want and we will let you in.') }), _jsx(YStack, { maxH: "60vh", overflowY: "auto", overflowX: "hidden", paddingInlineEnd: "$2", children: _jsx(BetasList, { go: go }) }), _jsxs(XStack, { items: "center", justify: "space-between", pt: "$3", borderTopWidth: 1, borderColor: "$borderColor", flexWrap: "wrap", gap: "$2", children: [_jsx(Text, { fontSize: "$2", color: "$color11", children: t('Looking for community plugins and MCP tools?') }), _jsx(Button, { size: "sm", variant: "outline", rounded: 999, onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), children: _jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", children: t('Explore on hanzo.market') }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true })] }) })] })] }) }));
++    return (_jsx(Dialog, { open: open, onOpenChange: onOpenChange, children: _jsxs(DialogContent, { maxW: 520, rounded: "$6", gap: "$3", children: [_jsx(DialogTitle, { children: t('Betas') }), _jsx(Text, { fontSize: "$2", color: "$color11", children: t('Apps we have not opened to everyone yet. Ask for the ones you want and we will let you in.') }), _jsx(YStack, { maxH: "60vh", overflowY: "auto", overflowX: "hidden", paddingInlineEnd: "$2", children: _jsx(BetasList, { go: go }) }), _jsxs(XStack, { items: "center", justify: "space-between", pt: "$3", borderTopWidth: 1, borderColor: "$borderColor", flexWrap: "wrap", gap: "$2", children: [_jsx(Text, { fontSize: "$2", color: "$color11", children: t('Looking for community plugins and MCP tools?') }), _jsx(Button, { size: "sm", variant: "outline", rounded: 999, onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), children: _jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", children: t('Hanzo Market') }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true })] }) })] })] }) }));
+ }
+ /** The Betas view rendered inside the app's main pane under /beta. */
+ export function BetasPane({ go }) {
+diff --git a/dist/Chat.js b/dist/Chat.js
+index ee5162e..13a620d 100644
+--- a/dist/Chat.js
++++ b/dist/Chat.js
+@@ -30,7 +30,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
+ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+ import { isolate, phrase } from "@hanzo/i18n";
+ import { useI18n } from "@hanzo/i18n/react";
+-import { billed, detail, familyOf, planRequired, plainly, refused } from "./failure.js";
++import { billed, detail, familyOf, ours, planRequired, plainly, refused } from "./failure.js";
+ import { english } from "./say.js";
+ import { Prose } from "./Prose.js";
+ import { useAgent, useAi, useChat, } from "@hanzo/ai/react";
+@@ -42,7 +42,7 @@ import { Face, brief as roomBrief, join, roleOf, roomTurn, roster as rosterLine,
+ import { cleanForSpeech, speakAgent } from "./speech.js";
+ import { AgentMaker, HOUSE, useAgentShelf, useCrew } from "./crew.js";
+ import { called } from "./team.js";
+-import { Anchor, Box, Button, Text, Tooltip, TooltipContent, TooltipTrigger, View, XStack, YStack } from "@hanzo/ui";
++import { Anchor, Box, Button, Text, Tooltip, TooltipContent, TooltipTrigger, View, VisuallyHidden, XStack, YStack } from "@hanzo/ui";
+ import { useMedia } from "@hanzo/gui";
+ import { given, tidy } from "./lib/title.js";
+ import { useIam, useIamToken } from "@hanzo/iam/react";
+@@ -50,7 +50,7 @@ import { bearer, hasSession, named, org } from "./lib/session.js";
+ import { api } from "./lib/api.js";
+ import { app, dev, go } from "./lib/host.js";
+ import { useRooms } from "./host.js";
+-import { chats, house, paidPlan, paused, setCreditsAfterAllowance, useLimits } from "./lib/limits.js";
++import { chats, house, paidPlan, paused, setCreditsAfterAllowance, spends, ultra, useLimits } from "./lib/limits.js";
+ import { LimitedBanner } from "@hanzo/ui/product/LimitedBanner";
+ import { WEB } from "./lib/web.js";
+ import { useHydrated } from "./lib/hydrated.js";
+@@ -469,9 +469,8 @@ function Carried({ text, attached, reused, onOpen, onSave, }) {
+  * "Schedule this" under a question: the quiet control that opens the dialog
+  * which makes the question run itself (Schedule.tsx).
+  */
+-function Plan({ onPress }) {
+-    const { t } = useI18n();
+-    return (_jsx(XStack, { justify: "flex-end", "data-slot": "plan", children: _jsxs(XStack, { render: "button", "aria-label": t("Schedule this"), onPress: onPress, items: "center", gap: "$1", px: "$1", height: 22, rounded: "$2", cursor: "pointer", opacity: 0.55, hoverStyle: { opacity: 1, bg: "$hover" }, focusStyle: { opacity: 1 }, children: [_jsx(Clock, { size: 12, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", color: "$ink", children: t("Schedule this") })] }) }));
++function Plan() {
++    return null;
+ }
+ /**
+  * The conversation. One component for a visitor and for an account.
+@@ -499,7 +498,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     // THE MODEL AND THE EFFORT are the one choice Chat and Dev share
+     // (@hanzo/build `useMind`): the catalog from `GET /v1/models` and what the
+     // reader kept, changed from the composer's chip or from Settings.
+-    const { t } = useI18n();
++    const { t, format } = useI18n();
+     const target = useMemo(() => ({ api: api(), token: bearer, org: org() }), [anonymous]); // eslint-disable-line react-hooks/exhaustive-deps
+     // THE PLAN decides what the chip may offer: Free answers from the free lane
+     // alone, so it opens there and lists the rest as upgrades (@hanzo/build).
+@@ -726,8 +725,6 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     // a refusal.
+     const held = paidPlan(limits);
+     const pause = notice && (notice.fallback || notice.refused) ? notice : null;
+-    // The banner's words and ways: the plan by name, when it comes back, and the two ways on.
+-    const banner = pause ? paused(pause, limits?.plan ?? "", (id) => nameOf(id, listed), Date.now(), t) : null;
+     // EVERY MODEL IS CHOSEN, never asked for: one the plan does not cover still
+     // picks, and the gateway answers it with the policy's refusal or from Enso,
+     // which the room then shows. A turn the gateway refuses `plan_required`
+@@ -757,12 +754,32 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+         },
+         ...(open ? { thread: open } : {}),
+         onError: (e) => {
+-            const needs = planRequired(e);
++            // A billing refusal's ways are the banner over the composer, Upgrade to
++            // continue first, so only a model the plan lacks opens the plans here.
++            const needs = billed(e) ? null : planRequired(e);
+             if (needs && free)
+                 setAsk({ ...needs, model: nameOf(model, listed) });
+         },
+     });
+     const { send, set, error, thread: kept } = chat;
++    // THE BANNER'S WORDS AND WAYS (lib/limits `paused`): usage reached, when it
++    // resets, and the ways on; the failed turn says the same words whether or
++    // not the banner is drawn. Try again later puts away this one refusal in
++    // this conversation: it is keyed by the conversation and its last turn, so
++    // the next send, refused again, shows it again.
++    const spent = pause ? paused(pause, limits, (id) => nameOf(id, listed), Date.now(), t, format) : null;
++    const [shut, setShut] = useState(null);
++    const which = pause ? `${kept ?? open ?? ""}:${chat.messages[chat.messages.length - 1]?.id ?? ""}` : null;
++    const banner = which !== shut ? spent : null;
++    // A reset that comes while the banner stands is said when it comes: no time already passed.
++    const [ticks, tick] = useState(0);
++    useEffect(() => {
++        const wait = Date.parse(pause?.resets_at ?? "") - Date.now();
++        if (!(wait > 0))
++            return;
++        const id = setTimeout(() => tick((n) => n + 1), Math.min(wait, 2 ** 31 - 1));
++        return () => clearTimeout(id);
++    }, [pause?.resets_at, ticks]);
+     // Threads THIS pane opened by writing them. Their transcript is already on
+     // the screen — it is what was just said — so the restore below has nothing to
+     // fetch for one, and fetching anyway would race a live conversation to
+@@ -1044,14 +1061,26 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     const [actWrong, setActWrong] = useState("");
+     const act = useCallback((a) => {
+         setActWrong("");
++        if (a.kind === "later") {
++            setShut(which);
++            // The banner leaves; the reader is put back in the field it stood over.
++            document.querySelector('[data-slot="limited-banner"]')?.closest('[data-slot="composer-shell"]')?.querySelector('[data-slot="composer-field"]')?.focus();
++            return;
++        }
++        // The upgrade opens the plans here, over the app (./Upgrade.js), on the plan the server named.
++        if (a.kind === "upgrade") {
++            setAsk({ href: a.url });
++            return;
++        }
+         if (a.kind === "switch") {
+             if (a.model)
+                 mind.pick(a.model);
+             return;
+         }
+         if (a.kind !== "credits") {
+-            if (a.url)
+-                window.location.assign(a.url);
++            const to = ours(a.url);
++            if (to)
++                window.location.assign(to);
+             return;
+         }
+         setCreditsAfterAllowance(true)
+@@ -1067,7 +1096,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     }, 
+     // `mind.pick` is rebuilt each render; the handler follows it.
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+-    [reread, speak, failures, mind.model, listed, t]);
++    [reread, speak, failures, mind.model, listed, t, which]);
+     // A TURN THAT NEVER SPEAKS IS STOPPED. A stream that stays open with nothing
+     // in it would leave a Stop button and no answer for as long as the upstream
+     // holds the connection; after `STALL` it is ended and its question is said to
+@@ -1321,11 +1350,11 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+         const wrong = failed?.error ?? null;
+         const how = wrong ? refusalOf(wrong) : null;
+         // A BILLING REFUSAL is said in the gateway's words; its way past —
+-        // Upgrade, Add prepaid credit — is the banner over the composer. The free
+-        // plan's cap answers the same until it resets, so it offers no Try again.
++        // Upgrade, Add prepaid credit — is the banner over the composer. Usage spent
++        // until a reset answers the same until then, so it offers no Try again.
+         const bill = wrong ? billed(wrong) : null;
+         const resign = !bill && !!wrong && (refused(wrong) || /audience not allowed|invalid access token/i.test(wrong.message));
+-        const lift = free ? planRequired(wrong) : null;
++        const lift = free && !bill ? planRequired(wrong) : null;
+         const said = !failed
+             ? t("No answer came back for this question.")
+             : failed.stalled
+@@ -1333,7 +1362,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                 : failed.empty
+                     ? t("{model} answered with nothing.", { model: nameOf(model, listed) })
+                     : bill
+-                        ? banner?.message ?? notice?.message ?? (bill.message || plainly(wrong, t("this conversation"), t))
++                        ? spent?.message ?? (spends(bill.code) ? (ultra(limits) ? t("Your balance is empty.") : t("Usage reached.")) : bill.message || plainly(wrong, t("this conversation"), t))
+                         : resign
+                             ? t(anonymous
+                                 ? "Sign in to ask this."
+@@ -1341,13 +1370,13 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                             : how?.provider
+                                 ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
+                                 : plainly(wrong, t("this conversation"), t);
+-        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || bill?.code === "free_plan_cap" ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
++        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
+                                 if (typeof window !== "undefined") {
+                                     localStorage.removeItem("hanzo_iam_access_token");
+                                     localStorage.removeItem("hanzo_iam_refresh_token");
+                                 }
+                                 enter(LOGIN);
+-                            }, children: t("Sign in") })) : lift ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => setAsk({ ...lift, model: nameOf(model, listed) }), children: t("Upgrade") })) : how?.visitor ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => enter(), children: t("Sign in to keep going") })) : (_jsx(Anchor, { href: checkoutUrl(), children: _jsx(Button, { size: "sm", variant: "outline", children: t("Add credit") }) })) })) : null] }) }));
++                            }, children: t("Sign in") })) : lift ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.location.assign(payUrl('/cart', { org: org(), returnUrl: window.location.href })), children: t("Upgrade") })) : how?.visitor ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => enter(), children: t("Sign in to keep going") })) : (_jsx(Anchor, { href: checkoutUrl(), children: _jsx(Button, { size: "sm", variant: "outline", children: t("Add credit") }) })) })) : null] }) }));
+     };
+     // Dev, from the Summary's Create file or site: a move inside the app where the
+     // host's app reads the path (hanzo.ai), else Dev on hanzo.ai, as the shell's
+@@ -1417,7 +1446,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+         },
+         // WHAT GOES WITH THE MESSAGE, above the frame and at its width: the
+         // pause and its ways past, one chip a file, and talk mode's words.
+-        head: files.length || turnedAway || prepWrong || preparing || talk.open || talk.refusal || pause ? (_jsxs(_Fragment, { children: [banner ? (_jsx(LimitedBanner, { message: banner.message, actions: banner.actions, onAction: act, onUsage: () => showSettings("usage") })) : null, actWrong ? (_jsx(Text, { role: "alert", "data-slot": "limited-banner-wrong", fontSize: "$2", color: BAD, children: actWrong })) : null, files.length ? (_jsx(XStack, { gap: "$1.5", flexWrap: "wrap", role: "list", "aria-label": t("Attached files"), "data-slot": "composer-attached", children: files.map((one) => (_jsx(HeldChip, { one: one, onOpen: openFile, onRemove: () => drop(at, one.id), onSave: anonymous ? undefined : (url, id) => keepOne(url, id, one.name, one.type) }, one.id))) })) : null, preparing ? (_jsxs(Text, { role: "status", "aria-live": "polite", "data-slot": "composer-preparing", fontSize: "$2", color: "$soft", children: [preparing, "\u2026"] })) : null, turnedAway || prepWrong ? (_jsx(Text, { role: "alert", fontSize: "$2", color: BAD, children: turnedAway || prepWrong })) : null, talk.open || talk.refusal ? (_jsx(Text, { role: "status", "aria-live": "polite", "data-slot": "composer-talk-reply", fontSize: "$2", color: talk.refusal ? BAD : "$soft", children: talk.refusal
++        head: files.length || turnedAway || prepWrong || preparing || talk.open || talk.refusal || pause ? (_jsxs(_Fragment, { children: [banner ? (_jsx(LimitedBanner, { message: banner.message, actions: banner.actions, onAction: act, onUsage: () => showSettings("usage"), labels: { usage: t("See usage"), dismiss: t("Dismiss") } })) : null, actWrong ? (_jsx(Text, { role: "alert", "data-slot": "limited-banner-wrong", fontSize: "$2", color: BAD, children: actWrong })) : null, files.length ? (_jsx(XStack, { gap: "$1.5", flexWrap: "wrap", role: "list", "aria-label": t("Attached files"), "data-slot": "composer-attached", children: files.map((one) => (_jsx(HeldChip, { one: one, onOpen: openFile, onRemove: () => drop(at, one.id), onSave: anonymous ? undefined : (url, id) => keepOne(url, id, one.name, one.type) }, one.id))) })) : null, preparing ? (_jsxs(Text, { role: "status", "aria-live": "polite", "data-slot": "composer-preparing", fontSize: "$2", color: "$soft", children: [preparing, "\u2026"] })) : null, turnedAway || prepWrong ? (_jsx(Text, { role: "alert", fontSize: "$2", color: BAD, children: turnedAway || prepWrong })) : null, talk.open || talk.refusal ? (_jsx(Text, { role: "status", "aria-live": "polite", "data-slot": "composer-talk-reply", fontSize: "$2", color: talk.refusal ? BAD : "$soft", children: talk.refusal
+                         ? worded(talk.refusal)
+                         : talk.reply
+                             ? `Hanzo: ${talk.reply}`
+@@ -1476,7 +1505,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+         // Chat keeps to the effort alone until the person asks for more: the family chips, the mode.
+         chips: anonymous ? undefined : families,
+         defaults: { chips: false, mode: false },
+-        status: anonymous ? null : _jsx(UsageControl, { read: planUsage, context: { model, window: rowOf(model)?.context_window, messages: chat.messages, draft, tools: !anonymous && house(rowOf(model)?.family) ? WEB : undefined } }),
++        status: anonymous || (said.length === 0 && files.length === 0 && !draft.trim()) ? null : _jsx(UsageControl, { read: planUsage, context: { model, window: rowOf(model)?.context_window, messages: chat.messages, draft, tools: !anonymous && house(rowOf(model)?.family) ? WEB : undefined } }),
+         limits,
+         onUpgrade: (id) => setAsk({ model: nameOf(id, listed) }),
+         voice,
+@@ -1530,10 +1559,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                         setPlan(null);
+                 }, prompt: plan ?? "", model: model, models: models.map((m) => ({ id: m.id, name: nameOf(m.id, listed) })) }), dragging ? (_jsx(YStack, { "aria-hidden": true, position: "absolute", t: 0, r: 0, b: 0, l: 0, z: 10, items: "center", justify: "center", bg: "var(--surface-scrim)", borderWidth: 2, borderStyle: "dashed", borderColor: "$borderColor", rounded: "var(--pane-round)", pointerEvents: "none", children: _jsxs(XStack, { items: "center", gap: "$2", px: "$4", py: "$2.5", rounded: "$10", bg: "$background", borderWidth: 1, borderColor: "$borderColor", children: [_jsx(Paperclip, { size: 15, "aria-hidden": true }), _jsx(Text, { fontSize: "$4", color: "$ink", children: t("Drop files to attach") })] }) })) : null, _jsxs(XStack, { "data-slot": "conversation-head", 
+                 // On the rail's line from a tablet up (HEAD, less the pane's edge); a phone's own bar is BAND.
+-                height: BAND, $md: { height: inPane(HEAD) }, $touchable: { height: inPane(TOUCH_HEAD) }, items: "center", justify: "space-between", gap: "$3", paddingInlineStart: "$4", 
++                height: BAND, $md: { height: 48, pt: 4 }, $touchable: { height: inPane(TOUCH_HEAD) }, items: "center", justify: "space-between", gap: "$3", paddingInlineStart: "$4", 
+                 // The last mark's centre INSET from the pane's end edge, as the rail's first is from the
+                 // window's start: the edge's 1px, then half the 32px mark.
+-                paddingInlineEnd: INSET - 1 - 16, shrink: 0, "data-tauri-drag-region": "deep", onMouseDown: dragWindow, onDoubleClick: toggleWindowMaximize, "$max-md": !mine && !room.length ? { display: 'none' } : undefined, children: [_jsxs(XStack, { items: "center", gap: "$2", minW: 0, flex: 1, children: [mine ? (_jsx(Text, { fontSize: 15, lineHeight: 20, color: "$ink", numberOfLines: 1, shrink: 1, minW: 0, children: tidy(mine.title) })) : null, room.length ? (_jsx(XStack, { role: "list", "aria-label": t("Agents in this chat"), items: "center", gap: "$1.5", minW: 0, overflowX: "auto", "$platform-web": { scrollbarWidth: "none" }, children: room.map((name) => (_jsxs(XStack, { role: "listitem", items: "center", gap: "$1.5", paddingInlineStart: "$1", paddingInlineEnd: "$0.5", py: "$0.5", rounded: 999, borderWidth: 1, borderColor: "$borderColor", shrink: 0, children: [_jsx(Face, { src: faces[name]?.avatar ?? (name === withWhom ? portrait : undefined), emoji: faces[name]?.emoji ?? (name === withWhom ? persona?.emoji : undefined), name: name, size: 22 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$color", numberOfLines: 1, display: "none", $sm: { display: "flex" }, children: name }), _jsx(Box, { render: "button", onClick: () => openAgent(name), "aria-label": t("Remove {name} from this chat", { name }), title: t("Remove {name}", { name }), width: 24, height: 24, rounded: 999, items: "center", justify: "center", hoverStyle: { bg: "$hover" }, children: _jsx(X, { size: 13, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) })] }, name))) })) : null] }), _jsxs(XStack, { "data-slot": "conversation-controls", "data-tauri-drag-region": "false", items: "center", gap: 4, shrink: 0, children: [free ? (_jsxs(Button, { size: "xs", variant: "outline", "data-slot": "header-upgrade", gap: "$1.5", px: "$2.5", py: "$1", rounded: "$4", cursor: "pointer", hoverStyle: { bg: 'var(--white-10)' }, onPress: () => window.location.assign(payUrl('/cart', { org: org(), returnUrl: window.location.href })), "aria-label": t("Upgrade plan"), children: [_jsx(Sparkles, { size: 13, color: "var(--primary)", "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Upgrade plan") })] })) : null, open ? _jsx(Share, { thread: open }) : null, said.length > 0 ? (_jsx(ConversationMenu, { threads: currentThreadMap, active: open || currentThread.id, onSchedule: anonymous || forgetful ? undefined : () => setPlan(lastAsked()), children: _jsx(XStack, { children: _jsx(ThreadMore, { t: currentThread }) }) })) : (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { asChild: true, children: _jsx(XStack, { render: "button", "data-slot": "header-private-chat", "aria-label": t("Private chat"), "aria-pressed": forgetful, width: 32, height: 32, items: "center", justify: "center", rounded: "$3", bg: "transparent", cursor: "pointer", hoverStyle: { bg: "$hover" }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "var(--ring)" }, onPress: () => setForgetful(!forgetful), children: _jsx(Ghost, { size: 16, strokeWidth: 1.75, color: forgetful ? "var(--foreground)" : "var(--muted-foreground)", fill: forgetful ? "currentColor" : "none", "aria-hidden": true }) }) }), _jsx(TooltipContent, { children: forgetful ? t("Private chat is on: this conversation is not saved") : t("Private chat") })] })), _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(Summary, { sections: sections, onOpen: () => setPanel(true), label: t("Summary") }) }), _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(PanelToggle, { open: panel, onToggle: () => setPanel(!panel) }) })] })] }), wide && aside !== null ? (_jsx(Beside, { children: _jsx(Panel, { side: deck, kinds: NONE, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) })) : null, !wide && panel ? _jsx(Panel, { side: deck, kinds: NONE, sheet: true, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) : null, _jsx(YStack, { "data-slot": "talk", flex: 1, minH: 0, children: _jsx(ChatSurface, { ...chat, messages: shown, send: guarded, 
++                paddingInlineEnd: 12, shrink: 0, "data-tauri-drag-region": "deep", onMouseDown: dragWindow, onDoubleClick: toggleWindowMaximize, "$max-md": !mine && !room.length ? { display: 'none' } : undefined, children: [_jsxs(XStack, { items: "center", gap: "$2", minW: 0, flex: 1, children: [mine ? (_jsx(Text, { fontSize: 15, lineHeight: 20, color: "$ink", numberOfLines: 1, shrink: 1, minW: 0, children: tidy(mine.title) })) : null, room.length ? (_jsx(XStack, { role: "list", "aria-label": t("Agents in this chat"), items: "center", gap: "$1.5", minW: 0, overflowX: "auto", "$platform-web": { scrollbarWidth: "none" }, children: room.map((name) => (_jsxs(XStack, { role: "listitem", items: "center", gap: "$1.5", paddingInlineStart: "$1", paddingInlineEnd: "$0.5", py: "$0.5", rounded: 999, borderWidth: 1, borderColor: "$borderColor", shrink: 0, children: [_jsx(Face, { src: faces[name]?.avatar ?? (name === withWhom ? portrait : undefined), emoji: faces[name]?.emoji ?? (name === withWhom ? persona?.emoji : undefined), name: name, size: 22 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$color", numberOfLines: 1, display: "none", $sm: { display: "flex" }, children: name }), _jsx(Box, { render: "button", onClick: () => openAgent(name), "aria-label": t("Remove {name} from this chat", { name }), title: t("Remove {name}", { name }), width: 24, height: 24, rounded: 999, items: "center", justify: "center", hoverStyle: { bg: "$hover" }, children: _jsx(X, { size: 13, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) })] }, name))) })) : null] }), _jsxs(XStack, { "data-slot": "conversation-controls", "data-tauri-drag-region": "false", items: "center", gap: 4, shrink: 0, children: [free ? (_jsxs(Button, { size: "xs", variant: "outline", "data-slot": "header-upgrade", gap: "$1.5", px: "$2.5", py: "$1", rounded: "$4", cursor: "pointer", hoverStyle: { bg: 'var(--white-10)' }, onPress: () => { setAsk({}); window.location.hash = '#pricing'; }, "aria-label": t("Upgrade plan"), children: [_jsx(Sparkles, { size: 13, color: "var(--primary)", "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Upgrade plan") })] })) : null, open ? _jsx(Share, { thread: open }) : null, said.length > 0 ? (_jsx(ConversationMenu, { threads: currentThreadMap, active: open || currentThread.id, onSchedule: anonymous || forgetful ? undefined : () => setPlan(lastAsked()), children: _jsx(XStack, { children: _jsx(ThreadMore, { t: currentThread }) }) })) : (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { asChild: true, children: _jsx(XStack, { render: "button", "data-slot": "header-private-chat", "aria-label": t("Private chat"), "aria-pressed": forgetful, width: 32, height: 32, items: "center", justify: "center", rounded: "$3", bg: "transparent", cursor: "pointer", hoverStyle: { bg: "$hover" }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "var(--ring)" }, onPress: () => setForgetful(!forgetful), children: _jsx(Ghost, { size: 16, strokeWidth: 1.75, color: forgetful ? "var(--foreground)" : "var(--muted-foreground)", fill: forgetful ? "currentColor" : "none", "aria-hidden": true }) }) }), _jsx(TooltipContent, { children: forgetful ? t("Private chat is on: this conversation is not saved") : t("Private chat") })] })), (said.length > 0 || files.length > 0 || sections.some((s) => s.entries?.length > 0)) ? (_jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(Summary, { sections: sections, onOpen: () => setPanel(true), label: t("Summary") }) })) : null, _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(PanelToggle, { open: panel, onToggle: () => setPanel(!panel) }) })] })] }), wide && aside !== null ? (_jsx(Beside, { children: _jsx(Panel, { side: deck, kinds: NONE, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) })) : null, !wide && panel ? _jsx(Panel, { side: deck, kinds: NONE, sheet: true, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) : null, _jsx(YStack, { "data-slot": "talk", flex: 1, minH: 0, children: _jsx(ChatSurface, { ...chat, messages: shown, send: guarded, 
+                     // WHILE NOTHING HAS BEEN SAID, from a tablet up, the opening and the
+                     // composer are one pair centred in the pane (`center`: rows `1fr auto auto
+                     // 1fr`), so the heading reads close above the field and nothing stands at
+@@ -1555,8 +1584,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                         // A QUESTION THAT CARRIED PICTURES draws them beside its words.
+                         if (turn.role === "user" && Array.isArray(turn.content)) {
+                             const parts = partsOf(turn.content);
+-                            const asked = parts.flatMap((p) => (p.type === "text" ? [p.text] : [])).join("\n");
+-                            return (_jsxs(YStack, { gap: "$1", children: [_jsx(Parts, { parts: parts, prose: (text) => _jsx(Prose, { text: text }) }), !anonymous && asked ? _jsx(Plan, { onPress: () => setPlan(asked) }) : null] }));
++                            return (_jsx(YStack, { gap: "$1", children: _jsx(Parts, { parts: parts, prose: (text) => _jsx(Prose, { text: text }) }) }));
+                         }
+                         const said = typeof turn.content === "string" ? turn.content : "";
+                         // A QUESTION THAT CARRIED FILES draws its words and the files' chips;
+@@ -1564,7 +1592,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                         if (turn.role === "user" && said) {
+                             const read = told(said);
+                             if (read.carried)
+-                                return (_jsxs(YStack, { gap: "$1", children: [_jsx(Carried, { text: read.text, attached: read.carried.attached, reused: read.carried.reused, onOpen: openFile, onSave: anonymous ? undefined : (url, id, f) => keepOne(url, id, f.name, f.type) }), !anonymous && read.text ? _jsx(Plan, { onPress: () => setPlan(read.text) }) : null] }));
++                                return (_jsx(YStack, { gap: "$1", children: _jsx(Carried, { text: read.text, attached: read.carried.attached, reused: read.carried.reused, onOpen: openFile, onSave: anonymous ? undefined : (url, id, f) => keepOne(url, id, f.name, f.type) }) }));
+                         }
+                         // WHILE THE ANSWER HAS NO WORDS YET: who is answering (the agents the
+                         // question addresses, or the whole room when it names nobody), and the
+@@ -1598,7 +1626,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                                 : [];
+                             return (_jsxs(YStack, { gap: "$3", children: [parts.map((part, i) => (_jsxs(YStack, { gap: "$1", children: [part.who ? (_jsxs(XStack, { items: "center", gap: "$2", children: [_jsx(Face, { src: faces[part.who]?.avatar, emoji: faces[part.who]?.emoji, name: part.who, size: 20 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$ink", children: part.who })] })) : null, _jsx(Prose, { text: part.text }), part.text ? _jsx(Reply, { text: part.text, listen: listen(part.who ?? withWhom ?? undefined), onOpen: opener(part.text) }) : null] }, i))), silent.length ? (_jsx(Text, { fontSize: "$2", color: "$soft", children: t("No answer from {names} in this reply.", { names: join(silent, t) }) })) : null, byline(turn.id)] }));
+                         }
+-                        return (_jsxs(YStack, { gap: "$1", children: [_jsx(Prose, { text: said }), turn.role === "assistant" && said ? _jsx(Reply, { text: said, listen: listen(withWhom ?? undefined), onOpen: opener(said) }) : null, turn.role === "assistant" && said ? byline(turn.id) : null, turn.role === "user" && said && !anonymous ? _jsx(Plan, { onPress: () => setPlan(said) }) : null] }));
++                        return (_jsxs(YStack, { gap: "$1", children: [_jsx(Prose, { text: said }), turn.role === "assistant" && said ? _jsx(Reply, { text: said, listen: listen(withWhom ?? undefined), onOpen: opener(said) }) : null, turn.role === "assistant" && said ? byline(turn.id) : null] }));
+                     }, 
+                     // The page's ONE heading, and it belongs to the empty transcript rather
+                     // than to a signed-out branch — the branch is gone, and the heading went
+@@ -1608,5 +1636,5 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                     empty: heading === null ? undefined : (_jsxs(YStack, { "data-slot": "opening", items: "center", justify: "flex-end", width: "100%", height: "100%", pt: "$6", pb: "$2", children: [room.length > 1 ? (_jsx(XStack, { items: "center", justify: "center", mb: "$4", children: room.map((name, i) => (_jsx(Box, { marginInlineStart: i ? -16 : 0, rounded: 40, borderWidth: 2, borderColor: "$background", z: room.length - i, children: _jsx(Face, { src: faces[name]?.avatar, emoji: faces[name]?.emoji, name: name, size: 72 }) }, name))) })) : portrait ? (_jsx(Box, { width: 160, height: 160, rounded: 24, overflow: "hidden", borderWidth: 2, borderColor: "var(--white-15)", boxShadow: "0 10px 24px color-mix(in srgb, var(--pure-black) 70%, transparent)", mb: "$4", bg: "var(--neutral-900)", children: _jsx(View, { render: _jsx("img", { src: portrait, alt: withWhom }), width: "100%", height: "100%", objectFit: "cover" }) })) : null, room.length === 1 && !portrait ? (_jsx(Box, { mb: "$3", children: _jsx(Face, { emoji: mate?.emoji ?? persona?.emoji, name: withWhom, size: 72 }) })) : null, _jsx(Text, { render: "h1", fontSize: "$7", lineHeight: "$7", fontWeight: "700", color: "$ink", text: "center", mb: "$1", children: join(room, t) || heading || (firstName ? t("What’s up, {name}?", { name: firstName }) : t("What’s up?")) }), room.length === 1 && (mate?.description ?? persona?.description) ? (_jsx(Text, { fontSize: "$3", color: "$soft", text: "center", maxW: 500, mb: "$4", lineHeight: "$4", children: mate?.description ?? persona?.description })) : null] })), 
+                     // The transcript reads at the same measure. `Thread` defaults to 768
+                     // itself; handing it the column here is what lets Width reach it.
+-                    column: { maxW: MEASURE }, composer: composer }) }), _jsx(AgentMaker, {}), carry.dialog, _jsx(Upgrade, { ask: ask, onClose: () => setAsk(null) })] }));
++                    column: { maxW: MEASURE }, composer: composer }) }), _jsx(AgentMaker, {}), carry.dialog, _jsx(Upgrade, { ask: ask, onClose: () => setAsk(null) }), _jsx(VisuallyHidden, { role: "status", "aria-live": "polite", "data-slot": "limited-said", children: _jsx(Text, { children: banner?.message ?? "" }) })] }));
+ }
+diff --git a/dist/Column.js b/dist/Column.js
+index 43c949a..0a6c0db 100644
+--- a/dist/Column.js
++++ b/dist/Column.js
+@@ -134,5 +134,5 @@ export function Column({ host, mode, thread, go, onShut, onSeek, onBack, drawer
+                                         borderColor: 'var(--border-strong)',
+                                         bg: 'var(--pane-fill)',
+                                     }
+-                                    : HEAD), children: _jsx(Search, { size: drawer ? 18 : 16, "aria-hidden": true }) })] })), mode === 'chat' ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, children: _jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { "data-slot": "app-new", ...ROW, active: !thread, bg: "transparent", hoverStyle: { bg: '$hover' }, icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) }), onPress: create, ...keys(create), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('New chat') }) }) }) })) : (_jsx(YStack, { "data-slot": "app-places", shrink: 0, children: groups.map((g, i) => (_jsxs(YStack, { pt: i ? '$2' : 0, children: [i && g.label ? (_jsx(Text, { id: `${uid}-${g.id}`, paddingInlineStart: "$2", pb: 2, fontSize: "$3", color: "$soft", children: g.label })) : null, _jsx(YStack, { role: "list", "aria-labelledby": i && g.label ? `${uid}-${g.id}` : undefined, "aria-label": i && g.label ? undefined : g.label || (at ? t(TITLE[at]) : g.id), gap: 1, children: g.links.map((link) => (_jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { ...ROW, ...(link.id === NEW ? { 'data-slot': 'app-new' } : {}), active: link.active, icon: link.id === NEW ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) })) : link.icon ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: link.icon })) : null, onPress: link.onPress, ...keys(() => link.onPress?.()), children: _jsx(Text, { fontSize: "$3", color: link.active ? '$ink' : '$quiet', children: link.label }) }) }, link.id))) })] }, g.id))) })), rail, mode === 'studio' || mode === 'tabs' || mode === 'beta' || mode === 'hosted' || at ? _jsx(YStack, { flex: 1, minH: 0 }) : _jsx(Recents, { host: host, mode: mode, thread: thread, onOpen: open, onNew: create }), at ? null : (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })), free ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, pt: "$2", children: _jsx(YStack, { role: "listitem", minH: MARK, justify: "center", children: _jsx(SidebarItem, { ...ROW, "data-slot": "column-upgrade", icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(Sparkles, { size: 16, "aria-hidden": true, color: "var(--primary)" }) }), onPress: () => window.location.assign(payUrl('/cart', { returnUrl: window.location.href })), ...keys(() => window.location.assign(payUrl('/cart', { returnUrl: window.location.href }))), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('Upgrade plan') }) }) }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') }))] }));
++                                    : HEAD), children: _jsx(Search, { size: drawer ? 18 : 16, "aria-hidden": true }) })] })), mode === 'chat' ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, children: _jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { "data-slot": "app-new", ...ROW, active: !thread, bg: "transparent", hoverStyle: { bg: '$hover' }, icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) }), onPress: create, ...keys(create), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('New chat') }) }) }) })) : (_jsx(YStack, { "data-slot": "app-places", shrink: 0, children: groups.map((g, i) => (_jsxs(YStack, { pt: i ? '$2' : 0, children: [i && g.label ? (_jsx(Text, { id: `${uid}-${g.id}`, paddingInlineStart: "$2", pb: 2, fontSize: "$3", color: "$soft", children: g.label })) : null, _jsx(YStack, { role: "list", "aria-labelledby": i && g.label ? `${uid}-${g.id}` : undefined, "aria-label": i && g.label ? undefined : g.label || (at ? t(TITLE[at]) : g.id), gap: 1, children: g.links.map((link) => (_jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { ...ROW, ...(link.id === NEW ? { 'data-slot': 'app-new' } : {}), active: link.active, icon: link.id === NEW ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) })) : link.icon ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: link.icon })) : null, onPress: link.onPress, ...keys(() => link.onPress?.()), children: _jsx(Text, { fontSize: "$3", color: link.active ? '$ink' : '$quiet', children: link.label }) }) }, link.id))) })] }, g.id))) })), rail, mode === 'beta' && !drawer ? _jsx(YStack, { "data-slot": "beta-sidebar-slot", flex: 1, minH: 0, overflowY: "auto", pt: "$1" }) : mode === 'studio' || mode === 'beta' || mode === 'hosted' || at ? _jsx(YStack, { flex: 1, minH: 0 }) : _jsx(Recents, { host: host, mode: mode, thread: thread, onOpen: open, onNew: create }), at || mode === 'beta' ? null : (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })), free && mode !== 'beta' ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, pt: "$2", children: _jsx(YStack, { role: "listitem", minH: MARK, justify: "center", children: _jsx(SidebarItem, { ...ROW, "data-slot": "column-upgrade", icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(Sparkles, { size: 16, "aria-hidden": true, color: "var(--primary)" }) }), onPress: () => { window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); }, ...keys(() => { window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); }), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('Upgrade plan') }) }) }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') }))] }));
+ }
+diff --git a/dist/Directory.js b/dist/Directory.js
+index 3451949..49540b1 100644
+--- a/dist/Directory.js
++++ b/dist/Directory.js
+@@ -218,7 +218,7 @@ export function Catalog({ tab }) {
+         return (rows ?? []).filter((r) => !q || r.name.toLowerCase().includes(q) || r.description.toLowerCase().includes(q));
+     }, [rows, query]);
+     const quiet = (text, action) => (_jsxs(YStack, { gap: "$3", py: "$4", items: "flex-start", children: [_jsx(Text, { fontSize: "$3", color: "$soft", children: text }), action] }));
+-    return (_jsxs(YStack, { gap: "$4", children: [_jsxs(XStack, { items: "center", justify: "space-between", gap: "$2", flexWrap: "wrap", children: [_jsxs(XStack, { items: "center", gap: "$2", flex: 1, minW: 180, children: [_jsx(Search, { size: 14, "aria-hidden": true }), _jsx(Input, { value: query, onChangeText: setQuery, placeholder: search, "aria-label": search, flex: 1 })] }), _jsx(Action, { render: "button", onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), $touchable: { minH: 36 }, children: _jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", fontWeight: "500", children: t('Explore on hanzo.market') }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true })] }) })] }), tab === 'channels' && !signed ? (quiet(t('Sign in to see the channels your organization can connect.'), _jsx(Action, { render: "button", onPress: () => enter(), $touchable: { minH: 44, minW: 44 }, children: t('Sign in') }))) : wrong ? (quiet(say(wrong, t('the channels'), 'read', t), _jsx(Action, { render: "button", onPress: () => setTurn((n) => n + 1), $touchable: { minH: 44, minW: 44 }, children: t('Try again') }))) : rows === null ? (quiet(t(tab === 'channels' ? 'Loading channels…' : 'Loading works with…'))) : shown.length > 0 ? (_jsxs(_Fragment, { children: [_jsx(Text, { fontSize: "$3", color: "$soft", children: shown.length === 1 ? t('1 result') : t('{n} results', { n: shown.length }) }), _jsx(YStack, { maxH: 380, overflowY: "auto", overflowX: "hidden", paddingInlineEnd: "$1", width: "100%", children: _jsx(Grid, { columns: tab === 'channels' ? { min: 168, max: 4 } : { min: 240, max: 2 }, gap: 12, children: shown.map((r) => tab === 'channels' ? (_jsx(Channel, { row: r, onChange: () => setTurn((n) => n + 1) }, r.id)) : (_jsx(RowCard, { row: r, tab: tab }, r.id))) }) })] })) : (quiet(query ? t('Nothing matches “{query}”.', { query }) : t(tab === 'channels' ? 'No channel can be connected here yet.' : 'Nothing is listed yet.')))] }));
++    return (_jsxs(YStack, { gap: "$4", children: [_jsxs(XStack, { items: "center", justify: "space-between", gap: "$2", flexWrap: "wrap", children: [_jsxs(XStack, { items: "center", gap: "$2", flex: 1, minW: 180, children: [_jsx(Search, { size: 14, "aria-hidden": true }), _jsx(Input, { value: query, onChangeText: setQuery, placeholder: search, "aria-label": search, flex: 1 })] }), _jsx(Action, { render: "button", onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), $touchable: { minH: 36 }, children: _jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", fontWeight: "500", children: t('Hanzo Market') }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true })] }) })] }), tab === 'channels' && !signed ? (quiet(t('Sign in to see the channels your organization can connect.'), _jsx(Action, { render: "button", onPress: () => enter(), $touchable: { minH: 44, minW: 44 }, children: t('Sign in') }))) : wrong ? (quiet(say(wrong, t('the channels'), 'read', t), _jsx(Action, { render: "button", onPress: () => setTurn((n) => n + 1), $touchable: { minH: 44, minW: 44 }, children: t('Try again') }))) : rows === null ? (quiet(t(tab === 'channels' ? 'Loading channels…' : 'Loading works with…'))) : shown.length > 0 ? (_jsxs(_Fragment, { children: [_jsx(Text, { fontSize: "$3", color: "$soft", children: shown.length === 1 ? t('1 result') : t('{n} results', { n: shown.length }) }), _jsx(YStack, { maxH: 380, overflowY: "auto", overflowX: "hidden", paddingInlineEnd: "$1", width: "100%", children: _jsx(Grid, { columns: tab === 'channels' ? { min: 168, max: 4 } : { min: 240, max: 2 }, gap: 12, children: shown.map((r) => tab === 'channels' ? (_jsx(Channel, { row: r, onChange: () => setTurn((n) => n + 1) }, r.id)) : (_jsx(RowCard, { row: r, tab: tab }, r.id))) }) })] })) : (quiet(query ? t('Nothing matches “{query}”.', { query }) : t(tab === 'channels' ? 'No channel can be connected here yet.' : 'Nothing is listed yet.')))] }));
+ }
+ function RowCard({ row, tab }) {
+     const { t } = useI18n();
+diff --git a/dist/Market.js b/dist/Market.js
+index 4a49e6f..fb36688 100644
+--- a/dist/Market.js
++++ b/dist/Market.js
+@@ -138,7 +138,7 @@ export function Market({ scope }) {
+         return _jsx(Empty, { children: "Sign in to browse agents you can add." });
+     if (failed)
+         return _jsx(Empty, { children: say(failed, 'the marketplace') });
+-    return (_jsxs(YStack, { flex: 1, minH: 0, children: [_jsxs(YStack, { p: "$5", gap: "$2", borderBottomWidth: 1, borderColor: "$borderColor", children: [_jsxs(Text, { fontSize: "$7", lineHeight: "$7", fontWeight: "500", color: "$ink", children: ["Put AI to work in ", brand()] }), _jsxs(Text, { fontSize: "$3", color: "$soft", children: ["Browse agents that bring your tools into ", brand(), "."] }), _jsxs(XStack, { items: "center", justify: "space-between", flexWrap: "wrap", gap: "$2", mt: "$2", children: [_jsxs(XStack, { width: 420, maxW: "100%", height: 36, items: "center", gap: "$2", px: "$3", rounded: "$3", borderWidth: 1, borderColor: "$borderColor", children: [_jsx(Search, { size: 14, "aria-hidden": true }), _jsx(Text, { render: _jsx("input", { value: ask, onChange: (e) => setAsk(e.target.value), placeholder: "Search agents" }), flex: 1, bg: "transparent", borderWidth: 0, outlineStyle: "none", color: "inherit" })] }), _jsxs(XStack, { render: "button", onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), height: 36, px: "$3", rounded: "$3", borderWidth: 1, borderColor: "$borderColor", items: "center", gap: "$1.5", cursor: "pointer", hoverStyle: { bg: '$hover' }, children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", fontWeight: "500", color: "$ink", children: "Explore on hanzo.market" }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true, color: "$soft" })] })] })] }), !listings ? (_jsx(Empty, { children: "Reading the shelf." })) : shown.length === 0 ? (_jsx(Empty, { children: scope === 'installed'
++    return (_jsxs(YStack, { flex: 1, minH: 0, children: [_jsxs(YStack, { p: "$5", gap: "$2", borderBottomWidth: 1, borderColor: "$borderColor", children: [_jsxs(Text, { fontSize: "$7", lineHeight: "$7", fontWeight: "500", color: "$ink", children: ["Put AI to work in ", brand()] }), _jsxs(Text, { fontSize: "$3", color: "$soft", children: ["Browse agents that bring your tools into ", brand(), "."] }), _jsxs(XStack, { items: "center", justify: "space-between", flexWrap: "wrap", gap: "$2", mt: "$2", children: [_jsxs(XStack, { width: 420, maxW: "100%", height: 36, items: "center", gap: "$2", px: "$3", rounded: "$3", borderWidth: 1, borderColor: "$borderColor", children: [_jsx(Search, { size: 14, "aria-hidden": true }), _jsx(Text, { render: _jsx("input", { value: ask, onChange: (e) => setAsk(e.target.value), placeholder: "Search agents" }), flex: 1, bg: "transparent", borderWidth: 0, outlineStyle: "none", color: "inherit" })] }), _jsxs(XStack, { render: "button", onPress: () => window.open('https://hanzo.market', '_blank', 'noopener,noreferrer'), height: 36, px: "$3", rounded: "$3", borderWidth: 1, borderColor: "$borderColor", items: "center", gap: "$1.5", cursor: "pointer", hoverStyle: { bg: '$hover' }, children: [_jsx(Compass, { size: 14, "aria-hidden": true }), _jsx(Text, { fontSize: "$2", fontWeight: "500", color: "$ink", children: "Hanzo Market" }), _jsx(ArrowUpRight, { size: 13, "aria-hidden": true, color: "$soft" })] })] })] }), !listings ? (_jsx(Empty, { children: "Reading the shelf." })) : shown.length === 0 ? (_jsx(Empty, { children: scope === 'installed'
+                     ? 'No agents installed yet.'
+                     : ask
+                         ? 'Nothing in the registry matches that.'
+diff --git a/dist/Me.js b/dist/Me.js
+index 72a29de..6662fc8 100644
+--- a/dist/Me.js
++++ b/dist/Me.js
+@@ -133,7 +133,7 @@ function Line({ icon, children, sub, trail }) {
+     return (_jsxs(_Fragment, { children: [icon !== undefined ? (_jsx(XStack, { width: 16, height: 16, items: "center", justify: "center", shrink: 0, children: icon })) : null, _jsxs(YStack, { flex: 1, minW: 0, children: [_jsx(SizableText, { size: "$2", color: "$ink", numberOfLines: 1, children: children }), sub ? (_jsx(SizableText, { size: "$1", color: "$soft", numberOfLines: 1, children: sub })) : null] }), trail] }));
+ }
+ /** An organization's mark in the list: its initials on a rounded square. */
+-const Mark = ({ org }) => (_jsx(XStack, { width: 16, height: 16, rounded: "$2", items: "center", justify: "center", bg: "$raised", shrink: 0, children: org.personal ? (_jsx(SizableText, { size: "$1", fontWeight: "600", color: "$ink", children: initials(org.display).charAt(0) })) : (_jsx(Building2, { size: 12, "aria-hidden": true })) }));
++const Mark = ({ org }) => (_jsx(XStack, { width: 16, height: 16, rounded: "$2", items: "center", justify: "center", bg: "$raised", shrink: 0, children: org?.personal ? (_jsx(SizableText, { size: "$1", fontWeight: "600", color: "$ink", children: initials(org.display).charAt(0) })) : (_jsx(Building2, { size: 12, "aria-hidden": true })) }));
+ /**
+  * The plans row, named by the plan the organization is on: Enterprise and
+  * Agency are plans a person stays on, so the row names theirs; every other
+@@ -178,7 +178,7 @@ export function Me({ host, narrow = false, above = false, onOrg, defaultAccountO
+     // A personal plan is bought for the personal organization, beside any business one.
+     // The plans row's name (a phrase of `upgrade`'s).
+     const plans = upgrade(read.value?.label?.name);
+-    const getPro = () => (personal ? window.location.assign(payUrl('/cart', { org: personal.name, returnUrl: window.location.href })) : window.location.assign(payUrl('/cart', { returnUrl: window.location.href })));
++    const getPro = () => { window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); };
+     const apple = mac();
+     useEffect(() => {
+         if (above)
+@@ -214,16 +214,16 @@ export function Me({ host, narrow = false, above = false, onOrg, defaultAccountO
+                     setHelp(false);
+                 }, 
+                 // Toward the content from the rail, and aligned as the row's own edge is: mirrored right to left.
+-                placement: narrow && !above ? (rtl ? 'left-end' : 'right-end') : above !== rtl ? 'top-end' : 'top-start', 
++                placement: narrow && !above ? (rtl ? 'top-end' : 'top-start') : above !== rtl ? 'top-end' : 'top-start', 
+                 // Clear of the rail's mark (or the row) it opens from, and flush with its foot.
+-                offset: 8, children: [_jsx(DropdownMenuTrigger, { asChild: true, children: _jsxs(XStack, { ref: (el) => {
++                offset: narrow && !above ? 4 : 8, children: [_jsx(DropdownMenuTrigger, { asChild: true, children: _jsxs(XStack, { ref: (el) => {
+                                 row.current = el instanceof HTMLElement ? el : null;
+                             }, render: "button", "data-slot": "me", "aria-label": t('Account: {name}', { name: [who, current].filter(Boolean).join(' · ') }), ...{ title: who }, width: narrow ? (above ? 44 : 36) : '100%', minH: narrow ? (above ? 44 : 36) : 48, 
+                             // A thumb's 44 on a touch screen.
+                             $touchable: narrow ? { width: 44, minH: 44 } : undefined, px: narrow ? 0 : '$2', gap: "$2.5", rounded: narrow ? 999 : '$5', borderWidth: narrow && above ? 1 : 0, borderColor: narrow && above ? 'var(--border-strong)' : undefined, bg: narrow && above ? 'var(--pane-fill)' : undefined, items: "center", justify: narrow ? 'center' : 'flex-start', hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: '$outlineColor' }, cursor: "pointer", children: [_jsx(Face, { host: host, size: narrow ? (above ? 32 : 26) : 32 }), narrow ? null : (_jsxs(_Fragment, { children: [_jsxs(YStack, { flex: 1, minW: 0, children: [_jsx(SizableText, { size: "$3", fontWeight: "600", color: "$ink", numberOfLines: 1, text: "start", children: who }), working ? (_jsx(SizableText, { size: "$1", color: "$soft", numberOfLines: 1, text: "start", children: working })) : null] }), isFree ? (_jsx(Button, { size: "xs", variant: "outline", "data-slot": "me-upgrade", px: "$2", py: "$0.5", rounded: "$3", onPress: (e) => {
+                                                 e?.stopPropagation?.();
+                                                 getPro();
+-                                            }, cursor: "pointer", children: t('Upgrade plan') })) : null, _jsx(ChevronsUpDown, { size: 14, "aria-hidden": true, opacity: 0.6 })] }))] }) }), _jsxs(DropdownMenuContent, { minW: 260, maxW: "calc(100vw - 16px)", "aria-labelledby": undefined, "aria-label": t('Account'), onCloseAutoFocus: back, children: [_jsxs(DropdownMenuSub, { open: account, onOpenChange: setAccount, children: [_jsxs(DropdownMenuSubTrigger, { minH: 48, gap: "$2.5", "data-slot": "me-account", children: [_jsx(Face, { host: host, size: 28 }), _jsxs(YStack, { flex: 1, minW: 0, children: [_jsx(SizableText, { size: "$2", fontWeight: "600", color: "$ink", numberOfLines: 1, children: who }), _jsx(SizableText, { size: "$1", color: "$soft", numberOfLines: 1, children: host.person.email || working })] })] }), account ? (_jsxs(DropdownMenuSubContent, { minW: 240, maxW: "calc(100vw - 16px)", pointerEvents: "auto", children: [_jsx(Meter, { read: read, onPlans: () => leave('here'), onBilling: () => (setOpen(false), showSettings('billing')) }), _jsx(DropdownMenuSeparator, {}), _jsx(DropdownMenuItem, { onSelect: () => showSettings('account'), children: _jsx(Line, { icon: _jsx(CircleUserRound, { size: 16, "aria-hidden": true }), children: t('Profile') }) }), _jsx(DropdownMenuItem, { onSelect: () => showSettings('general'), children: _jsx(Line, { icon: _jsx(Palette, { size: 16, "aria-hidden": true }), children: t('Personalization') }) }), _jsx(DropdownMenuItem, { "aria-keyshortcuts": "Control+, Meta+,", onSelect: () => showSettings('general'), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), trail: _jsx(DropdownMenuShortcut, { "aria-hidden": true, children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) }), children: t('Settings') }) }), _jsx(DropdownMenuItem, { onSelect: () => window.location.assign(site('/beta')), children: _jsx(Line, { icon: _jsx(FlaskConical, { size: 16, "aria-hidden": true }), children: t('Beta') }) })] })) : null] }), _jsxs(DropdownMenuSub, { open: orgs, onOpenChange: setOrgs, children: [_jsx(DropdownMenuSubTrigger, { "data-slot": "me-orgs", children: _jsx(Line, { icon: _jsx(Mark, { org: here ?? all[0] }), trail: _jsx(Check, { size: 16, "aria-label": t('Current') }), children: t('{org} · {plan}', { org: (here ? (here.personal ? t('Personal') : here.display) : current), plan: planName || t('No plan') }) }) }), orgs ? (_jsxs(DropdownMenuSubContent, { minW: 260, maxW: "calc(100vw - 16px)", pointerEvents: "auto", children: [_jsx(DropdownMenuLabel, { children: t('Organizations') }), all.map((o) => (_jsx(DropdownMenuItem, { onSelect: () => o.name !== current && onOrg(o.name), children: _jsx(Line, { icon: _jsx(Mark, { org: o }), sub: [o.personal ? t('Personal') : said(o.role, t), planFor(o) || (isFree && o.personal ? t('Free') : '')].filter(Boolean).join(' - '), trail: o.name === current ? _jsx(Check, { size: 16, "aria-label": t('Current') }) : null, children: o.display }) }, o.name))), _jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Plus, { size: 16, "aria-hidden": true }), children: t('Create organization') }) }), _jsx(DropdownMenuItem, { onSelect: () => out(site(settings('organization'))), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), children: t('Organization settings') }) }), where().team ? null : here && !here.personal ? (_jsx(DropdownMenuItem, { onSelect: () => out(`${ENTRY}&org=${encodeURIComponent(here.name)}`), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), trail: _jsx(ArrowUpRight, { size: 14, "aria-hidden": true, opacity: 0.6 }), children: t('Open in Hanzo Team') }) })) : (_jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), children: t('Create a team') }) })), superAdmin() ? (_jsx(DropdownMenuItem, { onSelect: choose, children: _jsx(Line, { icon: _jsx(Building2, { size: 16, "aria-hidden": true }), children: t('All organizations') }) })) : null] })) : null] }), _jsx(DropdownMenuItem, { onSelect: () => showSettings('usage'), children: _jsx(Line, { icon: _jsx(Activity, { size: 16, "aria-hidden": true }), children: t('Usage') }) }), _jsx(DropdownMenuItem, { onSelect: () => leave('here'), children: _jsx(Line, { icon: _jsx(Sparkles, { size: 16, "aria-hidden": true }), children: t(plans) }) }), _jsx(DropdownMenuSeparator, {}), _jsxs(DropdownMenuSub, { open: lang, onOpenChange: (next) => {
++                                            }, cursor: "pointer", children: t('Upgrade plan') })) : null, _jsx(ChevronsUpDown, { size: 14, "aria-hidden": true, opacity: 0.6 })] }))] }) }), _jsxs(DropdownMenuContent, { minW: narrow && !above ? 280 : 260, width: narrow && !above ? 280 : undefined, maxW: "calc(100vw - 16px)", "aria-labelledby": undefined, "aria-label": t('Account'), onCloseAutoFocus: back, children: [_jsxs(DropdownMenuSub, { open: account, onOpenChange: setAccount, children: [_jsxs(DropdownMenuSubTrigger, { minH: 48, gap: "$2.5", "data-slot": "me-account", children: [_jsx(Face, { host: host, size: 28 }), _jsxs(YStack, { flex: 1, minW: 0, children: [_jsx(SizableText, { size: "$2", fontWeight: "600", color: "$ink", numberOfLines: 1, children: who }), _jsx(SizableText, { size: "$1", color: "$soft", numberOfLines: 1, children: host.person.email || working })] })] }), account ? (_jsxs(DropdownMenuSubContent, { minW: 240, maxW: "calc(100vw - 16px)", pointerEvents: "auto", children: [_jsx(Meter, { read: read, onPlans: () => leave('here'), onBilling: () => (setOpen(false), showSettings('billing')) }), _jsx(DropdownMenuSeparator, {}), _jsx(DropdownMenuItem, { onSelect: () => showSettings('account'), children: _jsx(Line, { icon: _jsx(CircleUserRound, { size: 16, "aria-hidden": true }), children: t('Profile') }) }), _jsx(DropdownMenuItem, { onSelect: () => showSettings('general'), children: _jsx(Line, { icon: _jsx(Palette, { size: 16, "aria-hidden": true }), children: t('Personalization') }) }), _jsx(DropdownMenuItem, { "aria-keyshortcuts": "Control+, Meta+,", onSelect: () => showSettings('general'), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), trail: _jsx(DropdownMenuShortcut, { "aria-hidden": true, children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) }), children: t('Settings') }) }), _jsx(DropdownMenuItem, { onSelect: () => window.location.assign(site('/beta')), children: _jsx(Line, { icon: _jsx(FlaskConical, { size: 16, "aria-hidden": true }), children: t('Beta') }) })] })) : null] }), _jsxs(DropdownMenuSub, { open: orgs, onOpenChange: setOrgs, children: [_jsx(DropdownMenuSubTrigger, { "data-slot": "me-orgs", children: _jsx(Line, { icon: _jsx(Mark, { org: here ?? all[0] }), trail: _jsx(Check, { size: 16, "aria-label": t('Current') }), children: t('{org} · {plan}', { org: (here ? (here.personal ? t('Personal') : here.display) : current), plan: planName || t('No plan') }) }) }), orgs ? (_jsxs(DropdownMenuSubContent, { minW: 260, maxW: "calc(100vw - 16px)", pointerEvents: "auto", children: [_jsx(DropdownMenuLabel, { children: t('Organizations') }), all.map((o) => (_jsx(DropdownMenuItem, { onSelect: () => o.name !== current && onOrg(o.name), children: _jsx(Line, { icon: _jsx(Mark, { org: o }), sub: [o.personal ? t('Personal') : said(o.role, t), planFor(o) || (isFree && o.personal ? t('Free') : '')].filter(Boolean).join(' - '), trail: o.name === current ? _jsx(Check, { size: 16, "aria-label": t('Current') }) : null, children: o.display }) }, o.name))), _jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Plus, { size: 16, "aria-hidden": true }), children: t('Create organization') }) }), _jsx(DropdownMenuItem, { onSelect: () => out(site(settings('organization'))), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), children: t('Organization settings') }) }), where().team ? null : here && !here.personal ? (_jsx(DropdownMenuItem, { onSelect: () => out(`${ENTRY}&org=${encodeURIComponent(here.name)}`), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), trail: _jsx(ArrowUpRight, { size: 14, "aria-hidden": true, opacity: 0.6 }), children: t('Open in Hanzo Team') }) })) : (_jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), children: t('Create a team') }) })), superAdmin() ? (_jsx(DropdownMenuItem, { onSelect: choose, children: _jsx(Line, { icon: _jsx(Building2, { size: 16, "aria-hidden": true }), children: t('All organizations') }) })) : null] })) : null] }), _jsx(DropdownMenuItem, { onSelect: () => showSettings('usage'), children: _jsx(Line, { icon: _jsx(Activity, { size: 16, "aria-hidden": true }), children: t('Usage') }) }), _jsx(DropdownMenuItem, { onSelect: () => leave('here'), children: _jsx(Line, { icon: _jsx(Sparkles, { size: 16, "aria-hidden": true }), children: t(plans) }) }), _jsx(DropdownMenuSeparator, {}), _jsxs(DropdownMenuSub, { open: lang, onOpenChange: (next) => {
+                                     setLang(next);
+                                     if (!next)
+                                         setLangQuery('');
+diff --git a/dist/Orgs.js b/dist/Orgs.js
+index ad13a57..1851941 100644
+--- a/dist/Orgs.js
++++ b/dist/Orgs.js
+@@ -190,8 +190,15 @@ export function Orgs({ children, front = false, forward, signup = false, }) {
+         return front && Landing && !hasSession() && !arriving ? _jsx(Landing, {}) : _jsxs(_Fragment, { children: [_jsx(Held, { veiled: true, children: children }), _jsx(Veil, {})] });
+     if (arriving && !isAuthenticated)
+         return _jsx(SignIn, { to: LOGIN });
+-    if (!isAuthenticated)
++    if (!isAuthenticated) {
++        // A HOST THAT IS THE APP ITSELF opens its one room to a guest: the
++        // desktop window has no site behind it to send a stranger to, and Chat
++        // already draws the same room for everyone (`anonymous` is its free
++        // lane). Everything else sends the visitor to its sign-in.
++        if (where().guest)
++            return children;
+         return front && Landing ? _jsx(Landing, {}) : signup && Signup ? _jsx(Signup, {}) : _jsx(SignIn, {});
++    }
+     if (founding)
+         return _jsx(Start, { founded: founding, onFounded: setFounding, first: members.length === 0 });
+     if (members.length === 0) {
+diff --git a/dist/Rail.js b/dist/Rail.js
+index eec4d26..0a8ed8a 100644
+--- a/dist/Rail.js
++++ b/dist/Rail.js
+@@ -34,7 +34,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+ // lead there. Chat and Dev are the phone's bar's (Top.tsx), and the account is
+ // the menu's foot.
+ import { useI18n } from '@hanzo/i18n/react';
+-import { Clock, Code2, Compass, Ellipsis, FlaskConical, Library, MessageSquare, PanelLeft, Puzzle, Sparkles, SquareTerminal, Users, WandSparkles } from 'lucide-react';
++import { Bot, Clock, Code2, Compass, Ellipsis, FlaskConical, Library, MessageSquare, PanelLeft, Puzzle, Sparkles, SquareTerminal, Users, WandSparkles } from 'lucide-react';
+ import { useState } from 'react';
+ import { Text, XStack, YStack } from '@hanzo/gui';
+ import { route } from '@hanzo/build';
+@@ -108,25 +108,22 @@ export function Rail({ host, mode, at, open, toggle, inside = null, rows = false
+                 { key: 'library', label: t('Library'), icon: _jsx(Library, { size: 16, "aria-hidden": true }), onSelect: to(RAISED.library) },
+                 { key: 'scheduled', label: t('Scheduled tasks'), icon: _jsx(Clock, { size: 16, "aria-hidden": true }), onSelect: to(RAISED.scheduled) },
+                 { key: 'customize', label: t('Customize'), icon: _jsx(Puzzle, { size: 16, "aria-hidden": true }), onSelect: to(RAISED.customize) },
+-                ...(team ? [{ type: 'separator', key: 'raised' }] : []),
+-            ]
+-            : []),
+-        ...(team
+-            ? [
+-                { key: 'team', label: 'Team', icon: _jsx(Users, { size: 16, "aria-hidden": true }), onSelect: () => out(WORKSPACE) },
+-                ...granted.map((b) => ({ key: `beta-${b.id}`, label: b.name, icon: _jsx(Sparkles, { size: 16, "aria-hidden": true }), onSelect: () => out(b.href) })),
+-                { type: 'separator', key: 'betas-rule' },
+-                { key: 'betas', label: t('Betas'), icon: _jsx(FlaskConical, { size: 16, "aria-hidden": true }), onSelect: () => go('/beta') },
+-                { key: 'market', label: t('Explore on hanzo.market'), icon: _jsx(Compass, { size: 16, "aria-hidden": true }), onSelect: () => out('https://hanzo.market') },
++                { type: 'separator', key: 'raised' },
+             ]
+             : []),
++        { key: 'bot', label: 'Bot', icon: _jsx(Bot, { size: 16, "aria-hidden": true }), onSelect: () => go('/bot') },
++        ...(onStudio ? [{ key: 'studio', label: 'Studio', icon: _jsx(WandSparkles, { size: 16, "aria-hidden": true }), onSelect: onStudio }] : []),
++        { key: 'team', label: 'Team', icon: _jsx(Users, { size: 16, "aria-hidden": true }), onSelect: () => out(WORKSPACE) },
++        ...granted.map((b) => ({ key: `beta-${b.id}`, label: b.name, icon: _jsx(Sparkles, { size: 16, "aria-hidden": true }), onSelect: () => out(b.href) })),
++        { type: 'separator', key: 'market-rule' },
++        { key: 'market', label: t('Hanzo Market'), icon: _jsx(Compass, { size: 16, "aria-hidden": true }), onSelect: () => out('https://hanzo.market') },
+     ];
+     const betasDialog = _jsx(BetasDialog, { open: betas, onOpenChange: setBetas, go: reach });
+     if (rows)
+         return (_jsxs(YStack, { "data-slot": "places", render: "nav", "aria-label": t('Products'), pt: "$2", shrink: 0, children: [_jsxs(YStack, { role: "list", gap: 2, children: [_jsx(YStack, { role: "listitem", children: _jsx(Row, { label: "Studio", on: mode === 'studio', onPress: onStudio, "data-slot": "place-studio", icon: _jsx(WandSparkles, { size: 16, "aria-hidden": true }) }) }), _jsx(YStack, { role: "listitem", children: _jsx(Row, { label: "Tabs", on: mode === 'tabs', onPress: onTabs, "data-slot": "place-tabs", icon: _jsx(SquareTerminal, { size: 16, "aria-hidden": true }) }) }), apps.map((a) => (_jsx(YStack, { role: "listitem", children: _jsx(Row, { label: a.name, on: inside === a.id, onPress: () => go(hosted(a.id)), "data-slot": `place-app-${a.id}`, icon: _jsx(a.icon, { size: 16, "aria-hidden": true }) }) }, a.id))), _jsx(YStack, { role: "listitem", children: _jsx(DropdownMenu, { placement: "bottom-start", minWidth: 220, trigger: _jsx(Row, { label: t('More'), "data-slot": "place-more", "aria-haspopup": "menu", icon: _jsx(Ellipsis, { size: 16, "aria-hidden": true }) }), items: rest }) })] }), betasDialog] }));
+     return (_jsxs(YStack, { "data-slot": "rail", render: "nav", "aria-label": t('Products'), width: RAIL, flex: 1, 
+         // The first mark stands at the pane's top edge, one head row high (HEAD), the account on the sidebar's foot (Column's `pb`).
+-        pt: (HEAD - MARK) / 2, pb: "$2", gap: 4, shrink: 0, items: "center", $touchable: { pt: (TOUCH_HEAD - TOUCH) / 2 }, children: [toggle ? (_jsx(YStack, { pb: 4, children: _jsx(Toggle, { open: open, onPress: toggle }) })) : null, _jsx(Mark, { label: t('Chat'), on: mode === 'chat', onPress: onChat, "data-slot": "rail-chat", children: _jsx(MessageSquare, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Dev", on: mode === 'dev' && !here, onPress: onDev, "data-slot": "rail-dev", children: _jsx(Code2, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Studio", on: mode === 'studio', onPress: onStudio, "data-slot": "rail-studio", children: _jsx(WandSparkles, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Tabs", on: mode === 'tabs', onPress: onTabs, "data-slot": "rail-tabs", children: _jsx(SquareTerminal, { size: 18, "aria-hidden": true }) }), apps.map((a) => (_jsx(Mark, { label: a.name, on: inside === a.id, onPress: () => go(hosted(a.id)), "data-slot": `rail-app-${a.id}`, children: _jsx(a.icon, { size: 18, "aria-hidden": true }) }, a.id))), _jsx(Mark, { label: t('Library'), on: here === 'library', onPress: to(RAISED.library), "data-slot": "rail-library", children: _jsx(Library, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Scheduled tasks'), on: here === 'scheduled', onPress: to(RAISED.scheduled), "data-slot": "rail-scheduled", children: _jsx(Clock, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Customize'), on: here === 'customize', onPress: to(RAISED.customize), "data-slot": "rail-customize", children: _jsx(Puzzle, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Betas'), on: mode === 'beta', onPress: () => go('/beta'), "data-slot": "rail-betas", children: _jsx(FlaskConical, { size: 18, "aria-hidden": true }) }), betasDialog, rest.length ? (_jsx(DropdownMenu
++        pt: (HEAD - MARK) / 2, pb: 0, gap: 4, shrink: 0, items: "center", $touchable: { pt: (TOUCH_HEAD - TOUCH) / 2 }, children: [toggle ? (_jsx(YStack, { pb: 4, children: _jsx(Toggle, { open: open, onPress: toggle }) })) : null, _jsx(Mark, { label: t('Chat'), on: mode === 'chat', onPress: onChat, "data-slot": "rail-chat", children: _jsx(MessageSquare, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Dev", on: mode === 'dev' && !here, onPress: onDev, "data-slot": "rail-dev", children: _jsx(Code2, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Studio", on: mode === 'studio', onPress: onStudio, "data-slot": "rail-studio", children: _jsx(WandSparkles, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: "Tabs", on: mode === 'tabs', onPress: onTabs, "data-slot": "rail-tabs", children: _jsx(SquareTerminal, { size: 18, "aria-hidden": true }) }), apps.map((a) => (_jsx(Mark, { label: a.name, on: inside === a.id, onPress: () => go(hosted(a.id)), "data-slot": `rail-app-${a.id}`, children: _jsx(a.icon, { size: 18, "aria-hidden": true }) }, a.id))), _jsx(Mark, { label: t('Library'), on: here === 'library', onPress: to(RAISED.library), "data-slot": "rail-library", children: _jsx(Library, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Scheduled tasks'), on: here === 'scheduled', onPress: to(RAISED.scheduled), "data-slot": "rail-scheduled", children: _jsx(Clock, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Customize'), on: here === 'customize', onPress: to(RAISED.customize), "data-slot": "rail-customize", children: _jsx(Puzzle, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Betas'), on: mode === 'beta', onPress: () => go('/beta'), "data-slot": "rail-betas", children: _jsx(FlaskConical, { size: 18, "aria-hidden": true }) }), betasDialog, rest.length ? (_jsx(DropdownMenu
+             // Toward the content: right of the rail, left of it right to left.
+             , { 
+                 // Toward the content: right of the rail, left of it right to left.
+diff --git a/dist/Recents.js b/dist/Recents.js
+index 9ce2fc3..271851e 100644
+--- a/dist/Recents.js
++++ b/dist/Recents.js
+@@ -15,6 +15,7 @@ import { DOTS, route, useSessions } from '@hanzo/build';
+ import { DropdownMenu } from '@hanzo/ui';
+ import { SidebarItem, StatusDot } from '@hanzo/ui/chat';
+ import { useKept } from './kept.js';
++import { hasSession } from './lib/session.js';
+ import { arrange, chats, MENUS, PINNED, PLAIN, runs, SINCE, UNFILED, UNTITLED, UNTITLED_RUN, viewOf } from './recent.js';
+ import { ConversationMenu, ThreadRow, useThreadList } from './thread.js';
+ /** The menu's items: each section a heading and its options (recent.ts's phrases, drawn through `t`), the one in force checked. */
+@@ -44,9 +45,11 @@ export function Recents({ host, mode, thread, onOpen, onNew, }) {
+ /** Chat's Recents: the conversation store alone, the archived ones when the view asks for them. */
+ function Chats({ thread, view, keep, onOpen, onNew, }) {
+     const store = useThreadList(view.status === 'archived', thread);
++    // A refusal with no session is not a broken list: a guest has no chats.
++    const error = hasSession() ? store.error : null;
+     const rows = useMemo(() => chats(store.threads), [store.threads]);
+     const byId = useMemo(() => new Map(store.threads.map((t) => [t.id, t])), [store.threads]);
+-    return (_jsx(List, { mode: "chat", rows: rows, view: view, keep: keep, open: (r) => r.id === thread, reading: store.loading && !store.threads.length, error: store.error, onOpen: onOpen, threads: byId, held: thread, onNew: onNew }));
++    return (_jsx(List, { mode: "chat", rows: rows, view: view, keep: keep, open: (r) => r.id === thread, reading: store.loading && !store.threads.length, error, onOpen: onOpen, threads: byId, held: thread, onNew: onNew }));
+ }
+ /** Dev's Recents: the org's coding runs alone. */
+ function Runs({ host, view, keep, onOpen }) {
+@@ -63,7 +66,9 @@ function Runs({ host, view, keep, onOpen }) {
+         reload();
+     }, [run, store.loading, store.value, reload]);
+     const rows = useMemo(() => runs(store.value), [store.value]);
+-    return (_jsx(List, { mode: "dev", rows: rows, view: view, keep: keep, open: (row) => row.id === run, reading: store.loading && !store.value.length, error: store.error, onOpen: onOpen }));
++    // A refusal with no session is not a broken list: a guest has no runs.
++    const error = hasSession() ? store.error : null;
++    return (_jsx(List, { mode: "dev", rows: rows, view: view, keep: keep, open: (row) => row.id === run, reading: store.loading && !store.value.length, error, onOpen: onOpen }));
+ }
+ function List({ mode, rows, view, keep, open, reading, error, onOpen, threads, held = null, onNew, }) {
+     const { t } = useI18n();
+diff --git a/dist/Setup.js b/dist/Setup.js
+index b7d68e8..61f989f 100644
+--- a/dist/Setup.js
++++ b/dist/Setup.js
+@@ -40,6 +40,50 @@ export const STEP_KEY = 'hanzo.onboarding.step';
+ export const PLUGIN_KEY = 'hanzo.onboarding.plugin';
+ /** Where plugins and connectors live: Dev's Customize. */
+ const PLUGINS = '-/customize/plugins';
++/** Null when neither answered. /v1/connection lists `connections`; nothing else is read from it. */
++export function linked(providersData, connectionsData) {
++    const providers = providersData?.providers;
++    const connections = connectionsData?.connections;
++    const fromProviders = Array.isArray(providers) ? providers : null;
++    const fromConnections = Array.isArray(connections) ? connections : null;
++    if (!fromProviders && !fromConnections)
++        return null;
++    const ids = new Set();
++    const google = [];
++    const address = (id, account) => {
++        if (id === 'google' && typeof account === 'string' && account.trim())
++            google.push(account.trim().toLowerCase());
++    };
++    for (const p of fromProviders ?? []) {
++        if (!p.connected)
++            continue;
++        const id = String(p.id);
++        ids.add(id);
++        address(id, p.connection?.account);
++    }
++    for (const c of fromConnections ?? []) {
++        const id = String(c.provider);
++        ids.add(id);
++        address(id, c.account);
++    }
++    const own = ids.has('github-user');
++    return {
++        ids,
++        google,
++        github: own || ids.has('github') || ids.has('github-copilot'),
++        own,
++        whole: Boolean(fromProviders && fromConnections),
++    };
++}
++/** Where Disconnect lets go of GitHub: the reader's own link, or the org's App accounts. */
++export const leaving = (own) => (own ? '/v1/provider/github/user/disconnect' : '/v1/provider/github/disconnect');
++/**
++ * Said on the window when GitHub's connection changes, here or on Projects and
++ * Settings (@hanzo/build, which says and hears the same name), so each reads it
++ * again without a reload. Setup hears its own word too.
++ */
++export const GITHUB_CHANGED = 'hanzo:github';
++const changed = () => window.dispatchEvent(new Event(GITHUB_CHANGED));
+ /** Inline Slack Mark */
+ function SlackMark({ size = 18 }) {
+     return (_jsxs("svg", { width: size, height: size, viewBox: "0 0 54 54", fill: "none", "aria-hidden": true, children: [_jsx("path", { d: "M11.379 33.9993C11.379 37.1358 8.84512 39.6507 5.7276 39.6507C2.61008 39.6507 0.0572205 37.1168 0.0572205 33.9993C0.0572205 30.8817 2.5911 28.3479 5.70862 28.3479H11.36V33.9993H11.379Z", fill: "#E01E5A" }), _jsx("path", { d: "M14.1962 33.9997C14.1962 30.8632 16.7301 28.3483 19.8476 28.3483C22.9651 28.3483 25.499 30.8822 25.499 33.9997V48.1353C25.499 51.2718 22.9651 53.7867 19.8476 53.7867C16.7301 53.7867 14.1962 51.2718 14.1962 48.1353V33.9997Z", fill: "#E01E5A" }), _jsx("path", { d: "M19.8662 11.2673C16.7296 11.2673 14.2148 8.73347 14.2148 5.61594C14.2148 2.49842 16.7486 -0.0354538 19.8662 -0.0354538C22.9837 -0.0354538 25.5175 2.49842 25.5175 5.61594V11.2673H19.8662Z", fill: "#36C5F0" }), _jsx("path", { d: "M19.8682 14.1334C23.0047 14.1334 25.5196 16.6673 25.5196 19.7848C25.5196 22.9023 22.9857 25.4362 19.8682 25.4362H5.67566C2.53916 25.4362 0.0242615 22.9023 0.0242615 19.7848C0.0242615 16.6673 2.55814 14.1334 5.67566 14.1334H19.8682Z", fill: "#36C5F0" }), _jsx("path", { d: "M42.5323 19.7853C42.5323 16.6488 45.0662 14.1339 48.1837 14.1339C51.3012 14.1339 53.8351 16.6678 53.8351 19.7853C53.8351 22.9028 51.3012 25.4367 48.1837 25.4367H42.5323V19.7853Z", fill: "#2EB67D" }), _jsx("path", { d: "M39.7126 19.7934C39.7126 22.9299 37.1787 25.4448 34.0612 25.4448C30.9436 25.4448 28.4098 22.911 28.4098 19.7934V5.61986C28.4098 2.48336 30.9436 -0.0315399 34.0612 -0.0315399C37.1787 -0.0315399 39.7126 2.48336 39.7126 5.61986V19.7934Z", fill: "#2EB67D" }), _jsx("path", { d: "M34.0376 42.482C37.1741 42.482 39.689 45.0158 39.689 48.1334C39.689 51.2509 37.1552 53.7848 34.0376 53.7848C30.9201 53.7848 28.3862 51.2509 28.3862 48.1334V42.482H34.0376Z", fill: "#ECB22E" }), _jsx("path", { d: "M34.0381 39.6507C30.9016 39.6507 28.3867 37.1168 28.3867 33.9993C28.3867 30.8818 30.9206 28.3479 34.0381 28.3479H48.2306C51.3671 28.3479 53.882 30.8818 53.882 33.9993C53.882 37.1168 51.3482 39.6507 48.2306 39.6507H34.0381Z", fill: "#ECB22E" })] }));
+@@ -61,6 +105,7 @@ export function Setup({ go } = {}) {
+     const [errorMsg, setErrorMsg] = useState(null);
+     // A first press on Disconnect asks; the second lets go of GitHub.
+     const [dropping, setDropping] = useState(false);
++    const [githubOwn, setGithubOwn] = useState(false);
+     const [syncTurn, setSyncTurn] = useState(0);
+     const signed = isAuthenticated && Boolean(accessToken);
+     const accountList = Array.isArray(googleAccounts) ? googleAccounts : [];
+@@ -105,7 +150,7 @@ export function Setup({ go } = {}) {
+             fetch(`${api()}/v1/tool/mcp/servers`, { headers: auth })
+                 .then((r) => (r.ok ? r.json() : null))
+                 .catch(() => null),
+-        ]).then(([integrationsData, connectorsData, pluginsData, serversData]) => {
++        ]).then(([integrationsData, connectionsData, pluginsData, serversData]) => {
+             if (!live)
+                 return;
+             // A plugin the org built, or an MCP server it added: Customize's own lists.
+@@ -113,45 +158,22 @@ export function Setup({ go } = {}) {
+             const added = Array.isArray(serversData?.servers) ? serversData.servers.length : 0;
+             if (built + added > 0)
+                 setPluginDone(true);
+-            const providers = Array.isArray(integrationsData?.providers)
+-                ? integrationsData.providers
+-                : null;
+-            const connectors = Array.isArray(connectorsData?.connectors)
+-                ? connectorsData.connectors
+-                : null;
+-            if (!providers && !connectors)
++            const found = linked(integrationsData, connectionsData);
++            if (!found)
+                 return;
+-            const connectedSet = new Set();
+-            const discoveredGoogleAccounts = [];
+-            if (providers) {
+-                for (const p of providers) {
+-                    if (p.connected) {
+-                        const id = String(p.id);
+-                        connectedSet.add(id);
+-                        const conn = p.connection;
+-                        if (id === 'google' && typeof conn?.account === 'string' && conn.account.trim()) {
+-                            discoveredGoogleAccounts.push(conn.account.trim().toLowerCase());
+-                        }
+-                    }
+-                }
+-            }
+-            if (connectors) {
+-                for (const c of connectors) {
+-                    const prov = String(c.provider);
+-                    connectedSet.add(prov);
+-                    if (prov === 'google' && typeof c.account === 'string' && c.account.trim()) {
+-                        discoveredGoogleAccounts.push(c.account.trim().toLowerCase());
+-                    }
+-                }
+-            }
+-            const remoteGithub = connectedSet.has('github') || connectedSet.has('github-copilot');
++            const connectedSet = found.ids;
++            const discoveredGoogleAccounts = found.google;
+             const remoteSlack = connectedSet.has('slack');
+             const remoteGoogle = connectedSet.has('google') ||
+                 connectedSet.has('gmail') ||
+                 connectedSet.has('google-drive') ||
+                 connectedSet.has('google-calendar');
+-            if (remoteGithub)
+-                setGithubDone(true);
++            // GitHub follows what is connected, both ways, so a Disconnect on Projects
++            // reads here too; a half answer only ever adds it.
++            if (found.whole || found.github)
++                setGithubDone(found.github);
++            if (found.whole || found.own)
++                setGithubOwn(found.own);
+             if (remoteSlack)
+                 setSlackDone(true);
+             if (remoteGoogle)
+@@ -167,7 +189,8 @@ export function Setup({ go } = {}) {
+             live = false;
+         };
+     }, [signed, syncTurn]);
+-    // Listen for postMessage completion from /auth/callback popup and focus/visibility return
++    // Listen for postMessage completion from /auth/callback popup, focus/visibility return,
++    // and GitHub changed on this page (here, on Projects or in Settings)
+     useEffect(() => {
+         if (typeof window === 'undefined')
+             return;
+@@ -189,13 +212,16 @@ export function Setup({ go } = {}) {
+             }
+         };
+         const onFocus = () => setSyncTurn((n) => n + 1);
++        const onGithub = () => setSyncTurn((n) => n + 1);
+         window.addEventListener('message', onMessage);
+         document.addEventListener('visibilitychange', onReturn);
+         window.addEventListener('focus', onFocus);
++        window.addEventListener(GITHUB_CHANGED, onGithub);
+         return () => {
+             window.removeEventListener('message', onMessage);
+             document.removeEventListener('visibilitychange', onReturn);
+             window.removeEventListener('focus', onFocus);
++            window.removeEventListener(GITHUB_CHANGED, onGithub);
+         };
+     }, [signed, googleAccounts]);
+     const totalDone = (githubDone ? 1 : 0) + (slackDone ? 1 : 0) + (pluginDone ? 1 : 0);
+@@ -211,13 +237,17 @@ export function Setup({ go } = {}) {
+             return;
+         }
+         // The return page hands the answer back and closes the popup (lib/oauth);
+-        // a popup closed without one still re-reads what is connected.
++        // a popup closed without one still re-reads what is connected. GitHub's is
++        // said on the page, so Projects reads it too.
+         awaitAnswer(popup, provider, (answer) => {
+             if (answer?.ok)
+                 onDone();
+             else if (answer)
+                 setErrorMsg(t('Could not connect {provider} right now. Please try again.', { provider: label }));
+-            setSyncTurn((n) => n + 1);
++            if (provider === 'github')
++                changed();
++            else
++                setSyncTurn((n) => n + 1);
+         });
+     };
+     const connectOAuthProvider = async (provider, label, onDone) => {
+@@ -283,7 +313,8 @@ export function Setup({ go } = {}) {
+         setGithubDone(true);
+         setStep(slackDone ? 3 : 2);
+     });
+-    // Let go of the org's GitHub accounts, so another can be connected. The platform
++    // Let go of GitHub, so another account can be connected, as Projects does: the
++    // reader's own link first, else the org's GitHub accounts. For those the platform
+     // also removes its App from an account no other organization uses, so the next
+     // connect is a fresh install. An org admin's act: anyone else is told so.
+     const handleDisconnectGithub = async () => {
+@@ -294,20 +325,21 @@ export function Setup({ go } = {}) {
+         setBusy('github');
+         setErrorMsg(null);
+         try {
+-            const res = await fetch(`${api()}/v1/provider/github/disconnect`, {
++            const res = await fetch(`${api()}${leaving(githubOwn)}`, {
+                 method: 'POST',
+                 headers: { ...scope(), 'Content-Type': 'application/json' },
+                 body: '{}',
+             });
+             if (!res.ok) {
+-                setErrorMsg(res.status === 403
++                setErrorMsg(res.status === 403 && !githubOwn
+                     ? t('Only an organization admin can disconnect GitHub.')
+                     : t('Could not disconnect {provider} right now. Please try again.', { provider: 'GitHub' }));
+                 return;
+             }
+             setGithubDone(false);
+             setStep(1);
+-            setSyncTurn((n) => n + 1);
++            // Projects reads it again, and so does this card.
++            changed();
+         }
+         catch {
+             setErrorMsg(t('Could not disconnect {provider} right now. Please try again.', { provider: 'GitHub' }));
+diff --git a/dist/Shell.js b/dist/Shell.js
+index 59e5db4..a11821f 100644
+--- a/dist/Shell.js
++++ b/dist/Shell.js
+@@ -495,6 +495,13 @@ function Projects({ filter, onPick, }) {
+             .catch((e) => {
+             if (!live)
+                 return;
++            // No session, no projects: the store refuses a guest and the honest
++            // list is empty (as thread.js does for the Recents).
++            if (!hasSession()) {
++                setRows([]);
++                setWrong(null);
++                return;
++            }
+             setRows(null);
+             setWrong(e);
+         });
+diff --git a/dist/Upgrade.js b/dist/Upgrade.js
+index f9f98bd..2fb7292 100644
+--- a/dist/Upgrade.js
++++ b/dist/Upgrade.js
+@@ -1,21 +1,22 @@
+ 'use client';
+ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+-// The ask to upgrade, for a reader on the Free plan.
++// The upgrade dialog for readers on the Free plan, or reaching for paid features.
+ //
+-// A Free reader who reaches for something Free does not include is shown the
+-// first personal plan that charges (`usePlan('personal')`), priced by the
+-// catalog for a month or for a year, with checkout at hanzo.ai/pay. `useFree`
+-// says who is on Free; `Upgrade` draws the ask it is handed and nothing when it
+-// is handed none. A refusal's ask is read by `planRequired` in `failure.ts`.
++// Matches the modern ChatGPT-style modal:
++// - Centered "Upgrade your plan" title with top-right close button.
++// - Audience switcher: [ Personal | Business ].
++// - Personal view: defaults to 2 plans (Free + Pro) with "Show all plans" expandable
++//   to full options (Free, Go, Pro, Dev, Max, Ultra).
++// - Business view: Free + Highlighted Business card with Annual/Monthly switch,
++//   in-card seat types (Standard & Premium), and enterprise notice at the bottom.
+ import { useEffect, useState } from 'react';
+-import { phrase } from '@hanzo/i18n';
+ import { useI18n } from '@hanzo/i18n/react';
+-import { Gauge, Sparkles, Users, Workflow, X } from 'lucide-react';
+-import { Anchor, Box, Dialog, DialogContent, DialogTitle, Text, ToggleGroup, ToggleGroupItem, XStack, YStack } from '@hanzo/ui';
++import { BarChart2, Check, Cpu, Crown, Infinity, Layers, Link2, Lock, Rocket, ShieldCheck, Sliders, Sparkles, Sprout, Users, Workflow, X, Zap, } from 'lucide-react';
++import { Anchor, Box, Button, Dialog, DialogContent, DialogTitle, Text, XStack, YStack } from '@hanzo/ui';
+ import { track } from './lib/tags.js';
+ import { org } from './lib/session.js';
+ import { useTier } from './lib/tier.js';
+-import { charge, quote, saving, term, usePlan } from './lib/plans.js';
++import { term } from './lib/plans.js';
+ import { payUrl } from './lib/pay.js';
+ import { site } from './where.js';
+ /** The free rung's name in the billing catalog. */
+@@ -25,14 +26,6 @@ export function useFree(signedIn) {
+     const { tier } = useTier(signedIn, org());
+     return signedIn && tier?.tier?.name === FREE;
+ }
+-// What the first paid personal plan adds to Free, in the words of the plan
+-// catalog (@hanzo/plans subscription.json, the `dev` plan's features), drawn through `t`.
+-const ROWS = [
+-    [Gauge, phrase('Usage included on every model')],
+-    [Sparkles, phrase('Every model, including Enso Ultra and Kai')],
+-    [Users, phrase('Hanzo Team: chat, meetings, calendar and contacts')],
+-    [Workflow, phrase('Automations, with daily runs included')],
+-];
+ /** The page checkout returns to: this one, query and all. */
+ function here() {
+     if (typeof window === 'undefined')
+@@ -40,42 +33,131 @@ function here() {
+     const { origin, pathname, search } = window.location;
+     return `${origin}${pathname}${search}`;
+ }
++const MULTIPLIERS = {
++    '2x': {
++        id: 'pro-2x',
++        name: 'Pro',
++        multiple: '2×',
++        price: 15,
++        icon: Rocket,
++        subtitle: '2× more usage and higher limits for everyday builders.',
++        bots: 1,
++    },
++    '5x': {
++        id: 'dev-5x',
++        name: 'Dev',
++        multiple: '5×',
++        price: 45,
++        icon: Cpu,
++        subtitle: '5× higher limits for autonomous coding agents.',
++        bots: 1,
++    },
++    '10x': {
++        id: 'max-10x',
++        name: 'Max',
++        multiple: '10×',
++        price: 95,
++        icon: Crown,
++        subtitle: '10× limits for heavy continuous coding sessions.',
++        bots: 3,
++    },
++};
+ export function Upgrade({ ask, onClose }) {
+     const { t } = useI18n();
+-    const { plan } = usePlan('personal');
+-    const [cycle, setCycle] = useState('month');
+-    const shown = ask !== null && plan !== null;
+-    // The plan is shown to a reader who reached for it: GA4's view_item.
++    const [audience, setAudience] = useState('personal');
++    const [multiplier, setMultiplier] = useState('2x');
++    const [showAllPersonal, setShowAllPersonal] = useState(false);
++    const [businessCycle, setBusinessCycle] = useState('year');
++    const [hashOpen, setHashOpen] = useState(false);
++    // Listen for #pricing in hash or custom event 'hanzo:upgrade'
+     useEffect(() => {
+-        if (shown && plan)
+-            track('product_viewed', {
+-                currency: 'USD',
+-                value: charge(plan, 'month'),
+-                items: [{ item_id: plan.id, item_name: plan.name }],
+-            });
+-        // eslint-disable-next-line react-hooks/exhaustive-deps
+-    }, [shown]);
+-    if (!plan)
+-        return null;
+-    const save = saving(plan);
+-    const interval = save === null ? 'month' : cycle;
+-    const label = t('Choose your plan — Pro, Max & Team');
+-    const href = term(ask?.href ?? payUrl('/cart', { org: org(), returnUrl: here() }), interval);
+-    const buy = () => {
+-        const items = [{ item_id: plan.id, item_name: plan.name }];
+-        // The funnel reads the English, whatever language the reader chose.
+-        track('plan_clicked', { plan: plan.id, interval, cta: `Upgrade to ${plan.name} for ${quote(plan, interval)}`, items });
+-        track('checkout_started', { currency: 'USD', value: charge(plan, interval), items, interval });
++        const handleHash = () => {
++            if (typeof window !== 'undefined' && window.location.hash === '#pricing') {
++                setHashOpen(true);
++            }
++        };
++        const handleUpgradeEvent = () => setHashOpen(true);
++        handleHash();
++        window.addEventListener('hashchange', handleHash);
++        window.addEventListener('hanzo:upgrade', handleUpgradeEvent);
++        return () => {
++            window.removeEventListener('hashchange', handleHash);
++            window.removeEventListener('hanzo:upgrade', handleUpgradeEvent);
++        };
++    }, []);
++    const open = ask !== null || hashOpen;
++    useEffect(() => {
++        if (open) {
++            track('upgrade_dialog_opened', { audience });
++        }
++    }, [open, audience]);
++    const close = () => {
++        if (typeof window !== 'undefined' && window.location.hash === '#pricing') {
++            history.replaceState(null, '', window.location.pathname + window.location.search);
++        }
++        setHashOpen(false);
++        onClose();
++    };
++    const activeMultiplier = MULTIPLIERS[multiplier];
++    const goHref = term(payUrl('/cart', { plan: 'go', org: org(), returnUrl: here() }), 'month');
++    const proHref = term(payUrl('/cart', { plan: 'pro-2x', org: org(), returnUrl: here() }), 'month');
++    const devHref = term(payUrl('/cart', { plan: 'dev-5x', org: org(), returnUrl: here() }), 'month');
++    const maxHref = term(payUrl('/cart', { plan: 'max-10x', org: org(), returnUrl: here() }), 'month');
++    const multiplierHref = term(payUrl('/cart', { plan: activeMultiplier.id, org: org(), returnUrl: here() }), 'month');
++    const ultraHref = term(payUrl('/cart', { plan: 'ultra', org: org(), returnUrl: here() }), 'month');
++    const businessHref = term(payUrl('/cart', { plan: 'team', quantity: '5', org: org(), returnUrl: here() }), businessCycle);
++    const handleBuy = (planId, planName, price, interval = 'month') => {
++        const items = [{ item_id: planId, item_name: planName }];
++        track('plan_clicked', { plan: planId, interval, cta: `Upgrade to ${planName}`, items });
++        track('checkout_started', { currency: 'USD', value: price, items, interval });
+     };
+-    return (_jsx(Dialog, { open: ask !== null, onOpenChange: (open) => (open ? undefined : onClose()), children: _jsxs(DialogContent, { showCloseButton: false, width: "calc(100vw - 32px)", maxW: 440, bg: "var(--popover)", rounded: "$9", p: "$5", gap: "$5", $sm: { p: '$6' }, children: [_jsx(Box, { render: "button", "aria-label": t('Close'), onClick: onClose, position: "absolute", t: "$4", insetInlineEnd: "$4", p: "$1.5", rounded: "$2", bg: "transparent", borderWidth: 0, cursor: "pointer", hoverStyle: { bg: '$hover' }, children: _jsx(X, { size: 18, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) }), _jsx(DialogTitle
+-                // inline-style: design's serif face. gui names Zen and Zen Mono only; a family it cannot name resets the rung to 15px.
+-                , { 
+-                    // inline-style: design's serif face. gui names Zen and Zen Mono only; a family it cannot name resets the rung to 15px.
+-                    style: { fontFamily: 'var(--font-serif)' }, fontSize: "$8", lineHeight: "$9", fontWeight: "400", color: "$ink", paddingInlineEnd: "$6", children: ask?.model ? t('Use {model} with Hanzo {plan}', { model: ask.model, plan: plan.name }) : t('Upgrade to Hanzo {plan}', { plan: plan.name }) }), _jsx(YStack, { render: "ul", gap: "$3.5", m: 0, p: 0, children: ROWS.map(([Icon, line]) => (_jsxs(XStack, { render: "li", items: "center", gap: "$3", children: [_jsx(Icon, { size: 18, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }), _jsx(Text, { fontSize: "$4", color: "$ink", children: t(line) })] }, line))) }), save === null ? null : (_jsx(ToggleGroup, { type: "single", value: cycle, onValueChange: (v) => {
+-                        if (v === 'month' || v === 'year')
+-                            setCycle(v);
+-                    }, disableDeactivation: true, "aria-label": t('Billing term'), ...{ width: '100%', p: 4, rounded: 9999, bg: 'var(--surface-2)' }, children: [
+-                        ['month', t('Monthly')],
+-                        ['year', t('Yearly · Save {percent}%', { percent: save })],
+-                    ].map(([value, name]) => (_jsx(ToggleGroupItem, { value: value, variant: "outline", flex: 1, rounded: "$10", borderColor: "transparent", children: name }, value))) })), _jsxs(YStack, { gap: "$3", children: [_jsx(Anchor, { href: href, onPress: buy, "data-ga": true, bg: "var(--primary)", color: "var(--primary-foreground)", rounded: "$4", py: "$3", px: "$4", fontSize: "$4", fontWeight: "500", text: "center", textDecorationLine: "none", hoverStyle: { bg: 'var(--primary-hover)' }, children: label }), _jsxs(XStack, { justify: "center", gap: "$5", children: [_jsx(Anchor, { href: site("/pricing"), fontSize: "$3", color: "$soft", hoverStyle: { color: '$ink' }, children: t('See all plans') }), _jsx(Box, { render: "button", onClick: onClose, bg: "transparent", borderWidth: 0, p: 0, cursor: "pointer", children: _jsx(Text, { fontSize: "$3", color: "$soft", hoverStyle: { color: '$ink' }, children: t('Not now') }) })] })] })] }) }));
++    return (_jsx(Dialog, { open: open, onOpenChange: (v) => (v ? undefined : close()), children: _jsxs(DialogContent, { showCloseButton: false, width: "calc(100vw - 32px)", maxW: audience === 'business' || !showAllPersonal ? 880 : 1140, maxH: "90vh", overflowY: "auto", bg: "var(--popover, #121212)", rounded: "$8", p: "$5", gap: "$4", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.75)", $sm: { p: '$7', gap: '$5' }, children: [_jsx(Box, { render: "button", "aria-label": t('Close'), onClick: close, position: "absolute", t: "$4", insetInlineEnd: "$4", width: 32, height: 32, rounded: "$10", bg: "transparent", borderWidth: 0, cursor: "pointer", items: "center", justify: "center", hoverStyle: { bg: 'rgba(255, 255, 255, 0.08)' }, z: 10, children: _jsx(X, { size: 18, "aria-hidden": true, color: "var(--soft, #a1a1aa)" }) }), _jsxs(YStack, { items: "center", gap: "$2", pt: "$1", children: [_jsx(DialogTitle, { fontSize: 26, lineHeight: 32, fontWeight: "600", color: "$ink", text: "center", children: t('Upgrade your plan') }), _jsxs(XStack, { items: "center", bg: "rgba(255, 255, 255, 0.06)", p: 3, rounded: "$10", gap: 2, mt: "$2", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.04)", children: [_jsx(Box, { render: "button", onClick: () => setAudience('personal'), bg: audience === 'personal' ? 'rgba(255, 255, 255, 0.14)' : 'transparent', px: "$3.5", py: "$1.5", rounded: "$10", borderWidth: 0, cursor: "pointer", hoverStyle: audience === 'personal' ? {} : { bg: 'rgba(255, 255, 255, 0.06)' }, children: _jsx(Text, { fontSize: 13, fontWeight: audience === 'personal' ? '600' : '400', color: audience === 'personal' ? '#ffffff' : '#8e8e8e', children: t('Personal') }) }), _jsx(Box, { render: "button", onClick: () => setAudience('business'), bg: audience === 'business' ? 'rgba(255, 255, 255, 0.14)' : 'transparent', px: "$3.5", py: "$1.5", rounded: "$10", borderWidth: 0, cursor: "pointer", hoverStyle: audience === 'business' ? {} : { bg: 'rgba(255, 255, 255, 0.06)' }, children: _jsx(Text, { fontSize: 13, fontWeight: audience === 'business' ? '600' : '400', color: audience === 'business' ? '#ffffff' : '#8e8e8e', children: t('Business') }) })] })] }), audience === 'personal' ? (!showAllPersonal ? (_jsxs(YStack, { gap: "$4", width: "100%", children: [_jsxs(Box, { style: {
++                                display: 'grid',
++                                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
++                                gap: '24px',
++                                width: '100%',
++                                alignItems: 'stretch',
++                            }, children: [_jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$6", gap: "$5", justify: "space-between", children: _jsxs(YStack, { gap: "$3.5", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Sprout, { size: 16, color: "#4ade80", "aria-hidden": true }), _jsx(Text, { fontSize: 14, fontWeight: "500", color: "#a1a1aa", children: t('Free') })] }), _jsxs(YStack, { gap: "$1", children: [_jsx(Text, { fontSize: 24, fontWeight: "700", color: "$ink", children: t('Try Hanzo') }), _jsx(Text, { fontSize: 14, color: "var(--soft, #a1a1aa)", children: t('See what AI can do.') })] }), _jsx(Button, { disabled: true, variant: "outline", rounded: "$10", width: "100%", py: "$2.5", my: "$2", borderColor: "rgba(255, 255, 255, 0.15)", bg: "transparent", cursor: "default", children: _jsx(Text, { fontSize: 14, fontWeight: "500", color: "#8e8e8e", children: t('Your current plan') }) }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 28, fontWeight: "700", color: "$ink", children: "$0" }), _jsx(Text, { fontSize: 14, color: "#8e8e8e", children: t('/ month') })] }), _jsx(YStack, { gap: "$3", pt: "$2", children: [
++                                                    t('Unlimited everyday text chats'),
++                                                    t('Access to all foundation models'),
++                                                    t('Standard inference speed'),
++                                                    t('Context memory and chat history'),
++                                                    t('Community support'),
++                                                ].map((feat) => (_jsxs(XStack, { items: "center", gap: "$2.5", children: [_jsx(Check, { size: 16, color: "#a1a1aa", "aria-hidden": true }), _jsx(Text, { fontSize: 13, color: "$ink", children: feat })] }, feat))) })] }) }), _jsx(YStack, { bg: "rgba(37, 99, 235, 0.03)", borderWidth: 1.5, borderColor: "#2563eb", rounded: "$6", p: "$6", gap: "$4", justify: "space-between", boxShadow: "0 0 28px rgba(37, 99, 235, 0.16)", children: _jsxs(YStack, { gap: "$3", children: [_jsxs(XStack, { items: "center", justify: "space-between", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(activeMultiplier.icon, { size: 16, color: "#38bdf8", "aria-hidden": true }), _jsx(Text, { fontSize: 16, fontWeight: "700", color: "$ink", children: activeMultiplier.name })] }), _jsx(XStack, { items: "center", bg: "rgba(0, 0, 0, 0.45)", p: 2, rounded: "$10", gap: 1, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", children: ['2x', '5x', '10x'].map((m) => (_jsx(Box, { render: "button", onClick: () => setMultiplier(m), bg: multiplier === m ? 'rgba(255, 255, 255, 0.22)' : 'transparent', px: "$2", py: "$0.5", rounded: "$10", borderWidth: 0, cursor: "pointer", children: _jsx(Text, { fontSize: 11, fontWeight: multiplier === m ? '700' : '500', color: multiplier === m ? '#ffffff' : '#8e8e8e', children: m }) }, m))) })] }), _jsxs(YStack, { gap: "$1", children: [_jsx(Text, { fontSize: 24, fontWeight: "700", color: "$ink", children: t('{name} {tier}', { name: activeMultiplier.name, tier: activeMultiplier.multiple }) }), _jsx(Text, { fontSize: 14, color: "var(--soft, #a1a1aa)", children: t(activeMultiplier.subtitle) })] }), _jsxs(Anchor, { href: multiplierHref, onPress: () => handleBuy(activeMultiplier.id, activeMultiplier.name, activeMultiplier.price), bg: "#0070f3", hoverStyle: { bg: '#0060df' }, rounded: "$10", width: "100%", py: "$3", my: "$1", color: "#ffffff", fontWeight: "600", fontSize: 14, text: "center", textDecorationLine: "none", items: "center", justify: "center", gap: "$2", children: [_jsx(Sparkles, { size: 16, color: "#ffffff", "aria-hidden": true }), t('Get {name}', { name: activeMultiplier.name })] }), _jsxs(XStack, { items: "baseline", gap: "$1", pt: "$1", children: [_jsxs(Text, { fontSize: 28, fontWeight: "700", color: "$ink", children: ["$", activeMultiplier.price] }), _jsx(Text, { fontSize: 14, color: "#8e8e8e", children: t('/ month') })] }), _jsx(YStack, { gap: "$2.5", pt: "$1", children: [
++                                                    t('Everything in Free, plus:'),
++                                                    t('{multiple} more usage than Free', { multiple: activeMultiplier.multiple }),
++                                                    t('Access to Enso Ultra, Kai, and frontier models'),
++                                                    t('Build apps with Hanzo Dev & CLI'),
++                                                    t('Connect any MCP server'),
++                                                    t('Background agents & automations'),
++                                                    t('Hanzo Bot: {bots} custom {bots, plural, one {bot} other {bots}}', { bots: activeMultiplier.bots }),
++                                                    t('Dedicated priority support'),
++                                                ].map((feat, idx) => (_jsxs(XStack, { items: "center", gap: "$2.5", children: [_jsx(Check, { size: 16, color: idx === 0 ? '#38bdf8' : '#388bfd', "aria-hidden": true }), _jsx(Text, { fontSize: 13, color: "$ink", fontWeight: idx === 0 ? '600' : '400', children: feat })] }, feat))) })] }) })] }), _jsx(XStack, { justify: "center", pt: "$1", children: _jsx(Box, { render: "button", onClick: () => setShowAllPersonal(true), bg: "rgba(255, 255, 255, 0.05)", hoverStyle: { bg: 'rgba(255, 255, 255, 0.1)' }, px: "$4", py: "$2", rounded: "$10", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", cursor: "pointer", children: _jsx(Text, { fontSize: 13, fontWeight: "500", color: "#38bdf8", children: t('Show all plans (Free, Go, Pro, Dev, Max, Ultra) ↓') }) }) })] })) : (_jsxs(YStack, { gap: "$4", width: "100%", children: [_jsxs(Box, { style: {
++                                display: 'grid',
++                                gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
++                                gap: '14px',
++                                width: '100%',
++                                alignItems: 'stretch',
++                            }, children: [_jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Sprout, { size: 15, color: "#4ade80", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "600", color: "#a1a1aa", children: t('Free') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Try Hanzo') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('See what AI can do.') }), _jsx(Button, { disabled: true, variant: "outline", rounded: "$10", py: "$1.5", borderColor: "rgba(255, 255, 255, 0.15)", bg: "transparent", cursor: "default", children: _jsx(Text, { fontSize: 12, fontWeight: "500", color: "#8e8e8e", children: t('Current plan') }) }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$0" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('Everyday chats'), t('Foundation models'), t('Standard speed'), t('Community support')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#a1a1aa", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) }), _jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Zap, { size: 15, color: "#eab308", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "600", color: "#a1a1aa", children: t('Go') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Everyday AI') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('More models & agents.') }), _jsx(Anchor, { href: goHref, onPress: () => handleBuy('go', 'Go', 8), bg: "var(--primary)", rounded: "$10", py: "$1.5", px: "$3", color: "#ffffff", fontWeight: "600", fontSize: 12, text: "center", textDecorationLine: "none", children: t('Get Go') }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$8" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('All frontier models'), t('Hanzo Dev & CLI'), t('Connect MCP servers'), t('Background agents')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#38bdf8", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) }), _jsx(YStack, { bg: "rgba(255, 255, 255, 0.04)", borderWidth: 1.5, borderColor: "rgba(56, 189, 248, 0.3)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Rocket, { size: 15, color: "#38bdf8", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "700", color: "$ink", children: t('Pro 2×') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Pro') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('2× limits for builders.') }), _jsx(Anchor, { href: proHref, onPress: () => handleBuy('pro-2x', 'Pro', 15), bg: "var(--primary)", rounded: "$10", py: "$1.5", px: "$3", color: "#ffffff", fontWeight: "600", fontSize: 12, text: "center", textDecorationLine: "none", children: t('Get Pro') }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$15" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('2× more usage than Go'), t('2× higher 5h limits'), t('1 custom Hanzo Bot'), t('Priority support')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#38bdf8", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) }), _jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Cpu, { size: 15, color: "#60a5fa", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "700", color: "$ink", children: t('Dev 5×') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Dev') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('5× limits for agents.') }), _jsx(Anchor, { href: devHref, onPress: () => handleBuy('dev-5x', 'Dev', 45), bg: "var(--primary)", rounded: "$10", py: "$1.5", px: "$3", color: "#ffffff", fontWeight: "600", fontSize: 12, text: "center", textDecorationLine: "none", children: t('Get Dev') }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$45" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('5× more usage than Go'), t('5× higher 5h limits'), t('1 custom Hanzo Bot'), t('Train custom models')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#60a5fa", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) }), _jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Crown, { size: 15, color: "#fbbf24", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "700", color: "$ink", children: t('Max 10×') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Max') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('10× continuous limits.') }), _jsx(Anchor, { href: maxHref, onPress: () => handleBuy('max-10x', 'Max', 95), bg: "var(--primary)", rounded: "$10", py: "$1.5", px: "$3", color: "#ffffff", fontWeight: "600", fontSize: 12, text: "center", textDecorationLine: "none", children: t('Get Max') }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$95" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('10× more usage than Go'), t('10× higher 5h limits'), t('3 custom Hanzo Bots'), t('Dedicated support')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#fbbf24", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) }), _jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$4", justify: "space-between", gap: "$3", children: _jsxs(YStack, { gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Infinity, { size: 15, color: "#c084fc", "aria-hidden": true }), _jsx(Text, { fontSize: 12, fontWeight: "700", color: "$ink", children: t('Ultra') })] }), _jsx(Text, { fontSize: 18, fontWeight: "700", color: "$ink", children: t('Frontier Scale') }), _jsx(Text, { fontSize: 12, color: "var(--soft, #a1a1aa)", minH: 32, children: t('Unlimited intelligence.') }), _jsx(Anchor, { href: ultraHref, onPress: () => handleBuy('ultra', 'Ultra', 195), bg: "rgba(255, 255, 255, 0.12)", rounded: "$10", py: "$1.5", px: "$3", color: "#ffffff", fontWeight: "600", fontSize: 12, text: "center", textDecorationLine: "none", children: t('Get Ultra') }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 22, fontWeight: "700", color: "$ink", children: "$195" }), _jsx(Text, { fontSize: 12, color: "#8e8e8e", children: t('/ mo') })] }), _jsx(YStack, { gap: "$1.5", pt: "$1", children: [t('Unlimited model usage'), t('No hourly rate limits'), t('5 custom Hanzo Bots'), t('Engineering Slack')].map((f) => (_jsxs(XStack, { items: "center", gap: "$1.5", children: [_jsx(Check, { size: 13, color: "#c084fc", "aria-hidden": true }), _jsx(Text, { fontSize: 11, color: "$ink", children: f })] }, f))) })] }) })] }), _jsx(XStack, { justify: "center", pt: "$1", children: _jsx(Box, { render: "button", onClick: () => setShowAllPersonal(false), bg: "transparent", hoverStyle: { bg: 'rgba(255, 255, 255, 0.06)' }, px: "$4", py: "$2", rounded: "$10", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.1)", cursor: "pointer", children: _jsx(Text, { fontSize: 13, fontWeight: "500", color: "#a1a1aa", children: t('Show fewer plans ↑') }) }) })] }))) : (_jsxs(YStack, { gap: "$4", width: "100%", children: [_jsxs(Box, { style: {
++                                display: 'grid',
++                                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
++                                gap: '24px',
++                                width: '100%',
++                                alignItems: 'stretch',
++                            }, children: [_jsx(YStack, { bg: "rgba(255, 255, 255, 0.02)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$6", p: "$6", gap: "$5", justify: "space-between", children: _jsxs(YStack, { gap: "$3.5", children: [_jsx(Text, { fontSize: 14, fontWeight: "500", color: "#a1a1aa", children: t('Free') }), _jsxs(YStack, { gap: "$1", children: [_jsx(Text, { fontSize: 24, fontWeight: "700", color: "$ink", children: t('Try Hanzo') }), _jsx(Text, { fontSize: 14, color: "var(--soft, #a1a1aa)", children: t('See what AI can do.') })] }), _jsx(Button, { disabled: true, variant: "outline", rounded: "$10", width: "100%", py: "$2.5", my: "$2", borderColor: "rgba(255, 255, 255, 0.15)", bg: "transparent", cursor: "default", children: _jsx(Text, { fontSize: 14, fontWeight: "500", color: "#8e8e8e", children: t('Your current plan') }) }), _jsxs(XStack, { items: "baseline", gap: "$1", children: [_jsx(Text, { fontSize: 28, fontWeight: "700", color: "$ink", children: "$0" }), _jsx(Text, { fontSize: 14, color: "#8e8e8e", children: t('/ month') })] }), _jsx(YStack, { gap: "$3", pt: "$3", children: [
++                                                    t('Unlimited everyday text chats'),
++                                                    t('Limited access to image creation'),
++                                                    t('Limited memory and storage'),
++                                                    t('Limited voice chats'),
++                                                    t('Community and open model access'),
++                                                ].map((feat) => (_jsxs(XStack, { items: "center", gap: "$2.5", children: [_jsx(Check, { size: 16, color: "#a1a1aa", "aria-hidden": true }), _jsx(Text, { fontSize: 13, color: "$ink", children: feat })] }, feat))) })] }) }), _jsx(YStack, { bg: "rgba(37, 99, 235, 0.03)", borderWidth: 1.5, borderColor: "#2563eb", rounded: "$6", p: "$6", gap: "$4", justify: "space-between", boxShadow: "0 0 28px rgba(37, 99, 235, 0.16)", children: _jsxs(YStack, { gap: "$3", children: [_jsxs(XStack, { items: "center", justify: "space-between", children: [_jsx(Text, { fontSize: 16, fontWeight: "700", color: "$ink", children: t('Business') }), _jsxs(XStack, { items: "center", bg: "#212121", p: 2, rounded: "$10", gap: 1, borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", children: [_jsx(Box, { render: "button", onClick: () => setBusinessCycle('year'), bg: businessCycle === 'year' ? '#343434' : 'transparent', px: "$2.5", py: "$1", rounded: "$10", borderWidth: 0, cursor: "pointer", children: _jsx(Text, { fontSize: 11, fontWeight: businessCycle === 'year' ? '600' : '400', color: businessCycle === 'year' ? '#ffffff' : '#8e8e8e', children: t('Annual') }) }), _jsx(Box, { render: "button", onClick: () => setBusinessCycle('month'), bg: businessCycle === 'month' ? '#343434' : 'transparent', px: "$2.5", py: "$1", rounded: "$10", borderWidth: 0, cursor: "pointer", children: _jsx(Text, { fontSize: 11, fontWeight: businessCycle === 'month' ? '600' : '400', color: businessCycle === 'month' ? '#ffffff' : '#8e8e8e', children: t('Monthly') }) })] })] }), _jsxs(YStack, { gap: "$1", children: [_jsx(Text, { fontSize: 24, fontWeight: "700", color: "$ink", children: t('For growing teams') }), _jsx(Text, { fontSize: 14, color: "var(--soft, #a1a1aa)", children: t('A secure workspace with company context') })] }), _jsxs(Anchor, { href: businessHref, onPress: () => handleBuy('team', 'Business', businessCycle === 'year' ? 200 : 20, businessCycle), bg: "#0070f3", hoverStyle: { bg: '#0060df' }, rounded: "$10", width: "100%", py: "$3", my: "$1", color: "#ffffff", fontWeight: "600", fontSize: 14, text: "center", textDecorationLine: "none", items: "center", justify: "center", gap: "$2", children: [_jsx(Sparkles, { size: 16, color: "#ffffff", "aria-hidden": true }), t('Get started')] }), _jsxs(YStack, { bg: "rgba(0, 0, 0, 0.4)", borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.08)", rounded: "$4", p: "$3", gap: "$2", children: [_jsxs(YStack, { gap: "$0.5", children: [_jsxs(XStack, { justify: "space-between", items: "center", children: [_jsx(Text, { fontSize: 13, fontWeight: "600", color: "$ink", children: t('Standard seat') }), _jsx(Text, { fontSize: 13, fontWeight: "600", color: "$ink", children: businessCycle === 'year' ? '$16.67 / month' : '$20 / month' })] }), _jsx(Text, { fontSize: 11, color: "#8e8e8e", children: t('Best for everyday work') })] }), _jsx(Box, { height: 1, bg: "rgba(255, 255, 255, 0.06)" }), _jsxs(YStack, { gap: "$0.5", children: [_jsxs(XStack, { justify: "space-between", items: "center", children: [_jsx(Text, { fontSize: 13, fontWeight: "600", color: "$ink", children: t('Premium seat') }), _jsx(Text, { fontSize: 13, fontWeight: "600", color: "$ink", children: businessCycle === 'year' ? '$83.33 / month' : '$100 / month' })] }), _jsx(Text, { fontSize: 11, color: "#8e8e8e", children: t('More usage, no 5-hour limit') })] })] }), _jsx(YStack, { gap: "$2.5", pt: "$1", children: [
++                                                    [Workflow, t('Shared tasks — so your team can do more by delegating busy work')],
++                                                    [Users, t('Hanzo Space to collaborate with your team and AI')],
++                                                    [ShieldCheck, t('Secure workspace with SAML, SSO, and MFA')],
++                                                    [Link2, t('Connections for Google Workspace, Slack, GitHub, Microsoft 365, and more')],
++                                                    [BarChart2, t('Usage analytics and spend controls')],
++                                                    [Layers, t('Centralized billing and administration')],
++                                                    [Lock, t('No model training on your business data by default')],
++                                                    [Sliders, t('Mix and match seat types')],
++                                                ].map(([Icon, label], idx) => (_jsxs(XStack, { items: "flex-start", gap: "$2.5", children: [_jsx(Box, { pt: 2, children: _jsx(Icon, { size: 16, color: "#388bfd", "aria-hidden": true }) }), _jsx(Text, { fontSize: 13, color: "$ink", lineHeight: 18, children: label })] }, idx))) })] }) })] }), _jsxs(XStack, { justify: "center", items: "center", gap: "$1.5", pt: "$2", children: [_jsx(Text, { fontSize: 13, color: "#8e8e8e", children: t('Need more capabilities for your business?') }), _jsx(Anchor, { href: site('/contact-sales'), fontSize: 13, fontWeight: "600", color: "#388bfd", hoverStyle: { textDecorationLine: 'underline' }, children: t('See Hanzo Enterprise') })] })] })), _jsxs(XStack, { justify: "center", items: "center", gap: "$5", pt: "$2", children: [_jsx(Anchor, { href: site('/pricing'), fontSize: 13, color: "var(--soft, #a1a1aa)", hoverStyle: { color: '$ink' }, children: t('See all plans & pricing table') }), _jsx(Box, { render: "button", onClick: close, bg: "transparent", borderWidth: 0, p: 0, cursor: "pointer", children: _jsx(Text, { fontSize: 13, color: "var(--soft, #a1a1aa)", hoverStyle: { color: '$ink' }, children: t('Not now') }) })] })] }) }));
+ }
+diff --git a/dist/Usage.js b/dist/Usage.js
+index 1ef6fb8..2b5b94b 100644
+--- a/dist/Usage.js
++++ b/dist/Usage.js
+@@ -82,12 +82,15 @@ export function UsageControl({ context, read }) {
+     const capacity = context?.window && context.window > 0 ? context.window : null;
+     const percent = estimate && capacity ? Math.round(estimate.total / capacity * 100) : null;
+     const plan = limits?.plan ? label(limits.plan) : null;
+-    const highest = limits ? Math.max(0, ...Object.values(limits.classes).flatMap((c) => c ? [c.percent, ...(c.window ? [c.window.percent] : [])] : [])) : null;
++    const isEnterprise = limits?.plan === 'enterprise' || plan?.name === 'Enterprise';
++    const meteredClasses = limits ? Object.values(limits.classes).filter((c) => c && !(isEnterprise && c.paying === 'credits')) : [];
++    const highest = limits ? (meteredClasses.length ? Math.max(0, ...meteredClasses.flatMap((c) => c ? [c.percent, ...(c.window ? [c.window.percent] : [])] : [])) : null) : null;
++    const danger = percent !== null ? percent >= 90 : (highest !== null && highest >= 95 && meteredClasses.some((c) => c && c.state === 'limited'));
+     const title = plan ? `${plan.name}${plan.tag ? ` ${plan.tag}` : ''}` : t('Plan usage');
+     const toggle = (on) => { setOpen(on); if (on && read)
+         read.reload(); };
+     const metric = (name, n) => _jsxs(XStack, { justify: "space-between", gap: "$3", children: [_jsx(Text, { fontSize: "$2", color: "$soft", children: name }), _jsx(Text, { fontSize: "$2", color: "$ink", fontVariant: ['tabular-nums'], children: integer(n) })] }, name);
+-    return (_jsxs(Popover, { open: open, onOpenChange: toggle, placement: "top-end", children: [_jsx(PopoverTrigger, { asChild: true, children: _jsx(XStack, { render: "button", type: 'button', items: "center", height: 28, px: 5, rounded: 8, bg: "transparent", hoverStyle: { bg: '$hover' }, transition: "quickest", cursor: "pointer", "$max-sm": { height: 36 }, "aria-label": t('Context, tokens and plan usage'), "data-slot": "composer-usage", children: _jsx(SizableText, { size: "$3", color: highest !== null && highest >= 95 ? '$bad' : '$soft', children: percent !== null ? `${percent}%` : highest !== null ? `${Math.round(highest)}%` : t('Usage') }) }) }), _jsx(PopoverContent, { solid: true, width: 360, maxW: "calc(100vw - 24px)", maxH: "min(680px, calc(100dvh - 100px))", overflowY: "auto", "aria-label": t('Context, tokens and plan usage'), "data-slot": "composer-usage-panel", children: _jsxs(YStack, { gap: "$4", minW: 0, children: [_jsxs(XStack, { justify: "space-between", items: "center", gap: "$3", children: [_jsx(Text, { fontSize: "$3", fontWeight: "600", color: "$ink", children: t('Usage') }), _jsxs(Button, { type: "button", size: "sm", variant: "link", onClick: () => { setOpen(false); showSettings('usage'); }, "data-slot": "composer-see-usage", children: [t('See all usage'), " ", _jsx(ArrowUpRight, { size: 13 })] })] }), context && estimate ? (_jsxs(YStack, { gap: "$2", "data-slot": "composer-context", children: [_jsxs(XStack, { justify: "space-between", gap: "$2", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Context · estimated') }), _jsx(Text, { fontSize: "$1", color: "$soft", children: capacity ? t('{used} / {max} tokens', { used: integer(estimate.total), max: integer(capacity) }) : t('{used} tokens', { used: integer(estimate.total) }) })] }), percent !== null ? _jsx(Progress, { value: Math.min(100, percent), height: 5, "aria-label": t('Estimated context used'), indicatorColor: percent >= 90 ? '$bad' : '$good' }) : null, estimate.rows.filter((r) => r.tokens > 0).map((r) => metric(t(r.name), r.tokens)), _jsx(Text, { fontSize: "$1", color: "$soft", children: t('Text estimate; model tokenization and attachments can change the total.') }), !capacity ? _jsx(Text, { fontSize: "$1", color: "$soft", children: t('This model does not report a context capacity.') }) : null] })) : null, _jsxs(YStack, { gap: "$2", "data-slot": "composer-reported-tokens", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Last response · reported tokens') }), tokens ? _jsxs(_Fragment, { children: [metric(t('Input'), tokens.input), metric(t('Output'), tokens.output), tokens.cached !== undefined ? metric(t('Cached input'), tokens.cached) : null, tokens.reasoning !== undefined ? metric(t('Reasoning'), tokens.reasoning) : null, metric(t('Total'), tokens.total)] }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: t('No token counts reported for this conversation yet. See all usage for account totals.') })] }), _jsxs(YStack, { gap: "$2", "data-slot": "composer-account-usage", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Account · last 30 days') }), aggregate?.data ? _jsxs(_Fragment, { children: [metric(t('Tokens'), aggregate.data.totals.tokens), metric(t('Input'), aggregate.data.totals.promptTokens), metric(t('Output'), aggregate.data.totals.completionTokens), metric(t('Requests'), aggregate.data.totals.requests)] }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: aggregate?.error ?? t('Reading account usage…') })] }), _jsxs(YStack, { gap: "$2", "data-slot": "composer-plan-usage", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: title }), limits ? _jsx(UsageMeter, { limits: limits, size: "sm" }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: t(answered ? 'Plan usage is unavailable. Try again.' : 'Reading plan usage…') }), answered && !limits ? _jsx(Button, { type: "button", size: "sm", variant: "link", onClick: usage.reload, children: t('Retry') }) : null] }), _jsxs(XStack, { gap: "$3", justify: "space-between", flexWrap: "wrap", children: [_jsx(Button, { asChild: true, size: "sm", children: _jsx(Anchor, { href: payPage('/cart'), "data-slot": "composer-upgrade", children: t('Upgrade plan') }) }), _jsx(Button, { asChild: true, size: "sm", variant: "outline", children: _jsx(Anchor, { href: payPage('/amount/card'), "data-slot": "composer-buy-credits", children: t('Buy credits') }) })] })] }) })] }));
++    return (_jsxs(Popover, { open: open, onOpenChange: toggle, placement: "top-end", children: [_jsx(PopoverTrigger, { asChild: true, children: _jsx(XStack, { render: "button", type: 'button', items: "center", height: 28, px: 5, rounded: 8, bg: "transparent", hoverStyle: { bg: '$hover' }, transition: "quickest", cursor: "pointer", "$max-sm": { height: 36 }, "aria-label": t('Context, tokens and plan usage'), "data-slot": "composer-usage", children: _jsx(SizableText, { size: "$3", color: danger ? '$bad' : '$soft', children: percent !== null ? `${percent}%` : highest !== null ? `${Math.round(highest)}%` : t('Usage') }) }) }), _jsx(PopoverContent, { solid: true, width: 360, maxW: "calc(100vw - 24px)", maxH: "min(680px, calc(100dvh - 100px))", overflowY: "auto", "aria-label": t('Context, tokens and plan usage'), "data-slot": "composer-usage-panel", children: _jsxs(YStack, { gap: "$4", minW: 0, children: [_jsxs(XStack, { justify: "space-between", items: "center", gap: "$3", children: [_jsx(Text, { fontSize: "$3", fontWeight: "600", color: "$ink", children: t('Usage') }), _jsxs(Button, { type: "button", size: "sm", variant: "link", onClick: () => { setOpen(false); showSettings('usage'); }, "data-slot": "composer-see-usage", children: [t('See all usage'), " ", _jsx(ArrowUpRight, { size: 13 })] })] }), context && estimate ? (_jsxs(YStack, { gap: "$2", "data-slot": "composer-context", children: [_jsxs(XStack, { justify: "space-between", gap: "$2", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Context · estimated') }), _jsx(Text, { fontSize: "$1", color: "$soft", children: capacity ? t('{used} / {max} tokens', { used: integer(estimate.total), max: integer(capacity) }) : t('{used} tokens', { used: integer(estimate.total) }) })] }), percent !== null ? _jsx(Progress, { value: Math.min(100, percent), height: 5, "aria-label": t('Estimated context used'), indicatorColor: percent >= 90 ? '$bad' : '$good' }) : null, estimate.rows.filter((r) => r.tokens > 0).map((r) => metric(t(r.name), r.tokens)), _jsx(Text, { fontSize: "$1", color: "$soft", children: t('Text estimate; model tokenization and attachments can change the total.') }), !capacity ? _jsx(Text, { fontSize: "$1", color: "$soft", children: t('This model does not report a context capacity.') }) : null] })) : null, _jsxs(YStack, { gap: "$2", "data-slot": "composer-reported-tokens", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Last response · reported tokens') }), tokens ? _jsxs(_Fragment, { children: [metric(t('Input'), tokens.input), metric(t('Output'), tokens.output), tokens.cached !== undefined ? metric(t('Cached input'), tokens.cached) : null, tokens.reasoning !== undefined ? metric(t('Reasoning'), tokens.reasoning) : null, metric(t('Total'), tokens.total)] }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: t('No token counts reported for this conversation yet. See all usage for account totals.') })] }), _jsxs(YStack, { gap: "$2", "data-slot": "composer-account-usage", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: t('Account · last 30 days') }), aggregate?.data ? _jsxs(_Fragment, { children: [metric(t('Tokens'), aggregate.data.totals.tokens), metric(t('Input'), aggregate.data.totals.promptTokens), metric(t('Output'), aggregate.data.totals.completionTokens), metric(t('Requests'), aggregate.data.totals.requests)] }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: aggregate?.error ?? t('Reading account usage…') })] }), _jsxs(YStack, { gap: "$2", "data-slot": "composer-plan-usage", children: [_jsx(Text, { fontSize: "$2", fontWeight: "600", children: title }), limits ? _jsx(UsageMeter, { limits: limits, size: "sm" }) : _jsx(Text, { fontSize: "$2", color: "$soft", children: t(answered ? 'Plan usage is unavailable. Try again.' : 'Reading plan usage…') }), answered && !limits ? _jsx(Button, { type: "button", size: "sm", variant: "link", onClick: usage.reload, children: t('Retry') }) : null] }), _jsxs(XStack, { gap: "$3", justify: "space-between", flexWrap: "wrap", children: [!isEnterprise ? (_jsx(Button, { asChild: true, size: "sm", children: _jsx(Anchor, { href: payPage('/cart'), onClick: (e) => { e.preventDefault(); setOpen(false); window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); }, "data-slot": "composer-upgrade", children: t('Upgrade plan') }) })) : null, _jsx(Button, { asChild: true, size: "sm", variant: "outline", children: _jsx(Anchor, { href: payPage('/amount/card'), "data-slot": "composer-buy-credits", children: t('Buy credits') }) })] })] }) })] }));
+ }
+ /** Every shared composer in the app gets the same account usage entry. */
+ export function UsageProvider({ children }) {
+diff --git a/dist/failure.js b/dist/failure.js
+index d9d19dd..8221990 100644
+--- a/dist/failure.js
++++ b/dist/failure.js
+@@ -123,7 +123,8 @@ export function billed(error) {
+         return null;
+     return refusalOf(error?.body, code);
+ }
+-function ours(href) {
++/** The address, when it is an https page on hanzo.ai or one of its hosts: the only kind a refusal may send the reader to. */
++export function ours(href) {
+     if (typeof href !== 'string')
+         return undefined;
+     try {
+diff --git a/dist/lib/limits.js b/dist/lib/limits.js
+index 64d2806..bf142db 100644
+--- a/dist/lib/limits.js
++++ b/dist/lib/limits.js
+@@ -7,12 +7,14 @@
+  * Same base URL and headers as every billing read (lib/hanzo/tier.ts): the
+  * bearer is the subject and `X-Org-Id` the organization this browser works in.
+  */
+-import { label, said, spent, ways, when } from '@hanzo/build/plan';
++import { ways } from '@hanzo/build/plan';
+ import { useLimits as useHeld } from '@hanzo/ui/product/useLimits';
+ import { paidPlan } from '@hanzo/ui/product/limits';
++import { format } from '@hanzo/i18n';
+ import { english } from '../say.js';
+ import { api } from './api.js';
+-import { scope } from './session.js';
++import { payUrl } from './pay.js';
++import { org, scope } from './session.js';
+ /** Reads the limits as whoever holds the bearer, in this browser's organization. */
+ export async function readLimits(signal) {
+     const res = await fetch(`${api()}/v1/ai/limits`, { headers: scope(), signal });
+@@ -49,31 +51,82 @@ export const useLimits = (enabled = true, org = null, name) => useHeld(enabled ?
+  */
+ export const spendShown = ({ limits, answered }) => answered && !paidPlan(limits);
+ export { paidPlan };
++/** Whether the plan is Ultra: its id, compared as `paidPlan` compares it. */
++export const ultra = (l) => l?.plan === 'ultra';
++/** An instant as the server writes one: RFC 3339, with its offset. Anything else names no instant. */
++const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/i;
++/**
++ * When a spent allowance comes back, on the reader's own clock, or null when the
++ * server names no instant still ahead (none, one not RFC 3339, or one passed).
++ * `date` is '' when that is today where the reader is, and carries the year only
++ * when it is not this year. `time` is null at midnight, which is said as the
++ * word, never as 0:00, 00:00 or 12:00 AM; a midnight's date is the day it ends,
++ * so tonight's is today. `f` writes both (@hanzo/i18n `format`: the reader's
++ * locale, set apart in right-to-left prose), in `zone`, the browser's own unless
++ * a caller names one.
++ */
++export function resets(iso, now, f, zone) {
++    const at = iso && INSTANT.test(iso) ? Date.parse(iso) : NaN;
++    if (!(at > now))
++        return null;
++    const midnight = new Intl.DateTimeFormat('en-US', { timeZone: zone, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' }).format(at) === '00:00';
++    const ends = midnight ? at - 1 : at;
++    const part = (instant, o) => new Intl.DateTimeFormat('en-CA', { timeZone: zone, ...o }).format(instant);
++    const today = part(ends, { year: 'numeric', month: '2-digit', day: '2-digit' }) === part(now, { year: 'numeric', month: '2-digit', day: '2-digit' });
++    const year = part(ends, { year: 'numeric' }) !== part(now, { year: 'numeric' });
++    return {
++        date: today ? '' : f.date(ends, { timeZone: zone, month: 'short', day: 'numeric', ...(year ? { year: 'numeric' } : {}) }),
++        time: midnight ? null : f.date(at, { timeZone: zone, hour: 'numeric', minute: '2-digit' }),
++    };
++}
++/** "Usage reached." and, when the server names one still ahead, when it comes back. */
++function reached(back, t) {
++    if (!back)
++        return t('Usage reached.');
++    if (back.date)
++        return back.time ? t('Usage reached. Resets {date} at {time}.', { date: back.date, time: back.time }) : t('Usage reached. Resets {date} at midnight.', { date: back.date });
++    return back.time ? t('Usage reached. Resets at {time}.', { time: back.time }) : t('Usage reached. Resets at midnight.');
++}
++/**
++ * The refusals that are usage spent until a reset: a paid plan's included
++ * usage, its request window, the Free plan's cap and its allowance's window.
++ */
++const SPENT = new Set(['plan_allowance_used', 'usage_cap_exceeded', 'free_plan_cap', 'allowance_spent']);
++/** Whether a refusal's code is usage spent until a reset, which is said in our words and never the server's. */
++export const spends = (code) => SPENT.has(code);
+ /**
+  * What the banner over the composer says once the reader is turned away, and
+- * the ways on. A spent allowance is said by the plan's name and when it comes
+- * back — `Your Max 20x plan’s included premium model usage is used until 5:00
+- * PM.` — and a spent request window the same way; any other refusal in the
+- * server's own words. The ways are @hanzo/build's `ways`: continue with credits
+- * where the org holds some, else add credits; then the upgrade. What this module
+- * says goes through `t`; the spent allowance's sentence and the ways' labels are
+- * @hanzo/build's own.
++ * the ways on, or null when it says nothing. Usage spent until a reset reads
++ * `Usage reached. Resets at 5:00 PM.` (`resets`: the reader's clock, never a
++ * ceiling), with three ways: the upgrade (the server's own, else pay's plans),
++ * credits (the server's Continue with credits where the org holds some, else
++ * pay's amount step to add some), both for this browser's organization and
++ * coming back here, and Try again later, which the host takes as putting the
++ * banner away. Until the plan is read (`limits` null) there is no upgrade: the
++ * plan could be Ultra. Ultra has no allowance to spend, so what turns it away is
++ * an empty balance, said as that, and its one way on is credits. Any other
++ * refusal is the server's own words and ways (@hanzo/build `ways`). Everything
++ * said goes through `t`, and the time through `f`.
+  */
+-export function paused(n, plan, name = (id) => id, now = Date.now(), t = english) {
+-    const l = label(plan);
+-    const until = when(n.resets_at ?? '', now);
++export function paused(n, limits, name = (id) => id, now = Date.now(), t = english, f = format('en-US')) {
+     const on = n.fallback ? t(' You’re chatting on {model}.', { model: name(n.fallback) }) : '';
+-    const used = () => {
+-        if (l)
+-            return until ? t('Your {plan} plan’s requests are used until {until}.', { plan: said(l), until }) : t('Your {plan} plan’s requests are used.', { plan: said(l) });
+-        return until ? t('Your plan’s requests are used until {until}.', { until }) : t('Your plan’s requests are used.');
++    if (!SPENT.has(n.reason) && (n.reason || n.classes.length === 0))
++        return { message: n.message, actions: ways(n.actions, t) };
++    const here = typeof window === 'undefined' ? undefined : window.location.href;
++    const topup = { kind: 'topup', label: t('Add credits'), url: payUrl('/amount/card', { org: org(), returnUrl: here }) };
++    if (ultra(limits))
++        return { message: t('Your balance is empty.') + on, actions: [topup] };
++    const credits = n.actions.find((a) => a.kind === 'credits');
++    const way = credits ? { ...credits, label: t('Continue with credits') } : topup;
++    const later = { kind: 'later', label: t('Try again later') };
++    const message = reached(resets(n.resets_at, now, f), t) + on;
++    if (!limits)
++        return { message, actions: [way, later] };
++    const upgrade = n.actions.find((a) => a.kind === 'upgrade');
++    return {
++        message,
++        actions: [{ kind: 'upgrade', label: t('Upgrade to continue'), url: upgrade?.url ?? payUrl('/cart', { org: org(), returnUrl: here }) }, way, later],
+     };
+-    const message = n.reason === 'plan_allowance_used' || (!n.reason && n.classes.length > 0)
+-        ? spent(l, n.classes, n.resets_at ?? '', now) + on
+-        : n.reason === 'usage_cap_exceeded'
+-            ? used() + on
+-            : n.message;
+-    return { message, actions: ways(n.actions) };
+ }
+ /** Whether a catalog family is one of Hanzo's chat families, Enso or Zen, whose turns carry the live web. */
+ export const house = (family) => family === 'enso' || family === 'zen';
+diff --git a/dist/lib/pay.js b/dist/lib/pay.js
+index 672f95f..74d1e8c 100644
+--- a/dist/lib/pay.js
++++ b/dist/lib/pay.js
+@@ -54,12 +54,16 @@ export function checkoutUrl(id, back) {
+ export function payPage(path = "/") {
+     return payUrl(path, { org: org() });
+ }
++const CHECKOUT_SLUG = {
++    "pro-3x": "pro-2x",
++    "max-15x": "max-10x",
++};
+ /** The pay address with its query, written in one place for both callers above. */
+ export function payUrl(path, query) {
+     const q = new URLSearchParams();
+     for (const [k, v] of Object.entries(query))
+         if (v)
+-            q.set(k, v);
++            q.set(k, k === "plan" ? (CHECKOUT_SLUG[v] ?? v) : v);
+     const s = q.toString();
+     const at = billing();
+     if (path === "/" && !s)
+diff --git a/dist/recent.js b/dist/recent.js
+index cbb8d45..b302d61 100644
+--- a/dist/recent.js
++++ b/dist/recent.js
+@@ -54,7 +54,9 @@ export const MENUS = {
+ /** A kept view as this mode may hold it: anything a menu does not offer reads as the plain view's. */
+ export function viewOf(mode, kept) {
+     const k = (kept && typeof kept === 'object' ? kept : {});
+-    const m = MENUS[mode];
++    // A mode with no menu of its own (Tabs draws its own column) still gets a
++    // view: the chat one, so reading it is never a crash.
++    const m = MENUS[mode] ?? MENUS.chat;
+     const pick = (v, from, fallback) => from.find((o) => o.id === v)?.id ?? fallback;
+     return {
+         status: pick(k.status, m.status, PLAIN.status),
+diff --git a/dist/seek.js b/dist/seek.js
+index bbf49a0..37cece1 100644
+--- a/dist/seek.js
++++ b/dist/seek.js
+@@ -76,5 +76,8 @@ export function find(query, recent, idle, all) {
+         .sort((a, b) => b.best - a.best || a.i - b.i)
+         .map((x) => x.g);
+ }
+-/** Whether a key press opens the palette: ⌘K or Ctrl+K, once a press, from anywhere, a field included. */
+-export const summons = (e) => (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && !e.repeat && !e.isComposing && (e.key ?? '').toLowerCase() === 'k';
++/**
++ * Whether a key press opens the palette: ⌘K or Ctrl+K, once a press, from anywhere, a field included —
++ * unless something on the page already answered it (Dev's composer opens its own commands and claims the press).
++ */
++export const summons = (e) => !e.defaultPrevented && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && !e.repeat && !e.isComposing && (e.key ?? '').toLowerCase() === 'k';
+diff --git a/dist/thread.js b/dist/thread.js
+index e4e9a45..d18a881 100644
+--- a/dist/thread.js
++++ b/dist/thread.js
+@@ -29,6 +29,7 @@ import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSe
+ import { empty } from './open.js';
+ import { say } from './lib/org.js';
+ import { talk } from './lib/host.js';
++import { hasSession } from './lib/session.js';
+ import { BAD } from './lib/mix.js';
+ import { site } from './where.js';
+ import { attempt, bind, enlist, reread, snapshot, subscribe, sweep, tick, view } from './pending.js';
+@@ -76,6 +77,18 @@ export function useThreadList(archived = false, seek = null) {
+         }, (e) => {
+             if (control.signal.aborted)
+                 return;
++            // A READER WITH NO SESSION HAS NO CONVERSATIONS: the store answers
++            // 401 and the honest list is empty. The window draws the app for a
++            // guest (Orgs.js), so this is the first thing they would otherwise
++            // read — the store's refusal, in the place the Recents go.
++            if (!hasSession()) {
++                const got = { threads: [], at, archived };
++                last.set(ai, { ...last.get(ai), [`${archived}`]: got });
++                setRead(got);
++                setError(null);
++                setLoading(false);
++                return;
++            }
+             setError(e instanceof Error ? e : new Error(String(e)));
+             setLoading(false);
+         });

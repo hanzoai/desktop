@@ -4,9 +4,10 @@ import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
-import { App, type Titlebar as Bar } from '@hanzo/app/App';
+import { App, type Bar } from '@hanzo/app/App';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
 import { keychain, open as openKeychain, written } from './keychain';
@@ -21,15 +22,22 @@ import { safeListen } from './utils/tauri-check';
 // window's history), and links to other origins (the system browser).
 
 const brand = getBrand();
-const SITE = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3000'
-  : 'https://hanzo.ai';
+// The site the app's links go to. A window hosts the app ITSELF, so its own
+// hostname is the window (localhost, tauri.localhost), never a web address:
+// reading it as one sent sign-up to a dev server that is not running. The
+// marketing site's own pages are at hanzo.ai unless a build says otherwise.
+const SITE = (import.meta.env.VITE_HANZO_SITE as string | undefined) ?? 'https://hanzo.ai';
+
+// The gateway. A dev window asks its OWN origin: api.hanzo.ai does not answer
+// localhost:1420's CORS preflight, and Vite forwards `/v1` to it
+// (vite.config.ts). The shipped window asks the brand's gateway directly.
+const API = import.meta.env.DEV ? window.location.origin : brand.cloudApi;
 
 configure({
   site: SITE,
   home: '/home',
   signUp: `${SITE}/signup`,
-  api: brand.cloudApi,
+  api: API,
   iam: brand.iam.baseUrl,
   brand: brand.name === 'Hanzo' ? undefined : brand.name,
   // Signed out, the rooms answer on the brand's publishable key, as the web
@@ -38,7 +46,12 @@ configure({
   // The session is in the keychain, never the webview's localStorage: the rooms
   // read the token, its expiry and its claims there.
   session: keychain,
-});
+  // THE WINDOW IS THE APP, so there is no site behind it to send a guest to:
+  // the rooms draw their one room (Chat's free lane) for a signed-out reader,
+  // and sign-in is one control in the app rather than a wall in front of it.
+  // Patched into @hanzo/app (patches/@hanzo__app@0.2.63.patch, Orgs.js).
+  guest: true,
+} as Parameters<typeof configure>[0]);
 
 // THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
 // the app draws the bar a browser would: the sidebar toggle, Back and Forward
@@ -52,8 +65,8 @@ const BAR: Bar = {
 };
 
 const IAM = {
-  serverUrl: brand.cloudApi,
-  proxyBaseUrl: brand.cloudApi,
+  serverUrl: API,
+  proxyBaseUrl: API,
   clientId: brand.iam.clientId,
   redirectUri: brand.iam.redirectUri,
   organization: brand.iam.clientId.split('-')[0],
@@ -142,7 +155,9 @@ const GUEST = 'hanzo:guest';
 
 function guest(): boolean {
   try {
-    const isGuest = window.localStorage.getItem(GUEST) === '1';
+    const isGuest =
+      new URLSearchParams(window.location.search).get('guest') === '1' ||
+      window.localStorage.getItem(GUEST) === '1';
     if (isGuest) {
       window.sessionStorage.setItem('hanzo.anon.try', '1');
       (window as any).__hanzoAnonChat = true;
@@ -499,7 +514,10 @@ function Gate() {
   }, []);
 
   const isLoading = iamLoading && !loadingTimedOut;
-  const path = here.split('?')[0] || '/';
+  // A bundled window starts on its own index (windows/mod.rs `main_url`); that
+  // is the app's front door, not an address of its own.
+  const raw = here.split('?')[0] || '/';
+  const path = raw === '/' || raw === '/index.html' ? '/chat' : raw;
   const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || path === '/settings' || path.startsWith('/settings/');
 
   if (isLoading && !isBenchOrSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
@@ -535,11 +553,41 @@ function Gate() {
     window.history.replaceState(null, '', onward());
     return null;
   }
+  if (path === '/benchmark' || path === '/lsa') {
+    return <BenchmarkPage />;
+  }
 
   return (
     <Rooms router={router} path={path} route={path} Link={Anchor}>
       <App bar={BAR} />
     </Rooms>
+  );
+}
+
+function Crash({ error }: { error: unknown }) {
+  const text = error instanceof Error ? `${error.name}: ${error.message}\n\n${error.stack ?? ''}` : String(error);
+  return (
+    <div
+      role="alert"
+      style={{
+        height: '100vh',
+        width: '100vw',
+        overflow: 'auto',
+        padding: '48px 40px',
+        background: '#0a0a0a',
+        color: '#f5f5f5',
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: 12,
+        lineHeight: 1.6,
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
+      }}
+    >
+      <div style={{ color: '#ff6b6b', fontWeight: 600, marginBottom: 12 }}>
+        Hanzo could not start
+      </div>
+      {text}
+    </div>
   );
 }
 
@@ -586,7 +634,9 @@ export function Host() {
     <GuiProvider config={config} defaultTheme={scheme}>
       <IamProvider config={IAM}>
         <Look />
-        <Gate />
+        <ErrorBoundary fallbackRender={({ error }) => <Crash error={error} />}>
+          <Gate />
+        </ErrorBoundary>
       </IamProvider>
     </GuiProvider>
   );

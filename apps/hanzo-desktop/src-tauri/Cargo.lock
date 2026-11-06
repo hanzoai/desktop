@@ -3567,7 +3567,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "clap",
@@ -3599,7 +3599,7 @@ checksum = "b9dc246ef72490c348c62b93c06989605dc074e285657501c0aaa02d73c5b408"
 
 [[package]]
 name = "hanzo-audio"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "apodize",
@@ -3688,7 +3688,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-engine"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "ahash",
  "akin",
@@ -3831,7 +3831,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-llm-mcp"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3851,7 +3851,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-macros"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "darling 0.23.0",
  "proc-macro2",
@@ -3955,7 +3955,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-paged-attn"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "cudaforge",
@@ -3971,7 +3971,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-quant"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "byteorder",
  "cudaforge",
@@ -4011,7 +4011,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-sandbox"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "itoa",
@@ -4027,7 +4027,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-server-core"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "axum",
@@ -4058,7 +4058,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-train"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "anyhow",
  "hanzo-ml",
@@ -4095,7 +4095,7 @@ dependencies = [
 
 [[package]]
 name = "hanzo-vision"
-version = "1.7.95"
+version = "1.7.101"
 dependencies = [
  "hanzo-ml",
  "image",

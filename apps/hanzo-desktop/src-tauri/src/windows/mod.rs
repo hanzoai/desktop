@@ -21,6 +21,36 @@ impl Window {
     }
 }
 
+/// Where the main window's page comes from.
+///
+/// The window hosts hanzo.ai's app ITSELF (`src/host.tsx` mounts @hanzo/app),
+/// so it loads this repository's frontend and never hanzo.ai's dev server on
+/// :3000. A debug build loads the Vite server `tauri.conf.json`'s `devUrl`
+/// names; a bundled build loads the `frontendDist` the config ships. `path`
+/// is the address the app opens on, which is the app's own (`/chat`), not a
+/// page of the marketing site.
+fn main_url(path: &str) -> tauri::WebviewUrl {
+    let path = if path.starts_with('/') { path.to_string() } else { format!("/{path}") };
+    if let Some(dev) = dev_base() {
+        if let Ok(url) = format!("{dev}{path}").parse() {
+            return tauri::WebviewUrl::External(url);
+        }
+    }
+    // A bundled app serves its own index; the path is read from the window's
+    // history by the app's router (`host.tsx`), which treats `/index.html` as
+    // the address it started on.
+    tauri::WebviewUrl::App("index.html".into())
+}
+
+/// The Vite server a debug build is served from, or None in a bundled build.
+fn dev_base() -> Option<&'static str> {
+    if cfg!(debug_assertions) {
+        Some(option_env!("DEV_SERVER_URL").unwrap_or("http://localhost:1420"))
+    } else {
+        None
+    }
+}
+
 pub fn get_window(app_handle: AppHandle, window_name: Window, focus: bool) -> tauri::Result<WebviewWindow> {
     let label = window_name.as_str();
     if let Some(window) = app_handle.get_webview_window(label) {
@@ -68,16 +98,13 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
             window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
         }
         if window_config.label == Window::Main.as_str() {
-            let brand = option_env!("BRAND").unwrap_or("hanzo");
-            let default_url = match brand {
-                "team" => "https://hanzo.team",
-                "studio" => "http://localhost:3000/studio",
-                "bot" => "http://localhost:3000/bots",
-                _ => "http://localhost:3000/login?next=/chat",
-            };
-            window_config.url = tauri::WebviewUrl::External(default_url.parse().unwrap());
+            window_config.url = main_url(
+                option_env!("DEV_START_PATH").unwrap_or("/chat"),
+            );
             window_config.transparent = true;
-            window_config.decorations = false;
+            // The window keeps macOS's own controls: the lights sit over the
+            // page (Overlay), and the app's bar reserves their corner.
+            window_config.decorations = true;
         }
         match WebviewWindowBuilder::from_config(&app_handle, &window_config) {
             Ok(builder) => match builder.build() {
@@ -124,8 +151,13 @@ pub fn open_main_window_with_path(app_handle: AppHandle, path: String) {
         Ok(window) => {
             let target_url = if path.starts_with("http://") || path.starts_with("https://") {
                 path.clone()
+            } else if let Some(dev) = dev_base() {
+                let at = if path.starts_with('/') { path.clone() } else { format!("/{path}") };
+                format!("{dev}{at}")
             } else {
-                format!("http://localhost:3000{}", if path.starts_with('/') { path.clone() } else { format!("/{}", path) })
+                // A bundled window answers every in-app address with its own
+                // index; the app's router reads the path it was sent.
+                path.clone()
             };
             if let Ok(parsed_url) = target_url.parse() {
                 let _ = window.navigate(parsed_url);

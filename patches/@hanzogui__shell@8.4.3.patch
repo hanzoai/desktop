@@ -1,0 +1,28 @@
+diff --git a/dist/cjs/commandPalette.js b/dist/cjs/commandPalette.js
+index 07ed5af..95acf60 100644
+--- a/dist/cjs/commandPalette.js
++++ b/dist/cjs/commandPalette.js
+@@ -68,7 +68,8 @@ const TOP = '12vh';
+ function useCommandKey(toggle) {
+     (0, react_1.useEffect)(() => {
+         const onKey = (e) => {
+-            if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
++            // A press the page already answered (a composer's own command list) is not the palette's.
++            if (!e.defaultPrevented && (e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                 e.preventDefault();
+                 toggle();
+             }
+diff --git a/dist/esm/commandPalette.js b/dist/esm/commandPalette.js
+index 50b8e31..ce2eced 100644
+--- a/dist/esm/commandPalette.js
++++ b/dist/esm/commandPalette.js
+@@ -53,7 +53,8 @@ const TOP = '12vh';
+ export function useCommandKey(toggle) {
+     useEffect(() => {
+         const onKey = (e) => {
+-            if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
++            // A press the page already answered (a composer's own command list) is not the palette's.
++            if (!e.defaultPrevented && (e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+                 e.preventDefault();
+                 toggle();
+             }

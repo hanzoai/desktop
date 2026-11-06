@@ -62,7 +62,9 @@
         "height": 840,
         "resizable": true,
         "dragDropEnabled": false,
-        "decorations": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "decorations": true,
         "shadow": true,
         "center": true,
         "create": false

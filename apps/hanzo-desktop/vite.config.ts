@@ -126,6 +126,19 @@ export default defineConfig(() => ({
   server: {
     port: 1420,
     strictPort: true,
+    // THE GATEWAY FROM THE DEV SERVER'S OWN ORIGIN. api.hanzo.ai answers its
+    // CORS preflights for the app's origins (hanzo.ai, the packaged window),
+    // not for Vite's localhost:1420, so a dev window read no conversations and
+    // drew "Failed to fetch" where the reader's work belongs. The app asks this
+    // origin in dev (host.tsx) and Vite forwards it, so the dev window sees the
+    // same data as the shipped one.
+    proxy: {
+      '/v1': {
+        target: process.env.HANZO_API_ORIGIN || 'https://api.hanzo.ai',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
     watch: {
       ignored: [
         // Exclude output.wav from being watched

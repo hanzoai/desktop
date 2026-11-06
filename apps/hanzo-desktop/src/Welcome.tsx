@@ -18,6 +18,7 @@ export function Welcome({
   error: Error | null;
   onSignIn: () => void;
   onSkip: () => void;
+  onBenchmark?: () => void;
 }) {
   const { brand, name, productName } = getBrand();
 

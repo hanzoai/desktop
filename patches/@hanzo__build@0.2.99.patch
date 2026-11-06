@@ -1,0 +1,13 @@
+diff --git a/lib/panel.js b/lib/panel.js
+index d9d238992d5c16c1a9d60e382e56e8af96f2294c..1ee5830fecaf5559299a066780a2f30c3047b606 100644
+--- a/lib/panel.js
++++ b/lib/panel.js
+@@ -68,7 +68,7 @@ export function PanelToggle({ open, onToggle }) {
+     const { t } = useI18n();
+     if (open)
+         return null;
+-    return (_jsx(XStack, { render: "button", role: "button", "data-slot": "side-toggle", "aria-label": t('Show tabs'), "aria-expanded": false, "aria-keyshortcuts": SHORTCUTS, ...{ title: t('Show tabs ({keys})', { keys: KEYS }) }, onPress: onToggle, width: 32, height: 32, ...quiet(), children: _jsx(SquarePlus, { size: 16 }) }));
++    return (_jsx(XStack, { render: "button", role: "button", "data-slot": "side-toggle", "aria-label": t('Show tabs'), "aria-expanded": false, "aria-keyshortcuts": SHORTCUTS, ...{ title: t('Show tabs ({keys})', { keys: KEYS }) }, onPress: onToggle, width: 32, height: 32, ...quiet(), children: _jsx(Plus, { size: 18 }) }));
+ }
+ /** Our own hosts: a page of theirs answers a frame on any of our pages. */
+ const OURS = ['hanzo.ai', 'hanzo.app', 'hanzo.bot'];
