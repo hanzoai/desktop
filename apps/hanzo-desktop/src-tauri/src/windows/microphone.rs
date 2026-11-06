@@ -18,12 +18,61 @@ pub fn permit(window: &WebviewWindow) {
   #[cfg(target_os = "linux")]
   {
     use webkit2gtk::{
-      glib::prelude::Cast, PermissionRequestExt, UserMediaPermissionRequest,
-      UserMediaPermissionRequestExt, WebViewExt,
+      glib::prelude::Cast, PermissionRequestExt, UserContentInjectedFrames,
+      UserContentManagerExt, UserMediaPermissionRequest,
+      UserMediaPermissionRequestExt, UserStyleLevel, UserStyleSheet, WebViewExt,
     };
 
     if let Err(e) = window.with_webview(|webview| {
-      webview.inner().connect_permission_request(|_, request| {
+      let inner = webview.inner();
+      if let Some(manager) = inner.user_content_manager() {
+        let style = UserStyleSheet::new(
+          r#"
+          :root { --desktop-window-radius: 14px; }
+          :root:not(.light) {
+            --background: #0d0d0d;
+            --pane-floor: #090909;
+            --pane-fill: #111111;
+            --composer-fill: #181818;
+            --composer-ground: #181818;
+          }
+          html[data-maximized="true"] { --desktop-window-radius: 0px; }
+          html { background: transparent !important; background-color: transparent !important; }
+          body {
+            border-radius: var(--desktop-window-radius) !important;
+            clip-path: inset(0 round var(--desktop-window-radius));
+            overflow: hidden !important;
+          }
+          html:not([data-maximized="true"]) body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            border-radius: var(--desktop-window-radius);
+            border: 1px solid rgba(255, 255, 255, 0.085);
+            pointer-events: none;
+            z-index: 2147483646;
+          }
+          [data-slot="chat-empty-flow"] [data-slot="chat"] {
+            height: auto !important;
+            grid-template-rows: auto auto !important;
+          }
+          :root:not(.light) [data-slot="composer"],
+          :root:not(.light) [data-slot="composer"].glass {
+            --composer-edge: rgba(255, 255, 255, 0.095) !important;
+            background: var(--composer-fill, #181818) !important;
+            background-color: var(--composer-fill, #181818) !important;
+            border-color: rgba(255, 255, 255, 0.095) !important;
+            border-radius: 16px !important;
+          }
+          "#,
+          UserContentInjectedFrames::TopFrame,
+          UserStyleLevel::User,
+          &[],
+          &[],
+        );
+        manager.add_style_sheet(&style);
+      }
+      inner.connect_permission_request(|_, request| {
         let Some(media) = request.downcast_ref::<UserMediaPermissionRequest>() else {
           return false;
         };
