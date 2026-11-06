@@ -70,6 +70,10 @@ export interface LoadModelOptions {
   use_isq?: boolean;
   /** Enable paged attention for long contexts */
   paged_attention?: boolean;
+  /** Max context sequence length */
+  max_seq_len?: number;
+  /** Accelerator device (e.g. "cuda", "metal", "auto") */
+  device?: string;
 }
 
 // Chat Types
@@ -166,4 +170,37 @@ export interface EmbeddingResponse {
     prompt_tokens: number;
     total_tokens: number;
   };
+}
+
+export interface LsaEarlyBudget {
+  position: number;
+  top_k: number;
+  top_p: number;
+}
+
+export interface LsaConfig {
+  min_seq_len?: number;
+  window_size?: number;
+  sink_size?: number;
+  top_k?: number;
+  top_p?: number;
+  pool_size?: number;
+  bucket_size?: number;
+  bucket_cap?: number;
+  rotary_layout?: 'Prefix' | 'Suffix' | 'None';
+  rotary_dim?: number;
+  bucket_shape?: [number, number] | null;
+  top_level?: number;
+  node_bucket_size?: number;
+  node_cluster_block_size?: number;
+  beam_width?: number;
+  start_nodes?: number;
+  early_budget?: LsaEarlyBudget | null;
+  pca_index_dim?: number | null;
+  projections_path?: string | null;
+}
+
+export interface LsaStatusResponse {
+  enabled: boolean;
+  config: LsaConfig | null;
 }

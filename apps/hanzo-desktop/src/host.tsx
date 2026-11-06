@@ -4,12 +4,13 @@ import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
-import { App, type Bar } from '@hanzo/app/App';
+import { App, type Titlebar as Bar } from '@hanzo/app/App';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
 
 import config from '../gui.config';
 import { keychain, open as openKeychain, written } from './keychain';
+import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
 
@@ -141,7 +142,12 @@ const GUEST = 'hanzo:guest';
 
 function guest(): boolean {
   try {
-    return window.localStorage.getItem(GUEST) === '1';
+    const isGuest = window.localStorage.getItem(GUEST) === '1';
+    if (isGuest) {
+      window.sessionStorage.setItem('hanzo.anon.try', '1');
+      (window as any).__hanzoAnonChat = true;
+    }
+    return isGuest;
   } catch {
     return false;
   }
@@ -150,6 +156,8 @@ function guest(): boolean {
 function stayGuest(): void {
   try {
     window.localStorage.setItem(GUEST, '1');
+    window.sessionStorage.setItem('hanzo.anon.try', '1');
+    (window as any).__hanzoAnonChat = true;
   } catch {
     // The choice is a convenience: without storage the next launch asks again.
   }
@@ -212,6 +220,255 @@ function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
   );
 }
 
+const LOCAL_ENGINE_URL = 'http://localhost:36900';
+const LOCAL_CONVERSATIONS_KEY = 'hanzo:local:conversations';
+
+type StoredLocalConversation = {
+  id: string;
+  title: string;
+  pinned?: boolean;
+  archived?: boolean;
+  updatedAt: string;
+  createdAt: string;
+  messages: Array<{ role: string; content: string }>;
+};
+
+function readLocalConversations(): StoredLocalConversation[] {
+  try {
+    const raw = window.localStorage.getItem(LOCAL_CONVERSATIONS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeLocalConversations(items: StoredLocalConversation[]): void {
+  try {
+    window.localStorage.setItem(LOCAL_CONVERSATIONS_KEY, JSON.stringify(items));
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+// Install local-first fetch bridge for unauthenticated / guest desktop sessions
+// so "Continue without login · Local AI" works with zero "Failed to fetch" errors
+// and routes chat completions to the embedded local Hanzo Engine (:36900).
+if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTALLED__) {
+  (window as any).__HANZO_LOCAL_FETCH_INSTALLED__ = true;
+  const nativeFetch = window.fetch.bind(window);
+
+  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    const rawUrl = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    let parsed: URL | null = null;
+    try {
+      parsed = new URL(rawUrl, window.location.origin);
+    } catch {
+      parsed = null;
+    }
+
+    const isCloudApi =
+      parsed &&
+      (parsed.origin === brand.cloudApi ||
+        parsed.hostname === 'api.hanzo.ai' ||
+        parsed.hostname === 'api-dev.hanzo.ai');
+
+    const hasToken = Boolean(keychain.getItem('hanzo_iam_access_token'));
+
+    if (isCloudApi && parsed) {
+      const path = parsed.pathname;
+      const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
+
+      // 1. Local AI chat completions when continuing without login
+      if (!hasToken && (path === '/v1/chat/public' || path === '/v1/chat/completions') && method === 'POST') {
+        try {
+          const bodyText = typeof init?.body === 'string' ? init.body : '{}';
+          const payload = JSON.parse(bodyText);
+          const localPayload = {
+            ...payload,
+            model: 'default',
+          };
+          return await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(localPayload),
+            signal: init?.signal,
+          });
+        } catch (err) {
+          return jsonResponse(
+            {
+              error: {
+                message:
+                  err instanceof Error
+                    ? `Local Hanzo Engine error: ${err.message}`
+                    : 'Local Hanzo Engine unavailable on port 36900.',
+              },
+            },
+            503,
+          );
+        }
+      }
+
+      // 2. Local model catalog when continuing without login
+      if (!hasToken && path === '/v1/models' && method === 'GET') {
+        return jsonResponse({
+          object: 'list',
+          data: [
+            {
+              id: 'enso-free',
+              name: 'Zen 6 Local (D-LSA · CUDA)',
+              object: 'model',
+              created: 1793775303,
+              owned_by: 'hanzo-local',
+            },
+            {
+              id: 'zen-free',
+              name: 'Zen 6 Local (D-LSA · CUDA)',
+              object: 'model',
+              created: 1793775303,
+              owned_by: 'hanzo-local',
+            },
+            {
+              id: 'default',
+              name: 'Zen 6 Local (D-LSA · CUDA)',
+              object: 'model',
+              created: 1793775303,
+              owned_by: 'hanzo-local',
+            },
+          ],
+        });
+      }
+
+      // 3. Local conversation history store when continuing without login
+      if (!hasToken && path.startsWith('/v1/agents/chat/conversations')) {
+        const list = readLocalConversations();
+        const subId = path.slice('/v1/agents/chat/conversations'.length).replace(/^\/+/, '');
+
+        if (!subId && method === 'GET') {
+          const wantArchived = parsed.searchParams.get('archived') === 'true';
+          const filtered = list.filter((c) => Boolean(c.archived) === wantArchived);
+          return jsonResponse({ conversations: filtered });
+        }
+
+        if (!subId && method === 'POST') {
+          const bodyText = typeof init?.body === 'string' ? init.body : '{}';
+          const payload = JSON.parse(bodyText || '{}');
+          const incomingMessages = Array.isArray(payload.messages) ? payload.messages : [];
+          const now = new Date().toISOString();
+          const id = payload.conversationId || `local-${Date.now()}`;
+          const existingIdx = list.findIndex((c) => c.id === id);
+          if (existingIdx >= 0) {
+            list[existingIdx] = {
+              ...list[existingIdx],
+              updatedAt: now,
+              messages: [...list[existingIdx].messages, ...incomingMessages],
+            };
+          } else {
+            const firstUser = incomingMessages.find((m: any) => m.role === 'user')?.content || 'Local AI Chat';
+            const title = typeof firstUser === 'string' ? firstUser.slice(0, 60) : 'Local AI Chat';
+            list.unshift({
+              id,
+              title,
+              pinned: false,
+              archived: false,
+              createdAt: now,
+              updatedAt: now,
+              messages: incomingMessages,
+            });
+          }
+          writeLocalConversations(list);
+          return jsonResponse({ conversationId: id });
+        }
+
+        if (subId && method === 'GET') {
+          const found = list.find((c) => c.id === decodeURIComponent(subId));
+          return jsonResponse(found ?? { id: subId, messages: [] });
+        }
+
+        if (subId && method === 'PATCH') {
+          const bodyText = typeof init?.body === 'string' ? init.body : '{}';
+          const patch = JSON.parse(bodyText || '{}');
+          const idx = list.findIndex((c) => c.id === decodeURIComponent(subId));
+          if (idx >= 0) {
+            list[idx] = { ...list[idx], ...patch, updatedAt: new Date().toISOString() };
+            writeLocalConversations(list);
+            return jsonResponse(list[idx]);
+          }
+          return jsonResponse({}, 404);
+        }
+
+        if (subId && method === 'DELETE') {
+          const next = list.filter((c) => c.id !== decodeURIComponent(subId));
+          writeLocalConversations(next);
+          return jsonResponse({ ok: true });
+        }
+      }
+
+      // 4. Cloud-only account/org endpoints when continuing without login
+      if (!hasToken) {
+        if (path === '/v1/agent/sessions/stream' || path === '/v1/agents/sessions/stream') {
+          return new Response(': local-mode\n\n', {
+            status: 200,
+            headers: { 'Content-Type': 'text/event-stream' },
+          });
+        }
+        if (path === '/v1/agent/sessions' || path === '/v1/agents/sessions') {
+          return jsonResponse({ sessions: [] });
+        }
+        if (path === '/v1/agents') {
+          return jsonResponse({ agents: [] });
+        }
+        if (path === '/v1/project') {
+          return jsonResponse([]);
+        }
+        if (path === '/v1/pref' || path === '/v1/preferences') {
+          return jsonResponse({});
+        }
+        if (path === '/v1/agents/targets') {
+          return jsonResponse({ targets: [] });
+        }
+      }
+    }
+
+    try {
+      return await nativeFetch(input, init);
+    } catch (err) {
+      // Graceful fallback if cloud endpoint is unreachable in desktop webview
+      if (isCloudApi && parsed) {
+        const path = parsed.pathname;
+        if (path.startsWith('/v1/agents/chat/conversations')) {
+          return jsonResponse({ conversations: readLocalConversations() });
+        }
+        if (path === '/v1/agent/sessions' || path === '/v1/agents/sessions') {
+          return jsonResponse({ sessions: [] });
+        }
+        if (path === '/v1/agents') {
+          return jsonResponse({ agents: [] });
+        }
+        if (path === '/v1/project') {
+          return jsonResponse([]);
+        }
+        if (path === '/v1/pref' || path === '/v1/preferences') {
+          return jsonResponse({});
+        }
+      }
+      throw err;
+    }
+  };
+}
+
+if (typeof window !== 'undefined') {
+  (window as any).__HANZO_BENCHMARK_COMPONENT__ = BenchmarkPage;
+}
+
 function Gate() {
   const { isLoading: iamLoading, isAuthenticated, sdk } = useIam();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
@@ -225,11 +482,28 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
-  const isLoading = iamLoading && !loadingTimedOut;
+  // Ensure LSA is armed by default on the embedded engine
+  useEffect(() => {
+    fetch(LSA_URL)
+      .then((r) => (r.ok ? r.json() : null))
+      .then(async (s) => {
+        if (s && !s.enabled) {
+          await fetch(LSA_URL, {
+            body: JSON.stringify({ ...ZEN_27B_TREE_PRESET, min_seq_len: 1024, top_k: 512, top_p: 128 }),
+            headers: { 'content-type': 'application/json' },
+            method: 'POST',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
-  if (isLoading) return <LoadingScreen message="Loading Hanzo AI…" />;
+  const isLoading = iamLoading && !loadingTimedOut;
   const path = here.split('?')[0] || '/';
-  if (!isAuthenticated && (DOORS.has(path) || !visiting)) {
+  const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || path === '/settings' || path.startsWith('/settings/');
+
+  if (isLoading && !isBenchOrSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
+  if (!isAuthenticated && !isBenchOrSettings && (DOORS.has(path) || !visiting)) {
     return (
       <Welcome
         busy={busy}
@@ -246,7 +520,13 @@ function Gate() {
           stayGuest();
           setBusy(false);
           setVisiting(true);
-          if (DOORS.has(path)) window.history.replaceState(null, '', onward());
+          window.history.replaceState(null, '', DOORS.has(path) || path === '/' ? onward() : here);
+        }}
+        onBenchmark={() => {
+          stayGuest();
+          setBusy(false);
+          setVisiting(true);
+          window.history.replaceState(null, '', '/benchmark');
         }}
       />
     );
@@ -264,8 +544,24 @@ function Gate() {
 }
 
 export function Host() {
-  const scheme = useScheme();
+  const rawScheme = useScheme();
   const [ready, setReady] = useState(false);
+
+  // Default to dark theme unless the user explicitly chose light in appearance preferences
+  const scheme = (() => {
+    try {
+      const saved = localStorage.getItem('hanzo.appearance');
+      if (saved && saved.includes('"light"')) return 'light';
+    } catch {}
+    return rawScheme || 'dark';
+  })();
+
+  useEffect(() => {
+    if (scheme === 'dark') {
+      document.documentElement.classList.remove('light', 't_light');
+      document.documentElement.classList.add('dark', 't_dark');
+    }
+  }, [scheme]);
 
   useEffect(() => {
     const fallback = setTimeout(() => setReady(true), 1200);
