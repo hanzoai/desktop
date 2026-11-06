@@ -3,30 +3,32 @@
  *
  * @hanzo/app draws hanzo.ai's frame: the rail and the sidebar stand on the
  * window's floor and the stage is the one raised card. A window is not a page.
- * Here nothing is a card: the conversation IS the window's surface — one flat
- * dark ground from the bar to the window's foot — and only the sidebar is a
- * panel, sunk a shade below that ground so the list reads as a rail beside the
- * talk rather than a box set on it.
+ *
+ * Here the window is cut in two: the SIDEBAR — the rail and the list, one
+ * lighter surface that runs the window's full height, from the traffic lights
+ * to the foot — and the CHAT, the darker ground it sits beside. Neither is a
+ * card: no corner, no drop, no gutter between them, only the hairline at their
+ * seam. The composer is the one surface set ON the chat.
  *
  * `html:root` rather than `:root`: @hanzo/app hoists its tokens into a <style>
  * it appends at runtime, after this sheet, so an equal selector would lose on
  * order alone. One extra type selector wins on specificity instead.
  */
 html:root {
-  /* One dark ground for the whole window; no lamp, no card. */
-  --pane-floor: #080808;
+  /* The chat's ground: the window's own colour, dark. */
+  --pane-floor: #0a0a0a;
   --pane-fill: transparent;
   --pane-edge: transparent;
   --pane-ground: none;
 
-  /* The sidebar: the ground's own color, a shade darker — the hairline and the
-     rounded corner are what make it a panel, not a lighter fill. */
-  --desk-panel: #040404;
+  /* The sidebar: one rung up from the chat, the same in every mode. */
+  --desk-panel: #161616;
   --desk-panel-lit: none;
-  --desk-panel-edge: rgb(255 255 255 / 0.06);
+  --desk-panel-edge: rgb(255 255 255 / 0.055);
 
-  /* A surface set on the ground (Dev's run, a dialog's pane). */
-  --desk-surface: rgb(255 255 255 / 0.045);
+  /* A surface inside the chat (Dev's run, Studio's places): the chat's own
+     black, told apart by its hairline rather than by a lighter fill. */
+  --desk-surface: var(--pane-floor);
 }
 
 /* THE STAGE IS NOT A PANEL. The conversation runs from the bar to the window's
@@ -40,23 +42,33 @@ html:root {
   box-shadow: none !important;
 }
 
-/* THE SIDEBAR, the one panel: an even gutter on each side — from the rail, from
-   the stage, and under its foot — so it reads as one card floating in the desk
-   and its corner sits inside the window's corner. It takes the whole column its
-   margins leave rather than the frame's fixed span, which would leave the
-   stage-side gutter twice the rail-side one. */
+/* THE TITLE BAR rides above the two grounds so its marks stay on the sidebar
+   where the sidebar reaches up behind them. */
+[data-slot='title-bar'] {
+  position: relative;
+  z-index: 2;
+}
+
+/* THE SIDEBAR, full height. Its own box is the list column; the shadows paint
+   the same colour the 40px the title bar takes above it and the 12px the frame
+   pads below, so one surface runs from the window's top edge to its foot
+   without touching the grid. */
+[data-slot='rail'],
 [data-slot='app-column'] {
-  width: calc(var(--span) + var(--pane-gap)) !important;
-  height: calc(100% - var(--pane-gap)) !important;
-  margin: 0 var(--pane-gap) var(--pane-gap) var(--pane-gap);
-  /* Its content keeps the same gutter on both sides: the title, the marks and
-     the rows all stand off the panel's edge by one measure. */
-  padding-inline: 6px;
-  background-color: var(--desk-panel);
-  background-image: none;
-  border: 1px solid var(--desk-panel-edge);
-  border-radius: var(--pane-round);
-  box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.04) inset;
+  background-color: var(--desk-panel) !important;
+  background-image: none !important;
+  box-shadow: 0 -40px 0 0 var(--desk-panel), 0 12px 0 0 var(--desk-panel),
+    inset -1px 0 0 rgb(255 255 255 / 0.055);
+}
+
+[data-slot='app-column'] {
+  width: var(--span) !important;
+  height: 100% !important;
+  margin: 0 !important;
+  /* Its content keeps a gutter from the seam on both sides. */
+  padding-inline: 16px;
+  border: 0 !important;
+  border-radius: 0 !important;
 }
 
 /* THE SETUP CARD'S HEADING is a sentence, not a label: in a column this narrow
@@ -67,20 +79,27 @@ html:root {
   text-overflow: clip !important;
 }
 
-/* THE COMPOSER: a shade of the sidebar's, darker than the ground it sits on.
-   Two slots deep so the app's own `[data-slot='composer']` rule, hoisted after
-   this sheet, loses on specificity rather than order. */
-html [data-slot='pane'] [data-slot='composer'] {
-  background-color: rgb(255 255 255 / 0.055) !important;
+/* THE CHAT'S MARKS stand on the sidebar's title row rather than the middle of
+   the conversation's head, so the ghost and the panel toggle share a line with
+   the name beside them. */
+[data-slot='conversation-controls'] {
+  margin-top: -7px;
 }
 
-/* A pane lying inside the stage (Dev's run, Studio's places) is a surface set
-   on the ground, not the ground: it keeps a fill and an edge. */
+/* THE COMPOSER: a shade of the sidebar's, darker than its ground. */
+html [data-slot='pane'] [data-slot='composer'] {
+  background-color: rgb(255 255 255 / 0.06) !important;
+}
+
+/* A pane lying inside the stage (Dev's run, Studio's places) is the chat's own
+   black, told apart by its hairline. */
 [data-slot='pane'] [data-slot='pane'],
-[data-slot='pane'] [data-slot='side'] {
+[data-slot='pane'] [data-slot='side'],
+[data-slot='side'] [data-slot='pane'],
+[data-slot='side'] [data-slot='side'] {
   background-color: var(--desk-surface) !important;
   background-image: none !important;
   border: 1px solid var(--desk-panel-edge) !important;
   border-radius: var(--pane-round) !important;
-  box-shadow: revert !important;
+  box-shadow: none !important;
 }
