@@ -29,6 +29,7 @@ export {
   DialogTrigger,
   PopoverClose,
   PopoverTrigger,
+  Textarea,
   TooltipTrigger,
 } from './gui-repairs';
 
@@ -138,7 +139,6 @@ export {
   TabsContent,
   TabsList,
   TabsTrigger,
-  Textarea,
   ToggleGroup,
   ToggleGroupItem,
   Tooltip,

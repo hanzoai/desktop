@@ -336,10 +336,11 @@ const AppRoutes = () => {
             <Route element={<RestoreConnectionPage />} path={'restore'} />
             {/* <Route element={<ConnectMethodQrCodePage />} path={'connect-qr'} /> */}
           </Route>
-          {/* Native Lux Wallet — node-independent. Reachable before a node is
-              connected so a fresh user can create a wallet and Sign in with
-              Wallet without onboarding a local node first. */}
+          {/* Native Lux Wallet & Engine Benchmark — node-independent. Reachable
+              before a node is connected so users can benchmark local engines (:36900)
+              or sign in with Wallet without onboarding a local node first. */}
           <Route element={<CryptoWalletPage />} path={'wallet'} />
+          <Route element={<BenchmarkPage />} path={'benchmark'} />
           <Route
             element={
               <ProtectedRoute>
@@ -358,7 +359,6 @@ const AppRoutes = () => {
             }
           >
             <Route element={<HomePage />} path={'home'} />
-            <Route element={<BenchmarkPage />} path={'benchmark'} />
           </Route>
           <Route
             element={

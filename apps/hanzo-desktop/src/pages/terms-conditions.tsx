@@ -316,12 +316,18 @@ const TermsAndConditionsPage = () => {
               variant: 'outline',
               size: 'lg',
             }),
+            'rounded-full border-white/20 bg-white/5 hover:bg-white/10',
           )}
-          disabled={!termsAndConditionsAccepted || isStartLocalButtonLoading}
+          disabled={isStartLocalButtonLoading}
           isLoading={isStartLocalButtonLoading}
-          onClick={() => hanzoNodeSpawn()}
+          onClick={() => {
+            if (!termsAndConditionsAccepted) {
+              setTermsAndConditionsAccepted(true);
+            }
+            hanzoNodeSpawn();
+          }}
         >
-          {t('common.skip')}
+          Continue without login · Local AI
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (

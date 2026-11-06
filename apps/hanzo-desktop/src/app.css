@@ -31,6 +31,11 @@ html:root {
   --desk-surface: var(--pane-floor);
 }
 
+/* THE WINDOW has no lamp: its bar and its conversation are the same ground. */
+[data-slot='window'] {
+  background-image: none !important;
+}
+
 /* THE STAGE IS NOT A PANEL. The conversation runs from the bar to the window's
    foot: no fill, no corner, no edge, no drop. */
 [data-slot='pane'],
@@ -43,22 +48,33 @@ html:root {
 }
 
 /* THE TITLE BAR rides above the two grounds so its marks stay on the sidebar
-   where the sidebar reaches up behind them. */
+   where the sidebar reaches up behind them. Its own background passes clicks
+   through; the navigation and the drag field opt back in, and the drag field
+   stops short of the chat marks at its right end. */
 [data-slot='title-bar'] {
   position: relative;
   z-index: 2;
+  pointer-events: none;
+}
+
+[data-slot='title-bar'] > * {
+  pointer-events: auto;
+}
+
+[data-slot='title-bar'] > :nth-child(5) {
+  margin-inline-end: 96px;
 }
 
 /* THE SIDEBAR, full height. Its own box is the list column; the shadows paint
    the same colour the 40px the title bar takes above it and the 12px the frame
    pads below, so one surface runs from the window's top edge to its foot
-   without touching the grid. */
+   without touching the grid. There is no rule between the rail and the list,
+   nor between the list and the chat: the change of ground is the only seam. */
 [data-slot='rail'],
 [data-slot='app-column'] {
   background-color: var(--desk-panel) !important;
   background-image: none !important;
-  box-shadow: 0 -40px 0 0 var(--desk-panel), 0 12px 0 0 var(--desk-panel),
-    inset -1px 0 0 rgb(255 255 255 / 0.055);
+  box-shadow: 0 -40px 0 0 var(--desk-panel), 0 12px 0 0 var(--desk-panel);
 }
 
 [data-slot='app-column'] {
@@ -66,24 +82,77 @@ html:root {
   height: 100% !important;
   margin: 0 !important;
   /* Its content keeps a gutter from the seam on both sides. */
-  padding-inline: 16px;
+  padding-inline: 10px;
   border: 0 !important;
   border-radius: 0 !important;
 }
 
 /* THE SETUP CARD'S HEADING is a sentence, not a label: in a column this narrow
-   a longer wording wraps rather than ending in an ellipsis. */
+   a longer wording wraps rather than ending in an ellipsis. Its own padding
+   leaves the English heading on one line. */
+[data-slot='setup'] {
+  padding-inline: 10px !important;
+}
+
 [data-slot='setup'] .is_SizableText {
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: clip !important;
 }
 
-/* THE CHAT'S MARKS stand on the sidebar's title row rather than the middle of
-   the conversation's head, so the ghost and the panel toggle share a line with
-   the name beside them. */
+[data-slot='setup'] > :first-child .is_SizableText {
+  font-size: 12px !important;
+  white-space: nowrap !important;
+}
+
+/* THE CHAT'S MARKS stand in the window's bar, on the same line as Back,
+   Forward and macOS's controls. The conversation keeps its own head for the
+   title and the people in the room. */
 [data-slot='conversation-controls'] {
-  margin-top: -7px;
+  position: absolute;
+  top: -40px;
+  right: 0;
+  z-index: 3;
+  height: 40px;
+  margin-top: 0;
+  padding-inline-end: 12px;
+}
+
+/* Its room lifts those marks over the bar's drag field, without putting the
+   conversation itself in the bar's way. */
+[data-slot='chat-room'] {
+  z-index: 3;
+}
+
+/* THE MODEL PICKER is a preference, not furniture: the quiet composer does not
+   name its router or its effort by default. Settings still owns the choice. */
+html [data-slot='pane'] [data-slot='tune'] {
+  display: none !important;
+}
+
+/* THE GUEST ACCOUNT is one more rail mark, not a small card hanging off its
+   foot: the same well and radius as the products above it. */
+[data-slot='rail'] [data-slot='me'] {
+  border-radius: 12px;
+}
+
+[data-slot='rail'] [data-slot='me'] > div {
+  width: 36px !important;
+  height: 36px !important;
+  border: 0 !important;
+  background-color: transparent !important;
+}
+
+[data-slot='rail'] [data-slot='me'] [data-slot='sizable-text'] {
+  color: var(--quiet) !important;
+  font-size: 16px !important;
+}
+
+/* The pane's backdrop creates a stacking context; lift it with its room so the
+   marks it carries into the bar remain clickable above the bar's drag field. */
+[data-slot='pane'] {
+  position: relative;
+  z-index: 3;
 }
 
 /* THE COMPOSER: a shade of the sidebar's, darker than its ground. */

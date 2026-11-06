@@ -372,8 +372,9 @@ describe('ui primitives on @hanzo/gui', () => {
     );
     const el = container.querySelector('[data-slot="badge"]') as HTMLElement;
     // The host element changed <div> -> <span>; callers style it either way.
+    // @hanzo/ui's sx() converts Tailwind border-divider to gui atomic classes.
     expect(el.tagName).toBe('SPAN');
-    expect(el.className).toContain('border-divider');
+    expect(el.className).toContain('_btc-divider');
     expect(el.textContent).toBe('Active');
     await userEvent.click(el);
     expect(onClick).toHaveBeenCalled();
@@ -1167,9 +1168,9 @@ describe('ui primitives on @hanzo/gui', () => {
     expect(action.getAttribute('aria-label')).toBeNull();
     expect(action.textContent).toContain('Reset');
     // buttonVariants() in a className would still typecheck and still lose to
-    // gui's runtime sheet; the variant is a PROP now. This class does not
-    // collide with anything gui bakes, so it still lands.
-    expect(action.className).toContain('min-w-[120px]');
+    // gui's runtime sheet; the variant is a PROP now. @hanzo/ui's sx() converts
+    // min-w-[120px] into the gui atomic class _minW-120px.
+    expect(action.className).toContain('_minW-120px');
     // gui bakes justify:flex-end + gap:$2, so mcp.tsx's `justify-between gap-4`
     // had to become props.
     const footer = baseElement.querySelector(

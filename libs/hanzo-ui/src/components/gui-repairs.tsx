@@ -20,12 +20,14 @@ import {
   DialogTrigger as GuiDialogTrigger,
   PopoverClose as GuiPopoverClose,
   PopoverTrigger as GuiPopoverTrigger,
+  Textarea as GuiTextarea,
   TooltipTrigger as GuiTooltipTrigger,
 } from '@hanzo/ui';
 import {
   type ComponentProps,
   type ComponentType,
   createContext,
+  forwardRef,
   useContext,
   useEffect,
   useId,
@@ -220,3 +222,44 @@ export const CommandList = (props: ComponentProps<typeof GuiCommandList>) => {
 export const CommandItem = (props: ComponentProps<typeof GuiCommandItem>) => (
   <GuiCommandItem role="option" {...props} />
 );
+
+// ── Repair 4: Textarea drops caller inline style (e.g. WebkitTextSecurity) ──
+//
+// `TextArea` (`styled(Input)`) consumes the caller's `style` at the outer
+// `styled()` boundary and does not forward it in `rest.style` to `Input`, whose
+// `finalProps.style` then overwrites the outer `style` (dropping
+// `-webkit-text-security: disc` on crypto-wallet.tsx's seed-phrase field).
+// Applying caller `style` entries to the underlying `<textarea>` attribute
+// preserves both gui's `--t_placeholderColor` and the caller's inline styles.
+//
+// Delete when @hanzogui/input's `TextArea` forwards `style` into `Input`.
+const toCssProp = (k: string) =>
+  k.startsWith('--')
+    ? k
+    : k
+        .replace(/^(Webkit|Moz|Ms|O)(?=[A-Z])/, '-$1')
+        .replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+
+export const Textarea = forwardRef<
+  HTMLTextAreaElement,
+  ComponentProps<typeof GuiTextarea>
+>(({ style, ...props }, forwardedRef) => {
+  const applyStyle = (el: HTMLTextAreaElement | null) => {
+    if (typeof forwardedRef === 'function') forwardedRef(el);
+    else if (forwardedRef) forwardedRef.current = el;
+    if (!el || !style) return;
+    const base = el.getAttribute('style')?.replace(/;\s*$/, '') ?? '';
+    const extra = Object.entries(style as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .map(
+        ([k, v]) =>
+          `${toCssProp(k)}: ${typeof v === 'number' ? `${v}px` : String(v)}`,
+      )
+      .join('; ');
+    if (extra && !base.includes(extra)) {
+      el.setAttribute('style', base ? `${base}; ${extra};` : `${extra};`);
+    }
+  };
+  return <GuiTextarea ref={applyStyle} style={style} {...props} />;
+});
+Textarea.displayName = 'Textarea';
