@@ -430,7 +430,17 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
       // 4. Cloud-only account/org endpoints when continuing without login
       if (!hasToken) {
         if (path === '/v1/agent/sessions/stream' || path === '/v1/agents/sessions/stream') {
-          return new Response(': local-mode\n\n', {
+          // A guest has no runs to hear about, so the stream stays open and quiet
+          // until its reader aborts, as the real one does. A body that ended at
+          // once was reopened twice a second, each time refetching the run list.
+          const signal = init?.signal ?? (input instanceof Request ? input.signal : undefined);
+          const quiet = new ReadableStream<Uint8Array>({
+            start(controller) {
+              controller.enqueue(new TextEncoder().encode(': local-mode\n\n'));
+              signal?.addEventListener('abort', () => controller.error(signal.reason), { once: true });
+            },
+          });
+          return new Response(quiet, {
             status: 200,
             headers: { 'Content-Type': 'text/event-stream' },
           });
