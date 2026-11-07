@@ -5,6 +5,7 @@ pub mod fetch;
 pub mod galxe;
 pub mod gpu;
 pub mod hardware;
+pub mod knowledge_graph;
 pub mod logs;
 pub mod hanzo_node_manager_commands;
 pub mod mcp_clients_install;

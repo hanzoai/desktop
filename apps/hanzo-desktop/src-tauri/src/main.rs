@@ -9,6 +9,10 @@ use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
 use crate::commands::hardware::hardware_get_summary;
+use crate::commands::knowledge_graph::{
+    knowledge_graph_get_ontology, knowledge_graph_query_entity, knowledge_graph_read_local,
+    knowledge_graph_sync_apple, knowledge_graph_update_convo,
+};
 use crate::commands::hanzo_node_manager_commands::{
     hanzo_node_get_default_model, hanzo_node_get_default_embedding_model,     hanzo_node_get_options, hanzo_node_is_running,
     hanzo_node_kill, hanzo_node_remove_storage, hanzo_node_set_default_options,
@@ -194,6 +198,11 @@ fn main() {
             node_remove_storage,
             show_node_manager_window,
             hardware_get_summary,
+            knowledge_graph_read_local,
+            knowledge_graph_sync_apple,
+            knowledge_graph_query_entity,
+            knowledge_graph_update_convo,
+            knowledge_graph_get_ontology,
             galxe_generate_proof,
             get_request,
             post_request,
