@@ -155,17 +155,36 @@ impl HanzoNodeManager {
             cmd.arg("run").arg("-m").arg(&model);
         }
 
-        let child = cmd
-            .spawn()
-            .map_err(|e| format!("failed to spawn hanzo-engine ({}): {}", bin, e))?;
-
-        // Non-blocking: don't stall node startup on model load. The engine loads
-        // in the background and the agent starts answering once it's ready.
-        log::info!(
-            "hanzo-engine spawned on :{} (loading model in background)",
-            port
-        );
-        Ok(Some(child))
+        match cmd.spawn() {
+            Ok(child) => {
+                log::info!(
+                    "hanzo-engine spawned on :{} (loading model in background)",
+                    port
+                );
+                Ok(Some(child))
+            }
+            Err(e) => {
+                // Fallback: if hanzo-server is not installed, ensure local Ollama runtime
+                // (:11434) is running if available on the system so local models work out of the box.
+                if !Self::engine_up("http://127.0.0.1:11434/api/tags").await {
+                    for candidate in ["ollama", "/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"] {
+                        if let Ok(child) = std::process::Command::new(candidate)
+                            .arg("serve")
+                            .stdout(std::process::Stdio::null())
+                            .stderr(std::process::Stdio::null())
+                            .spawn()
+                        {
+                            log::info!("spawned local inference runtime `{}` on :11434", candidate);
+                            return Ok(Some(child));
+                        }
+                    }
+                } else {
+                    log::info!("local inference runtime already listening on :11434, reusing it");
+                    return Ok(None);
+                }
+                Err(format!("failed to spawn hanzo-engine ({}): {}", bin, e))
+            }
+        }
     }
 
     pub async fn spawn(&mut self) -> Result<(), String> {

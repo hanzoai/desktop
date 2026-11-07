@@ -11,6 +11,11 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
 import { keychain, open as openKeychain, written } from './keychain';
+import {
+  buildLocalModelsCatalogResponse,
+  handleLocalChatCompletion,
+  LocalAiManager,
+} from './local-ai';
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
@@ -294,7 +299,8 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
       parsed &&
       (parsed.origin === brand.cloudApi ||
         parsed.hostname === 'api.hanzo.ai' ||
-        parsed.hostname === 'api-dev.hanzo.ai');
+        parsed.hostname === 'api-dev.hanzo.ai' ||
+        (parsed.origin === window.location.origin && parsed.pathname.startsWith('/v1/')));
 
     const hasToken = Boolean(keychain.getItem('hanzo_iam_access_token'));
 
@@ -304,62 +310,13 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
 
       // 1. Local AI chat completions when continuing without login
       if (!hasToken && (path === '/v1/chat/public' || path === '/v1/chat/completions') && method === 'POST') {
-        try {
-          const bodyText = typeof init?.body === 'string' ? init.body : '{}';
-          const payload = JSON.parse(bodyText);
-          const localPayload = {
-            ...payload,
-            model: 'default',
-          };
-          return await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(localPayload),
-            signal: init?.signal,
-          });
-        } catch (err) {
-          return jsonResponse(
-            {
-              error: {
-                message:
-                  err instanceof Error
-                    ? `Local Hanzo Engine error: ${err.message}`
-                    : 'Local Hanzo Engine unavailable on port 36900.',
-              },
-            },
-            503,
-          );
-        }
+        return await handleLocalChatCompletion(nativeFetch, init);
       }
 
       // 2. Local model catalog when continuing without login
       if (!hasToken && path === '/v1/models' && method === 'GET') {
-        return jsonResponse({
-          object: 'list',
-          data: [
-            {
-              id: 'enso-free',
-              name: 'Zen 6 Local (D-LSA · CUDA)',
-              object: 'model',
-              created: 1793775303,
-              owned_by: 'hanzo-local',
-            },
-            {
-              id: 'zen-free',
-              name: 'Zen 6 Local (D-LSA · CUDA)',
-              object: 'model',
-              created: 1793775303,
-              owned_by: 'hanzo-local',
-            },
-            {
-              id: 'default',
-              name: 'Zen 6 Local (D-LSA · CUDA)',
-              object: 'model',
-              created: 1793775303,
-              owned_by: 'hanzo-local',
-            },
-          ],
-        });
+        const catalog = await buildLocalModelsCatalogResponse();
+        return jsonResponse(catalog);
       }
 
       // 3. Local conversation history store when continuing without login
@@ -646,6 +603,7 @@ export function Host() {
         <Look />
         <ErrorBoundary fallbackRender={({ error }) => <Crash error={error} />}>
           <Gate />
+          <LocalAiManager />
         </ErrorBoundary>
       </IamProvider>
     </GuiProvider>

@@ -52,7 +52,7 @@ index df06a48..4a786c7 100644
  /** The Betas view rendered inside the app's main pane under /beta. */
  export function BetasPane({ go }) {
 diff --git a/dist/Chat.js b/dist/Chat.js
-index ee5162e..13a620d 100644
+index ee5162e..f04683e 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
 @@ -30,7 +30,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
@@ -103,6 +103,28 @@ index ee5162e..13a620d 100644
      const target = useMemo(() => ({ api: api(), token: bearer, org: org() }), [anonymous]); // eslint-disable-line react-hooks/exhaustive-deps
      // THE PLAN decides what the chip may offer: Free answers from the free lane
      // alone, so it opens there and lists the rest as upgrades (@hanzo/build).
+@@ -702,10 +701,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     };
+     const listed = mind.models;
+     const filteredListed = useMemo(() => {
+-        if (chatPrefs.allowThirdPartyModels)
++        if (anonymous || chatPrefs.allowThirdPartyModels)
+             return listed;
+         return listed.filter((m) => isHouseModel(m) || m.id === ENSO || m.id === FREE);
+-    }, [listed, chatPrefs.allowThirdPartyModels]);
++    }, [listed, anonymous, chatPrefs.allowThirdPartyModels]);
+     const models = useMemo(() => filteredListed.filter(chats), [filteredListed]);
+     // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
+     // read from the catalog's own fields (`parseModels`): its class, its family.
+@@ -717,7 +716,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     const wanted = mind.model;
+     // A model the catalog lists is sent as picked, whatever it answers with; only
+     // a name the catalog does not list falls to one that converses (`served`).
+-    const sent = anonymous ? FREE : wanted;
++    const sent = wanted && (!anonymous || wanted !== ENSO) ? wanted : anonymous ? FREE : wanted;
+     const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
+     // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
+     // headers and read again whenever a send settles, below. The room draws no
 @@ -726,8 +725,6 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
      // a refusal.
      const held = paidPlan(limits);
@@ -146,7 +168,52 @@ index ee5162e..13a620d 100644
      // Threads THIS pane opened by writing them. Their transcript is already on
      // the screen — it is what was just said — so the restore below has nothing to
      // fetch for one, and fetching anyway would race a live conversation to
-@@ -1044,14 +1061,26 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -883,7 +900,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     // identity changes on every `setMessages` — `useChat` closes over `messages` —
+     // so an effect depending on it re-runs after each streamed token.
+     const latest = useRef(send);
+-    latest.current = (text) => send(text);
++    latest.current = (text, images) => send(text, images);
+     // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
+     // it. `Chat` owns a draft of its own and spreads `composer` after it, so
+     // passing value/onChange/onSend takes that ownership over rather than fighting
+@@ -958,7 +975,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+         if (queued === null || resolving)
+             return;
+         setQueued(null);
+-        void latest.current(queued);
++        if (typeof queued === "object" && queued !== null)
++            void latest.current(queued.text, queued.images);
++        else
++            void latest.current(queued);
+     }, [queued, resolving]);
+     const streaming = useRef(false);
+     streaming.current = chat.streaming;
+@@ -1019,8 +1039,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+      * it leaves its place in the thread and is asked at the end, so it is asked
+      * once and not twice.
+      */
+-    const speak = useCallback((text, again) => {
+-        if (!text)
++    const speak = useCallback((text, again, images) => {
++        if (!text && !(images && images.length))
+             return;
+         // Activation: the first question this browser asks (a retry is not one).
+         if (!again)
+@@ -1032,10 +1052,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                     const { [again]: _gone, ...rest } = all;
+                     return rest;
+                 });
+-            setQueued(text);
++            setQueued(images && images.length ? { text, images } : text);
+             return;
+         }
+-        void latest.current(text);
++        void latest.current(text, images);
+     }, []);
+     // THE WAYS PAST A PAUSE, as the server sends them. A page opens; Continue
+     // with credits turns the org's choice on and asks the last question again on
+@@ -1044,14 +1064,26 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
      const [actWrong, setActWrong] = useState("");
      const act = useCallback((a) => {
          setActWrong("");
@@ -175,7 +242,7 @@ index ee5162e..13a620d 100644
              return;
          }
          setCreditsAfterAllowance(true)
-@@ -1067,7 +1096,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1067,7 +1099,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
      }, 
      // `mind.pick` is rebuilt each render; the handler follows it.
      // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -184,7 +251,40 @@ index ee5162e..13a620d 100644
      // A TURN THAT NEVER SPEAKS IS STOPPED. A stream that stays open with nothing
      // in it would leave a Stop button and no answer for as long as the upstream
      // holds the connection; after `STALL` it is ended and its question is said to
-@@ -1321,11 +1350,11 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1255,6 +1287,25 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+                     setPreparing(t("Uploading {files}", { files: names(holding, t) }));
+                 const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
+                 spend(at);
++                const localImages = landedFiles.map((f) => f.dataUrl).filter(Boolean);
++                const localTextFiles = landedFiles.filter((f) => typeof f.localText === "string");
++                if (anonymous || localImages.length || localTextFiles.length) {
++                    const localAttached = localTextFiles.map(refOf);
++                    const reusedLocal = earlier.filter((f) => !localAttached.some((a) => a.id === f.id));
++                    if (!localAttached.length && !reusedLocal.length) {
++                        const promptText = text || (localImages.length ? "What is in this image?" : "");
++                        guarded(extra ? carrying(promptText, extra) : promptText, undefined, localImages.length ? localImages : undefined);
++                        return;
++                    }
++                    const localGrounds = {
++                        passages: localTextFiles.map((f, i) => ({
++                            cite: `${f.name} › ¶${i + 1}`,
++                            text: String(f.localText || "").slice(0, 100000),
++                        })),
++                    };
++                    guarded(compose(text, { attached: localAttached, reused: reusedLocal }, localGrounds, undefined, undefined, extra), undefined, localImages.length ? localImages : undefined);
++                    return;
++                }
+                 const attached = landedFiles.map(refOf);
+                 const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
+                 const all = [...attached, ...reused];
+@@ -1317,15 +1368,18 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+     const failure = (question) => {
+         const failed = failures[question.id];
+         const text = words(question.content);
++        const rawImages = Array.isArray(question.content)
++            ? question.content.filter((p) => p?.type === "image_url" && p.image_url?.url).map((p) => p.image_url.url)
++            : undefined;
+         const whom = addressed(text, room);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
          // A BILLING REFUSAL is said in the gateway's words; its way past —
@@ -199,7 +299,7 @@ index ee5162e..13a620d 100644
          const said = !failed
              ? t("No answer came back for this question.")
              : failed.stalled
-@@ -1333,7 +1362,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1333,7 +1387,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                  : failed.empty
                      ? t("{model} answered with nothing.", { model: nameOf(model, listed) })
                      : bill
@@ -208,23 +308,23 @@ index ee5162e..13a620d 100644
                          : resign
                              ? t(anonymous
                                  ? "Sign in to ask this."
-@@ -1341,13 +1370,13 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1341,13 +1395,13 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                              : how?.provider
                                  ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
                                  : plainly(wrong, t("this conversation"), t);
 -        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || bill?.code === "free_plan_cap" ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
-+        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
++        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, rawImages), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, _jsxs(XStack, { gap: "$2", flexWrap: "wrap", children: [anonymous || how?.provider ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") })) : null, anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (resign ? (_jsx(Button, { size: "sm", onClick: () => {
                                  if (typeof window !== "undefined") {
                                      localStorage.removeItem("hanzo_iam_access_token");
                                      localStorage.removeItem("hanzo_iam_refresh_token");
                                  }
                                  enter(LOGIN);
 -                            }, children: t("Sign in") })) : lift ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => setAsk({ ...lift, model: nameOf(model, listed) }), children: t("Upgrade") })) : how?.visitor ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => enter(), children: t("Sign in to keep going") })) : (_jsx(Anchor, { href: checkoutUrl(), children: _jsx(Button, { size: "sm", variant: "outline", children: t("Add credit") }) })) })) : null] }) }));
-+                            }, children: t("Sign in") })) : lift ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.location.assign(payUrl('/cart', { org: org(), returnUrl: window.location.href })), children: t("Upgrade") })) : how?.visitor ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => enter(), children: t("Sign in to keep going") })) : (_jsx(Anchor, { href: checkoutUrl(), children: _jsx(Button, { size: "sm", variant: "outline", children: t("Add credit") }) })) })) : null] }) }));
++                            }, children: t("Sign in") })) : lift ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.location.assign(payUrl('/cart', { org: org(), returnUrl: window.location.href })), children: t("Upgrade") })) : how?.visitor ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => enter(), children: t("Sign in to keep going") })) : (_jsx(Anchor, { href: checkoutUrl(), children: _jsx(Button, { size: "sm", variant: "outline", children: t("Add credit") }) }))) : null] })] }) }));
      };
      // Dev, from the Summary's Create file or site: a move inside the app where the
      // host's app reads the path (hanzo.ai), else Dev on hanzo.ai, as the shell's
-@@ -1417,7 +1446,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1417,7 +1471,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
          },
          // WHAT GOES WITH THE MESSAGE, above the frame and at its width: the
          // pause and its ways past, one chip a file, and talk mode's words.
@@ -233,7 +333,7 @@ index ee5162e..13a620d 100644
                          ? worded(talk.refusal)
                          : talk.reply
                              ? `Hanzo: ${talk.reply}`
-@@ -1476,7 +1505,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1476,7 +1530,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
          // Chat keeps to the effort alone until the person asks for more: the family chips, the mode.
          chips: anonymous ? undefined : families,
          defaults: { chips: false, mode: false },
@@ -242,7 +342,7 @@ index ee5162e..13a620d 100644
          limits,
          onUpgrade: (id) => setAsk({ model: nameOf(id, listed) }),
          voice,
-@@ -1530,10 +1559,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1530,10 +1584,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                          setPlan(null);
                  }, prompt: plan ?? "", model: model, models: models.map((m) => ({ id: m.id, name: nameOf(m.id, listed) })) }), dragging ? (_jsx(YStack, { "aria-hidden": true, position: "absolute", t: 0, r: 0, b: 0, l: 0, z: 10, items: "center", justify: "center", bg: "var(--surface-scrim)", borderWidth: 2, borderStyle: "dashed", borderColor: "$borderColor", rounded: "var(--pane-round)", pointerEvents: "none", children: _jsxs(XStack, { items: "center", gap: "$2", px: "$4", py: "$2.5", rounded: "$10", bg: "$background", borderWidth: 1, borderColor: "$borderColor", children: [_jsx(Paperclip, { size: 15, "aria-hidden": true }), _jsx(Text, { fontSize: "$4", color: "$ink", children: t("Drop files to attach") })] }) })) : null, _jsxs(XStack, { "data-slot": "conversation-head", 
                  // On the rail's line from a tablet up (HEAD, less the pane's edge); a phone's own bar is BAND.
@@ -251,11 +351,11 @@ index ee5162e..13a620d 100644
                  // The last mark's centre INSET from the pane's end edge, as the rail's first is from the
                  // window's start: the edge's 1px, then half the 32px mark.
 -                paddingInlineEnd: INSET - 1 - 16, shrink: 0, "data-tauri-drag-region": "deep", onMouseDown: dragWindow, onDoubleClick: toggleWindowMaximize, "$max-md": !mine && !room.length ? { display: 'none' } : undefined, children: [_jsxs(XStack, { items: "center", gap: "$2", minW: 0, flex: 1, children: [mine ? (_jsx(Text, { fontSize: 15, lineHeight: 20, color: "$ink", numberOfLines: 1, shrink: 1, minW: 0, children: tidy(mine.title) })) : null, room.length ? (_jsx(XStack, { role: "list", "aria-label": t("Agents in this chat"), items: "center", gap: "$1.5", minW: 0, overflowX: "auto", "$platform-web": { scrollbarWidth: "none" }, children: room.map((name) => (_jsxs(XStack, { role: "listitem", items: "center", gap: "$1.5", paddingInlineStart: "$1", paddingInlineEnd: "$0.5", py: "$0.5", rounded: 999, borderWidth: 1, borderColor: "$borderColor", shrink: 0, children: [_jsx(Face, { src: faces[name]?.avatar ?? (name === withWhom ? portrait : undefined), emoji: faces[name]?.emoji ?? (name === withWhom ? persona?.emoji : undefined), name: name, size: 22 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$color", numberOfLines: 1, display: "none", $sm: { display: "flex" }, children: name }), _jsx(Box, { render: "button", onClick: () => openAgent(name), "aria-label": t("Remove {name} from this chat", { name }), title: t("Remove {name}", { name }), width: 24, height: 24, rounded: 999, items: "center", justify: "center", hoverStyle: { bg: "$hover" }, children: _jsx(X, { size: 13, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) })] }, name))) })) : null] }), _jsxs(XStack, { "data-slot": "conversation-controls", "data-tauri-drag-region": "false", items: "center", gap: 4, shrink: 0, children: [free ? (_jsxs(Button, { size: "xs", variant: "outline", "data-slot": "header-upgrade", gap: "$1.5", px: "$2.5", py: "$1", rounded: "$4", cursor: "pointer", hoverStyle: { bg: 'var(--white-10)' }, onPress: () => window.location.assign(payUrl('/cart', { org: org(), returnUrl: window.location.href })), "aria-label": t("Upgrade plan"), children: [_jsx(Sparkles, { size: 13, color: "var(--primary)", "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Upgrade plan") })] })) : null, open ? _jsx(Share, { thread: open }) : null, said.length > 0 ? (_jsx(ConversationMenu, { threads: currentThreadMap, active: open || currentThread.id, onSchedule: anonymous || forgetful ? undefined : () => setPlan(lastAsked()), children: _jsx(XStack, { children: _jsx(ThreadMore, { t: currentThread }) }) })) : (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { asChild: true, children: _jsx(XStack, { render: "button", "data-slot": "header-private-chat", "aria-label": t("Private chat"), "aria-pressed": forgetful, width: 32, height: 32, items: "center", justify: "center", rounded: "$3", bg: "transparent", cursor: "pointer", hoverStyle: { bg: "$hover" }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "var(--ring)" }, onPress: () => setForgetful(!forgetful), children: _jsx(Ghost, { size: 16, strokeWidth: 1.75, color: forgetful ? "var(--foreground)" : "var(--muted-foreground)", fill: forgetful ? "currentColor" : "none", "aria-hidden": true }) }) }), _jsx(TooltipContent, { children: forgetful ? t("Private chat is on: this conversation is not saved") : t("Private chat") })] })), _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(Summary, { sections: sections, onOpen: () => setPanel(true), label: t("Summary") }) }), _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(PanelToggle, { open: panel, onToggle: () => setPanel(!panel) }) })] })] }), wide && aside !== null ? (_jsx(Beside, { children: _jsx(Panel, { side: deck, kinds: NONE, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) })) : null, !wide && panel ? _jsx(Panel, { side: deck, kinds: NONE, sheet: true, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) : null, _jsx(YStack, { "data-slot": "talk", flex: 1, minH: 0, children: _jsx(ChatSurface, { ...chat, messages: shown, send: guarded, 
-+                paddingInlineEnd: 12, shrink: 0, "data-tauri-drag-region": "deep", onMouseDown: dragWindow, onDoubleClick: toggleWindowMaximize, "$max-md": !mine && !room.length ? { display: 'none' } : undefined, children: [_jsxs(XStack, { items: "center", gap: "$2", minW: 0, flex: 1, children: [mine ? (_jsx(Text, { fontSize: 15, lineHeight: 20, color: "$ink", numberOfLines: 1, shrink: 1, minW: 0, children: tidy(mine.title) })) : null, room.length ? (_jsx(XStack, { role: "list", "aria-label": t("Agents in this chat"), items: "center", gap: "$1.5", minW: 0, overflowX: "auto", "$platform-web": { scrollbarWidth: "none" }, children: room.map((name) => (_jsxs(XStack, { role: "listitem", items: "center", gap: "$1.5", paddingInlineStart: "$1", paddingInlineEnd: "$0.5", py: "$0.5", rounded: 999, borderWidth: 1, borderColor: "$borderColor", shrink: 0, children: [_jsx(Face, { src: faces[name]?.avatar ?? (name === withWhom ? portrait : undefined), emoji: faces[name]?.emoji ?? (name === withWhom ? persona?.emoji : undefined), name: name, size: 22 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$color", numberOfLines: 1, display: "none", $sm: { display: "flex" }, children: name }), _jsx(Box, { render: "button", onClick: () => openAgent(name), "aria-label": t("Remove {name} from this chat", { name }), title: t("Remove {name}", { name }), width: 24, height: 24, rounded: 999, items: "center", justify: "center", hoverStyle: { bg: "$hover" }, children: _jsx(X, { size: 13, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) })] }, name))) })) : null] }), _jsxs(XStack, { "data-slot": "conversation-controls", "data-tauri-drag-region": "false", items: "center", gap: 4, shrink: 0, children: [free ? (_jsxs(Button, { size: "xs", variant: "outline", "data-slot": "header-upgrade", gap: "$1.5", px: "$2.5", py: "$1", rounded: "$4", cursor: "pointer", hoverStyle: { bg: 'var(--white-10)' }, onPress: () => { setAsk({}); window.location.hash = '#pricing'; }, "aria-label": t("Upgrade plan"), children: [_jsx(Sparkles, { size: 13, color: "var(--primary)", "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Upgrade plan") })] })) : null, open ? _jsx(Share, { thread: open }) : null, said.length > 0 ? (_jsx(ConversationMenu, { threads: currentThreadMap, active: open || currentThread.id, onSchedule: anonymous || forgetful ? undefined : () => setPlan(lastAsked()), children: _jsx(XStack, { children: _jsx(ThreadMore, { t: currentThread }) }) })) : (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { asChild: true, children: _jsx(XStack, { render: "button", "data-slot": "header-private-chat", "aria-label": t("Private chat"), "aria-pressed": forgetful, width: 32, height: 32, items: "center", justify: "center", rounded: "$3", bg: "transparent", cursor: "pointer", hoverStyle: { bg: "$hover" }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "var(--ring)" }, onPress: () => setForgetful(!forgetful), children: _jsx(Ghost, { size: 16, strokeWidth: 1.75, color: forgetful ? "var(--foreground)" : "var(--muted-foreground)", fill: forgetful ? "currentColor" : "none", "aria-hidden": true }) }) }), _jsx(TooltipContent, { children: forgetful ? t("Private chat is on: this conversation is not saved") : t("Private chat") })] })), (said.length > 0 || files.length > 0 || sections.some((s) => s.entries?.length > 0)) ? (_jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(Summary, { sections: sections, onOpen: () => setPanel(true), label: t("Summary") }) })) : null, _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(PanelToggle, { open: panel, onToggle: () => setPanel(!panel) }) })] })] }), wide && aside !== null ? (_jsx(Beside, { children: _jsx(Panel, { side: deck, kinds: NONE, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) })) : null, !wide && panel ? _jsx(Panel, { side: deck, kinds: NONE, sheet: true, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) : null, _jsx(YStack, { "data-slot": "talk", flex: 1, minH: 0, children: _jsx(ChatSurface, { ...chat, messages: shown, send: guarded, 
++                paddingInlineEnd: 12, shrink: 0, "data-tauri-drag-region": "deep", onMouseDown: dragWindow, onDoubleClick: toggleWindowMaximize, "$max-md": !mine && !room.length ? { display: 'none' } : undefined, children: [_jsxs(XStack, { items: "center", gap: "$2", minW: 0, flex: 1, children: [mine ? (_jsx(Text, { fontSize: 15, lineHeight: 20, color: "$ink", numberOfLines: 1, shrink: 1, minW: 0, children: tidy(mine.title) })) : null, room.length ? (_jsx(XStack, { role: "list", "aria-label": t("Agents in this chat"), items: "center", gap: "$1.5", minW: 0, overflowX: "auto", "$platform-web": { scrollbarWidth: "none" }, children: room.map((name) => (_jsxs(XStack, { role: "listitem", items: "center", gap: "$1.5", paddingInlineStart: "$1", paddingInlineEnd: "$0.5", py: "$0.5", rounded: 999, borderWidth: 1, borderColor: "$borderColor", shrink: 0, children: [_jsx(Face, { src: faces[name]?.avatar ?? (name === withWhom ? portrait : undefined), emoji: faces[name]?.emoji ?? (name === withWhom ? persona?.emoji : undefined), name: name, size: 22 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$color", numberOfLines: 1, display: "none", $sm: { display: "flex" }, children: name }), _jsx(Box, { render: "button", onClick: () => openAgent(name), "aria-label": t("Remove {name} from this chat", { name }), title: t("Remove {name}", { name }), width: 24, height: 24, rounded: 999, items: "center", justify: "center", hoverStyle: { bg: "$hover" }, children: _jsx(X, { size: 13, "aria-hidden": true, color: "var(--soft, var(--muted-foreground))" }) })] }, name))) })) : null] }), _jsxs(XStack, { "data-slot": "conversation-controls", "data-tauri-drag-region": "false", items: "center", gap: 4, shrink: 0, children: [_jsx(Button, { size: "xs", variant: "outline", "data-slot": "header-local-ai", px: "$2.5", py: "$0.5", height: 24, rounded: "$3", cursor: "pointer", hoverStyle: { bg: "$hover" }, onPress: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), "aria-label": t("Local AI & Node"), children: _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Local AI") }) }), free ? (_jsxs(Button, { size: "xs", variant: "outline", "data-slot": "header-upgrade", gap: "$1.5", px: "$2.5", py: "$1", rounded: "$4", cursor: "pointer", hoverStyle: { bg: 'var(--white-10)' }, onPress: () => { setAsk({}); window.location.hash = '#pricing'; }, "aria-label": t("Upgrade plan"), children: [_jsx(Sparkles, { size: 13, color: "var(--primary)", "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "600", color: "$ink", children: t("Upgrade plan") })] })) : null, open ? _jsx(Share, { thread: open }) : null, said.length > 0 ? (_jsx(ConversationMenu, { threads: currentThreadMap, active: open || currentThread.id, onSchedule: anonymous || forgetful ? undefined : () => setPlan(lastAsked()), children: _jsx(XStack, { children: _jsx(ThreadMore, { t: currentThread }) }) })) : (_jsxs(Tooltip, { children: [_jsx(TooltipTrigger, { asChild: true, children: _jsx(XStack, { render: "button", "data-slot": "header-private-chat", "aria-label": t("Private chat"), "aria-pressed": forgetful, width: 32, height: 32, items: "center", justify: "center", rounded: "$3", bg: "transparent", cursor: "pointer", hoverStyle: { bg: "$hover" }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "var(--ring)" }, onPress: () => setForgetful(!forgetful), children: _jsx(Ghost, { size: 16, strokeWidth: 1.75, color: forgetful ? "var(--foreground)" : "var(--muted-foreground)", fill: forgetful ? "currentColor" : "none", "aria-hidden": true }) }) }), _jsx(TooltipContent, { children: forgetful ? t("Private chat is on: this conversation is not saved") : t("Private chat") })] })), (said.length > 0 || files.length > 0 || sections.some((s) => s.entries?.length > 0)) ? (_jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(Summary, { sections: sections, onOpen: () => setPanel(true), label: t("Summary") }) })) : null, _jsx(XStack, { "$max-md": { display: 'none' }, children: _jsx(PanelToggle, { open: panel, onToggle: () => setPanel(!panel) }) })] })] }), wide && aside !== null ? (_jsx(Beside, { children: _jsx(Panel, { side: deck, kinds: NONE, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) })) : null, !wide && panel ? _jsx(Panel, { side: deck, kinds: NONE, sheet: true, onHide: () => setPanel(false), label: t("Tabs"), ...browsing }) : null, _jsx(YStack, { "data-slot": "talk", flex: 1, minH: 0, children: _jsx(ChatSurface, { ...chat, messages: shown, send: guarded, 
                      // WHILE NOTHING HAS BEEN SAID, from a tablet up, the opening and the
                      // composer are one pair centred in the pane (`center`: rows `1fr auto auto
                      // 1fr`), so the heading reads close above the field and nothing stands at
-@@ -1555,8 +1584,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1555,8 +1609,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                          // A QUESTION THAT CARRIED PICTURES draws them beside its words.
                          if (turn.role === "user" && Array.isArray(turn.content)) {
                              const parts = partsOf(turn.content);
@@ -265,7 +365,7 @@ index ee5162e..13a620d 100644
                          }
                          const said = typeof turn.content === "string" ? turn.content : "";
                          // A QUESTION THAT CARRIED FILES draws its words and the files' chips;
-@@ -1564,7 +1592,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1564,7 +1617,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                          if (turn.role === "user" && said) {
                              const read = told(said);
                              if (read.carried)
@@ -274,7 +374,7 @@ index ee5162e..13a620d 100644
                          }
                          // WHILE THE ANSWER HAS NO WORDS YET: who is answering (the agents the
                          // question addresses, or the whole room when it names nobody), and the
-@@ -1598,7 +1626,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1598,7 +1651,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                                  : [];
                              return (_jsxs(YStack, { gap: "$3", children: [parts.map((part, i) => (_jsxs(YStack, { gap: "$1", children: [part.who ? (_jsxs(XStack, { items: "center", gap: "$2", children: [_jsx(Face, { src: faces[part.who]?.avatar, emoji: faces[part.who]?.emoji, name: part.who, size: 20 }), _jsx(Text, { fontSize: "$2", fontWeight: "600", color: "$ink", children: part.who })] })) : null, _jsx(Prose, { text: part.text }), part.text ? _jsx(Reply, { text: part.text, listen: listen(part.who ?? withWhom ?? undefined), onOpen: opener(part.text) }) : null] }, i))), silent.length ? (_jsx(Text, { fontSize: "$2", color: "$soft", children: t("No answer from {names} in this reply.", { names: join(silent, t) }) })) : null, byline(turn.id)] }));
                          }
@@ -283,7 +383,7 @@ index ee5162e..13a620d 100644
                      }, 
                      // The page's ONE heading, and it belongs to the empty transcript rather
                      // than to a signed-out branch — the branch is gone, and the heading went
-@@ -1608,5 +1636,5 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
+@@ -1608,5 +1661,5 @@ function Thread({ placeholder = message(), initial, anonymous = false, heading,
                      empty: heading === null ? undefined : (_jsxs(YStack, { "data-slot": "opening", items: "center", justify: "flex-end", width: "100%", height: "100%", pt: "$6", pb: "$2", children: [room.length > 1 ? (_jsx(XStack, { items: "center", justify: "center", mb: "$4", children: room.map((name, i) => (_jsx(Box, { marginInlineStart: i ? -16 : 0, rounded: 40, borderWidth: 2, borderColor: "$background", z: room.length - i, children: _jsx(Face, { src: faces[name]?.avatar, emoji: faces[name]?.emoji, name: name, size: 72 }) }, name))) })) : portrait ? (_jsx(Box, { width: 160, height: 160, rounded: 24, overflow: "hidden", borderWidth: 2, borderColor: "var(--white-15)", boxShadow: "0 10px 24px color-mix(in srgb, var(--pure-black) 70%, transparent)", mb: "$4", bg: "var(--neutral-900)", children: _jsx(View, { render: _jsx("img", { src: portrait, alt: withWhom }), width: "100%", height: "100%", objectFit: "cover" }) })) : null, room.length === 1 && !portrait ? (_jsx(Box, { mb: "$3", children: _jsx(Face, { emoji: mate?.emoji ?? persona?.emoji, name: withWhom, size: 72 }) })) : null, _jsx(Text, { render: "h1", fontSize: "$7", lineHeight: "$7", fontWeight: "700", color: "$ink", text: "center", mb: "$1", children: join(room, t) || heading || (firstName ? t("What’s up, {name}?", { name: firstName }) : t("What’s up?")) }), room.length === 1 && (mate?.description ?? persona?.description) ? (_jsx(Text, { fontSize: "$3", color: "$soft", text: "center", maxW: 500, mb: "$4", lineHeight: "$4", children: mate?.description ?? persona?.description })) : null] })), 
                      // The transcript reads at the same measure. `Thread` defaults to 768
                      // itself; handing it the column here is what lets Width reach it.
@@ -474,7 +574,7 @@ index 9ce2fc3..271851e 100644
  function List({ mode, rows, view, keep, open, reading, error, onOpen, threads, held = null, onNew, }) {
      const { t } = useI18n();
 diff --git a/dist/Setup.js b/dist/Setup.js
-index b7d68e8..61f989f 100644
+index b7d68e8..911685c 100644
 --- a/dist/Setup.js
 +++ b/dist/Setup.js
 @@ -40,6 +40,50 @@ export const STEP_KEY = 'hanzo.onboarding.step';
@@ -528,7 +628,7 @@ index b7d68e8..61f989f 100644
  /** Inline Slack Mark */
  function SlackMark({ size = 18 }) {
      return (_jsxs("svg", { width: size, height: size, viewBox: "0 0 54 54", fill: "none", "aria-hidden": true, children: [_jsx("path", { d: "M11.379 33.9993C11.379 37.1358 8.84512 39.6507 5.7276 39.6507C2.61008 39.6507 0.0572205 37.1168 0.0572205 33.9993C0.0572205 30.8817 2.5911 28.3479 5.70862 28.3479H11.36V33.9993H11.379Z", fill: "#E01E5A" }), _jsx("path", { d: "M14.1962 33.9997C14.1962 30.8632 16.7301 28.3483 19.8476 28.3483C22.9651 28.3483 25.499 30.8822 25.499 33.9997V48.1353C25.499 51.2718 22.9651 53.7867 19.8476 53.7867C16.7301 53.7867 14.1962 51.2718 14.1962 48.1353V33.9997Z", fill: "#E01E5A" }), _jsx("path", { d: "M19.8662 11.2673C16.7296 11.2673 14.2148 8.73347 14.2148 5.61594C14.2148 2.49842 16.7486 -0.0354538 19.8662 -0.0354538C22.9837 -0.0354538 25.5175 2.49842 25.5175 5.61594V11.2673H19.8662Z", fill: "#36C5F0" }), _jsx("path", { d: "M19.8682 14.1334C23.0047 14.1334 25.5196 16.6673 25.5196 19.7848C25.5196 22.9023 22.9857 25.4362 19.8682 25.4362H5.67566C2.53916 25.4362 0.0242615 22.9023 0.0242615 19.7848C0.0242615 16.6673 2.55814 14.1334 5.67566 14.1334H19.8682Z", fill: "#36C5F0" }), _jsx("path", { d: "M42.5323 19.7853C42.5323 16.6488 45.0662 14.1339 48.1837 14.1339C51.3012 14.1339 53.8351 16.6678 53.8351 19.7853C53.8351 22.9028 51.3012 25.4367 48.1837 25.4367H42.5323V19.7853Z", fill: "#2EB67D" }), _jsx("path", { d: "M39.7126 19.7934C39.7126 22.9299 37.1787 25.4448 34.0612 25.4448C30.9436 25.4448 28.4098 22.911 28.4098 19.7934V5.61986C28.4098 2.48336 30.9436 -0.0315399 34.0612 -0.0315399C37.1787 -0.0315399 39.7126 2.48336 39.7126 5.61986V19.7934Z", fill: "#2EB67D" }), _jsx("path", { d: "M34.0376 42.482C37.1741 42.482 39.689 45.0158 39.689 48.1334C39.689 51.2509 37.1552 53.7848 34.0376 53.7848C30.9201 53.7848 28.3862 51.2509 28.3862 48.1334V42.482H34.0376Z", fill: "#ECB22E" }), _jsx("path", { d: "M34.0381 39.6507C30.9016 39.6507 28.3867 37.1168 28.3867 33.9993C28.3867 30.8818 30.9206 28.3479 34.0381 28.3479H48.2306C51.3671 28.3479 53.882 30.8818 53.882 33.9993C53.882 37.1168 51.3482 39.6507 48.2306 39.6507H34.0381Z", fill: "#ECB22E" })] }));
-@@ -61,6 +105,7 @@ export function Setup({ go } = {}) {
+@@ -61,12 +105,13 @@ export function Setup({ go } = {}) {
      const [errorMsg, setErrorMsg] = useState(null);
      // A first press on Disconnect asks; the second lets go of GitHub.
      const [dropping, setDropping] = useState(false);
@@ -536,6 +636,14 @@ index b7d68e8..61f989f 100644
      const [syncTurn, setSyncTurn] = useState(0);
      const signed = isAuthenticated && Boolean(accessToken);
      const accountList = Array.isArray(googleAccounts) ? googleAccounts : [];
+     const hasGoogle = googleDone || accountList.length > 0;
+-    // Google Workspace is a private beta until Google verifies its scopes.
+-    const workspace = opens('workspace');
++    // Google Workspace is disabled on desktop until Google verifies its scopes.
++    const workspace = false;
+     // Customize's plugins, inside the app where the host reads the path, else Dev on the site.
+     const openPlugins = () => (pathed && go ? go(app(PLUGINS)) : window.location.assign(site(app(PLUGINS))));
+     // The token itself is lib/gmail's to keep; Setup lists the addresses.
 @@ -105,7 +150,7 @@ export function Setup({ go } = {}) {
              fetch(`${api()}/v1/tool/mcp/servers`, { headers: auth })
                  .then((r) => (r.ok ? r.json() : null))
@@ -1101,6 +1209,78 @@ index 672f95f..74d1e8c 100644
      const s = q.toString();
      const at = billing();
      if (path === "/" && !s)
+diff --git a/dist/pane.js b/dist/pane.js
+index 9789697..e3b55a0 100644
+--- a/dist/pane.js
++++ b/dist/pane.js
+@@ -125,11 +125,6 @@ function watch(api, f, key, id) {
+ export async function hold(key, list, via) {
+     if (!list.length)
+         return;
+-    if (!via.org) {
+-        edit(key, (was) => ({ ...was, refused: 'Sign in to attach files: they are kept in your workspace Drive.' }));
+-        return;
+-    }
+-    const org = via.org;
+     const taken = list.map((file) => ({
+         id: mint('h'),
+         name: file.name,
+@@ -147,6 +142,55 @@ export async function hold(key, list, via) {
+         carrying.set(h.id, { stop, done });
+         return { h, file: list[i], stop, land };
+     });
++    if (!via.org) {
++        await Promise.all(jobs.map(async ({ h, file, stop, land }) => {
++            try {
++                if (stop.signal.aborted)
++                    return land(null);
++                const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(file.name);
++                if (isImage) {
++                    const dataUrl = await new Promise((resolve, reject) => {
++                        const reader = new FileReader();
++                        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
++                        reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
++                        reader.readAsDataURL(file);
++                    });
++                    const got = {
++                        id: `local-${h.id}`,
++                        name: file.name,
++                        size: file.size,
++                        type: file.type || 'image/png',
++                        status: 'ready',
++                        dataUrl,
++                    };
++                    local.set(got.id, h.href);
++                    know(got);
++                    patch(key, h.id, fromFile(got));
++                    return land(got);
++                }
++                const localText = await file.text();
++                const got = {
++                    id: `local-${h.id}`,
++                    name: file.name,
++                    size: file.size,
++                    type: file.type || 'text/plain',
++                    status: 'ready',
++                    localText,
++                };
++                local.set(got.id, h.href);
++                know(got);
++                patch(key, h.id, fromFile(got));
++                return land(got);
++            }
++            catch (e) {
++                if (!stop.signal.aborted)
++                    patch(key, h.id, { state: 'failed', error: e?.message || `${file.name} could not be read.` });
++                return land(null);
++            }
++        }));
++        return;
++    }
++    const org = via.org;
+     await pool(jobs, FILES_AT_ONCE, async ({ h, file, stop, land }) => {
+         try {
+             if (stop.signal.aborted)
 diff --git a/dist/recent.js b/dist/recent.js
 index cbb8d45..b302d61 100644
 --- a/dist/recent.js

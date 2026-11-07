@@ -358,6 +358,10 @@ fn main() {
             tauri::async_runtime::spawn({
                 let app_handle = app.handle().clone();
                 async move {
+                    let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
+                    let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
+                    let _ = recreate_window(app_handle.clone(), Window::Main, true);
+
                     // Kill any existing process related to hanzo and/or using hanzo ports
                     let mut hanzo_node_manager_guard =
                         HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
@@ -377,10 +381,6 @@ fn main() {
                             .args(["--user", "start", "hanzo-site.service"])
                             .spawn();
                     }
-
-                    let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
-                    let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
-                    let _ = recreate_window(app_handle.clone(), Window::Main, true);
 
                     // The AI-mining precompile is now native Rust
                     // (mining/precompile.rs — no Go FFI), so start Phase-1

@@ -15,7 +15,7 @@ const SHOTS = process.env.SHOT_DIR ?? 'test-results';
 async function enter(page: Page, width = 1280, height = 900) {
   await page.setViewportSize({ width, height });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Not now' }).click();
+  await page.getByRole('button', { name: /Not now|Continue without login/ }).click();
   await expect(page.locator('[data-slot="title-bar"]')).toBeVisible({ timeout: 30_000 });
 }
 
@@ -34,7 +34,7 @@ test('the bar holds the sidebar toggle, Back and Forward at the top-left, and dr
   // The rail starts with Chat: the toggle is the bar's, not the rail's too.
   const rail = page.getByRole('navigation', { name: 'Products' });
   const marks = await rail.locator('[aria-label]').evaluateAll((all) => all.map((n) => n.getAttribute('aria-label')));
-  expect(marks.slice(0, 6)).toEqual(['Chat', 'Dev', 'Library', 'Scheduled tasks', 'Customize', 'More']);
+  expect(marks.slice(0, 6)).toEqual(['Chat', 'Dev', 'Studio', 'Tabs', 'CRM', 'Commerce']);
   await expect(page.getByRole('button', { name: /sidebar/ })).toHaveCount(1);
   await page.screenshot({ path: `${SHOTS}/desktop-1280.png` });
 });
@@ -78,4 +78,32 @@ test('a narrow window opens the sidebar as a drawer from the bar, and nothing sc
   await expect(page.locator('[data-slot="drawer"]').getByRole('navigation', { name: 'Products' })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
   await page.screenshot({ path: `${SHOTS}/desktop-390-drawer.png` });
+});
+
+test('hides Google Workspace setup, aligns top controls with traffic lights, shows composer model selector, and opens Local AI manager', async ({ page }) => {
+  await enter(page);
+  // Google Workspace setup card must not be shown
+  await expect(page.locator('[data-slot="setup-workspace"]')).toHaveCount(0);
+  await expect(page.getByText('Google Workspace')).toHaveCount(0);
+
+  // Top-left bar toggle and top-right conversation controls should align near y=16.5px (macOS traffic light center)
+  const toggleBox = await page.locator('[data-slot="title-bar"]').getByRole('button', { name: 'Close sidebar' }).boundingBox();
+  const localAiBtn = page.locator('[data-slot="header-local-ai"]');
+  await expect(localAiBtn).toBeVisible();
+  const localAiBox = await localAiBtn.boundingBox();
+  expect(toggleBox).not.toBeNull();
+  expect(localAiBox).not.toBeNull();
+  const toggleCenterY = toggleBox!.y + toggleBox!.height / 2;
+  const localAiCenterY = localAiBox!.y + localAiBox!.height / 2;
+  expect(Math.abs(toggleCenterY - 16.5)).toBeLessThanOrEqual(2.5);
+  expect(Math.abs(localAiCenterY - 16.5)).toBeLessThanOrEqual(2.5);
+
+  // Composer model selector ([data-slot="tune"]) is visible in signed-out/local mode
+  await expect(page.locator('[data-slot="tune"]')).toBeVisible();
+
+  // Clicking "Local AI" opens the Local AI Models & Hanzo Node Manager modal
+  await localAiBtn.click();
+  const modal = page.getByTestId('local-ai-manager-modal');
+  await expect(modal).toBeVisible();
+  await page.screenshot({ path: `${SHOTS}/desktop-1280-local-ai-modal.png` });
 });

@@ -71,27 +71,27 @@ impl HanzoNodeProcessHandler {
     }
 
     async fn health(base_url: &str, timeout: Duration) -> bool {
-        // The node serves its HTTP API under `/v1/node` (matching the frontend's
-        // hanzo-message-ts client). Probe the readiness endpoint there.
-        let url = format!("{}/v2/health_check", base_url);
+        // The node serves its HTTP API under `/v1/node` (v1.19.2+) or `/v2` (v1.15.x).
+        // Probe `/v1/node/health_check` first, then `/v2/health_check`; any HTTP
+        // response from the local node port (< 500) proves the HTTP server is up.
         let client = reqwest::Client::new();
-        log::info!(
-            "checking hanzo-nodehealth of {} with timeout {:?}",
-            url,
-            timeout
-        );
-        match client.get(&url).timeout(timeout).send().await {
-            Ok(response) => {
+        for path in ["/v1/node/health_check", "/v2/health_check"] {
+            let url = format!("{}{}", base_url, path);
+            log::info!(
+                "checking hanzo-node health of {} with timeout {:?}",
+                url,
+                timeout
+            );
+            if let Ok(response) = client.get(&url).timeout(timeout).send().await {
                 let status = response.status();
                 let text = response.text().await;
-                log::info!("health check response: {:?} {:?}", status, text);
-                status == reqwest::StatusCode::OK
-            }
-            Err(e) => {
-                log::info!("health check failed {:?}", e);
-                false
+                log::info!("health check response ({}): {:?} {:?}", path, status, text);
+                if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
+                    return true;
+                }
             }
         }
+        false
     }
 
     /// Poll the node's health endpoint until it answers, or give up.

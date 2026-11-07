@@ -50,10 +50,15 @@ html:root {
 /* THE TITLE BAR rides above the two grounds so its marks stay on the sidebar
    where the sidebar reaches up behind them. Its own background passes clicks
    through; the navigation and the drag field opt back in, and the drag field
-   stops short of the chat marks at its right end. */
+   stops short of the chat marks at its right end.
+   33px height places the bar's center at y = 16.5px — exact horizontal alignment
+   with macOS's native traffic lights (y = 10..23, cy = 16.5px) and the right-side
+   conversation controls. */
 [data-slot='title-bar'] {
   position: relative;
   z-index: 2;
+  height: 33px !important;
+  min-height: 33px !important;
   pointer-events: none;
 }
 
@@ -61,12 +66,19 @@ html:root {
   pointer-events: auto;
 }
 
+[data-slot='title-bar'] [data-slot='sidebar-toggle'],
+[data-slot='title-bar'] [data-slot='back'],
+[data-slot='title-bar'] [data-slot='forward'] {
+  width: 28px !important;
+  height: 28px !important;
+}
+
 [data-slot='title-bar'] > :nth-child(5) {
-  margin-inline-end: 96px;
+  margin-inline-end: 136px;
 }
 
 /* THE SIDEBAR, full height. Its own box is the list column; the shadows paint
-   the same colour the 40px the title bar takes above it and the 12px the frame
+   the same colour the 33px the title bar takes above it and the 12px the frame
    pads below, so one surface runs from the window's top edge to its foot
    without touching the grid. There is no rule between the rail and the list,
    nor between the list and the chat: the change of ground is the only seam. */
@@ -74,24 +86,49 @@ html:root {
 [data-slot='app-column'] {
   background-color: var(--desk-panel) !important;
   background-image: none !important;
-  box-shadow: 0 -40px 0 0 var(--desk-panel), 0 12px 0 0 var(--desk-panel);
+  box-shadow: 0 -33px 0 0 var(--desk-panel), 0 12px 0 0 var(--desk-panel);
+}
+
+[data-slot='rail'] {
+  width: 48px !important;
+  padding-top: 2px !important;
+  padding-bottom: 0 !important;
+  gap: 5px !important;
 }
 
 [data-slot='app-column'] {
   width: var(--span) !important;
   height: 100% !important;
   margin: 0 !important;
-  /* Its content keeps a gutter from the seam on both sides. */
-  padding-inline: 10px;
+  /* Extra breathing room on both sides of the sidebar list. */
+  padding-inline: 12px !important;
   border: 0 !important;
   border-radius: 0 !important;
+}
+
+[data-slot='app-rail'] {
+  padding-inline: 6px !important;
+  padding-top: 0 !important;
+  padding-bottom: 10px !important;
+  gap: 4px !important;
+}
+
+[data-slot='app-head'] {
+  height: 38px !important;
+  min-height: 38px !important;
+  margin-bottom: 2px !important;
+}
+
+/* Hide unverified Google Workspace onboarding prompt on desktop. */
+[data-slot='setup-workspace'] {
+  display: none !important;
 }
 
 /* THE SETUP CARD'S HEADING is a sentence, not a label: in a column this narrow
    a longer wording wraps rather than ending in an ellipsis. Its own padding
    leaves the English heading on one line. */
 [data-slot='setup'] {
-  padding-inline: 10px !important;
+  padding-inline: 12px !important;
 }
 
 [data-slot='setup'] .is_SizableText {
@@ -106,16 +143,17 @@ html:root {
 }
 
 /* THE CHAT'S MARKS stand in the window's bar, on the same line as Back,
-   Forward and macOS's controls. The conversation keeps its own head for the
-   title and the people in the room. */
+   Forward and macOS's controls (cy = 16.5px). The conversation keeps its own
+   head for the title and the people in the room. */
 [data-slot='conversation-controls'] {
   position: absolute;
-  top: -40px;
+  top: -33px !important;
   right: 0;
   z-index: 3;
-  height: 40px;
+  height: 33px !important;
   margin-top: 0;
   padding-inline-end: 12px;
+  align-items: center !important;
 }
 
 /* Its room lifts those marks over the bar's drag field, without putting the
@@ -124,16 +162,11 @@ html:root {
   z-index: 3;
 }
 
-/* THE MODEL PICKER is a preference, not furniture: the quiet composer does not
-   name its router or its effort by default. Settings still owns the choice. */
-html [data-slot='pane'] [data-slot='tune'] {
-  display: none !important;
-}
-
-/* THE GUEST ACCOUNT is one more rail mark, not a small card hanging off its
-   foot: the same well and radius as the products above it. */
+/* THE GUEST / USER ACCOUNT sits slightly lower at the foot of the left rail,
+   level with the bottom edge of the sidebar setup card. */
 [data-slot='rail'] [data-slot='me'] {
   border-radius: 12px;
+  margin-bottom: -5px !important;
 }
 
 [data-slot='rail'] [data-slot='me'] > div {
