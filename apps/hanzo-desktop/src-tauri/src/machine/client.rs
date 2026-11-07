@@ -8,6 +8,7 @@ use hyper::{Method, Request, Response, StatusCode};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use thiserror::Error;
+#[cfg(unix)]
 use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 
@@ -160,6 +161,7 @@ impl MachinedClient {
         Ok(())
     }
 
+    #[cfg(unix)]
     async fn raw_request(
         &self,
         method: Method,
@@ -192,6 +194,22 @@ impl MachinedClient {
         let req = builder.body(Full::new(req_body))?;
         let res = sender.send_request(req).await.map_err(MachinedError::Send)?;
         Ok(res)
+    }
+
+    #[cfg(not(unix))]
+    async fn raw_request(
+        &self,
+        _method: Method,
+        _path: &str,
+        _body: Option<Bytes>,
+    ) -> Result<Response<Incoming>, MachinedError> {
+        Err(MachinedError::Connect {
+            path: self.socket.clone(),
+            source: std::io::Error::new(
+                std::io::ErrorKind::Unsupported,
+                "hanzo-machined UNIX socket is not supported on Windows",
+            ),
+        })
     }
 }
 
@@ -429,7 +447,7 @@ impl<T: AsyncWrite + Unpin> Write for TokioIo<T> {
 // Tests
 // =========================================================================
 
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use std::convert::Infallible;

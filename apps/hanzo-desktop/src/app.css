@@ -149,10 +149,15 @@ html [data-slot='pane'] [data-slot='tune'] {
 }
 
 /* The pane's backdrop creates a stacking context; lift it with its room so the
-   marks it carries into the bar remain clickable above the bar's drag field. */
+   marks it carries into the bar remain clickable above the bar's drag field.
+   Chat has no card to clip, so those marks may escape its head into the bar. */
 [data-slot='pane'] {
   position: relative;
   z-index: 3;
+}
+
+[data-slot='pane']:has(> [data-slot='chat-room']) {
+  overflow: visible !important;
 }
 
 /* THE COMPOSER: a shade of the sidebar's, darker than its ground. */
