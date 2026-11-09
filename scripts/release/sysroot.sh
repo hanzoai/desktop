@@ -25,8 +25,15 @@ mkdir -p "$state/lists/partial" "$state/archives/partial"
 
 apt=(apt-get -q -o Dir::State="$state" -o Dir::State::lists="$state/lists"
      -o Dir::Cache="$state" -o Dir::Cache::archives="$state/archives"
-     -o Dir::State::status=/var/lib/dpkg/status -o Debug::NoLocking=1 -o APT::Sandbox::User=)
-"${apt[@]}" update >/dev/null
+     -o Dir::State::status=/var/lib/dpkg/status -o Debug::NoLocking=1 -o APT::Sandbox::User=
+     -o Acquire::Retries=5 -o Acquire::ForceIPv4=true)
+# A mirror that cannot be reached is a warning to apt and an empty index to the next
+# command; Error-Mode=any makes it an error, and a second try is usually enough.
+for try in 1 2 3; do
+  "${apt[@]}" update -o APT::Update::Error-Mode=any >/dev/null && break
+  [ "$try" -lt 3 ] || { echo "sysroot: apt update failed three times" >&2; exit 1; }
+  sleep 10
+done
 "${apt[@]}" install --download-only -y --no-install-recommends "$@" >/dev/null
 
 unpacked=0; kept=0
