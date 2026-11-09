@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         label: [heavy-linux-amd64, heavy-linux-arm64]
-    runs-on: [${{ matrix.label }}]
+    runs-on: ${{ matrix.label }}
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
