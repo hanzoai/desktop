@@ -416,51 +416,71 @@ pre-release channel of the same binary, behind stable.
 
 ### Workflows
 
-**A gate, but no release lane.** `.hanzo/workflows/cicd.yml` calls
-`hanzoai/ci/.hanzo/workflows/build.yml@v1` on push to main, on a pull request,
-and on both tag shapes this repo uses — `v*` and a bare `1.1.48`, because
-releases here are tagged to match `package.json` exactly and a `v*`-only filter
-would never fire on them. Every knob lives in `/hanzo.yml`, which declares
-`test:` and nothing else: the artifact is a signed per-platform bundle, not a
-container, so there is no `images:` and nothing to deploy. The real gate is
-`pnpm typecheck` (`tsc --noEmit -p tsconfig.app.json`), which catches a break in
-`libs/` here rather than in whoever imports it next.
+**The gate** is `.github/workflows/cicd.yml`: it calls the `hanzoai/ci` reusable on
+push to main, on a pull request, and on both tag shapes this repo has used (`v*` and
+a bare `1.1.48`). Every knob lives in `/hanzo.yml`, which declares `test:` and
+nothing else; the real gate is `pnpm typecheck` plus `scripts/version.sh check`.
 
-It runs on the git-runner fleet at git.hanzo.ai — the only pool serving those
-labels. `.github/workflows/` is empty, and a caller placed there could not be
-scheduled at all.
+**The release lane** is two workflows, split so a missing Mac never holds back the
+rest:
 
-What is still missing is the **release** lane: nothing cuts, signs, notarizes or
-publishes the per-platform bundles, so those come off a developer's machine. The
-secrets below are what such a lane needs — recorded because they are what the
-old one used, not because something reads them today. The version-drift check
-went with it: `release-prod.yml` failed a release whose tag and `package.json`
-disagreed, and since its deletion nothing asserts that.
+- `desktop-release.yml` — on a `v*` tag, builds Linux amd64 and arm64
+  (AppImage, deb, rpm) and Windows x64 (NSIS setup.exe, portable zip) on
+  `heavy-linux-{amd64,arm64}` runner pods, uploads each leg's assets straight to the
+  GitHub release (a draft until every leg is in), then writes `SHA256SUMS` and
+  `latest.json` and publishes. The tag must equal `v` + the root `package.json`
+  version. A pull request that touches the lane, or Run workflow on a branch, is a
+  dry run: same builds, same uploads, against a draft release named
+  `dry-run-<run id>` that the last job deletes. Run workflow on a tag cuts that tag
+  again.
+- `desktop-release-macos.yml` — builds the universal `.dmg` and `.app.tar.gz` on a
+  host labelled `macos-arm64`, attaches them to the same release and recomputes the
+  manifest, which then gains the darwin platforms. No such host existed when this was
+  written. GitHub drops a job nothing serves after 24 hours; Run workflow on the tag
+  when the host is up. The host needs Xcode's command line tools and `jq` (macOS 15
+  ships it); the app is ad-hoc signed, not notarized.
 
-### Required Secrets
+`scripts/release/` is the lane's whole logic, and each script says what it does at
+its head: `meta.sh` (which release, creates the draft), `sysroot.sh`, `rust.sh`,
+`prepare.sh`, `kms.sh`, `signing.sh`, `stage.sh`, `verify.py`, `manifest.sh`,
+`gh.sh`. The runner has no sudo and no apt (visor ignores setuid), so the Linux
+build libraries are `apt-get download`ed as the runner user and unpacked into a
+prefix under the job. `gh` is not on the image; `gh.sh` is curl and jq.
 
-**Apple (macOS signing):** APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY, APPLE_ID, APPLE_PASSWORD, APPLE_TEAM_ID, KEYCHAIN_PASSWORD
+Asset names are what hanzo.ai's `scripts/sync-releases.mjs` resolves:
+`Hanzo_Desktop_<v>_{amd64,arm64}.{AppImage,deb}`, `Hanzo_Desktop-<v>-1.{x86_64,aarch64}.rpm`,
+`Hanzo_Desktop_<v>_x64-setup.exe`, `Hanzo_Desktop_<v>_x64-portable.zip`,
+`Hanzo_Desktop_<v>_universal.{dmg,app.tar.gz}`, each updater bundle with a `.sig`,
+plus `SHA256SUMS` (from the sha256 digest GitHub computes) and `latest.json`. Change a
+name and the download page loses a tile.
 
-**Tauri updates:** TAURI_PRIVATE_KEY, TAURI_KEY_PASSWORD
+### The updater key
 
-**Windows EV (Google Cloud KMS):** EV_CODE_SIGNING_CERTIFICATE
+Updater bundles are signed with a Tauri (minisign) key pair made 2026-11-08; the old
+key (id 189DA78B3D6E3032) was lost, so installs of 1.1.54 and earlier carry a public
+key nothing can sign for and cannot auto-update: they reinstall once. The public key
+is `plugins.updater.pubkey` in `tauri.conf.json` (key id 704F82A3E95CC96F). The
+private key and its password are in Hanzo KMS, org `hanzo`, env `prod`, path
+`/desktop`, names `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+The CI identity reads them through a grant in universe `kms-grants.yaml`. Rotating is
+`tauri signer generate`, `hanzo kms secrets create --as hanzo --env prod --path /desktop
+--name <NAME> --value <value>` for both, and the new pubkey in the config; every
+install then has to be a build carrying it. `scripts/release/verify.py` checks every
+bundle's signature against the config's pubkey before anything uploads.
 
-**Infrastructure:** R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, SLACK_BOT_TOKEN
-
-**App:** VITE_POSTHOG_API_KEY, SECRET_DESKTOP_INSTALLATION_PROOF_KEY
-
-### Build Artifacts
-- Installers: .AppImage (Linux), .dmg (macOS), .exe (Windows)
-- Update bundles: .tar.gz (macOS/Linux), .nsis.zip (Windows)
-- Signature files: .sig for Tauri auto-updater
-- Uploaded to: GitHub Releases + Cloudflare R2 (download.hanzo.ai)
-- Rollout: rename `updates-next.json` to `updates.json`
+`createUpdaterArtifacts` is `true`, not `v1Compatible`: the AppImage and the NSIS
+setup are signed themselves, so there is no second 600 MB `.tar.gz` per platform.
 
 ### Troubleshooting
-- APPLE_CERTIFICATE must be base64 without newlines
-- Use `base64 --decode > file` not `base64 --decode -o file`
-- Ensure package.json version matches git tag
-- Update check failures are handled gracefully (no user-facing errors)
+- A release that stays a draft: a leg failed. Re-run the failed jobs; the release job
+  publishes once Linux and Windows are all in.
+- Windows is cross-built on Linux (cargo-xwin, makensis, clang-cl); it needs no Windows host.
+- `src-tauri/Cargo.toml` names `hanzoai/engine` by optional path; `prepare.sh` writes
+  stub manifests beside the checkout so cargo can resolve. Nothing compiles them.
+- `VITE_POSTHOG_API_KEY` and `SECRET_DESKTOP_INSTALLATION_PROOF_KEY` are optional and
+  unset in release builds; PostHog is off and the proof key is the compiled default.
+- The two archives `pins` warns about ship the wrong CPU's deno and uv; the universal
+  macOS app therefore carries arm64-only tool runtimes.
 
 ## Model Tools (hanzo-ml integration)
 

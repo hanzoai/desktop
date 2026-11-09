@@ -55,7 +55,7 @@ release_delete() { api -X DELETE "$api_base/releases/$1" >/dev/null; }
 # a dropped one leaves a half asset of the same name that blocks the next try.
 asset_put() {
   local rid=$1 file=$2 name=${3:-$(basename "$2")} size aid got try
-  size=$(stat -c %s "$file")
+  size=$(wc -c < "$file" | tr -d ' ')
   for try in 1 2 3 4 5 6; do
     for aid in $(release_assets "$rid" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id'); do
       api -X DELETE "$api_base/releases/assets/$aid" >/dev/null

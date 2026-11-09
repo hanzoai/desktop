@@ -20,6 +20,21 @@ for crate in hanzo hanzo-engine hanzo-server-core; do
   : > "$engine/$crate/src/lib.rs"
 done
 
+# The cluster image carries Node. A bare host, the Mac, does not.
+if ! command -v node >/dev/null; then
+  node=22.23.3
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  case $(uname -m) in x86_64) cpu=x64 ;; *) cpu=arm64 ;; esac
+  tar=node-v$node-$os-$cpu.tar.gz
+  home=${RUNNER_TEMP:-/tmp}/node
+  mkdir -p "$home"
+  curl -fsSL --retry 5 -o "$home/$tar" "https://nodejs.org/dist/v$node/$tar"
+  (cd "$home" && curl -fsSL "https://nodejs.org/dist/v$node/SHASUMS256.txt" | grep " $tar\$" | shasum -a 256 -c -)
+  tar -xzf "$home/$tar" -C "$home" --strip-components=1
+  export PATH=$home/bin:$PATH
+  [ -z "${GITHUB_PATH:-}" ] || echo "$home/bin" >> "$GITHUB_PATH"
+fi
+
 "$here/rust.sh" "$@"
 
 cd "$root"
