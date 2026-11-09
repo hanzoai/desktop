@@ -17,25 +17,34 @@ sysroot=$1; shift
 triplet=$(gcc -dumpmachine)
 work=$(mktemp -d)
 
-merge() { # <system dir>
-  local dir=$1 name real view
+merge() { # <system dir> [<alias>=<name>]...
+  local dir=$1 name real view alias
   name=$(printf %s "$dir" | tr / _)
   real=$work/real$name view=$work/view$name
   mkdir -p "$real" "$view"
   mount --bind "$dir" "$real"
   cp -rs "$real/." "$view/"
   [ ! -d "$sysroot$dir" ] || cp -rs --update=none "$sysroot$dir/." "$view/"
+  shift
+  for alias in "$@"; do
+    if [ -e "$view/${alias#*=}" ] && [ ! -e "$view/${alias%%=*}" ]; then ln -s "${alias#*=}" "$view/${alias%%=*}"; fi
+  done
   mount --bind "$view" "$dir"
 }
 
+# Links a package's install script makes, which no script ran to make:
+#   libgtk-3-0       the GTK plugin looks for gtk-query-immodules-3.0 in libgtk-3-0/;
+#                    Ubuntu 24.04 renamed the package, and the directory, libgtk-3-0t64.
+#   libblas.so.3,    update-alternatives points them into blas/ and lapack/, and
+#   liblapack.so.3   gstreamer1.0-libav needs both.
 merge /usr/bin
-merge "/usr/lib/$triplet"
+merge "/usr/lib/$triplet" libgtk-3-0=libgtk-3-0t64 libblas.so.3=blas/libblas.so.3 liblapack.so.3=lapack/liblapack.so.3
 merge /usr/share
 
 # The prefix's .pc files name the prefix, which is what a build outside the namespace
 # wants. Here the prefix is /usr, and the plugin derives where to copy from by
 # comparing what pkg-config says with where it looks, so it gets the files as shipped.
-export PKG_CONFIG_PATH=$sysroot/.pc/usr/lib/$triplet/pkgconfig:$sysroot/.pc/usr/lib/pkgconfig:$sysroot/.pc/usr/share/pkgconfig
+export PKG_CONFIG_PATH=$sysroot/.pc/usr/lib/$triplet/pkgconfig:$sysroot/.pc/usr/lib/pkgconfig:$sysroot/.pc/usr/share/pkgconfig:${PKG_CONFIG_PATH:-}
 unset LIBRARY_PATH CPATH
 
 # Files the machine's root owns have no owner in this namespace, and `cp -a`, which
