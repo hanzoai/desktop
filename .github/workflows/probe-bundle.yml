@@ -25,7 +25,7 @@ jobs:
           libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
           libasound2-dev libsoup-3.0-dev libxdo-dev xdg-utils patchelf desktop-file-utils
           squashfs-tools file zsync gstreamer1.0-plugins-base gstreamer1.0-plugins-good
-          gstreamer1.0-plugins-bad gstreamer1.0-libav
+          gstreamer1.0-plugins-bad gstreamer1.0-libav libglib2.0-bin libgtk-3-bin libgdk-pixbuf2.0-bin
       - name: Toolchain and workspace
         run: scripts/release/prepare.sh
       - name: Sidecars and model
@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
         working-directory: apps/hanzo-desktop
         run: |
-          unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage > "$RUNNER_TEMP/bundle.log" 2>&1 || true
+          unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage,deb,rpm > "$RUNNER_TEMP/bundle.log" 2>&1 || true
           wc -l "$RUNNER_TEMP/bundle.log"
           grep -v -E '^Setting rpath|^Failed to remove directory|^Copying file|^Deploying|^WARNING: Could not find copyright|^Creating directory|^Calling strip|^Skipping deployment|Debug \[|^warning|^\s+[0-9]+ \||^\s+\||^\s+=' "$RUNNER_TEMP/bundle.log" | tail -70 | cut -c1-400
       - name: Diagnose
