@@ -1,0 +1,109 @@
+name: probe-win2
+on:
+  push:
+    branches: [probe-win2]
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+  KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+jobs:
+  windows:
+    # Cross-built: Tauri's NSIS bundler runs makensis and cargo-xwin compiles for
+    # x86_64-pc-windows-msvc against the Windows SDK it fetches from Microsoft, so no
+    # Windows host is needed. Only amd64 has the toolchain this uses.
+    runs-on: heavy-linux-amd64
+    timeout-minutes: 170
+    env:
+      V: 1.1.54
+      TRIPLE: x86_64-pc-windows-msvc
+      NODE_OPTIONS: --max_old_space_size=8192
+      XWIN_ARCH: x86_64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cross toolchain
+        run: |
+          set -euo pipefail
+          scripts/release/sysroot.sh "$RUNNER_TEMP/sysroot" nsis lld llvm clang
+          llvm=$RUNNER_TEMP/sysroot/usr/lib/llvm-18
+          ln -sf clang "$llvm/bin/clang-cl"
+          echo "$llvm/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$llvm/lib:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/bin"
+          for tool in cargo-xwin xwin; do
+            case $tool in
+              cargo-xwin) v=v0.23.1; url=https://github.com/rust-cross/cargo-xwin/releases/download/$v/cargo-xwin-$v.x86_64-unknown-linux-musl.tar.gz; strip=0 ;;
+              xwin) v=0.10.0; url=https://github.com/Jake-Shadle/xwin/releases/download/$v/xwin-$v-x86_64-unknown-linux-musl.tar.gz; strip=1 ;;
+            esac
+            curl -fsSL --retry 5 -o "$RUNNER_TEMP/$tool.tgz" "$url"
+            echo "$(curl -fsSL "$url.sha256" | cut -d' ' -f1)  $RUNNER_TEMP/$tool.tgz" | sha256sum -c -
+            tar -xzf "$RUNNER_TEMP/$tool.tgz" --strip-components=$strip -C "$RUNNER_TEMP/bin"
+          done
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+          # The Windows SDK and CRT. cargo-xwin can fetch them itself, and on these pods
+          # it did not finish in 30 minutes; the xwin it embeds, run alone, takes about
+          # a minute and a half. So xwin lays the cache out, in the shape cargo-xwin
+          # reads (<cache>/xwin/{crt,sdk} and a DONE file naming the arches), and
+          # cargo-xwin finds nothing left to do.
+          cache=$RUNNER_TEMP/xwin-cache
+          "$RUNNER_TEMP/bin/xwin" --accept-license --cache-dir "$cache/download" --arch x86_64 --variant desktop \
+            splat --output "$cache/xwin"
+          echo x86_64 > "$cache/xwin/DONE"
+          echo "XWIN_CACHE_DIR=$cache" >> "$GITHUB_ENV"
+
+      - name: Toolchain and workspace
+        run: scripts/release/prepare.sh "$TRIPLE"
+
+      - name: Sidecars and model
+        env:
+          TARGET: ${{ env.TRIPLE }}
+        run: apps/hanzo-desktop/src-tauri/download-binaries.sh
+
+      - name: Signing key
+        run: scripts/release/signing.sh dry-run
+
+      - name: Restore target
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/hanzo-desktop/src-tauri/target
+          key: probe-win-${{ hashFiles('apps/hanzo-desktop/src-tauri/Cargo.lock') }}
+      - name: Build
+        id: build
+        continue-on-error: true
+        working-directory: apps/hanzo-desktop
+        run: pnpm exec tauri build --ci --runner cargo-xwin --target "$TRIPLE" --bundles nsis
+      - name: Save target
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/hanzo-desktop/src-tauri/target
+          key: probe-win-${{ hashFiles('apps/hanzo-desktop/src-tauri/Cargo.lock') }}
+      - name: Outcome
+        if: steps.build.outcome == 'failure'
+        run: echo "tauri build failed"; exit 1
+
+      - name: Name the bundles
+        run: |
+          set -euo pipefail
+          t=apps/hanzo-desktop/src-tauri
+          scripts/release/stage.sh "$t/target/$TRIPLE/release/bundle/nsis/*-setup.exe" "dist/Hanzo_Desktop_${V}_x64-setup.exe"
+          test -f "dist/Hanzo_Desktop_${V}_x64-setup.exe.sig"
+
+          # The portable build is the install tree: the app, the three sidecars
+          # beside it under the names Tauri gives them on install, and the model.
+          p="$RUNNER_TEMP/portable/Hanzo Desktop"
+          mkdir -p "$p"
+          cp "$t/target/$TRIPLE/release/hanzo-desktop.exe" "$p/Hanzo Desktop.exe"
+          n=$t/external-binaries/hanzo-node
+          cp "$n/hanzo-node-$TRIPLE.exe" "$p/hanzo-node.exe"
+          cp "$n/hanzo-tools-runner-resources/deno-$TRIPLE.exe" "$p/deno.exe"
+          cp "$n/hanzo-tools-runner-resources/uv-$TRIPLE.exe" "$p/uv.exe"
+          cp -r "$t/llm-models" "$p/llm-models"
+          (cd "$RUNNER_TEMP/portable" && zip -qr -X -1 "$OLDPWD/dist/Hanzo_Desktop_${V}_x64-portable.zip" "Hanzo Desktop")
+          ls -l dist
+
+      - name: Signatures verify against the key the app ships with
+        run: python3 -I scripts/release/verify.py "$UPDATER_CONF" "dist/Hanzo_Desktop_${V}_x64-setup.exe"
+
