@@ -142,7 +142,7 @@ jobs:
       V: ${{ needs.meta.outputs.version }}
       TRIPLE: x86_64-pc-windows-msvc
       NODE_OPTIONS: --max_old_space_size=8192
-      XWIN_ACCEPT_LICENSE: '1'
+      XWIN_ARCH: x86_64
     steps:
       - uses: actions/checkout@v4
 
@@ -154,13 +154,28 @@ jobs:
           ln -sf clang "$llvm/bin/clang-cl"
           echo "$llvm/bin" >> "$GITHUB_PATH"
           echo "LD_LIBRARY_PATH=$llvm/lib:${LD_LIBRARY_PATH:-}" >> "$GITHUB_ENV"
-          xwin=v0.23.1
-          url=https://github.com/rust-cross/cargo-xwin/releases/download/$xwin/cargo-xwin-$xwin.x86_64-unknown-linux-musl.tar.gz
           mkdir -p "$RUNNER_TEMP/bin"
-          curl -fsSL --retry 5 -o "$RUNNER_TEMP/xwin.tgz" "$url"
-          echo "$(curl -fsSL "$url.sha256" | cut -d' ' -f1)  $RUNNER_TEMP/xwin.tgz" | sha256sum -c -
-          tar -xzf "$RUNNER_TEMP/xwin.tgz" -C "$RUNNER_TEMP/bin"
+          for tool in cargo-xwin xwin; do
+            case $tool in
+              cargo-xwin) v=v0.23.1; url=https://github.com/rust-cross/cargo-xwin/releases/download/$v/cargo-xwin-$v.x86_64-unknown-linux-musl.tar.gz; strip=0 ;;
+              xwin) v=0.10.0; url=https://github.com/Jake-Shadle/xwin/releases/download/$v/xwin-$v-x86_64-unknown-linux-musl.tar.gz; strip=1 ;;
+            esac
+            curl -fsSL --retry 5 -o "$RUNNER_TEMP/$tool.tgz" "$url"
+            echo "$(curl -fsSL "$url.sha256" | cut -d' ' -f1)  $RUNNER_TEMP/$tool.tgz" | sha256sum -c -
+            tar -xzf "$RUNNER_TEMP/$tool.tgz" --strip-components=$strip -C "$RUNNER_TEMP/bin"
+          done
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+          # The Windows SDK and CRT. cargo-xwin can fetch them itself, and on these pods
+          # it did not finish in 30 minutes; the xwin it embeds, run alone, takes about
+          # a minute and a half. So xwin lays the cache out, in the shape cargo-xwin
+          # reads (<cache>/xwin/{crt,sdk} and a DONE file naming the arches), and
+          # cargo-xwin finds nothing left to do.
+          cache=$RUNNER_TEMP/xwin-cache
+          "$RUNNER_TEMP/bin/xwin" --accept-license --cache-dir "$cache/download" --arch x86_64 --variant desktop \
+            splat --output "$cache/xwin"
+          echo x86_64 > "$cache/xwin/DONE"
+          echo "XWIN_CACHE_DIR=$cache" >> "$GITHUB_ENV"
 
       - name: Toolchain and workspace
         run: scripts/release/prepare.sh "$TRIPLE"

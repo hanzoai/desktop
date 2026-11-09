@@ -443,9 +443,14 @@ rest:
 `scripts/release/` is the lane's whole logic, and each script says what it does at
 its head: `meta.sh` (which release, creates the draft), `sysroot.sh`, `rust.sh`,
 `prepare.sh`, `kms.sh`, `signing.sh`, `stage.sh`, `verify.py`, `manifest.sh`,
-`gh.sh`. The runner has no sudo and no apt (visor ignores setuid), so the Linux
-build libraries are `apt-get download`ed as the runner user and unpacked into a
-prefix under the job. `gh` is not on the image; `gh.sh` is curl and jq.
+`gh.sh`, `overlay.sh`. The runner has no sudo and no apt (visor ignores setuid), so
+the Linux build libraries are `apt-get download`ed as the runner user and unpacked
+into a prefix under the job. Tauri's AppImage bundler reads `xdg-mime`, `xdg-open`
+and WebKit's helper processes from fixed `/usr` paths, so that one step
+(`tauri bundle`) runs under `unshare -Urm overlay.sh`, which mounts the prefix's
+missing entries into `/usr/bin` and `/usr/lib/<triplet>` for the length of the
+command. The build is `tauri build --no-bundle` and the bundle is `tauri bundle`,
+so that namespace never sees a compile. `gh` is not on the image; `gh.sh` is curl and jq.
 
 Asset names are what hanzo.ai's `scripts/sync-releases.mjs` resolves:
 `Hanzo_Desktop_<v>_{amd64,arm64}.{AppImage,deb}`, `Hanzo_Desktop-<v>-1.{x86_64,aarch64}.rpm`,
