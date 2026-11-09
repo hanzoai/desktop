@@ -50,7 +50,10 @@ jobs:
       - name: Bundle (verbose)
         continue-on-error: true
         working-directory: apps/hanzo-desktop
-        run: unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage 2>&1 | tail -150
+        run: |
+          unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage > "$RUNNER_TEMP/bundle.log" 2>&1 || true
+          wc -l "$RUNNER_TEMP/bundle.log"
+          grep -v -E '^Setting rpath|^Failed to remove directory|^warning|^\s+[0-9]+ \||^\s+\||^\s+=' "$RUNNER_TEMP/bundle.log" | grep -n -i -E 'error|fail|cannot|not found|no such|denied|plugin|strip|gtk|gstreamer|appimage|Exit|exit' | grep -v 'Compiling\|dead code\|unused' | head -80 | cut -c1-300
       - name: Diagnose
         if: always()
         run: |
