@@ -69,11 +69,11 @@ fi
 
 # pkg-config answers with paths under /usr; make them paths under the prefix. The files
 # as shipped are kept in .pc/, for the one consumer that wants /usr (overlay.sh).
-find "$prefix/usr" -name '*.pc' | while read -r pc; do
+find "$prefix/usr" -type f -name '*.pc' | while read -r pc; do
   mkdir -p "$prefix/.pc/$(dirname "${pc#"$prefix"/}")"
   cp "$pc" "$prefix/.pc/${pc#"$prefix"/}"
 done
-find "$prefix" -name '*.pc' -exec sed -i \
+find "$prefix/usr" -type f -name '*.pc' -exec sed -i \
   -e "s|=/usr|=$prefix/usr|g" -e "s|-I/usr|-I$prefix/usr|g" -e "s|-L/usr|-L$prefix/usr|g" {} +
 
 # A link from a package the prefix holds to a file of one the machine already had
