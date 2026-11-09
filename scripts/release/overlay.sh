@@ -32,12 +32,13 @@ merge() { # <system dir> [<alias>=<name>]...
   mount --bind "$view" "$dir"
 }
 
-# The GTK plugin looks for gtk-query-immodules-3.0 in libgtk-3-0/. Ubuntu 24.04 renamed
-# the package libgtk-3-0t64 and the directory with it, so the plugin finds nothing and
-# its next line fails on the cache that was never written. The usual fix is a link from
-# the old name to the new, which is a file under /usr that this namespace can hold.
+# Links a package's install script makes, which no script ran to make:
+#   libgtk-3-0       the GTK plugin looks for gtk-query-immodules-3.0 in libgtk-3-0/;
+#                    Ubuntu 24.04 renamed the package, and the directory, libgtk-3-0t64.
+#   libblas.so.3,    update-alternatives points them into blas/ and lapack/, and
+#   liblapack.so.3   gstreamer1.0-libav needs both.
 merge /usr/bin
-merge "/usr/lib/$triplet" libgtk-3-0=libgtk-3-0t64
+merge "/usr/lib/$triplet" libgtk-3-0=libgtk-3-0t64 libblas.so.3=blas/libblas.so.3 liblapack.so.3=lapack/liblapack.so.3
 merge /usr/share
 
 # The prefix's .pc files name the prefix, which is what a build outside the namespace
