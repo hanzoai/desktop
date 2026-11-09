@@ -35,4 +35,12 @@ merge() { # <system dir>
 
 merge /usr/bin
 merge "/usr/lib/$triplet"
+
+# Files the machine's root owns have no owner in this namespace, and `cp -a`, which
+# the GTK plugin uses to gather typelibs and schemas, cannot give one to a copy:
+# chown answers EINVAL. A copy owned by whoever makes it is what anyone wants here.
+mkdir -p "$work/shim"
+printf '#!/bin/sh\nexec /usr/bin/cp "$@" --no-preserve=ownership\n' > "$work/shim/cp"
+chmod +x "$work/shim/cp"
+export PATH=$work/shim:$PATH
 exec "$@"
