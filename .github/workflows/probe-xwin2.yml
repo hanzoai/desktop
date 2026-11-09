@@ -16,7 +16,7 @@ jobs:
           curl -sL "$man" -o "$RUNNER_TEMP/vs.man" -w 'vs.man %{size_download} bytes %{time_total}s %{speed_download} B/s\n'
           url=$(jq -r '[.packages[]|select(.id|test("^Microsoft.VC.*Tools.HostX64.TargetX64.base$"))|.payloads[]|select(.size>50000000)][0].url' "$RUNNER_TEMP/vs.man" 2>/dev/null || true)
           echo "payload url: $url"
-          [ -z "$url" ] || timeout 120 curl -sL "$url" -o /dev/null -w 'payload %{size_download} bytes %{time_total}s %{speed_download} B/s\n'
+          true
       - name: xwin standalone
         run: |
           set -x
