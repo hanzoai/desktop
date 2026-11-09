@@ -11,18 +11,26 @@ jobs:
     runs-on: linux-${{ matrix.arch }}
     timeout-minutes: 20
     steps:
-      - name: namespaces
+      - uses: actions/checkout@v4
+      - name: sysroot
+        run: >-
+          scripts/release/sysroot.sh -b "$RUNNER_TEMP/sysroot"
+          libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+          libasound2-dev libsoup-3.0-dev libxdo-dev xdg-utils patchelf desktop-file-utils
+          squashfs-tools file zsync
+      - name: overlay
         run: |
           set -x
-          unshare -Urm true; echo "unshare rc=$?"
-          unshare -Urm sh -c 'id; mkdir -p /tmp/ov/u /tmp/ov/w; mount -t overlay overlay -o lowerdir=/usr/bin,upperdir=/tmp/ov/u,workdir=/tmp/ov/w /usr/bin && ls /usr/bin | head -2'; echo "overlay rc=$?"
-          which bwrap proot fakechroot fakeroot || true
-      - name: proot
-        run: |
-          set -x
-          case "$(uname -m)" in x86_64) a=x86_64 ;; aarch64) a=aarch64 ;; esac
-          curl -fsSL -o /tmp/proot "https://github.com/proot-me/proot/releases/download/v5.3.0/proot-v5.3.0-$a-static" || curl -fsSL -o /tmp/proot "https://proot.gitlab.io/proot/bin/proot"
-          chmod +x /tmp/proot; /tmp/proot --version | head -2
-          printf '#!/bin/sh\necho hello-from-bind\n' > /tmp/fake-xdg; chmod +x /tmp/fake-xdg
-          /tmp/proot -b /tmp/fake-xdg:/usr/bin/xdg-mime /usr/bin/xdg-mime; echo "proot run rc=$?"
-          /tmp/proot -b /tmp/fake-xdg:/usr/bin/xdg-mime sh -c 'ls -l /usr/bin/xdg-mime; test -e /usr/bin/xdg-mime && echo exists; cp /usr/bin/xdg-mime /tmp/copied && echo copied'; echo "proot sh rc=$?"
+          t=$(gcc -dumpmachine)
+          ls -l "$RUNNER_TEMP/sysroot/usr/bin/xdg-mime" "$RUNNER_TEMP/sysroot/usr/bin/xdg-open" || true
+          ls "$RUNNER_TEMP/sysroot/usr/lib/$t/webkit2gtk-4.1/" || true
+          test ! -e /usr/bin/xdg-mime && echo "xdg-mime absent outside"
+          unshare -Urm scripts/release/overlay.sh "$RUNNER_TEMP/sysroot" bash -c '
+            id
+            ls -l /usr/bin/xdg-mime /usr/bin/xdg-open
+            ls /usr/lib/'"$t"'/webkit2gtk-4.1/
+            ls /usr/bin | wc -l; ls /usr/lib/'"$t"' | wc -l
+            gcc --version | head -1; ldd /usr/bin/ls | head -2; node -v; cp /usr/bin/xdg-mime /tmp/copied-xdg-mime && echo copy-ok
+            ls /usr/lib/'"$t"'/libc.so.6 /usr/lib/'"$t"'/libgtk-3.so'
+          echo "overlay rc=$?"
+          test ! -e /usr/bin/xdg-mime && echo "xdg-mime still absent outside"
