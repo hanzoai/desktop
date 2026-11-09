@@ -1,0 +1,28 @@
+name: probe-proot
+on:
+  push:
+    branches: [probe-proot]
+jobs:
+  p:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    runs-on: linux-${{ matrix.arch }}
+    timeout-minutes: 20
+    steps:
+      - name: namespaces
+        run: |
+          set -x
+          unshare -Urm true; echo "unshare rc=$?"
+          unshare -Urm sh -c 'id; mkdir -p /tmp/ov/u /tmp/ov/w; mount -t overlay overlay -o lowerdir=/usr/bin,upperdir=/tmp/ov/u,workdir=/tmp/ov/w /usr/bin && ls /usr/bin | head -2'; echo "overlay rc=$?"
+          which bwrap proot fakechroot fakeroot || true
+      - name: proot
+        run: |
+          set -x
+          case "$(uname -m)" in x86_64) a=x86_64 ;; aarch64) a=aarch64 ;; esac
+          curl -fsSL -o /tmp/proot "https://github.com/proot-me/proot/releases/download/v5.3.0/proot-v5.3.0-$a-static" || curl -fsSL -o /tmp/proot "https://proot.gitlab.io/proot/bin/proot"
+          chmod +x /tmp/proot; /tmp/proot --version | head -2
+          printf '#!/bin/sh\necho hello-from-bind\n' > /tmp/fake-xdg; chmod +x /tmp/fake-xdg
+          /tmp/proot -b /tmp/fake-xdg:/usr/bin/xdg-mime /usr/bin/xdg-mime; echo "proot run rc=$?"
+          /tmp/proot -b /tmp/fake-xdg:/usr/bin/xdg-mime sh -c 'ls -l /usr/bin/xdg-mime; test -e /usr/bin/xdg-mime && echo exists; cp /usr/bin/xdg-mime /tmp/copied && echo copied'; echo "proot sh rc=$?"
