@@ -16,4 +16,4 @@ files=($1)
 mkdir -p "$(dirname "$2")"
 cp "${files[0]}" "$2"
 [ ! -f "${files[0]}.sig" ] || cp "${files[0]}.sig" "$2.sig"
-echo "staged $(basename "$2") ($(stat -c %s "$2") bytes)"
+echo "staged $(basename "$2") ($(wc -c < "$2" | tr -d ' ') bytes)"

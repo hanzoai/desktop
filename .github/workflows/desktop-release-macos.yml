@@ -1,0 +1,121 @@
+# The macOS half of the desktop release lane, kept apart from desktop-release.yml so
+# that a missing Mac never holds back Linux and Windows. It builds the universal
+# .dmg and .app.tar.gz on a host labelled macos-arm64, attaches them to the same
+# release, and recomputes SHA256SUMS and latest.json so the updater gains the darwin
+# platforms.
+#
+# No such host exists yet. GitHub queues a job for a label nothing serves and drops
+# it after 24 hours, so when this run expires unserved, Run workflow on the tag
+# once the host is up: it builds that tag's macOS bundles and adds them to the
+# release, published or not.
+#
+# The host provides Xcode's command line tools; everything else this fetches. The
+# app is ad-hoc signed and not notarized, so Gatekeeper asks the first time.
+name: desktop-release-macos
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desktop-release-macos-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+  KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+
+jobs:
+  meta:
+    runs-on: linux-amd64
+    concurrency:
+      group: desktop-release-draft-${{ github.ref_name }}
+      cancel-in-progress: false
+    outputs:
+      mode: ${{ steps.meta.outputs.mode }}
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      release: ${{ steps.meta.outputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: meta
+        run: scripts/release/meta.sh
+
+  macos:
+    needs: meta
+    runs-on: macos-arm64
+    timeout-minutes: 170
+    env:
+      V: ${{ needs.meta.outputs.version }}
+      NODE_OPTIONS: --max_old_space_size=8192
+      # '-' is the ad-hoc identity: Apple Silicon will not run an unsigned binary.
+      APPLE_SIGNING_IDENTITY: '-'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain and workspace
+        run: scripts/release/prepare.sh aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Sidecars and model, one slice each
+        working-directory: apps/hanzo-desktop/src-tauri
+        run: |
+          set -euo pipefail
+          for t in aarch64-apple-darwin x86_64-apple-darwin; do TARGET=$t ./download-binaries.sh; done
+
+          # Tauri wants one fat binary per sidecar, named -universal-apple-darwin; it
+          # does not join the slices itself. pins records that the x86_64 archive
+          # carries arm64 deno and uv: lipo refuses two slices of one architecture,
+          # and the arm64 binary stands alone, as it does in the archive.
+          for s in hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv; do
+            b=external-binaries/hanzo-node/$s
+            lipo -create "$b-aarch64-apple-darwin" "$b-x86_64-apple-darwin" -output "$b-universal-apple-darwin" 2>/dev/null \
+              || cp "$b-aarch64-apple-darwin" "$b-universal-apple-darwin"
+            chmod +x "$b-universal-apple-darwin"
+            lipo -info "$b-universal-apple-darwin"
+          done
+
+      - name: Signing key
+        run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
+
+      - name: Build
+        working-directory: apps/hanzo-desktop
+        run: pnpm exec tauri build --ci --target universal-apple-darwin --bundles app,dmg
+
+      - name: Name the bundles
+        run: |
+          set -euo pipefail
+          b=apps/hanzo-desktop/src-tauri/target/universal-apple-darwin/release/bundle
+          scripts/release/stage.sh "$b/dmg/*.dmg" "dist/Hanzo_Desktop_${V}_universal.dmg"
+          scripts/release/stage.sh "$b/macos/*.app.tar.gz" "dist/Hanzo_Desktop_${V}_universal.app.tar.gz"
+          test -f "dist/Hanzo_Desktop_${V}_universal.app.tar.gz.sig"
+          ls -l dist
+
+      - name: Signatures verify against the key the app ships with
+        run: python3 -I scripts/release/verify.py "$UPDATER_CONF" "dist/Hanzo_Desktop_${V}_universal.app.tar.gz"
+
+      - name: Upload
+        run: |
+          set -euo pipefail
+          . scripts/release/gh.sh
+          for f in dist/*; do asset_put "${{ needs.meta.outputs.release }}" "$f"; done
+
+  manifest:
+    needs: [meta, macos]
+    runs-on: linux-amd64
+    concurrency:
+      group: desktop-release-manifest-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: SHA256SUMS and latest.json
+        run: scripts/release/manifest.sh "${{ needs.meta.outputs.release }}" "${{ needs.meta.outputs.tag }}" "${{ needs.meta.outputs.version }}"
+      - name: Delete a dry run's draft release
+        if: needs.meta.outputs.mode == 'dry-run'
+        run: |
+          . scripts/release/gh.sh
+          release_delete "${{ needs.meta.outputs.release }}"
