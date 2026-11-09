@@ -53,8 +53,7 @@ jobs:
         run: |
           unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage > "$RUNNER_TEMP/bundle.log" 2>&1 || true
           wc -l "$RUNNER_TEMP/bundle.log"
-          grep -n 'Running \[' "$RUNNER_TEMP/bundle.log" | cut -c1-900
-          grep -v -E '^Setting rpath|^Failed to remove directory|^Copying file|^Deploying|^WARNING: Could not find copyright|^Creating directory' "$RUNNER_TEMP/bundle.log" | sed -n '100,$p' | cut -c1-300 | head -120
+          grep -v -E '^Setting rpath|^Failed to remove directory|^Copying file|^Deploying|^WARNING: Could not find copyright|^Creating directory|^Calling strip|^Skipping deployment|Debug \[|^warning|^\s+[0-9]+ \||^\s+\||^\s+=' "$RUNNER_TEMP/bundle.log" | tail -70 | cut -c1-400
       - name: Diagnose
         if: always()
         run: |
