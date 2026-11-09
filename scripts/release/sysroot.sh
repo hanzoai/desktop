@@ -23,16 +23,31 @@ triplet=$(gcc -dumpmachine)
 state=$prefix/.apt
 mkdir -p "$state/lists/partial" "$state/archives/partial"
 
+codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+arch=$(dpkg --print-architecture)
+sources=$state/sources.list
 apt=(apt-get -q -o Dir::State="$state" -o Dir::State::lists="$state/lists"
      -o Dir::Cache="$state" -o Dir::Cache::archives="$state/archives"
      -o Dir::State::status=/var/lib/dpkg/status -o Debug::NoLocking=1 -o APT::Sandbox::User=
-     -o Acquire::Retries=5 -o Acquire::ForceIPv4=true)
-# A mirror that cannot be reached is a warning to apt and an empty index to the next
-# command; Error-Mode=any makes it an error, and a second try is usually enough.
+     -o Dir::Etc::sourcelist="$sources" -o Dir::Etc::sourceparts=/dev/null
+     -o Acquire::Retries=5 -o Acquire::ForceIPv4=true -o Acquire::http::Timeout=20)
+
+# The archive's own host first, then kernel.org's mirror of it. From a cluster's
+# shared egress address either has been seen to time out for minutes, and apt takes
+# an unreachable mirror for a warning and an empty index.
 for try in 1 2 3; do
+  case $arch:$try in
+    amd64:1) base=http://archive.ubuntu.com/ubuntu ;;
+    amd64:*) base=https://mirrors.edge.kernel.org/ubuntu ;;
+    *:1) base=http://ports.ubuntu.com/ubuntu-ports ;;
+    *) base=https://mirrors.edge.kernel.org/ubuntu-ports ;;
+  esac
+  for pocket in "" -updates -security; do
+    echo "deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] $base $codename$pocket main universe"
+  done > "$sources"
   "${apt[@]}" update -o APT::Update::Error-Mode=any >/dev/null && break
   [ "$try" -lt 3 ] || { echo "sysroot: apt update failed three times" >&2; exit 1; }
-  sleep 10
+  sleep 5
 done
 "${apt[@]}" install --download-only -y --no-install-recommends "$@" >/dev/null
 
@@ -52,7 +67,12 @@ if [ -d "$prefix/lib" ] && [ ! -L "$prefix/lib" ]; then
   mkdir -p "$prefix/usr/lib"; cp -a "$prefix/lib/." "$prefix/usr/lib/"; rm -rf "$prefix/lib"
 fi
 
-# pkg-config answers with paths under /usr; make them paths under the prefix.
+# pkg-config answers with paths under /usr; make them paths under the prefix. The files
+# as shipped are kept in .pc/, for the one consumer that wants /usr (overlay.sh).
+find "$prefix/usr" -name '*.pc' | while read -r pc; do
+  mkdir -p "$prefix/.pc/$(dirname "${pc#"$prefix"/}")"
+  cp "$pc" "$prefix/.pc/${pc#"$prefix"/}"
+done
 find "$prefix" -name '*.pc' -exec sed -i \
   -e "s|=/usr|=$prefix/usr|g" -e "s|-I/usr|-I$prefix/usr|g" -e "s|-L/usr|-L$prefix/usr|g" {} +
 
@@ -65,8 +85,9 @@ find "$prefix/usr" -xtype l | while read -r link; do
   case $target in /*) installed=$target ;; *) installed=$(realpath -m "$(dirname "${link#"$prefix"}")/$target") ;; esac
   if [ -e "$installed" ]; then ln -sfn "$installed" "$link"; fi
 done
-dangling=$(find "$prefix/usr/bin" "$prefix/usr/lib" -xtype l | wc -l)
-[ "$dangling" -eq 0 ] || { find "$prefix/usr/bin" "$prefix/usr/lib" -xtype l | head; echo "sysroot: $dangling links point nowhere" >&2; exit 1; }
+broken() { find "$prefix/usr/bin" "$prefix/usr/lib" -xtype l 2>/dev/null || true; }
+dangling=$(broken | wc -l)
+[ "$dangling" -eq 0 ] || { broken | head; echo "sysroot: $dangling links point nowhere" >&2; exit 1; }
 
 lib=$prefix/usr/lib/$triplet
 add() { [ -z "${GITHUB_ENV:-}" ] || echo "$1=$2" >> "$GITHUB_ENV"; }

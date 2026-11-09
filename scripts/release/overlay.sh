@@ -3,13 +3,14 @@
 #
 #   unshare -Urm overlay.sh <sysroot> <command>...
 #
-# Tauri's AppImage bundler reads xdg-mime, xdg-open and WebKit's helper processes
-# from fixed system paths (/usr/bin, /usr/lib/<triplet>), and a runner without sudo
-# cannot put them there. In a user and mount namespace the caller is root of its own
-# view of the filesystem, which is enough to mount: /usr/bin and /usr/lib/<triplet>
-# are each replaced by a directory of links to the real entries plus whatever the
-# sysroot has that the system does not. Nothing outside the namespace changes, and it
-# ends with the command.
+# Tauri's AppImage bundler reads xdg-mime, xdg-open and WebKit's helper processes from
+# fixed system paths, and the GTK plugin it drives copies GTK's modules, schemas and
+# typelibs from wherever pkg-config says /usr is. A runner without sudo cannot put
+# anything there. In a user and mount namespace the caller is root of its own view of
+# the filesystem, which is enough to mount: /usr/bin, /usr/lib/<triplet> and /usr/share
+# are each replaced by a tree of links to the machine's files plus whatever the sysroot
+# has that the machine does not. Nothing outside the namespace changes, and it ends
+# with the command.
 set -euo pipefail
 
 sysroot=$1; shift
@@ -17,24 +18,25 @@ triplet=$(gcc -dumpmachine)
 work=$(mktemp -d)
 
 merge() { # <system dir>
-  local dir=$1 name real view e
+  local dir=$1 name real view
   name=$(printf %s "$dir" | tr / _)
   real=$work/real$name view=$work/view$name
   mkdir -p "$real" "$view"
   mount --bind "$dir" "$real"
-  for e in "$real"/* "$real"/.[!.]*; do
-    [ -e "$e" ] || [ -L "$e" ] || continue
-    ln -s "$e" "$view/${e##*/}"
-  done
-  for e in "$sysroot$dir"/*; do
-    [ -e "$e" ] || [ -L "$e" ] || continue
-    [ -e "$view/${e##*/}" ] || [ -L "$view/${e##*/}" ] || ln -s "$e" "$view/${e##*/}"
-  done
+  cp -rs "$real/." "$view/"
+  [ ! -d "$sysroot$dir" ] || cp -rs --update=none "$sysroot$dir/." "$view/"
   mount --bind "$view" "$dir"
 }
 
 merge /usr/bin
 merge "/usr/lib/$triplet"
+merge /usr/share
+
+# The prefix's .pc files name the prefix, which is what a build outside the namespace
+# wants. Here the prefix is /usr, and the plugin derives where to copy from by
+# comparing what pkg-config says with where it looks, so it gets the files as shipped.
+export PKG_CONFIG_PATH=$sysroot/.pc/usr/lib/$triplet/pkgconfig:$sysroot/.pc/usr/lib/pkgconfig:$sysroot/.pc/usr/share/pkgconfig
+unset LIBRARY_PATH CPATH
 
 # Files the machine's root owns have no owner in this namespace, and `cp -a`, which
 # the GTK plugin uses to gather typelibs and schemas, cannot give one to a copy:
