@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run a command where the sysroot looks installed.
 #
-#   unshare -Urm overlay.sh <sysroot> <command>...
+#   unshare -Urm overlay.sh [-s] <sysroot> <command>...
 #
 # Tauri's AppImage bundler reads xdg-mime, xdg-open and WebKit's helper processes from
 # fixed system paths, and the GTK plugin it drives copies GTK's modules, schemas and
@@ -11,8 +11,14 @@
 # are each replaced by a tree of links to the machine's files plus whatever the sysroot
 # has that the machine does not. Nothing outside the namespace changes, and it ends
 # with the command.
+#
+# -s merges /usr/share alone. A compiler finds its own parts relative to where its
+# executable really is, which a tree of links is not, so a build that compiles keeps
+# /usr/bin and /usr/lib out of this and takes only the data it needs (NSIS's stubs).
 set -euo pipefail
 
+share=0
+[ "${1:-}" != -s ] || { share=1; shift; }
 sysroot=$1; shift
 triplet=$(gcc -dumpmachine)
 work=$(mktemp -d)
@@ -37,8 +43,10 @@ merge() { # <system dir> [<alias>=<name>]...
 #                    Ubuntu 24.04 renamed the package, and the directory, libgtk-3-0t64.
 #   libblas.so.3,    update-alternatives points them into blas/ and lapack/, and
 #   liblapack.so.3   gstreamer1.0-libav needs both.
-merge /usr/bin
-merge "/usr/lib/$triplet" libgtk-3-0=libgtk-3-0t64 libblas.so.3=blas/libblas.so.3 liblapack.so.3=lapack/liblapack.so.3
+if [ "$share" -eq 0 ]; then
+  merge /usr/bin
+  merge "/usr/lib/$triplet" libgtk-3-0=libgtk-3-0t64 libblas.so.3=blas/libblas.so.3 liblapack.so.3=lapack/liblapack.so.3
+fi
 merge /usr/share
 
 # The prefix's .pc files name the prefix, which is what a build outside the namespace

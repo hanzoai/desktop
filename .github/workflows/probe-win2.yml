@@ -78,7 +78,7 @@ jobs:
         id: build
         continue-on-error: true
         working-directory: apps/hanzo-desktop
-        run: unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri build --ci --runner cargo-xwin --target "$TRIPLE" --bundles nsis
+        run: unshare -Urm ../../scripts/release/overlay.sh -s "$SYSROOT" pnpm exec tauri build --ci --runner cargo-xwin --target "$TRIPLE" --bundles nsis
       - name: Save target
         if: always() && steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
