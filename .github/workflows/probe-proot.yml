@@ -4,8 +4,8 @@ on:
     branches: [probe-proot]
 jobs:
   x:
-    runs-on: linux-amd64
-    timeout-minutes: 25
+    runs-on: heavy-linux-amd64
+    timeout-minutes: 40
     steps:
       - name: xwin cache
         run: |
@@ -13,11 +13,11 @@ jobs:
           xwin=v0.23.1
           url=https://github.com/rust-cross/cargo-xwin/releases/download/$xwin/cargo-xwin-$xwin.x86_64-unknown-linux-musl.tar.gz
           mkdir -p "$RUNNER_TEMP/bin"; curl -fsSL --retry 5 "$url" | tar -xz -C "$RUNNER_TEMP/bin"
-          export PATH=$RUNNER_TEMP/bin:$PATH XWIN_CACHE_DIR=$RUNNER_TEMP/xwin-cache
+          export PATH=$RUNNER_TEMP/bin:$PATH XWIN_CACHE_DIR=$RUNNER_TEMP/xwin-cache XWIN_ARCH=x86_64
           mkdir -p "$XWIN_CACHE_DIR"
           ( while true; do sleep 20; echo "cache: $(du -sm "$XWIN_CACHE_DIR" 2>/dev/null | cut -f1) MB at $(date -u +%T)"; done ) &
           curl -s -o /dev/null -w 'manifest-channel %{http_code} %{time_total}s\n' -L https://aka.ms/vs/17/release/channel
           curl -s -L https://aka.ms/vs/17/release/channel -o "$RUNNER_TEMP/channel.json"; jq -r '.channelItems|length' "$RUNNER_TEMP/channel.json"
           time timeout 900 cargo-xwin cache xwin --help || true
-          time timeout 900 cargo-xwin cache xwin 2>&1 | tail -30 || true
+          time timeout 1800 cargo-xwin cache xwin 2>&1 | tail -30 || true
           du -sh "$XWIN_CACHE_DIR"; ls "$XWIN_CACHE_DIR"
