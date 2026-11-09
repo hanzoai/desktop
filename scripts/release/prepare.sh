@@ -35,25 +35,20 @@ if ! command -v node >/dev/null; then
   [ -z "${GITHUB_PATH:-}" ] || echo "$home/bin" >> "$GITHUB_PATH"
 fi
 
-# Cargo fetches the git dependencies (zapd, fix-path-env) anonymously through
-# libgit2, and every runner shares a handful of egress addresses: GitHub answers an
-# anonymous clone from them with a refusal libgit2 reports as "failed to
-# authenticate". The git CLI with the job's own token is neither refused nor
-# able to leave the token behind: git reads it from the environment, which ends
-# with the job, and not from a gitconfig on a host that outlives it.
-if [ -n "${GITHUB_ENV:-}" ] && [ -n "${GITHUB_TOKEN:-}" ]; then
-  {
-    echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
-    echo "GIT_CONFIG_COUNT=1"
-    echo "GIT_CONFIG_KEY_0=url.https://x-access-token:$GITHUB_TOKEN@github.com/.insteadOf"
-    echo "GIT_CONFIG_VALUE_0=https://github.com/"
-  } >> "$GITHUB_ENV"
-  export CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 \
-    GIT_CONFIG_KEY_0="url.https://x-access-token:$GITHUB_TOKEN@github.com/.insteadOf" \
-    GIT_CONFIG_VALUE_0=https://github.com/
-fi
-
 "$here/rust.sh" "$@"
+
+# src-tauri depends on a git repository GitHub serves only to an account that can see
+# it (zap-proto/zapd), and the job's own token cannot. The deploy token in KMS can.
+# It goes to the one command that needs it, through git's environment, so the
+# build scripts and install scripts that run after it never hold it. Cargo then
+# finds the locked revisions already fetched.
+. "$here/kms.sh"
+token=$(kms_read deploy GITHUB_TOKEN)
+echo "::add-mask::$token"
+(cd "$root/apps/hanzo-desktop/src-tauri" \
+  && CARGO_NET_GIT_FETCH_WITH_CLI=true GIT_CONFIG_COUNT=1 GIT_CONFIG_VALUE_0=https://github.com/ \
+     GIT_CONFIG_KEY_0="url.https://x-access-token:$token@github.com/.insteadOf" \
+     "${CARGO_HOME:-$HOME/.cargo}/bin/cargo" fetch)
 
 cd "$root"
 corepack enable
