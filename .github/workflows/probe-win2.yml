@@ -52,6 +52,10 @@ jobs:
             splat --output "$cache/xwin"
           echo x86_64 > "$cache/xwin/DONE"
           echo "XWIN_CACHE_DIR=$cache" >> "$GITHUB_ENV"
+          mkdir -p "$RUNNER_TEMP/pc"
+          printf 'Name: ayatana-appindicator3-0.1\nDescription: asked for by tauri-cli on a Linux host, unused by a Windows target\nVersion: 0.5.0\nLibs: -L/usr/lib -layatana-appindicator3\n' \
+            > "$RUNNER_TEMP/pc/ayatana-appindicator3-0.1.pc"
+          echo "PKG_CONFIG_PATH=$RUNNER_TEMP/pc:${PKG_CONFIG_PATH:-}" >> "$GITHUB_ENV"
 
       - name: Toolchain and workspace
         run: scripts/release/prepare.sh "$TRIPLE"
