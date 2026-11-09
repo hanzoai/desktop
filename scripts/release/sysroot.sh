@@ -49,15 +49,17 @@ fi
 find "$prefix" -name '*.pc' -exec sed -i \
   -e "s|=/usr|=$prefix/usr|g" -e "s|-I/usr|-I$prefix/usr|g" -e "s|-L/usr|-L$prefix/usr|g" {} +
 
-# libfoo.so -> libfoo.so.0.N where the runtime half is already installed system-wide.
-find "$prefix/usr/lib" -xtype l | while read -r link; do
-  want=$(basename "$(readlink "$link")")
-  for dir in "/usr/lib/$triplet" "/lib/$triplet" /usr/lib; do
-    if [ -e "$dir/$want" ]; then ln -sfn "$dir/$want" "$link"; break; fi
-  done
+# A link from a package the prefix holds to a file of one the machine already had
+# (libfoo.so -> libfoo.so.0.N, or /usr/bin/glib-compile-schemas -> ../lib/.../glib-2.0/
+# glib-compile-schemas) points at nothing in the prefix. Resolved the way it would be
+# once installed, it is a file on the machine: link to that.
+find "$prefix/usr" -xtype l | while read -r link; do
+  target=$(readlink "$link")
+  case $target in /*) installed=$target ;; *) installed=$(realpath -m "$(dirname "${link#"$prefix"}")/$target") ;; esac
+  if [ -e "$installed" ]; then ln -sfn "$installed" "$link"; fi
 done
-dangling=$(find "$prefix/usr/lib" -xtype l | wc -l)
-[ "$dangling" -eq 0 ] || { find "$prefix/usr/lib" -xtype l | head; echo "sysroot: $dangling links point nowhere" >&2; exit 1; }
+dangling=$(find "$prefix/usr/bin" "$prefix/usr/lib" -xtype l | wc -l)
+[ "$dangling" -eq 0 ] || { find "$prefix/usr/bin" "$prefix/usr/lib" -xtype l | head; echo "sysroot: $dangling links point nowhere" >&2; exit 1; }
 
 lib=$prefix/usr/lib/$triplet
 add() { [ -z "${GITHUB_ENV:-}" ] || echo "$1=$2" >> "$GITHUB_ENV"; }
