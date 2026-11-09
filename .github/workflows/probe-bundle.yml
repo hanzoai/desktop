@@ -1,0 +1,60 @@
+name: probe-bundle
+on:
+  push:
+    branches: [probe-bundle]
+jobs:
+  b:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [arm64]
+    runs-on: heavy-linux-${{ matrix.arch }}
+    timeout-minutes: 120
+    env:
+      V: 1.1.54
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+      NODE_OPTIONS: --max_old_space_size=8192
+      GITHUB_TOKEN: ${{ github.token }}
+      KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+      KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build libraries
+        run: >-
+          scripts/release/sysroot.sh -b "$RUNNER_TEMP/sysroot"
+          libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+          libasound2-dev libsoup-3.0-dev libxdo-dev xdg-utils patchelf desktop-file-utils
+          squashfs-tools file zsync gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+          gstreamer1.0-plugins-bad gstreamer1.0-libav
+      - name: Toolchain and workspace
+        run: scripts/release/prepare.sh
+      - name: Sidecars and model
+        run: apps/hanzo-desktop/src-tauri/download-binaries.sh
+      - name: Signing key
+        run: scripts/release/signing.sh dry-run
+      - name: Restore target
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: apps/hanzo-desktop/src-tauri/target
+          key: probe-target-${{ matrix.arch }}-${{ hashFiles('apps/hanzo-desktop/src-tauri/Cargo.lock') }}
+      - name: Build
+        working-directory: apps/hanzo-desktop
+        run: pnpm exec tauri build --ci --no-bundle
+      - name: Save target
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: apps/hanzo-desktop/src-tauri/target
+          key: probe-target-${{ matrix.arch }}-${{ hashFiles('apps/hanzo-desktop/src-tauri/Cargo.lock') }}
+      - name: Bundle (verbose)
+        continue-on-error: true
+        working-directory: apps/hanzo-desktop
+        run: unshare -Urm ../../scripts/release/overlay.sh "$SYSROOT" pnpm exec tauri bundle --ci --verbose --bundles appimage 2>&1 | tail -150
+      - name: Diagnose
+        if: always()
+        run: |
+          d=$(ls -d apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/*.AppDir 2>/dev/null | head -1)
+          echo "AppDir: $d"; [ -n "$d" ] && find "$d" -maxdepth 3 | head -60
+          ls -la apps/hanzo-desktop/src-tauri/target/release/bundle/appimage/ 2>/dev/null
+          ls ~/.cache/tauri 2>/dev/null
