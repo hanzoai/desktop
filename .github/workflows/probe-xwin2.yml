@@ -1,0 +1,34 @@
+name: probe-xwin2
+on:
+  push:
+    branches: [probe-xwin2]
+jobs:
+  x:
+    runs-on: heavy-linux-amd64
+    timeout-minutes: 30
+    steps:
+      - name: raw throughput to Microsoft
+        run: |
+          set -x
+          curl -sL https://aka.ms/vs/17/release/channel -o "$RUNNER_TEMP/channel.json"
+          man=$(jq -r '.channelItems[]|select(.id=="Microsoft.VisualStudio.Manifests.VisualStudio")|.payloads[0].url' "$RUNNER_TEMP/channel.json")
+          echo "manifest $man"
+          curl -sL "$man" -o "$RUNNER_TEMP/vs.man" -w 'vs.man %{size_download} bytes %{time_total}s %{speed_download} B/s\n'
+          url=$(jq -r '[.packages[]|select(.id|test("^Microsoft.VC.*Tools.HostX64.TargetX64.base$"))|.payloads[]|select(.size>50000000)][0].url' "$RUNNER_TEMP/vs.man" 2>/dev/null || true)
+          echo "payload url: $url"
+          [ -z "$url" ] || timeout 120 curl -sL "$url" -o /dev/null -w 'payload %{size_download} bytes %{time_total}s %{speed_download} B/s\n'
+      - name: xwin standalone
+        run: |
+          set -x
+          v=0.10.0
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL "https://github.com/Jake-Shadle/xwin/releases/download/$v/xwin-$v-x86_64-unknown-linux-musl.tar.gz" | tar -xz --strip-components=1 -C "$RUNNER_TEMP/bin"
+          export PATH=$RUNNER_TEMP/bin:$PATH
+          xwin --version
+          d=$RUNNER_TEMP/xw; mkdir -p "$d"
+          ( while true; do sleep 15; echo "cache $(du -sm "$d" | cut -f1) MB at $(date -u +%T) load $(cut -d' ' -f1 /proc/loadavg)"; done ) &
+          time timeout 600 xwin --accept-license --cache-dir "$d" --arch x86_64 --variant desktop download 2>&1 | tail -15
+          du -sh "$d"
+          time timeout 600 xwin --accept-license --cache-dir "$d" --arch x86_64 --variant desktop unpack 2>&1 | tail -5
+          time timeout 600 xwin --accept-license --cache-dir "$d" --arch x86_64 --variant desktop splat --output "$d/splat" 2>&1 | tail -5
+          du -sh "$d/splat"
