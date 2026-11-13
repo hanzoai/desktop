@@ -8,7 +8,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "postinstall": "npx patch-package && ln -sf ../libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs node_modules/libsodium-wrappers-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs 2>/dev/null || true",
+    "postinstall": "npx patch-package && node -e \"try{const fs=require('fs'),p='node_modules/libsodium-wrappers-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs',t='node_modules/libsodium-sumo/dist/modules-sumo-esm/libsodium-sumo.mjs';if(fs.existsSync(t)){try{fs.unlinkSync(p)}catch{}fs.copyFileSync(t,p)}}catch{}\"",
     "dev": "pnpm -F hanzo-desktop dev",
     "build": "pnpm -F hanzo-desktop build",
     "build:ci": "pnpm -F hanzo-desktop build:ci",
