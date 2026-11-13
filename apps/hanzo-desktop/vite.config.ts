@@ -138,6 +138,16 @@ export default defineConfig(() => ({
         changeOrigin: true,
         secure: true,
       },
+      // STUDIO'S ENGINE, the same way. On localhost Studio asks /engine/v1/*
+      // (@hanzo/studio engineFrom); studio.hanzo.ai's CORS admits hanzo.ai
+      // alone, so the dev window reaches it through here, as the packaged
+      // window does through the hanzo-studio scheme (src-tauri/src/studio_proxy.rs).
+      '/engine': {
+        target: process.env.HANZO_STUDIO_URL || 'https://studio.hanzo.ai',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/engine/, ''),
+      },
     },
     watch: {
       ignored: [

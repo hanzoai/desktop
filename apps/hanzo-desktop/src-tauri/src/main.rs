@@ -81,6 +81,7 @@ mod machine;
 mod mining;
 mod model_tools;
 mod models;
+mod studio_proxy;
 mod tray;
 mod windows;
 // Native Hanzo Engine (in-process mistral.rs fork). Compiled only with the
@@ -129,6 +130,11 @@ fn main() {
                 .build(),
         )
         .plugin(tauri_plugin_http::init())
+        // Studio's engine calls, forwarded to studio.hanzo.ai (whose CORS
+        // admits no window origin). See studio_proxy.rs.
+        .register_asynchronous_uri_scheme_protocol(studio_proxy::SCHEME, |ctx, req, responder| {
+            studio_proxy::handle(ctx, req, responder)
+        })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
