@@ -453,6 +453,15 @@ Asset names are what hanzo.ai's `scripts/sync-releases.mjs` resolves:
 each updater bundle with a `.sig`, plus `SHA256SUMS` (from the sha256 digest GitHub
 computes) and `latest.json`. Change a name and the download page loses a tile.
 
+`bundle.linux.rpm.compression` in `apps/hanzo-desktop/src-tauri/tauri.conf.json`
+must stay `{"type": "none"}` while `@tauri-apps/cli` bundles `rpm 0.16.0`:
+`rpm 0.16.0`'s `Sha256Writer::write` hashes the entire input slice before forwarding to
+`Compressor::write`, which only consumes one 32–128 KB stream chunk per call on
+compressed encoders — turning the 584 MiB `embeddinggemma-300M-BF16.gguf` resource
+into multi-terabyte O(N^2) SHA-256 hashing and corrupting `RPMTAG_PAYLOADDIGEST`.
+`Compressor::None(Vec<u8>)` consumes the slice in a single call (~850 MiB `.rpm`,
+valid payload digest, seconds to bundle).
+
 ### The updater key
 
 Updater bundles are signed with a Tauri (minisign) key pair made 2026-11-08; the old

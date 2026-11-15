@@ -24,8 +24,7 @@
     "linux": {
       "rpm": {
         "compression": {
-          "type": "zstd",
-          "level": 1
+          "type": "none"
         }
       }
     },
