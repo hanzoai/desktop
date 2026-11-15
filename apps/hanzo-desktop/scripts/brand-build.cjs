@@ -48,6 +48,14 @@ const base = JSON.parse(fs.readFileSync(baseConfigPath, 'utf8'));
 const overlay = JSON.parse(fs.readFileSync(overlayPath, 'utf8'));
 const merged = deepMerge(base, overlay);
 
+// Updater artifacts are signed with the release key, which only the release
+// lane holds; without it `tauri build` bundles everything and then fails. A
+// local build skips them and says so, rather than failing at the last step.
+if (merged.bundle && merged.bundle.createUpdaterArtifacts && !process.env.TAURI_SIGNING_PRIVATE_KEY) {
+  console.warn('brand-build: TAURI_SIGNING_PRIVATE_KEY is not set, so this build has no updater artifacts (fine for a local build).');
+  merged.bundle.createUpdaterArtifacts = false;
+}
+
 fs.copyFileSync(baseConfigPath, backupPath);
 fs.writeFileSync(baseConfigPath, JSON.stringify(merged, null, 2) + '\n');
 
@@ -82,7 +90,13 @@ process.on('SIGINT', () => { restore(); process.exit(130); });
 process.on('SIGTERM', () => { restore(); process.exit(143); });
 
 const env = { ...process.env, VITE_BRAND: brand, BRAND: brand };
-const result = spawnSync('tauri', ['build'].concat((process.env.TAURI_BUNDLES||'').split(',').filter(Boolean).length?['--bundles',process.env.TAURI_BUNDLES]:[]), { stdio: 'inherit', env });
+// TAURI_BUNDLES=nsis (comma-separated) narrows the bundles, e.g. to skip the
+// MSI on a Windows box without WiX. On Windows the CLI is `tauri.cmd`, which
+// CreateProcess cannot launch directly, so it goes through the shell there.
+const bundles = (process.env.TAURI_BUNDLES || '').split(',').filter(Boolean);
+const args = ['build'].concat(bundles.length ? ['--bundles', bundles.join(',')] : []);
+const result = spawnSync('tauri', args, { stdio: 'inherit', env, shell: process.platform === 'win32' });
+if (result.error) console.error(result.error);
 
 restore();
 process.exit(result.status ?? 1);

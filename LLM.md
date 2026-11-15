@@ -358,12 +358,12 @@ Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
 
 ## The sidecars, and why a clean checkout could not build
 
-`pnpm dev` and `pnpm build` both run `src-tauri/download-binaries.sh` first,
+`pnpm dev` and `pnpm build` both run `src-tauri/download-binaries.mjs` first,
 because `tauri.conf.json` declares three `externalBin` entries and Tauri will
 not bundle a sidecar it cannot find. `external-binaries/` is gitignored, so a
 fresh clone has nothing and the fetch is not optional.
 
-**One file names a version: `src-tauri/pins`.** The script sources it and
+**One file names a version: `src-tauri/pins`.** The script reads it and
 nothing else in the repo carries a release number. Before that, the number
 lived in three places that disagreed — the script said v1.13.0, the README
 said v1.1.18, and a second downloader in `ci-scripts/` read it from an env var

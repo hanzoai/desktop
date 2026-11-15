@@ -125,12 +125,58 @@ Hanzo is built as a modern monorepo using **NX** for orchestration and dependenc
 
 #### 1. Clone and Setup
 
+The workspace is pnpm (the version is pinned in `package.json`'s
+`packageManager`; corepack, which ships with Node 22+, picks it up):
+
 ```bash
 git clone https://github.com/hanzoai/desktop
 cd desktop
-nvm use
-npm ci
+corepack enable
+pnpm install
 ```
+
+You also need Rust (stable, via rustup) and the platform's Tauri prerequisites.
+
+#### Windows
+
+Build on Windows itself, from a checkout on a Windows drive (`C:\...`), not
+from WSL or a `\\wsl$` path: the bundle is an MSVC binary with WebView2.
+
+- **Visual Studio 2022 Build Tools** with *Desktop development with C++*
+  (MSVC and a Windows 10/11 SDK)
+- **Rust** via rustup, toolchain `stable-x86_64-pc-windows-msvc`
+- **Node 22+** with corepack (`corepack enable`)
+- **WebView2 runtime**, already present on Windows 10 21H2+ and Windows 11
+- **Git for Windows**
+
+In PowerShell:
+
+```powershell
+git clone https://github.com/hanzoai/desktop
+cd desktop
+corepack enable
+pnpm install
+cd apps\hanzo-desktop
+
+# Dev window with hot reload (Vite on :1420)
+pnpm tauri dev
+
+# Hanzo-brand installer (NSIS). The MSI target has no real WiX template yet.
+$env:TAURI_BUNDLES = "nsis"; pnpm build:hanzo
+```
+
+The installer lands in
+`apps\hanzo-desktop\src-tauri\target\release\bundle\nsis\`. A local build has
+no updater signing key, so `build:hanzo` skips the updater artifacts and says
+so; the release lane sets `TAURI_SIGNING_PRIVATE_KEY`.
+
+**Local AI on Windows.** Sign-in is optional: *Continue without login* routes
+chat to a local engine on `127.0.0.1:36900`. The default build does not embed
+one (`native-engine` is an opt-in Cargo feature), so the app spawns
+`hanzo-server` from `HANZO_ENGINE_BIN`, from beside the app's executable, or
+from `PATH`. Build it from [hanzoai/engine](https://github.com/hanzoai/engine)
+(`cargo build --release -p hanzo-server`). Signed in, chat uses your Hanzo
+cloud account as usual.
 
 #### 2. Fetch the side binaries
 
@@ -153,12 +199,18 @@ edit `pins` — no other file names a version.
 
 ```bash
 # Run desktop app (recommended for development)
-npx nx serve:tauri hanzo-desktop
+cd apps/hanzo-desktop && pnpm tauri dev
 ```
 
 #### Building
 
 ```bash
+# Build the Hanzo-brand bundle (also: build:zoo, build:lux, build:team, ...)
+cd apps/hanzo-desktop && pnpm build:hanzo
+
+# Only some bundle types, e.g. the Windows installer
+TAURI_BUNDLES=nsis pnpm build:hanzo
+
 # Build desktop application
 npx nx build hanzo-desktop
 

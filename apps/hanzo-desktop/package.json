@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "download-binaries": "cd src-tauri && ./download-binaries.sh",
+    "download-binaries": "node src-tauri/download-binaries.mjs",
     "dev": "pnpm run download-binaries && vite",
     "build": "pnpm run download-binaries && vite build",
     "build:ci": "vite build",

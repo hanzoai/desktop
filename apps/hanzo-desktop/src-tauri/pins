@@ -1,6 +1,6 @@
 # The external releases this app bundles as Tauri sidecars.
 #
-# download-binaries.sh reads this file, and nothing else in the repo names a
+# download-binaries.mjs reads this file, and nothing else in the repo names a
 # version. Every value here has to name an artifact download.hanzo.ai actually
 # serves for all five targets — a pin that answers 404 is a clean checkout that
 # builds on the machine it was pinned from and nowhere else.
