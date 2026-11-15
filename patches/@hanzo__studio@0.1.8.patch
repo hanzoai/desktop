@@ -1,0 +1,78 @@
+diff --git a/lib/kinds/kind.js b/lib/kinds/kind.js
+index 1bc54cb..5a0bd49 100644
+--- a/lib/kinds/kind.js
++++ b/lib/kinds/kind.js
+@@ -2,7 +2,8 @@
+ export const maker = (a, output) => a.models.find((m) => m.outputs.includes(output)) ?? null;
+ /** Whether an online GPU of the org advertises `lane`. */
+ export function lit(fleet, lane) {
+-    return Boolean(fleet?.nodes.some((n) => n.online !== false && n.lanes?.includes(lane)));
++    // A fleet without a node list (an engine that answered something else) lights nothing.
++    return Array.isArray(fleet?.nodes) && fleet.nodes.some((n) => n.online !== false && n.lanes?.includes(lane));
+ }
+ /** A string argument, trimmed, or `or`. */
+ export const str = (v, or = '') => (typeof v === 'string' && v.trim() ? v.trim() : or);
+diff --git a/lib/live.d.ts b/lib/live.d.ts
+index 8edc4b2..c3775ef 100644
+--- a/lib/live.d.ts
++++ b/lib/live.d.ts
+@@ -12,7 +12,7 @@ import { type Fleet, type Wire } from './wire.ts';
+  * Where the engine is from this page: this origin on studio.hanzo.ai, a dev
+  * server's /engine proxy on a laptop, studio.hanzo.ai from anywhere else.
+  */
+-export declare function engineFrom(hostname: string): string;
++export declare function engineFrom(hostname: string, protocol?: string): string;
+ /**
+  * The models Studio's own words come from. The chat that decides what to make
+  * calls tools; the writer answers JSON a kind asks for (a type system, a deck).
+diff --git a/lib/live.js b/lib/live.js
+index dcde41e..32dd59b 100644
+--- a/lib/live.js
++++ b/lib/live.js
+@@ -3,11 +3,19 @@ import { index } from './chat/store.js';
+ import { ENGINE, gpus, libraryLive, makers, sync } from './wire.js';
+ /**
+  * Where the engine is from this page: this origin on studio.hanzo.ai, a dev
+- * server's /engine proxy on a laptop, studio.hanzo.ai from anywhere else.
++ * server's /engine proxy on a laptop, the desktop's hanzo-studio scheme in its
++ * window, studio.hanzo.ai from anywhere else.
+  */
+-export function engineFrom(hostname) {
++export function engineFrom(hostname, protocol = 'https:') {
+     if (hostname === 'studio.hanzo.ai')
+         return '';
++    // The Hanzo desktop window (tauri://localhost; http://tauri.localhost on Windows):
++    // studio.hanzo.ai's CORS admits neither, so the desktop forwards the engine's
++    // calls itself through its hanzo-studio scheme (src-tauri/src/studio_proxy.rs).
++    if (protocol === 'tauri:')
++        return 'hanzo-studio://localhost';
++    if (hostname === 'tauri.localhost')
++        return `${protocol}//hanzo-studio.localhost`;
+     if (hostname === 'localhost' || hostname === '127.0.0.1')
+         return '/engine';
+     return ENGINE;
+@@ -22,7 +30,7 @@ export function engineFrom(hostname) {
+ export const BRAIN = 'zen5';
+ export const WRITER = 'zen5-flash';
+ export function useWire(host) {
+-    const engine = typeof window === 'undefined' ? ENGINE : engineFrom(window.location.hostname);
++    const engine = typeof window === 'undefined' ? ENGINE : engineFrom(window.location.hostname, window.location.protocol);
+     return useMemo(() => ({ api: host.api, engine, token: host.token, org: host.org }), [host.api, host.token, host.org, engine]);
+ }
+ /* One shared read of what can run, refreshed while anyone is looking. */
+@@ -37,10 +45,13 @@ async function poll() {
+     if (!w || !w.token())
+         return;
+     const [fleet, models] = await Promise.allSettled([gpus(w), makers(w)]);
++    // Only a fleet is a fleet: an origin that is not the engine (a dev server or a
++    // desktop window answering /engine/* with its index.html) is an error, not GPUs.
++    const read = fleet.status === 'fulfilled' && Array.isArray(fleet.value?.nodes) ? fleet.value : null;
+     state = {
+-        fleet: fleet.status === 'fulfilled' ? fleet.value : state.fleet,
++        fleet: read ?? state.fleet,
+         models: models.status === 'fulfilled' ? models.value : state.models,
+-        error: fleet.status === 'rejected' ? (fleet.reason instanceof Error ? fleet.reason.message : String(fleet.reason)) : '',
++        error: fleet.status === 'rejected' ? (fleet.reason instanceof Error ? fleet.reason.message : String(fleet.reason)) : read ? '' : 'The engine did not answer with its GPUs.',
+     };
+     tell();
+ }

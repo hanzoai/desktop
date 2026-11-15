@@ -13,6 +13,6 @@ if [ ! -x "$CARGO_HOME/bin/rustup" ]; then
     | sh -s -- -y --profile minimal --default-toolchain none --no-modify-path
 fi
 targets=(); for t in "$@"; do targets+=(--target "$t"); done
-"$CARGO_HOME/bin/rustup" toolchain install "$version" --profile minimal "${targets[@]}"
+"$CARGO_HOME/bin/rustup" toolchain install "$version" --profile minimal ${targets[@]+"${targets[@]}"}
 "$CARGO_HOME/bin/rustup" default "$version"
 [ -z "${GITHUB_PATH:-}" ] || echo "$CARGO_HOME/bin" >> "$GITHUB_PATH"

@@ -433,12 +433,11 @@ rest:
   dry run: same builds, same uploads, against a draft release named
   `dry-run-<run id>` that the last job deletes. Run workflow on a tag cuts that tag
   again.
-- `desktop-release-macos.yml` — builds the universal `.dmg` and `.app.tar.gz` on a
-  host labelled `macos-arm64`, attaches them to the same release and recomputes the
-  manifest, which then gains the darwin platforms. No such host existed when this was
-  written. GitHub drops a job nothing serves after 24 hours; Run workflow on the tag
-  when the host is up. The host needs Xcode's command line tools and `jq` (macOS 15
-  ships it); the app is ad-hoc signed, not notarized.
+- `desktop-release-macos.yml` — builds the `aarch64`, `x64`, and `universal` `.dmg`
+  installers plus the `universal` `.app.tar.gz` updater archive on GitHub-hosted
+  `macos-15` runners, attaches them to the same release, and recomputes the manifest,
+  which then gains the darwin platforms. The host needs Xcode's command line tools
+  and `jq` (macOS 15 ships it); the app is ad-hoc signed, not notarized.
 
 `scripts/release/` is the lane's whole logic, and each script says what it does at
 its head: `meta.sh` (which release, creates the draft), `sysroot.sh`, `rust.sh`,
@@ -450,9 +449,9 @@ prefix under the job. `gh` is not on the image; `gh.sh` is curl and jq.
 Asset names are what hanzo.ai's `scripts/sync-releases.mjs` resolves:
 `Hanzo_Desktop_<v>_{amd64,arm64}.{AppImage,deb}`, `Hanzo_Desktop-<v>-1.{x86_64,aarch64}.rpm`,
 `Hanzo_Desktop_<v>_x64-setup.exe`, `Hanzo_Desktop_<v>_x64-portable.zip`,
-`Hanzo_Desktop_<v>_universal.{dmg,app.tar.gz}`, each updater bundle with a `.sig`,
-plus `SHA256SUMS` (from the sha256 digest GitHub computes) and `latest.json`. Change a
-name and the download page loses a tile.
+`Hanzo_Desktop_<v>_{aarch64,x64,universal}.dmg`, `Hanzo_Desktop_<v>_universal.app.tar.gz`,
+each updater bundle with a `.sig`, plus `SHA256SUMS` (from the sha256 digest GitHub
+computes) and `latest.json`. Change a name and the download page loses a tile.
 
 ### The updater key
 

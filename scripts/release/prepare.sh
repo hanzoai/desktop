@@ -51,5 +51,14 @@ echo "::add-mask::$token"
      "${CARGO_HOME:-$HOME/.cargo}/bin/cargo" fetch)
 
 cd "$root"
-corepack enable
+mkdir -p "$HOME/.local/bin"
+export PATH="$HOME/.local/bin:$PATH"
+export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+[ -z "${GITHUB_PATH:-}" ] || echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+[ -z "${GITHUB_ENV:-}" ] || echo "COREPACK_ENABLE_DOWNLOAD_PROMPT=0" >> "$GITHUB_ENV"
+if command -v corepack >/dev/null; then
+  corepack enable --install-directory "$HOME/.local/bin"
+elif ! command -v pnpm >/dev/null; then
+  npm install -g --prefix "$HOME/.local" pnpm
+fi
 pnpm install --frozen-lockfile

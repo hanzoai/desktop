@@ -28,7 +28,9 @@ mkdir -p "$tmp"
 password=$(head -c 24 /dev/urandom | base64)
 echo "::add-mask::$password"
 (cd "$(cd "$here/../.." && pwd)" && pnpm exec tauri signer generate --ci -p "$password" -w "$tmp/key" >/dev/null)
-echo "TAURI_SIGNING_PRIVATE_KEY=$(cat "$tmp/key")" >> "$GITHUB_ENV"
+key=$(cat "$tmp/key")
+echo "::add-mask::$key"
+echo "TAURI_SIGNING_PRIVATE_KEY=$key" >> "$GITHUB_ENV"
 echo "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=$password" >> "$GITHUB_ENV"
 jq -nc --rawfile k "$tmp/key.pub" '{plugins: {updater: {pubkey: ($k | rtrimstr("\n"))}}}' > "$tmp/conf.json"
 echo "UPDATER_CONF=$tmp/conf.json" >> "$GITHUB_ENV"
