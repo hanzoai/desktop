@@ -7,7 +7,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "appimage", "deb", "nsis", "msi", "dmg"],
+    "targets": ["app", "appimage", "deb", "rpm", "nsis", "msi", "dmg"],
     "externalBin": [
       "external-binaries/hanzo-node/hanzo-node",
       "external-binaries/hanzo-node/hanzo-tools-runner-resources/deno",
@@ -21,10 +21,18 @@
       "icons/icon.ico"
     ],
     "resources": ["llm-models/"],
+    "linux": {
+      "rpm": {
+        "compression": {
+          "type": "zstd",
+          "level": 1
+        }
+      }
+    },
     "macOS": {
       "minimumSystemVersion": "12.0"
     },
-    "createUpdaterArtifacts": "v1Compatible"
+    "createUpdaterArtifacts": true
   },
   "productName": "Hanzo Desktop",
   "mainBinaryName": "hanzo-desktop",
@@ -32,7 +40,7 @@
   "identifier": "com.hanzo.desktop",
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDE4OURBNzhCM0Q2RTMwMzIKUldReU1HNDlpNmVkR01uQXpJaS9Dd2gvRlpsbDVYQmg0MlJSUnNib2tSOW5qRG5zSVdsMW0zZm8K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcwNEY4MkEzRTk1Q0M5NkYKUldSdnlWenBvNEpQY0p1OGJBMUMrUXpJclVFc2EwMU50U3VUNFR2Um9wbjM2ejAyeCtZb3c5a3EK",
       "endpoints": [
         "https://github.com/hanzoai/desktop/releases/latest/download/latest.json"
       ],

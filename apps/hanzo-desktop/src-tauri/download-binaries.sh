@@ -43,10 +43,13 @@ case "$ARCH" in
         ;;
 esac
 
-TARGET="${ARCH_NAME}-${PLATFORM}"
+# TARGET names the machine the bundle runs on, which is this one unless a
+# cross build says otherwise: the release lane cuts the Windows installer on
+# Linux and a universal macOS image from two slices, one call per slice.
+TARGET="${TARGET:-${ARCH_NAME}-${PLATFORM}}"
 EXT=""
-[ "$PLATFORM" = "pc-windows-msvc" ] && EXT=".exe"
-echo "Detected platform: $TARGET"
+case "$TARGET" in *-pc-windows-msvc) EXT=".exe" ;; esac
+echo "Target: $TARGET"
 
 NODE_DIR="$BINARIES_DIR/hanzo-node"
 mkdir -p "$NODE_DIR/hanzo-tools-runner-resources"
@@ -67,7 +70,7 @@ SIDECARS="hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resour
 
 if [ ! -f "$NODE_DIR/hanzo-node-${TARGET}${EXT}" ]; then
     echo "Downloading from: $HANZO_NODE_URL"
-    if curl -L -f -o "$NODE_DIR/hanzo-node.zip" "$HANZO_NODE_URL"; then
+    if curl -L -f --retry 5 --retry-all-errors -o "$NODE_DIR/hanzo-node.zip" "$HANZO_NODE_URL"; then
         unzip -o "$NODE_DIR/hanzo-node.zip" -d "$NODE_DIR/"
 
         for s in $SIDECARS; do
@@ -103,7 +106,7 @@ EMBEDDING_MODEL="embeddinggemma-300M-BF16.gguf"
 if [ ! -f "$LLM_MODELS_DIR/$EMBEDDING_MODEL" ]; then
     echo "Downloading embedding model..."
     EMBEDDING_URL="https://download.hanzo.ai/llm-models/${EMBEDDING_MODEL}"
-    if curl -L -f -o "$LLM_MODELS_DIR/$EMBEDDING_MODEL" "$EMBEDDING_URL"; then
+    if curl -L -f --retry 5 --retry-all-errors -o "$LLM_MODELS_DIR/$EMBEDDING_MODEL" "$EMBEDDING_URL"; then
         echo "Downloaded embedding model successfully"
     else
         echo "Failed to download embedding model"
