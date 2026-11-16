@@ -255,6 +255,11 @@ impl StreamRedactor {
         Self::default()
     }
 
+    /// Stub (tests first).
+    pub fn redact_chunk(&mut self, chunk: &str) -> Vec<String> {
+        chunk.lines().map(str::to_string).collect()
+    }
+
     pub fn redact_line(&mut self, line: &str) -> Option<String> {
         if let Some(n) = self.in_pem {
             if let Some(e) = line.find("-----END ") {

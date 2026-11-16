@@ -1,0 +1,13 @@
+[package]
+name = "hanzo-node-secret"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "One-time rotation of the local node's localhost HTTPS certificate in node_storage/.secret"
+license = "Apache-2.0"
+
+[dependencies]
+rcgen = "0.13"
+
+[dev-dependencies]
+tempfile = "3"

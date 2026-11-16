@@ -235,3 +235,44 @@ fn tool_keys_and_paths_are_not_mistaken_for_secrets() {
         assert_eq!(redact(l), l);
     }
 }
+
+#[test]
+fn sidecar_chunk_yields_only_redacted_lines_and_keeps_the_ready_line() {
+    // ProcessHandler logs each line and checks the ready signal on what this
+    // returns, so the ready-path log can never see a raw line.
+    let mut r = StreamRedactor::new();
+    let chunk = format!(
+        "key_string: {}\nlistening on http://127.0.0.1:3690\n",
+        fake_pem("PRIVATE KEY")
+    );
+    let lines = r.redact_chunk(&chunk);
+    assert_clean(&lines.join("\n"));
+    assert!(lines.iter().any(|l| l == "listening on http://127.0.0.1:3690"), "{lines:?}");
+}
+
+#[test]
+fn ready_line_after_split_pem_across_chunks_is_clean() {
+    let mut r = StreamRedactor::new();
+    let pem = format!("key_string: {}", fake_pem("PRIVATE KEY"));
+    let mut seen = Vec::new();
+    for l in pem.lines() {
+        seen.extend(r.redact_chunk(&format!("{l}\n")));
+    }
+    seen.extend(r.redact_chunk("listening on http://127.0.0.1:3690"));
+    assert_clean(&seen.join("\n"));
+    assert_eq!(seen.last().map(String::as_str), Some("listening on http://127.0.0.1:3690"));
+}
+
+#[test]
+fn pkce_and_oauth_fields_are_redacted_even_when_short_and_alphabetic() {
+    for c in [
+        "code_verifier=abcdefghijklmnop",
+        "\"code_verifier\": \"abcdefghijklmnop\"",
+        "pkce_code_verifier: abcdefghijklmnop",
+        "client_assertion=abcdefghijklmnop",
+        "\"code\": \"abcdefghijklmnop\", \"grant_type\": \"authorization_code\"",
+    ] {
+        let out = redact(c);
+        assert!(!out.contains("abcdefghijklmnop"), "leaked: {out}");
+    }
+}
