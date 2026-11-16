@@ -36,3 +36,10 @@ test:
       set -e
       pnpm install --frozen-lockfile
       pnpm typecheck
+  # The log sink's redaction (Cargo.toml-guarded Rust provision in the
+  # reusable workflow puts cargo on the runner). Pure Rust, no Tauri or system
+  # libraries, so it runs on any runner in seconds.
+  - name: log-redact
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml

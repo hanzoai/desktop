@@ -1,6 +1,7 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use hanzo_log_redact::StreamRedactor;
 use tauri::AppHandle;
 use tauri_plugin_shell::{
     process::{CommandChild, CommandEvent},
@@ -51,13 +52,29 @@ impl ProcessHandler {
         let _ = event_sender.send(event).await;
     }
 
-    fn command_event_to_message_log(process_name: &str, event: CommandEvent) {
+    /// Forwards a sidecar's output to the log. Lines pass through a
+    /// per-stream `StreamRedactor`, which drops the body of a PEM block that
+    /// arrives one line per event, so key material never reaches the file.
+    fn command_event_to_message_log(
+        process_name: &str,
+        event: CommandEvent,
+        stdout_redactor: &mut StreamRedactor,
+        stderr_redactor: &mut StreamRedactor,
+    ) {
         match event {
             CommandEvent::Stdout(message) => {
-                log::info!(target: process_name, "{}", String::from_utf8_lossy(&message));
+                for line in String::from_utf8_lossy(&message).lines() {
+                    if let Some(line) = stdout_redactor.redact_line(line) {
+                        log::info!(target: process_name, "{}", line);
+                    }
+                }
             }
             CommandEvent::Stderr(message) => {
-                log::error!(target: process_name, "{}", String::from_utf8_lossy(&message));
+                for line in String::from_utf8_lossy(&message).lines() {
+                    if let Some(line) = stderr_redactor.redact_line(line) {
+                        log::error!(target: process_name, "{}", line);
+                    }
+                }
             }
             CommandEvent::Error(message) => {
                 log::error!("[{}] error: {}", process_name, message);
@@ -86,11 +103,14 @@ impl ProcessHandler {
         args: Vec<&str>,
         current_dir: Option<PathBuf>,
     ) -> Result<(), String> {
+        // Names only: the values carry API keys and installation secrets.
+        let mut env_names: Vec<&String> = env.keys().collect();
+        env_names.sort();
         log::info!(
-            "[{}] attempting to spawn process with args {:?} and env {:?}",
+            "[{}] attempting to spawn process with args {:?} and env vars {:?}",
             self.process_name,
             args,
-            env
+            env_names
         );
         {
             let process = self.process.read().await;
@@ -138,8 +158,15 @@ impl ProcessHandler {
 
         let ready_matcher = self.ready_matcher.clone();
         tauri::async_runtime::spawn(async move {
+            let mut stdout_redactor = StreamRedactor::new();
+            let mut stderr_redactor = StreamRedactor::new();
             while let Some(event) = rx.recv().await {
-                Self::command_event_to_message_log(&process_name, event.clone());
+                Self::command_event_to_message_log(
+                    &process_name,
+                    event.clone(),
+                    &mut stdout_redactor,
+                    &mut stderr_redactor,
+                );
                 match event {
                     CommandEvent::Terminated(_) => {
                         {

@@ -3636,6 +3636,7 @@ dependencies = [
  "futures-util",
  "hanzo",
  "hanzo-engine",
+ "hanzo-log-redact",
  "hanzo-mining",
  "hanzo-server-core",
  "hex",
@@ -3847,6 +3848,16 @@ dependencies = [
  "tracing",
  "utoipa",
  "uuid 1.23.3",
+]
+
+[[package]]
+name = "hanzo-log-redact"
+version = "0.1.0"
+dependencies = [
+ "coins-bip39",
+ "dirs 6.0.0",
+ "once_cell",
+ "regex",
 ]
 
 [[package]]

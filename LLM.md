@@ -412,6 +412,33 @@ reaches typescript-eslint, which *refuses* 7 by version check at module load, so
 and the alias goes. Do NOT add `@typescript/native-preview` — it is the
 pre-release channel of the same binary, behind stable.
 
+## The log file is redacted at the sink
+
+`Hanzo Desktop.log` (Tauri `app_log_dir()`: `~/Library/Logs/<identifier>/` on
+macOS, `<data_local_dir>/<identifier>/logs/` on Linux and Windows) receives the
+app's own `log::*` records and every stdout/stderr line of the sidecars,
+forwarded by `ProcessHandler` (stdout at INFO, stderr at ERROR). A sidecar
+release is pinned (`src-tauri/pins`), so whatever it prints is out of this
+repo's hands until the pin moves. The sink therefore never trusts its input:
+
+- `src-tauri/log-redact` (crate `hanzo-log-redact`, pure Rust) is the one
+  redaction layer. `redact()` runs inside the tauri-plugin-log `format`
+  closure in `main.rs`, so every record passes it. It removes PEM blocks,
+  standalone base64 runs, secret-named fields, bearer/API tokens, long hex and
+  base58, and 12+ word BIP-39 runs.
+- `StreamRedactor` sits in `ProcessHandler`: a sidecar prints a PEM one line
+  per event, and no single line holds the block, so it drops the lines between
+  `BEGIN` and `END`.
+- `scrub_log_dir()` runs in `main()` before the log plugin opens the file and
+  rewrites any `*.log` still holding such material (idempotent; files also get
+  mode 0600 on Unix). Upgrading cleans what older builds wrote.
+- `ProcessHandler::spawn` logs env var NAMES, never values (they carry API keys
+  and installation secrets).
+
+`cargo test --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml`
+is a `hanzo.yml` gate. Add a fixture there for any new secret shape; keep
+fixtures synthetic and assembled at run time.
+
 ## Release Pipeline
 
 ### Workflows
