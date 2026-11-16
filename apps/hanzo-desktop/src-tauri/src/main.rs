@@ -109,6 +109,14 @@ fn main() {
     // browser commands reach the extension with or without one running.
     #[cfg(unix)]
     zapd::embed();
+    let context = tauri::generate_context!();
+    // Older builds wrote sidecar key material (and other credentials) to the
+    // log in plaintext. Redact whatever is still on disk before the log
+    // plugin opens the file again. Best effort: a failure here must not stop
+    // the app from starting.
+    if let Some(dir) = hanzo_log_redact::app_log_dir(&context.config().identifier) {
+        let _ = hanzo_log_redact::scrub_log_dir(&dir);
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             let _ = recreate_window(app.clone(), Window::Main, true);
@@ -118,6 +126,10 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .format(|out, message, record| {
+                    // Every record, the app's own and each sidecar line, is
+                    // redacted here: this is the one place all of them pass.
+                    let message = message.to_string();
+                    let message = hanzo_log_redact::redact(&message);
                     // Ending with a triple ideographic space as separator so then we can group texts that belongs to the same log
                     out.finish(format_args!(
                         "[{}][{}][{}] {}　　　",
@@ -433,7 +445,7 @@ fn main() {
             });
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while running tauri application")
         .run(move |app_handle, event| match event {
             RunEvent::ExitRequested { api, .. } => {

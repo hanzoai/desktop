@@ -412,6 +412,63 @@ reaches typescript-eslint, which *refuses* 7 by version check at module load, so
 and the alias goes. Do NOT add `@typescript/native-preview` — it is the
 pre-release channel of the same binary, behind stable.
 
+## The log file is redacted at the sink
+
+`Hanzo Desktop.log` (Tauri `app_log_dir()`: `~/Library/Logs/<identifier>/` on
+macOS, `<data_local_dir>/<identifier>/logs/` on Linux and Windows) receives the
+app's own `log::*` records and every stdout/stderr line of the sidecars,
+forwarded by `ProcessHandler` (stdout at INFO, stderr at ERROR). A sidecar
+release is pinned (`src-tauri/pins`), so whatever it prints is out of this
+repo's hands until the pin moves. The sink therefore never trusts its input:
+
+- `src-tauri/log-redact` (crate `hanzo-log-redact`, pure Rust) is the one
+  redaction layer. `redact()` runs inside the tauri-plugin-log `format`
+  closure in `main.rs`, so every record passes it. It removes PEM blocks,
+  standalone base64 runs, secret-named fields, bearer/API tokens, long hex and
+  base58, and 12+ word BIP-39 runs.
+- `StreamRedactor` sits in `ProcessHandler`: a sidecar prints a PEM one line
+  per event, and no single line holds the block, so it drops the lines between
+  `BEGIN` and `END`.
+- `scrub_log_dir()` runs in `main()` before the log plugin opens the file and
+  rewrites any `*.log` still holding such material (idempotent; files also get
+  mode 0600 on Unix). Upgrading cleans what older builds wrote.
+- `ProcessHandler::spawn` logs env var NAMES, never values (they carry API keys
+  and installation secrets).
+
+`cargo test --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml`
+is a `hanzo.yml` gate. Add a fixture there for any new secret shape; keep
+fixtures synthetic and assembled at run time.
+
+- Sidecar output goes through `StreamRedactor::redact_chunk`; the ready-signal
+  check and its log line use the returned (redacted) lines, never the raw
+  event. Anything else that inspects sidecar output must do the same.
+- OAuth/PKCE fields (`code_verifier`, `code_challenge`, `client_assertion`,
+  `authorization_code`, and a bare `code` inside a `grant_type`/`redirect_uri`
+  exchange) are redacted like any other secret field.
+
+### Localhost TLS certificate rotation (node-secret crate)
+
+`apps/hanzo-desktop/src-tauri/node-secret` (`hanzo-node-secret`) runs from
+`HanzoNodeProcessHandler::spawn`, after the old node is killed and before the
+new one starts. Once per `ROTATION_ID` (marker file
+`node_storage/.localhost-tls-rotated`; a separate file because hanzo-node
+rewrites `.secret` with only its five fields on every start) it replaces
+`PRIVATE_HTTPS_CERTIFICATE`/`PUBLIC_HTTPS_CERTIFICATE` in `.secret` with a new
+self-signed `localhost` cert + PKCS#8 key (rcgen, the same shape the node
+generates), leaving identity/encryption keys and the name untouched. Write is
+temp file at 0600 + rename; `.secret` is re-chmodded 0600 on every start
+because the node recreates it with the default umask. No `.secret` or empty
+HTTPS values: nothing to rotate. Bump `ROTATION_ID` to force another rotation.
+
+### Secret-logging check
+
+`scripts/check-secret-logging.py` (gate `no-secret-logging`) scans whole macro
+calls, so multiline `log!`/`println!` calls are covered, and flags Debug
+formatting (`{:?}`) of credential-like values (provider, credential, keypair,
+token, env, headers, auth...). Test code and `tests/` are skipped. A deliberate
+exception needs `// secret-log-ok: <reason>` on the line. Its self-test,
+`scripts/test_check_secret_logging.py`, holds the shapes it must keep catching.
+
 ## Release Pipeline
 
 ### Workflows
