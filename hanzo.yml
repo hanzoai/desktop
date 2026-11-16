@@ -43,3 +43,17 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml
+  # One-time replacement of the local node's localhost HTTPS certificate
+  # (node_storage/.secret, kept 0600). Pure Rust, like log-redact.
+  - name: node-secret
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-secret/Cargo.toml
+  # No secret-bearing value may be printed or logged from the Tauri crate:
+  # whole-call (multiline) scan plus Debug-format of credential-like values.
+  # The self-test proves the scanner still catches the shapes it must.
+  - name: no-secret-logging
+    run: |
+      set -e
+      python3 scripts/test_check_secret_logging.py
+      python3 scripts/check-secret-logging.py apps/hanzo-desktop/src-tauri

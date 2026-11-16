@@ -46,6 +46,7 @@ log = "0.4"
 # Scrubs key material and credentials out of every log record (and the log
 # files older builds left on disk). See log-redact/src/lib.rs.
 hanzo-log-redact = { path = "log-redact" }
+hanzo-node-secret = { path = "node-secret" }
 anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
 kill_tree = { version = "0.2", features = ["tokio"] }

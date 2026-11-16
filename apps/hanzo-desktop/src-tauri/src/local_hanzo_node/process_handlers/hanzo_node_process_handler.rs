@@ -179,6 +179,21 @@ impl HanzoNodeProcessHandler {
     pub async fn spawn(&self) -> Result<(), String> {
         let _ = self.kill().await;
 
+        // Earlier builds could write the local node's HTTPS key to the log;
+        // replace that certificate once, while the node is stopped.
+        if let Some(storage) = self.options.node_storage_path.as_deref() {
+            match hanzo_node_secret::rotate_localhost_cert_once(std::path::Path::new(storage)) {
+                Ok(hanzo_node_secret::Rotation::Rotated) => {
+                    log::info!("rotated the local node's localhost HTTPS certificate")
+                }
+                Ok(_) => {}
+                Err(e) => log::warn!(
+                    "could not rotate the local node's localhost HTTPS certificate: {}",
+                    e.kind()
+                ),
+            }
+        }
+
         let env = options_to_env(&self.options.clone());
         self.process_handler.spawn(env, [].to_vec(), None).await?;
         if let Err(e) = self.wait_hanzo_node_server().await {

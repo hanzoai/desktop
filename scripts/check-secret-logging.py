@@ -32,7 +32,7 @@ SECRET_PARTS = (
     "code_verifier", "request_body", "response_json", "https_certificate",
     "certificate_pem", "private_cert",
 )
-SECRET_EXACT = {"sk", "computed_sk", "secret_key_str", "key_pem", "private_key_pem", "key_string"}
+SECRET_EXACT = {"sk", "computed_sk", "secret_key_str", "key_pem", "private_key_pem", "key_string", "custom_headers"}
 DEBUG_PARTS = (
     "provider", "credential", "keypair", "node_keys", "oauth", "token",
     "secret", "env", "headers", "auth",

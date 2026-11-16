@@ -11,6 +11,11 @@ csl = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(csl)
 
 FLAGGED = {
+    "request_headers_printed": '''
+fn f(custom_headers: String) {
+    log::debug!("custom headers: {}", custom_headers);
+}
+''',
     "multiline_hanzo_log_of_secret_keys": '''
 fn f() {
     hanzo_log(

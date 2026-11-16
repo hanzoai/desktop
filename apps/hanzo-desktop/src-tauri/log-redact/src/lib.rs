@@ -40,13 +40,19 @@ const MNEMONIC_MIN_WORDS: usize = 12;
 
 static SECRET_FIELD: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
-        r#"(?i)(?P<k>\b[a-z0-9_\-]*?(?:secret|private[_\-]?key|key_string|api[_\-]?keys?|apikey|access[_\-]?token|refresh[_\-]?token|id[_\-]?token|auth[_\-]?token|session[_\-]?token|password|passwd|passphrase|mnemonic|seed[_\-]?phrase|certificate[_\-]?pem|https[_\-]?certificate|cookie)\b"?)(?P<sep>\s*[:=]\s*)(?P<v>Some\("[^"]*"\)|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s,&;}\])]+)"#,
+        r#"(?i)(?P<k>\b[a-z0-9_\-]*?(?:secret|private[_\-]?key|key_string|code[_\-]?verifier|code[_\-]?challenge|client[_\-]?assertion|authorization[_\-]?code|auth[_\-]?code|api[_\-]?keys?|apikey|access[_\-]?token|refresh[_\-]?token|id[_\-]?token|auth[_\-]?token|session[_\-]?token|password|passwd|passphrase|mnemonic|seed[_\-]?phrase|certificate[_\-]?pem|https[_\-]?certificate|cookie)\b"?)(?P<sep>\s*[:=]\s*)(?P<v>Some\("[^"]*"\)|"(?:[^"\\]|\\.)*"|'[^']*'|[^\s,&;}\])]+)"#,
     )
     .unwrap()
 });
 
 static AUTH_HEADER: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r#"(?i)(?P<k>\b(?:proxy-)?authorization"?\s*[:=]\s*"?)(?P<v>[^"\r\n,}]+)"#).unwrap()
+});
+
+/// A bare `code` field is only an OAuth authorization code inside an OAuth
+/// exchange, so it is redacted only where `grant_type`/`redirect_uri` appear.
+static OAUTH_CODE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r#"(?i)(?P<k>(?:^|[\s{,&?"'])"?code"?\s*[:=]\s*)(?P<v>"[^"]*"|'[^']*'|[^\s,&;}\])]+)"#).unwrap()
 });
 
 static BEARER: Lazy<Regex> =
@@ -97,6 +103,9 @@ pub fn redact(input: &str) -> Cow<'_, str> {
             format!("{}{}{REDACTED}", &c["k"], &c["sep"])
         }
     });
+    if s.contains("grant_type") || s.contains("redirect_uri") {
+        s = apply(s, &OAUTH_CODE, |c| format!("{}{REDACTED}", &c["k"]));
+    }
     s = apply(s, &KNOWN_TOKEN, |_| REDACTED.to_string());
     s = apply(s, &LONG_HEX, |_| REDACTED.to_string());
     s = apply(s, &LONG_BASE58, |_| REDACTED.to_string());
@@ -255,9 +264,12 @@ impl StreamRedactor {
         Self::default()
     }
 
-    /// Stub (tests first).
+    /// Redacts one output event (which may hold several lines) and returns
+    /// the lines that may be logged, already redacted. Callers log these and
+    /// run any further matching (e.g. a ready signal) on them, never on the
+    /// raw event.
     pub fn redact_chunk(&mut self, chunk: &str) -> Vec<String> {
-        chunk.lines().map(str::to_string).collect()
+        chunk.lines().filter_map(|l| self.redact_line(l)).collect()
     }
 
     pub fn redact_line(&mut self, line: &str) -> Option<String> {
