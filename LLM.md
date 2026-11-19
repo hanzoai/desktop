@@ -927,3 +927,26 @@ the tsconfig `paths` mapping and take their dependencies from the root install.
 worth 32 alerts including a critical, 29 of them one stale axios while the root
 had already moved to 1.18.1. Deleted. If a lib needs a dependency, add it at the
 root.
+
+## Desktop Architecture, Build & Keybindings (2026-11-19)
+- **Tauri Workspace Isolation (`apps/hanzo-desktop/src-tauri/Cargo.toml`)**: Includes `[workspace]` at the manifest root so Cargo never walks up to parent workspace manifests (`~/work/hanzo/Cargo.toml`) during `tauri build` or `tauri dev`.
+- **Dock Reopen (`apps/hanzo-desktop/src-tauri/src/main.rs`)**: `RunEvent::Reopen` delegates to `recreate_window(app_handle.clone(), Window::Main, true)` so reopening from the macOS Dock after closing (`⌘W`) mounts `index.html` (`main_url("/chat")`) with microphone permissions enabled rather than raw `localhost:3000`.
+- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.2.63.patch`)**:
+  - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
+  - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
+  - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).
+  - `⇧⌘M` / `Ctrl+Shift+M`: Toggle voice microphone input; `Hold Fn` (>= 250ms) push-to-talk & `Double-tap Fn` (< 320ms) continuous hands-free voice (`createFnVoiceController`).
+  - `⌘,` / `Ctrl+,`: Opens `DesktopSettings` (`/settings`, with Appearance, Local AI / Node / Embedded Engine `:36900` / `hanzod` `:9630` status, Cloud Settings link, and Shortcuts table; `Esc` / `⌘[` returns to `/chat`).
+  - `⌘/` / `Ctrl+/`: Opens Keyboard Shortcuts dialog in both signed-in and Guest / Local AI modes (`Me.js`).
+  - `⌘.` / `Ctrl+.` & `⌘⇧B`: Toggle right side Tabs panel (`@hanzo/build`).
+  - `⇧⌘I` / `Ctrl+Shift+I`: System-wide global New Chat (`create-chat` Tauri event wired in `host.tsx`).
+  - `⇧⌘J` / `Ctrl+Shift+J`: System-wide global Hanzo Spotlight (`toggle_spotlight`, with `navigate-to-path` wired in `host.tsx`).
+  - Unit tests: `./node_modules/.bin/vitest run --pool=threads --root apps/hanzo-desktop src/__tests__/keybindings.test.tsx`.
+
+## Unified Hanzo Dev Obsidian Shell + Bot & Team Sidebars (2026-11-19)
+- **Multi-Brand Shell Identity (`apps/hanzo-desktop/src/lib/brand-identity.ts`)**: `resolveDesktopShellBrand({ viteBrand, hostname, pathname })` resolves `'hanzo' | 'dev' | 'bot' | 'team'` across `VITE_BRAND`, hostnames (`hanzo.bot`, `hanzo.team`), and internal paths (`/bots`, `/team`, `/channels`, `/dev`), plus `DESKTOP_CROSS_APPS` for cross-surface switching (`Chat`, `Dev`, `Bot`, `Team`, `Console`, `Desktop / Mobile`).
+- **Unified Shell Chrome (`apps/hanzo-desktop/src/unified-shell.tsx`, `src/app.css`, `src/host.tsx`, `index.html`)**:
+  - Obsidian `#050505` outer floor, `256px` collapsible `#09090b` left sidebar (`⌘B` toggle + shortcut badge), `⌘K` Command Palette, `⇧⌘O` primary new action, inset rounded `#0f0f12` stage pane (`1px solid rgba(255,255,255,0.08)` hairline border), and unified bottom-left **Hanzo Account & Org Switcher (`X-Org-Id`)** pill (`hanzo.id` sign-in, org selector, plan badge, Settings `⌘,`, Keyboard shortcuts `⌘/`).
+  - **`brand === 'bot'`**: Renders first-class **`Bots`** section directly in the left sidebar (`Filter bots & routines...`, live `running` emerald / `awaiting_approval` amber / `idle` zinc status dots, `zen6` / `zen6-flash` / `qwen3+` / `cloud resident` runtime badges with zero `zen4`/`zen5`/`qwen2`, `+ New Bot` inline creator, and **Workflows (`/flow`)**, **Approvals**, **Runs** quick links).
+  - **`brand === 'team'`**: Renders first-class **`Channels`** (`#general`, `#engineering`, `#deployments`, `#approvals`, `#incidents`, unread count badges, `+ New Channel`) and **`Direct & Bot Handoffs`** (`@hanzo-dev`, `@release-bot`, team presence dots) directly in the left sidebar (`Jump to channel or person... ⌘K`).
+- **Local AI Test Stability & Zen 6 Catalog (`apps/hanzo-desktop/src/local-ai.tsx`, `src/lib/hanzo-node-manager/model-catalog.json`, `src/components/ais/constants.tsx`)**: Upgraded all active Zen model SKUs and UI badges/placeholders to **Zen 6** (`zen6`, `zen6-coder`, `zen6-flash`, `zen6-max`, `zen6-free`, `zen-vl`) mapped to `qwen3+` / `qwen3-vl` local weights with zero `zen4`, `zen5`, or `qwen2` entries in `model-catalog.json` or rendered UI; parallelized localhost probes (`Promise.all` with fast test-mode timeout), skipped eager hidden-mount probes, and windowed initial unsearched `All` catalog view (`20` models + "Show all" toggle) so `src/__tests__/local-ai.test.tsx` completes deterministically in <3s.

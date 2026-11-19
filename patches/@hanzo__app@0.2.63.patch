@@ -1,5 +1,5 @@
 diff --git a/dist/App.js b/dist/App.js
-index 692678e..9ab382f 100644
+index 692678eedf0205be51f1dde78cfc9bf4a809efdd..67ae64469969b75a66674d5b2c45401800d1ec64 100644
 --- a/dist/App.js
 +++ b/dist/App.js
 @@ -61,7 +61,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
@@ -22,7 +22,78 @@ index 692678e..9ab382f 100644
      // The hosted app the address names (lib/hosted), for the rail to light.
      const inside = at.mode === 'hosted' ? at.id : null;
      const where = at.mode === 'dev' ? at.at : null;
-@@ -261,7 +261,14 @@ function Window({ bar, betas }) {
+@@ -223,19 +223,58 @@ function Window({ bar, betas }) {
+     // The app's keys.
+     useEffect(() => {
+         const key = (e) => {
++            if (e.defaultPrevented || e.isComposing)
++                return;
+             if (summons(e)) {
+                 e.preventDefault();
+                 setFinding((open) => !open);
+                 return;
+             }
+-            if (typing(e))
+-                return;
+             const mod = e.metaKey || e.ctrlKey;
+-            if (mod && !e.shiftKey && !e.altKey && e.key === ',') {
++            const lower = (e.key ?? '').toLowerCase();
++            // New chat: ⇧⌘O / Ctrl+Shift+O everywhere, plus ⌘N / Ctrl+N in a desktop window.
++            if (mod && !e.altKey && !e.repeat && ((e.shiftKey && lower === 'o') || (bar && !e.shiftKey && lower === 'n'))) {
++                e.preventDefault();
++                empty();
++                move(talk());
++                requestAnimationFrame(() => {
++                    const field = document.querySelector('[data-slot="composer-field"], textarea');
++                    if (field && typeof field.focus === 'function')
++                        field.focus();
++                });
++                return;
++            }
++            // Voice input toggle: ⇧⌘M / Ctrl+Shift+M from anywhere.
++            if (mod && e.shiftKey && !e.altKey && !e.repeat && lower === 'm') {
++                const mic = document.querySelector('button[data-state][aria-pressed]');
++                if (mic && typeof mic.click === 'function' && !mic.hasAttribute('disabled')) {
++                    e.preventDefault();
++                    mic.click();
++                    return;
++                }
++            }
++            // Toggle left sidebar: ⌘B / Ctrl+B anywhere outside contenteditable rich text.
++            if (mod && !e.shiftKey && !e.altKey && !e.repeat && lower === 'b' && !e.target?.isContentEditable) {
++                e.preventDefault();
++                if (typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 767.98px)').matches) {
++                    if (drawer.state === 'open')
++                        drawer.close();
++                    else
++                        drawer.open();
++                }
++                else {
++                    setClosed((c) => !c);
++                }
++                return;
++            }
++            // Settings: ⌘, / Ctrl+, from anywhere.
++            if (mod && !e.shiftKey && !e.altKey && !e.repeat && e.key === ',') {
+                 e.preventDefault();
+                 move(settings());
+                 return;
+             }
++            if (typing(e))
++                return;
+             if (!bar)
+                 return;
+             const back = (e.metaKey && e.key === '[') || (e.altKey && e.key === 'ArrowLeft');
+@@ -250,7 +289,7 @@ function Window({ bar, betas }) {
+         };
+         window.addEventListener('keydown', key);
+         return () => window.removeEventListener('keydown', key);
+-    }, [bar, router, move]);
++    }, [bar, router, move, drawer, setClosed]);
+     const back = () => move(away.current || app(''));
+     const toChat = () => move(last.chat || talk());
+     const toDev = () => move(last.dev || app(''));
+@@ -261,7 +300,14 @@ function Window({ bar, betas }) {
          pick(o);
          window.location.assign(mode === 'dev' ? app('') : mode === 'studio' ? studio('') : mode === 'tabs' ? TERMINALS : inside ? hosted(inside) : talk());
      };
@@ -39,7 +110,7 @@ index 692678e..9ab382f 100644
                      id: 'learning', label: t('Learning'), active: learning, icon: _jsx(RefreshCw, { size: 16, "aria-hidden": true }),
                      onPress: () => { shut(); setLearning(true); },
 diff --git a/dist/Betas.js b/dist/Betas.js
-index df06a48..4a786c7 100644
+index df06a48aef4668408fc6e16d29556e85783bb5cd..4a786c75881ec984df661073c57672cb8efce9c8 100644
 --- a/dist/Betas.js
 +++ b/dist/Betas.js
 @@ -163,7 +163,7 @@ export function BetasList({ go }) {
@@ -52,7 +123,7 @@ index df06a48..4a786c7 100644
  /** The Betas view rendered inside the app's main pane under /beta. */
  export function BetasPane({ go }) {
 diff --git a/dist/Chat.js b/dist/Chat.js
-index ee5162e..f04683e 100644
+index ee5162e3bce8b9d1458399ecf9990fab1f1a42b7..f04683e91e4d3932ca14433acd0dc30f131a7f02 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
 @@ -30,7 +30,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
@@ -391,7 +462,7 @@ index ee5162e..f04683e 100644
 +                    column: { maxW: MEASURE }, composer: composer }) }), _jsx(AgentMaker, {}), carry.dialog, _jsx(Upgrade, { ask: ask, onClose: () => setAsk(null) }), _jsx(VisuallyHidden, { role: "status", "aria-live": "polite", "data-slot": "limited-said", children: _jsx(Text, { children: banner?.message ?? "" }) })] }));
  }
 diff --git a/dist/Column.js b/dist/Column.js
-index 43c949a..0a6c0db 100644
+index 43c949a065450c0fc1d21e500c0401f0128a1afd..0a6c0dbaada419646e97c68ea4d2e632651a2aeb 100644
 --- a/dist/Column.js
 +++ b/dist/Column.js
 @@ -134,5 +134,5 @@ export function Column({ host, mode, thread, go, onShut, onSeek, onBack, drawer
@@ -402,7 +473,7 @@ index 43c949a..0a6c0db 100644
 +                                    : HEAD), children: _jsx(Search, { size: drawer ? 18 : 16, "aria-hidden": true }) })] })), mode === 'chat' ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, children: _jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { "data-slot": "app-new", ...ROW, active: !thread, bg: "transparent", hoverStyle: { bg: '$hover' }, icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) }), onPress: create, ...keys(create), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('New chat') }) }) }) })) : (_jsx(YStack, { "data-slot": "app-places", shrink: 0, children: groups.map((g, i) => (_jsxs(YStack, { pt: i ? '$2' : 0, children: [i && g.label ? (_jsx(Text, { id: `${uid}-${g.id}`, paddingInlineStart: "$2", pb: 2, fontSize: "$3", color: "$soft", children: g.label })) : null, _jsx(YStack, { role: "list", "aria-labelledby": i && g.label ? `${uid}-${g.id}` : undefined, "aria-label": i && g.label ? undefined : g.label || (at ? t(TITLE[at]) : g.id), gap: 1, children: g.links.map((link) => (_jsx(YStack, { role: "listitem", children: _jsx(SidebarItem, { ...ROW, ...(link.id === NEW ? { 'data-slot': 'app-new' } : {}), active: link.active, icon: link.id === NEW ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(SquarePen, { size: 16, "aria-hidden": true }) })) : link.icon ? (_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: link.icon })) : null, onPress: link.onPress, ...keys(() => link.onPress?.()), children: _jsx(Text, { fontSize: "$3", color: link.active ? '$ink' : '$quiet', children: link.label }) }) }, link.id))) })] }, g.id))) })), rail, mode === 'beta' && !drawer ? _jsx(YStack, { "data-slot": "beta-sidebar-slot", flex: 1, minH: 0, overflowY: "auto", pt: "$1" }) : mode === 'studio' || mode === 'beta' || mode === 'hosted' || at ? _jsx(YStack, { flex: 1, minH: 0 }) : _jsx(Recents, { host: host, mode: mode, thread: thread, onOpen: open, onNew: create }), at || mode === 'beta' ? null : (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })), free && mode !== 'beta' ? (_jsx(YStack, { role: "list", gap: 2, shrink: 0, pt: "$2", children: _jsx(YStack, { role: "listitem", minH: MARK, justify: "center", children: _jsx(SidebarItem, { ...ROW, "data-slot": "column-upgrade", icon: _jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", shrink: 0, children: _jsx(Sparkles, { size: 16, "aria-hidden": true, color: "var(--primary)" }) }), onPress: () => { window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); }, ...keys(() => { window.location.hash = '#pricing'; window.dispatchEvent(new CustomEvent('hanzo:upgrade')); }), children: _jsx(Text, { fontSize: "$3", color: "$ink", children: t('Upgrade plan') }) }) }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') }))] }));
  }
 diff --git a/dist/Directory.js b/dist/Directory.js
-index 3451949..49540b1 100644
+index 34519491f2da17a29946555c713a8ba2fabcdfa0..49540b1cb645dd45ae9a5256e63b176c16a56b30 100644
 --- a/dist/Directory.js
 +++ b/dist/Directory.js
 @@ -218,7 +218,7 @@ export function Catalog({ tab }) {
@@ -415,7 +486,7 @@ index 3451949..49540b1 100644
  function RowCard({ row, tab }) {
      const { t } = useI18n();
 diff --git a/dist/Market.js b/dist/Market.js
-index 4a49e6f..fb36688 100644
+index 4a49e6f7a7a377309c1a21a724326cfe930375de..fb366881ad4a32a59fc0e78a288740808ae0c19d 100644
 --- a/dist/Market.js
 +++ b/dist/Market.js
 @@ -138,7 +138,7 @@ export function Market({ scope }) {
@@ -428,7 +499,7 @@ index 4a49e6f..fb36688 100644
                      : ask
                          ? 'Nothing in the registry matches that.'
 diff --git a/dist/Me.js b/dist/Me.js
-index 72a29de..6662fc8 100644
+index 72a29de8b268d6ec3575253cb26d1570045f8280..1fdf5a8239a02841aa6fcf63ac5a5261fa639833 100644
 --- a/dist/Me.js
 +++ b/dist/Me.js
 @@ -133,7 +133,7 @@ function Line({ icon, children, sub, trail }) {
@@ -449,6 +520,15 @@ index 72a29de..6662fc8 100644
      const apple = mac();
      useEffect(() => {
          if (above)
+@@ -203,7 +203,7 @@ export function Me({ host, narrow = false, above = false, onOrg, defaultAccountO
+         });
+     };
+     if (!host.person)
+-        return null;
++        return _jsx(Shortcuts, { open: keys, onOpenChange: setKeys, apple: apple });
+     return (_jsxs(_Fragment, { children: [_jsxs(DropdownMenu, { open: open, onOpenChange: (next) => {
+                     setOpen(next);
+                     if (next)
 @@ -214,16 +214,16 @@ export function Me({ host, narrow = false, above = false, onOrg, defaultAccountO
                      setHelp(false);
                  }, 
@@ -470,7 +550,7 @@ index 72a29de..6662fc8 100644
                                      if (!next)
                                          setLangQuery('');
 diff --git a/dist/Orgs.js b/dist/Orgs.js
-index ad13a57..1851941 100644
+index ad13a575fe1f80fb275d2266896c069893fdc523..1851941403a31f2391c97fe647d9247b1c2eebda 100644
 --- a/dist/Orgs.js
 +++ b/dist/Orgs.js
 @@ -190,8 +190,15 @@ export function Orgs({ children, front = false, forward, signup = false, }) {
@@ -490,8 +570,21 @@ index ad13a57..1851941 100644
      if (founding)
          return _jsx(Start, { founded: founding, onFounded: setFounding, first: members.length === 0 });
      if (members.length === 0) {
+diff --git a/dist/Palette.js b/dist/Palette.js
+index e5d58960b65d8308166cf65ea7cae10d8d246f8b..9203489013655e2f4bbb4558b5550fae70b6154a 100644
+--- a/dist/Palette.js
++++ b/dist/Palette.js
+@@ -129,7 +129,7 @@ function tune(go) {
+ export function actions(host, go, signOut, keys, t = english) {
+     const upload = host ? library(host, (p) => go(app(p)), t)[0]?.links.find((l) => l.id === 'upload') : undefined;
+     const list = [
+-        { id: 'new-chat', label: t('New chat'), icon: _jsx(SquarePen, { ...ICON }), run: () => (empty(), go(talk())) },
++        { id: 'new-chat', label: t('New chat'), icon: _jsx(SquarePen, { ...ICON }), shortcut: ['Mod', 'N'], run: () => (empty(), go(talk())) },
+         { id: 'new-task', label: t('New Dev task'), icon: _jsx(Code2, { ...ICON }), keywords: ['run'], run: () => go(app('')) },
+         { id: 'new-creation', label: t('New Studio creation'), icon: _jsx(WandSparkles, { ...ICON }), keywords: ['image', 'video'], run: () => go(studio('')) },
+         { id: 'new-scheduled', label: t('New scheduled task'), icon: _jsx(Clock, { ...ICON }), keywords: ['automation'], run: () => go(app(written({ kind: 'automation', id: 'new' }))) },
 diff --git a/dist/Rail.js b/dist/Rail.js
-index eec4d26..0a8ed8a 100644
+index eec4d26eceff5131c028a8b459b452466877db4a..0a8ed8a7cd26803f6db0aca2fc5ad778fd76d6e1 100644
 --- a/dist/Rail.js
 +++ b/dist/Rail.js
 @@ -34,7 +34,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
@@ -538,7 +631,7 @@ index eec4d26..0a8ed8a 100644
              , { 
                  // Toward the content: right of the rail, left of it right to left.
 diff --git a/dist/Recents.js b/dist/Recents.js
-index 9ce2fc3..271851e 100644
+index 9ce2fc36721298ef1507061e3f6f54a6e4085393..271851e82572b09e5b1673c251363a61a0e6049e 100644
 --- a/dist/Recents.js
 +++ b/dist/Recents.js
 @@ -15,6 +15,7 @@ import { DOTS, route, useSessions } from '@hanzo/build';
@@ -574,7 +667,7 @@ index 9ce2fc3..271851e 100644
  function List({ mode, rows, view, keep, open, reading, error, onOpen, threads, held = null, onNew, }) {
      const { t } = useI18n();
 diff --git a/dist/Setup.js b/dist/Setup.js
-index b7d68e8..911685c 100644
+index b7d68e841af6f7ef6badcb702b2b86c3dacdd8c6..911685c42c75775fc858d2ab864e4fcd1cd7f1f6 100644
 --- a/dist/Setup.js
 +++ b/dist/Setup.js
 @@ -40,6 +40,50 @@ export const STEP_KEY = 'hanzo.onboarding.step';
@@ -792,7 +885,7 @@ index b7d68e8..911685c 100644
          catch {
              setErrorMsg(t('Could not disconnect {provider} right now. Please try again.', { provider: 'GitHub' }));
 diff --git a/dist/Shell.js b/dist/Shell.js
-index 59e5db4..a11821f 100644
+index 59e5db453ed38161bd5d3faa133f1852362c4abe..a11821f7089af16c083abacf9cdd2f959ba8926f 100644
 --- a/dist/Shell.js
 +++ b/dist/Shell.js
 @@ -495,6 +495,13 @@ function Projects({ filter, onPick, }) {
@@ -810,7 +903,7 @@ index 59e5db4..a11821f 100644
              setWrong(e);
          });
 diff --git a/dist/Upgrade.js b/dist/Upgrade.js
-index f9f98bd..2fb7292 100644
+index f9f98bd5f723e66c81d6433ed6fc518c59d5d65f..2fb7292bff60368c7876b7d743c9a6776547e778 100644
 --- a/dist/Upgrade.js
 +++ b/dist/Upgrade.js
 @@ -1,21 +1,22 @@
@@ -1028,7 +1121,7 @@ index f9f98bd..2fb7292 100644
 +                                                ].map(([Icon, label], idx) => (_jsxs(XStack, { items: "flex-start", gap: "$2.5", children: [_jsx(Box, { pt: 2, children: _jsx(Icon, { size: 16, color: "#388bfd", "aria-hidden": true }) }), _jsx(Text, { fontSize: 13, color: "$ink", lineHeight: 18, children: label })] }, idx))) })] }) })] }), _jsxs(XStack, { justify: "center", items: "center", gap: "$1.5", pt: "$2", children: [_jsx(Text, { fontSize: 13, color: "#8e8e8e", children: t('Need more capabilities for your business?') }), _jsx(Anchor, { href: site('/contact-sales'), fontSize: 13, fontWeight: "600", color: "#388bfd", hoverStyle: { textDecorationLine: 'underline' }, children: t('See Hanzo Enterprise') })] })] })), _jsxs(XStack, { justify: "center", items: "center", gap: "$5", pt: "$2", children: [_jsx(Anchor, { href: site('/pricing'), fontSize: 13, color: "var(--soft, #a1a1aa)", hoverStyle: { color: '$ink' }, children: t('See all plans & pricing table') }), _jsx(Box, { render: "button", onClick: close, bg: "transparent", borderWidth: 0, p: 0, cursor: "pointer", children: _jsx(Text, { fontSize: 13, color: "var(--soft, #a1a1aa)", hoverStyle: { color: '$ink' }, children: t('Not now') }) })] })] }) }));
  }
 diff --git a/dist/Usage.js b/dist/Usage.js
-index 1ef6fb8..2b5b94b 100644
+index 1ef6fb8fff2bc5c37b647a1d4d35e230d8a05feb..2b5b94bee2bb32ea5d2e69415972ebe37834b3a0 100644
 --- a/dist/Usage.js
 +++ b/dist/Usage.js
 @@ -82,12 +82,15 @@ export function UsageControl({ context, read }) {
@@ -1050,7 +1143,7 @@ index 1ef6fb8..2b5b94b 100644
  /** Every shared composer in the app gets the same account usage entry. */
  export function UsageProvider({ children }) {
 diff --git a/dist/failure.js b/dist/failure.js
-index d9d19dd..8221990 100644
+index d9d19dd2e521ca818ff16a3726b57a530d054ff3..822199004a8d10bcd8ee6cd3efa9c90fd106696b 100644
 --- a/dist/failure.js
 +++ b/dist/failure.js
 @@ -123,7 +123,8 @@ export function billed(error) {
@@ -1063,8 +1156,22 @@ index d9d19dd..8221990 100644
      if (typeof href !== 'string')
          return undefined;
      try {
+diff --git a/dist/help.js b/dist/help.js
+index 4adda95d631f2017606298c670eb0ce982d58d44..b81b5410239695df5edae89250bc370abe73c287 100644
+--- a/dist/help.js
++++ b/dist/help.js
+@@ -32,6 +32,9 @@ export const legal = () => [
+  */
+ export const KEYS = [
+     { does: phrase('Search chats'), mac: '⌘K', pc: 'Ctrl+K' },
++    { does: phrase('New chat'), mac: '⌘N / ⇧⌘O', pc: 'Ctrl+N / Ctrl+Shift+O' },
++    { does: phrase('Toggle sidebar'), mac: '⌘B', pc: 'Ctrl+B' },
++    { does: phrase('Voice input'), mac: '⇧⌘M', pc: 'Ctrl+Shift+M' },
+     { does: phrase('Settings'), mac: '⌘,', pc: 'Ctrl+,' },
+     { does: phrase('Keyboard shortcuts'), mac: '⌘/', pc: 'Ctrl+/' },
+     { does: phrase('Side panel'), mac: '⌘.', pc: 'Ctrl+.' },
 diff --git a/dist/lib/limits.js b/dist/lib/limits.js
-index 64d2806..bf142db 100644
+index 64d28061e9be685cf336edaa0bc930a2a0c2be06..bf142db8fb460731d5ccffc1835cdc8bdc3dcad9 100644
 --- a/dist/lib/limits.js
 +++ b/dist/lib/limits.js
 @@ -7,12 +7,14 @@
@@ -1188,7 +1295,7 @@ index 64d2806..bf142db 100644
  /** Whether a catalog family is one of Hanzo's chat families, Enso or Zen, whose turns carry the live web. */
  export const house = (family) => family === 'enso' || family === 'zen';
 diff --git a/dist/lib/pay.js b/dist/lib/pay.js
-index 672f95f..74d1e8c 100644
+index 672f95f41d058110cdba037709d53e243f3614c1..74d1e8c24c3268752f7bfd9ba9164310a3169494 100644
 --- a/dist/lib/pay.js
 +++ b/dist/lib/pay.js
 @@ -54,12 +54,16 @@ export function checkoutUrl(id, back) {
@@ -1210,7 +1317,7 @@ index 672f95f..74d1e8c 100644
      const at = billing();
      if (path === "/" && !s)
 diff --git a/dist/pane.js b/dist/pane.js
-index 9789697..e3b55a0 100644
+index 9789697def551c028fbb12dfe2acbdf3ebcbc309..e3b55a0d79525811164ad42c0bf7d1ad6a8df3c4 100644
 --- a/dist/pane.js
 +++ b/dist/pane.js
 @@ -125,11 +125,6 @@ function watch(api, f, key, id) {
@@ -1282,7 +1389,7 @@ index 9789697..e3b55a0 100644
          try {
              if (stop.signal.aborted)
 diff --git a/dist/recent.js b/dist/recent.js
-index cbb8d45..b302d61 100644
+index cbb8d4539b35f2ba0267deb7b6b8000807e91425..b302d610812041b13f53f57f934ff599aea3fcb0 100644
 --- a/dist/recent.js
 +++ b/dist/recent.js
 @@ -54,7 +54,9 @@ export const MENUS = {
@@ -1297,7 +1404,7 @@ index cbb8d45..b302d61 100644
      return {
          status: pick(k.status, m.status, PLAIN.status),
 diff --git a/dist/seek.js b/dist/seek.js
-index bbf49a0..37cece1 100644
+index bbf49a03dae4f2115047947ce72a11639b4001cd..37cece1a2e1d0d7a9e5635a9a1d5bc773ba7418b 100644
 --- a/dist/seek.js
 +++ b/dist/seek.js
 @@ -76,5 +76,8 @@ export function find(query, recent, idle, all) {
@@ -1312,7 +1419,7 @@ index bbf49a0..37cece1 100644
 + */
 +export const summons = (e) => !e.defaultPrevented && (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && !e.repeat && !e.isComposing && (e.key ?? '').toLowerCase() === 'k';
 diff --git a/dist/thread.js b/dist/thread.js
-index e4e9a45..d18a881 100644
+index e4e9a4500e9692ab38e75050996e2f0045933a2f..d18a8811558ee7610049f746dee2e3a90eafef1c 100644
 --- a/dist/thread.js
 +++ b/dist/thread.js
 @@ -29,6 +29,7 @@ import { Button, ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSe

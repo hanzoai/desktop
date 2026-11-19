@@ -14,7 +14,12 @@ describe('resolveProviderIcon', () => {
       ZenIcon,
     );
     expect(resolveProviderIcon('local', 'zen-agent:4b')).toBe(ZenIcon);
-    expect(resolveProviderIcon(undefined, 'zen4:8b')).toBe(ZenIcon);
+    expect(resolveProviderIcon(undefined, 'zen6:8b')).toBe(ZenIcon);
+    expect(resolveProviderIcon(undefined, 'zen6-coder:31b')).toBe(ZenIcon);
+    expect(resolveProviderIcon('local', 'zen6-flash')).toBe(ZenIcon);
+    expect(resolveProviderIcon('local', 'zen6-max')).toBe(ZenIcon);
+    expect(resolveProviderIcon('local', 'zen6-free')).toBe(ZenIcon);
+    expect(resolveProviderIcon('local', 'zen-vl:8b')).toBe(ZenIcon);
     expect(resolveProviderIcon('groq', 'zen-coder')).toBe(ZenIcon);
   });
 

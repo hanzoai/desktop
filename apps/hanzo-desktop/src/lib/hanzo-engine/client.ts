@@ -3,7 +3,7 @@
  *
  * HTTP client for the local inference engine.
  * Defaults to hanzo-engine on 36900 (OpenAI / Anthropic compatible).
- * Override with VITE_ENGINE_BASE_URL=… to point at zen5-server (8000)
+ * Override with VITE_ENGINE_BASE_URL=… to point at zen6-server (8000)
  * or a remote endpoint.
  */
 

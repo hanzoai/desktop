@@ -212,7 +212,7 @@ export default defineConfig(() => ({
     // through the same alias map the browser build uses.
     server: {
       deps: {
-        inline: [/@hanzogui\//, /@hanzo\/gui/, /@hanzo\/ui/, /react-native/],
+        inline: [/@hanzogui\//, /@hanzo\/gui/, /@hanzo\/ui/, /@hanzo\/app/, /react-native/],
       },
     },
     coverage: {

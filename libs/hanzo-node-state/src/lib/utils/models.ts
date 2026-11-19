@@ -457,8 +457,8 @@ export const modelsConfig: Record<Models, ModelConfig> = {
         value: 'mistral-7b-instruct-v0.2',
       },
       {
-        name: 'Qwen 2.5 7B',
-        value: 'qwen2.5-7b-instruct',
+        name: 'Qwen 3 8B',
+        value: 'qwen3-8b',
       },
       {
         name: 'Phi 3 Mini',

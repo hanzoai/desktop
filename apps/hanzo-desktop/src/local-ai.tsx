@@ -90,9 +90,10 @@ export interface DiscoveredEngine {
   base_url: string;
 }
 
-// Filter out qwen2 models (Zen models: qwen3+ only, NOT qwen2) and embedding-only models for chat
+// Filter out legacy models (Zen models: zen6 / qwen3+ only) and embedding-only models for chat
+const LEGACY_MODEL_RE = /qwen2|zen[45]/i;
 const ALL_CATALOG_MODELS: CatalogModel[] = (rawCatalog as CatalogModel[]).filter(
-  (m) => !m.name.toLowerCase().includes('qwen2'),
+  (m) => !LEGACY_MODEL_RE.test(m.name),
 );
 
 // Map friendly Zen model aliases to underlying weights when pulling via Ollama registry if needed
@@ -100,14 +101,22 @@ const OLLAMA_PULL_ALIASES: Record<string, string> = {
   'zen-nano:0.6b': 'qwen3:0.6b',
   'zen-agent:4b': 'qwen3:4b',
   'zen-coder:24b': 'qwen3-coder:30b',
-  'zen4:latest': 'qwen3:8b',
-  'zen4:4b': 'qwen3:4b',
-  'zen4:8b': 'qwen3:8b',
-  'zen4:14b': 'qwen3:14b',
-  'zen4:30b': 'qwen3:30b',
-  'zen4:80b': 'qwen3:32b',
-  'zen4-coder:latest': 'qwen3-coder:30b',
-  'zen4-coder:31b': 'qwen3-coder:30b',
+  'zen6:latest': 'qwen3:8b',
+  'zen6:4b': 'qwen3:4b',
+  'zen6:8b': 'qwen3:8b',
+  'zen6:14b': 'qwen3:14b',
+  'zen6:30b': 'qwen3:30b',
+  'zen6:80b': 'qwen3:32b',
+  'zen6-coder:latest': 'qwen3-coder:30b',
+  'zen6-coder:31b': 'qwen3-coder:30b',
+  'zen6-coder:80b': 'qwen3:32b',
+  'zen6-flash:latest': 'qwen3:4b',
+  'zen6-flash:4b': 'qwen3:4b',
+  'zen6-flash:8b': 'qwen3:8b',
+  'zen-vl:latest': 'qwen3-vl:8b',
+  'zen-vl:4b': 'qwen3-vl:4b',
+  'zen-vl:8b': 'qwen3-vl:8b',
+  'zen-vl:30b': 'qwen3-vl:30b',
 };
 
 export function getCustomEngineUrl(): string {
@@ -139,73 +148,78 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
   }
   const found: InstalledModelInfo[] = [];
   const seen = new Set<string>();
+  const isTestEnv = typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test';
+  const probeTimeoutMs = isTestEnv ? 150 : 1200;
 
-  // 1. Probe custom engine URL if configured
   const customUrl = getCustomEngineUrl();
-  if (customUrl) {
-    try {
-      const base = customUrl.endsWith('/v1') ? customUrl : `${customUrl}/v1`;
-      const res = await fetch(`${base}/models`, { signal: AbortSignal.timeout(1500) });
-      if (res.ok) {
+  const [customRows, engineRows, ollamaModels] = await Promise.all([
+    customUrl
+      ? (async () => {
+          try {
+            const base = customUrl.endsWith('/v1') ? customUrl : `${customUrl}/v1`;
+            const res = await fetch(`${base}/models`, { signal: AbortSignal.timeout(probeTimeoutMs) });
+            if (!res.ok) return [];
+            const body = await res.json();
+            return Array.isArray(body?.data) ? body.data : [];
+          } catch {
+            return [];
+          }
+        })()
+      : Promise.resolve([]),
+    (async () => {
+      try {
+        const res = await fetch(`${LOCAL_ENGINE_PORT_URL}/v1/models`, {
+          signal: AbortSignal.timeout(probeTimeoutMs),
+        });
+        if (!res.ok) return [];
         const body = await res.json();
-        const rows = Array.isArray(body?.data) ? body.data : [];
-        for (const r of rows) {
-          if (r?.id && !seen.has(r.id)) {
-            seen.add(r.id);
-            found.push({ id: r.id, source: 'custom' });
-          }
-        }
+        return Array.isArray(body?.data) ? body.data : [];
+      } catch {
+        return [];
       }
-    } catch {
-      // ignore offline custom engine
+    })(),
+    (async () => {
+      try {
+        const res = await fetch(`${LOCAL_OLLAMA_URL}/api/tags`, {
+          signal: AbortSignal.timeout(probeTimeoutMs),
+        });
+        if (!res.ok) return [];
+        const body = await res.json();
+        return Array.isArray(body?.models) ? body.models : [];
+      } catch {
+        return [];
+      }
+    })(),
+  ]);
+
+  for (const r of customRows) {
+    if (r?.id && !seen.has(r.id)) {
+      seen.add(r.id);
+      found.push({ id: r.id, source: 'custom' });
     }
   }
 
-  // 2. Probe embedded Hanzo Engine (:36900)
-  try {
-    const res = await fetch(`${LOCAL_ENGINE_PORT_URL}/v1/models`, {
-      signal: AbortSignal.timeout(1200),
-    });
-    if (res.ok) {
-      const body = await res.json();
-      const rows = Array.isArray(body?.data) ? body.data : [];
-      for (const r of rows) {
-        if (r?.id && !seen.has(r.id)) {
-          seen.add(r.id);
-          found.push({ id: r.id, source: 'hanzo-engine' });
-        }
-      }
+  for (const r of engineRows) {
+    if (r?.id && !seen.has(r.id)) {
+      seen.add(r.id);
+      found.push({ id: r.id, source: 'hanzo-engine' });
     }
-  } catch {
-    // :36900 not running
   }
 
-  // 3. Probe local Ollama runtime (:11434)
-  try {
-    const res = await fetch(`${LOCAL_OLLAMA_URL}/api/tags`, {
-      signal: AbortSignal.timeout(1200),
-    });
-    if (res.ok) {
-      const body = await res.json();
-      const models = Array.isArray(body?.models) ? body.models : [];
-      for (const m of models) {
-        const name = String(m?.name || m?.model || '').trim();
-        if (!name || name.toLowerCase().includes('qwen2')) continue;
-        if (!seen.has(name)) {
-          seen.add(name);
-          found.push({ id: name, sizeBytes: m?.size, source: 'ollama' });
-        }
-        // If qwen3:0.6b is installed, also mark zen-nano:0.6b as ready
-        for (const [zenTag, targetTag] of Object.entries(OLLAMA_PULL_ALIASES)) {
-          if (name === targetTag && !seen.has(zenTag)) {
-            seen.add(zenTag);
-            found.push({ id: zenTag, sizeBytes: m?.size, source: 'ollama' });
-          }
-        }
+  for (const m of ollamaModels) {
+    const name = String(m?.name || m?.model || '').trim();
+    if (!name || LEGACY_MODEL_RE.test(name)) continue;
+    if (!seen.has(name)) {
+      seen.add(name);
+      found.push({ id: name, sizeBytes: m?.size, source: 'ollama' });
+    }
+    // If qwen3:0.6b is installed, also mark zen-nano:0.6b as ready
+    for (const [zenTag, targetTag] of Object.entries(OLLAMA_PULL_ALIASES)) {
+      if (name === targetTag && !seen.has(zenTag)) {
+        seen.add(zenTag);
+        found.push({ id: zenTag, sizeBytes: m?.size, source: 'ollama' });
       }
     }
-  } catch {
-    // :11434 not running
   }
 
   cachedInstalledModels = found;
@@ -216,7 +230,7 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
 function formatModelTitle(model: CatalogModel, tag: CatalogTag, installed: boolean): string {
   const baseName = model.name
     .split(/[-_]/)
-    .map((w) => (w.toLowerCase() === 'zen' ? 'Zen' : w.toLowerCase() === 'zen4' ? 'Zen4' : w.toLowerCase() === 'vl' ? 'VL' : w.toLowerCase() === 'r1' ? 'R1' : w.charAt(0).toUpperCase() + w.slice(1)))
+    .map((w) => (w.toLowerCase() === 'zen' ? 'Zen' : w.toLowerCase() === 'zen6' ? 'Zen 6' : w.toLowerCase() === 'vl' ? 'VL' : w.toLowerCase() === 'r1' ? 'R1' : w.charAt(0).toUpperCase() + w.slice(1)))
     .join(' ');
   const paramPart = tag.name.includes(':') ? tag.name.split(':')[1] : '';
   const suffix = paramPart && paramPart !== 'latest' ? ` ${paramPart.toUpperCase()}` : '';
@@ -411,6 +425,7 @@ export async function handleLocalChatCompletion(
     if (!exactMatch) {
       if (
         targetModel === 'enso-free' ||
+        targetModel === 'zen6-free' ||
         targetModel === 'zen-free' ||
         targetModel === 'enso' ||
         targetModel === 'default' ||
@@ -470,7 +485,7 @@ export async function handleLocalChatCompletion(
     JSON.stringify({
       error: {
         message:
-          'No local AI model is loaded yet. Select or download a local model (such as Zen Nano 0.6B or Zen4 8B) in the Local AI & Node Manager.',
+          'No local AI model is loaded yet. Select or download a local model (such as Zen Nano 0.6B or Zen 6 8B) in the Local AI & Node Manager.',
         code: 'local_model_required',
       },
     }),
@@ -478,8 +493,11 @@ export async function handleLocalChatCompletion(
   );
 }
 
-export function openLocalAiManager(detail?: { tab?: 'models' | 'node' | 'engine'; model?: string }) {
-  window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail }));
+export function openLocalAiManager(
+  detail?: 'models' | 'node' | 'engine' | { tab?: 'models' | 'node' | 'engine'; model?: string },
+) {
+  const normalized = typeof detail === 'string' ? { tab: detail } : detail;
+  window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: normalized }));
 }
 
 export function LocalAiManager() {
@@ -512,26 +530,26 @@ export function LocalAiManager() {
   const [loadingEngineModel, setLoadingEngineModel] = useState<boolean>(false);
   const [engineMessage, setEngineMessage] = useState<string>('');
 
+  const [showAllModels, setShowAllModels] = useState<boolean>(false);
+
   const refreshState = useCallback(async () => {
-    const models = await probeInstalledLocalModels(true);
+    const isTestEnv = typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test';
+    const healthTimeoutMs = isTestEnv ? 150 : 1000;
+
+    const [models, engineOk, ollamaOk] = await Promise.all([
+      probeInstalledLocalModels(true),
+      fetch(`${LOCAL_ENGINE_PORT_URL}/health`, { signal: AbortSignal.timeout(healthTimeoutMs) })
+        .then((r) => r.ok)
+        .catch(() => false),
+      fetch(`${LOCAL_OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(healthTimeoutMs) })
+        .then((r) => r.ok)
+        .catch(() => false),
+    ]);
+
     setInstalled(models);
     setSelectedModel(kept().model || 'zen-nano:0.6b');
-
-    // Check :36900
-    try {
-      const r = await fetch(`${LOCAL_ENGINE_PORT_URL}/health`, { signal: AbortSignal.timeout(1000) });
-      setEngine36900Up(r.ok);
-    } catch {
-      setEngine36900Up(false);
-    }
-
-    // Check :11434
-    try {
-      const r = await fetch(`${LOCAL_OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(1000) });
-      setOllama11434Up(r.ok);
-    } catch {
-      setOllama11434Up(false);
-    }
+    setEngine36900Up(engineOk);
+    setOllama11434Up(ollamaOk);
 
     // Check hanzo-node via Tauri IPC
     if (isTauri()) {
@@ -549,10 +567,6 @@ export function LocalAiManager() {
       }
     }
   }, []);
-
-  useEffect(() => {
-    void refreshState();
-  }, [refreshState]);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
@@ -789,6 +803,11 @@ export function LocalAiManager() {
     });
   }, [search, category, installedSet]);
 
+  const visibleModels = useMemo(() => {
+    if (search.trim() || showAllModels || category !== 'all') return filteredModels;
+    return filteredModels.slice(0, 20);
+  }, [filteredModels, search, showAllModels, category]);
+
   if (!open) return null;
 
   return (
@@ -997,7 +1016,7 @@ export function LocalAiManager() {
                 data-testid="local-ai-search-input"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search local models (zen4, qwen3, deepseek-r1, vision, coder…)"
+                placeholder="Search local models (zen6, qwen3, deepseek-r1, vision, coder…)"
                 style={{
                   flex: 1,
                   minWidth: 220,
@@ -1053,7 +1072,7 @@ export function LocalAiManager() {
                 gap: 10,
               }}
             >
-              {filteredModels.map((model) => {
+              {visibleModels.map((model) => {
                 const localTags = model.tags.filter((t) => !t.name.endsWith('-cloud') && t.size !== 'Unknown');
                 const tagsToShow = localTags.length > 0 ? localTags.slice(0, 6) : model.tags.slice(0, 3);
                 return (
@@ -1227,6 +1246,24 @@ export function LocalAiManager() {
                   </div>
                 );
               })}
+              {visibleModels.length < filteredModels.length && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllModels(true)}
+                  style={{
+                    padding: '9px 14px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    backgroundColor: 'rgba(255,255,255,0.04)',
+                    color: '#e4e4e7',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Show all {filteredModels.length} local models ↓
+                </button>
+              )}
             </div>
           </div>
         )}
