@@ -158,5 +158,3 @@ vulkan = ["hanzo?/vulkan", "hanzo-engine?/vulkan", "hanzo-server-core?/vulkan"]
 accelerate = ["hanzo-engine?/accelerate", "hanzo-server-core?/accelerate"]
 flash-attn = ["hanzo?/flash-attn", "hanzo-server-core?/flash-attn"]
 
-[workspace]
-
