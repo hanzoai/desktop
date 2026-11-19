@@ -17,14 +17,12 @@ import {
   DesktopSettings,
 } from './desktop-shortcuts';
 import { keychain, open as openKeychain, written } from './keychain';
-import { resolveDesktopShellBrand } from './lib/brand-identity';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
 } from './local-ai';
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
-import { UnifiedDesktopShell } from './unified-shell';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
 
@@ -638,26 +636,6 @@ function Gate() {
           stayGuest();
           setVisiting(true);
           window.history.pushState(null, '', '/chat');
-        }}
-      />
-    );
-  }
-
-  const shellBrand = resolveDesktopShellBrand({ pathname: path });
-  if (shellBrand === 'bot' || shellBrand === 'team') {
-    return (
-      <UnifiedDesktopShell
-        brand={shellBrand}
-        barInset={BAR.inset ?? 0}
-        isAuthenticated={isAuthenticated}
-        onNavigate={(target) => move(target)}
-        onSignIn={() => {
-          setBusy(true);
-          setError(null);
-          signIn(sdk).catch((err: unknown) => {
-            setBusy(false);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          });
         }}
       />
     );
