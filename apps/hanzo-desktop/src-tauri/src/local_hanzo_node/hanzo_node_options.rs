@@ -29,6 +29,9 @@ pub struct HanzoNodeOptions {
     pub hanzo_tools_runner_deno_binary_path: Option<String>,
     pub hanzo_tools_runner_uv_binary_path: Option<String>,
     pub hanzo_store_url: Option<String>,
+    /// `SKIP_IMPORT_FROM_DIRECTORY`: "true" stops the node fetching its
+    /// default-tool directory at start. See the default below.
+    pub skip_import_from_directory: Option<String>,
     pub secret_desktop_installation_proof_key: Option<String>,
 }
 
@@ -175,6 +178,12 @@ impl HanzoNodeOptions {
                     .or(base_options.hanzo_store_url)
                     .unwrap_or_default(),
             ),
+            skip_import_from_directory: Some(
+                options
+                    .skip_import_from_directory
+                    .or(base_options.skip_import_from_directory)
+                    .unwrap_or_else(|| default_options.skip_import_from_directory.unwrap_or_default()),
+            ),
             secret_desktop_installation_proof_key: default_options
                 .secret_desktop_installation_proof_key,
             proxy_identity: default_options.proxy_identity,
@@ -247,14 +256,31 @@ impl Default for HanzoNodeOptions {
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
-            // 384-dim model that matches hanzo-node's hardcoded DB schema.
-            // The bundled Ollama's `snowflake-arctic-embed:xs` tag actually
-            // points at gemma-300M which returns 768-dim — schema mismatch.
-            default_embedding_model: Some("all-minilm:l6-v2".to_string()),
+            // The node sizes its vector tables (`vec0 ... float[N]`) from this
+            // model when it creates a new database, and it seeds 130 static
+            // prompts whose embeddings are PRECOMPUTED with embeddinggemma:300m
+            // — 768 floats each (hanzo-db-sqlite files/prompts_data.rs, node
+            // v1.15.0). `all-minilm:l6-v2` made the tables 384 wide and every
+            // seed insert failed: "Dimension mismatch ... Expected 384
+            // dimensions but received 768" (cloud#760). 768 is also the node's
+            // own default. A database already created at 384 keeps its tables
+            // and its stored model; only a new one picks this up.
+            default_embedding_model: Some("embeddinggemma:300m".to_string()),
             supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,all-minilm:l6-v2".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
             hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),
+            // The node fetches its default-tool directory from
+            // HANZO_TOOLS_DIRECTORY_URL, default
+            // https://store-api.hanzo.ai/store/defaults. Nothing serves that:
+            // the host falls through to the *.hanzo.ai ingress and answers
+            // 404 (cloud#760), and hanzoai/store-api, the only code for it,
+            // answers an object with stub entries where the node needs an
+            // array of {name, file, routerKey}. So the fetch can only fail.
+            // The flag skips just that fetch: the local-directory import it
+            // also gates needs INSTALL_FOLDER_PATH, which the desktop never
+            // sets. Set it to "false" once a directory is served.
+            skip_import_from_directory: Some("true".to_string()),
             secret_desktop_installation_proof_key: option_env!(
                 "SECRET_DESKTOP_INSTALLATION_PROOF_KEY"
             )

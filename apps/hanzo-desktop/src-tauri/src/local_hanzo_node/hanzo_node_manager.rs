@@ -47,6 +47,16 @@ pub enum HanzoNodeManagerEvent {
     EngineStopError { error: String },
 }
 
+/// What starting the chat engine on :36900 came to.
+enum EngineLaunch {
+    /// We started it; the child is ours to stop.
+    Spawned(std::process::Child),
+    /// Something was already listening; it is not ours to stop.
+    Reused,
+    /// No engine binary is installed (release bundles ship none), so nothing runs.
+    NotInstalled,
+}
+
 pub struct HanzoNodeManager {
     hanzo_node_process: HanzoNodeProcessHandler,
     event_broadcaster: broadcast::Sender<HanzoNodeManagerEvent>,
@@ -105,26 +115,68 @@ impl HanzoNodeManager {
             .unwrap_or(false)
     }
 
+    /// The `hanzo-server` binary to run, or `None` when none is installed.
+    /// Release bundles do not ship it (cloud#760), so `None` is the normal case
+    /// there and both engine ports are skipped without an error.
+    fn engine_bin() -> Option<String> {
+        let exe_dir = std::env::current_exe()
+            .ok()
+            .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf));
+        hanzo_engine_bin::resolve(
+            std::env::var_os(hanzo_engine_bin::OVERRIDE_VAR).as_deref(),
+            exe_dir.as_deref(),
+            std::env::var_os("PATH").as_deref(),
+        )
+        .map(|p| p.to_string_lossy().into_owned())
+    }
+
+    /// Fallback when hanzo-server is missing or will not start: reuse, or
+    /// start, a local inference runtime on :11434 if the system has one, so
+    /// local models still work. `None` when there is none.
+    async fn local_runtime_fallback() -> Option<EngineLaunch> {
+        if Self::engine_up("http://127.0.0.1:11434/api/tags").await {
+            log::info!("local inference runtime already listening on :11434, reusing it");
+            return Some(EngineLaunch::Reused);
+        }
+        for candidate in ["ollama", "/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"] {
+            if let Ok(child) = std::process::Command::new(candidate)
+                .arg("serve")
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+            {
+                log::info!("spawned local inference runtime `{}` on :11434", candidate);
+                return Some(EngineLaunch::Spawned(child));
+            }
+        }
+        None
+    }
+
     /// Spawn (or reuse) the daemon-managed inference engine — hanzo-engine
-    /// (mistral.rs, CUDA on GPU). Returns the child if we started it, or `None`
-    /// if an engine was already listening on the port (detect-and-reuse).
-    async fn spawn_engine(&self) -> Result<Option<std::process::Child>, String> {
+    /// (mistral.rs, CUDA on GPU). An engine already listening on the port is
+    /// reused; with no engine installed the local engine is skipped.
+    async fn spawn_engine(&self) -> Result<EngineLaunch, String> {
         let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
         let models_url = format!("http://127.0.0.1:{}/health", port);
 
         if Self::engine_up(&models_url).await {
             log::info!("hanzo-engine already listening on :{}, reusing it", port);
-            return Ok(None);
+            return Ok(EngineLaunch::Reused);
         }
 
-        let bin = std::env::var("HANZO_ENGINE_BIN").unwrap_or_else(|_| {
-            std::env::current_exe()
-                .ok()
-                .and_then(|exe| exe.parent().map(|dir| dir.join("hanzo-server")))
-                .filter(|p| p.exists())
-                .map(|p| p.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "hanzo-server".to_string())
-        });
+        let Some(bin) = Self::engine_bin() else {
+            if let Some(launch) = Self::local_runtime_fallback().await {
+                return Ok(launch);
+            }
+            log::info!(
+                "no local inference engine: `{}` is not in the app bundle or on PATH and {} is unset; \
+                 skipping the local engine on :{} (cloud models are unaffected)",
+                hanzo_engine_bin::file_name(),
+                hanzo_engine_bin::OVERRIDE_VAR,
+                port
+            );
+            return Ok(EngineLaunch::NotInstalled);
+        };
         let model =
             std::env::var("HANZO_ENGINE_MODEL").unwrap_or_else(|_| "Qwen/Qwen3-0.6B".to_string());
         // Chat model. Default to the real zen chat model `zen-eco-3b-agent` (a GGUF;
@@ -161,29 +213,12 @@ impl HanzoNodeManager {
                     "hanzo-engine spawned on :{} (loading model in background)",
                     port
                 );
-                Ok(Some(child))
+                Ok(EngineLaunch::Spawned(child))
             }
-            Err(e) => {
-                // Fallback: if hanzo-server is not installed, ensure local Ollama runtime
-                // (:11434) is running if available on the system so local models work out of the box.
-                if !Self::engine_up("http://127.0.0.1:11434/api/tags").await {
-                    for candidate in ["ollama", "/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"] {
-                        if let Ok(child) = std::process::Command::new(candidate)
-                            .arg("serve")
-                            .stdout(std::process::Stdio::null())
-                            .stderr(std::process::Stdio::null())
-                            .spawn()
-                        {
-                            log::info!("spawned local inference runtime `{}` on :11434", candidate);
-                            return Ok(Some(child));
-                        }
-                    }
-                } else {
-                    log::info!("local inference runtime already listening on :11434, reusing it");
-                    return Ok(None);
-                }
-                Err(format!("failed to spawn hanzo-engine ({}): {}", bin, e))
-            }
+            Err(e) => match Self::local_runtime_fallback().await {
+                Some(launch) => Ok(launch),
+                None => Err(format!("failed to spawn hanzo-engine ({}): {}", bin, e)),
+            },
         }
     }
 
@@ -193,9 +228,21 @@ impl HanzoNodeManager {
         // already listening on the engine port we detect and reuse it.
         self.emit_event(HanzoNodeManagerEvent::StartingEngine);
         match self.spawn_engine().await {
-            Ok(child) => {
-                self.engine_child = child;
+            Ok(EngineLaunch::Spawned(child)) => {
+                self.engine_child = Some(child);
                 self.emit_event(HanzoNodeManagerEvent::EngineStarted);
+            }
+            Ok(EngineLaunch::Reused) => {
+                self.engine_child = None;
+                self.emit_event(HanzoNodeManagerEvent::EngineStarted);
+            }
+            Ok(EngineLaunch::NotInstalled) => {
+                // Not a failure: the bundle does not ship an engine. Logged at
+                // INFO in spawn_engine; the event says the engine is not running.
+                self.engine_child = None;
+                self.emit_event(HanzoNodeManagerEvent::EngineStartError {
+                    error: format!("{} is not installed", hanzo_engine_bin::file_name()),
+                });
             }
             Err(e) => {
                 log::error!("failed to start hanzo-engine: {}", e);
@@ -212,9 +259,7 @@ impl HanzoNodeManager {
             let emodels = format!("http://127.0.0.1:{}/health", eport);
             if Self::engine_up(&emodels).await {
                 log::info!("embedding engine already on :{}, reusing it", eport);
-            } else {
-                let ebin = std::env::var("HANZO_ENGINE_BIN")
-                    .unwrap_or_else(|_| "hanzo-server".to_string());
+            } else if let Some(ebin) = Self::engine_bin() {
                 let emodel = std::env::var("HANZO_EMBED_MODEL")
                     .unwrap_or_else(|_| "zenlm/zen-embedding-0.6B".to_string());
                 let earch = std::env::var("HANZO_EMBED_ARCH")
@@ -233,6 +278,12 @@ impl HanzoNodeManager {
                     Ok(c) => self.embed_child = Some(c),
                     Err(e) => log::error!("failed to spawn embedding engine ({}): {}", ebin, e),
                 }
+            } else {
+                log::info!(
+                    "no local embedding engine: `{}` is not installed; skipping :{}",
+                    hanzo_engine_bin::file_name(),
+                    eport
+                );
             }
         }
 

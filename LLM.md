@@ -469,6 +469,43 @@ token, env, headers, auth...). Test code and `tests/` are skipped. A deliberate
 exception needs `// secret-log-ok: <reason>` on the line. Its self-test,
 `scripts/test_check_secret_logging.py`, holds the shapes it must keep catching.
 
+## Local node startup: what the pinned node can and cannot do (cloud#760)
+
+Four startup errors were reported from 1.1.54's log. Their causes, measured
+against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
+
+- **No engine binary.** Release bundles ship `hanzo-node`, `deno` and `uv`, not
+  `hanzo-server`, so spawning it failed twice per start. `src-tauri/engine-bin`
+  (crate `hanzo-engine-bin`, gate `engine-bin`) answers first whether one exists:
+  `HANZO_ENGINE_BIN` as written, then beside the app executable, then `PATH`.
+  None means both engine ports are skipped with an INFO line; the old fallback to
+  a system Ollama on :11434 still runs first. Whether bundles ship an engine is
+  an owner decision, not a code one.
+- **384 vs 768.** The node sizes its `vec0` tables from `DEFAULT_EMBEDDING_MODEL`
+  when it CREATES its database, and seeds 130 static prompts whose embeddings are
+  precomputed with `embeddinggemma:300m` (768 floats). The app passed
+  `all-minilm:l6-v2` (384), so every seed insert failed. The default is now
+  `embeddinggemma:300m`. A database already created at 384 keeps its tables and
+  its stored model (the database wins over the env on later starts), and the
+  Settings migration cannot rescue it: the node first asks an Ollama for the
+  model and gives up without one.
+- **"Query is not read-only" is not a read-only connection.** It is how rusqlite
+  0.32 prints `Error::InvalidQuery`, which the node returns when its embedding
+  request fails. Rust tools carry no embedding, so `add_tool` asks
+  `POST {EMBEDDINGS_SERVER_URL}/api/embeddings` (Ollama's shape) for one;
+  api.hanzo.ai answers that path 404 and serves only `/v1/embeddings` with a key.
+  So nothing that needs a fresh embedding works in the local node today: the
+  built-in Rust tools, imported tools, file chunks. Fixing it needs an embedding
+  backend the node can call (a bundled engine, or a cloud endpoint plus a key)
+  and therefore a node build, which is not this repo's to make.
+- **The tool directory 404s.** `store-api.hanzo.ai` falls through to the
+  `*.hanzo.ai` ingress; nothing serves `/store/defaults`. `hanzoai/store-api`
+  answers `{tools, prompts}` with stub entries, where the node needs an array of
+  `{name, file, routerKey}`. The app now sets `SKIP_IMPORT_FROM_DIRECTORY=true`
+  (option `skip_import_from_directory`, editable in the Node Manager), which skips
+  only that fetch: the local-directory import it also gates needs
+  `INSTALL_FOLDER_PATH`, which the app never sets. Flip it once a directory is served.
+
 ## Release Pipeline
 
 ### Workflows
