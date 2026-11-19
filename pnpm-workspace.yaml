@@ -75,11 +75,15 @@ overrides:
 # The desktop draws hanzo.ai's app, so it takes hanzo.ai's patches with it:
 # @hanzo/app 0.2.63 with Setup's GitHub fixes and the composer's spent-usage
 # banner (hanzoai/app#23, #25), and @hanzogui/shell 8.4.3 with hanzoai/gui#20
-# (the palette leaves a ⌘K the page already answered). Drop each when its pin
-# moves to a release that carries it.
+# (the palette leaves a ⌘K the page already answered), and @hanzo/studio 0.1.8
+# so a GPU status that is not a fleet no longer crashes Studio in lit(), and the
+# window reaches the engine through the hanzo-studio scheme
+# (src-tauri/src/studio_proxy.rs), since studio.hanzo.ai's CORS admits no window
+# origin. Drop each when its pin moves to a release that carries it.
 patchedDependencies:
   '@hanzo/app@0.2.63': patches/@hanzo__app@0.2.63.patch
   '@hanzo/build@0.2.99': patches/@hanzo__build@0.2.99.patch
+  '@hanzo/studio@0.1.8': patches/@hanzo__studio@0.1.8.patch
   '@hanzogui/shell@8.4.3': patches/@hanzogui__shell@8.4.3.patch
 allowBuilds:
   '@swc/core': true

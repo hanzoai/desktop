@@ -9,6 +9,10 @@ use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
 use crate::commands::hardware::hardware_get_summary;
+use crate::commands::knowledge_graph::{
+    knowledge_graph_get_ontology, knowledge_graph_query_entity, knowledge_graph_read_local,
+    knowledge_graph_sync_apple, knowledge_graph_update_convo,
+};
 use crate::commands::hanzo_node_manager_commands::{
     hanzo_node_get_default_model, hanzo_node_get_default_embedding_model,     hanzo_node_get_options, hanzo_node_is_running,
     hanzo_node_kill, hanzo_node_remove_storage, hanzo_node_set_default_options,
@@ -77,6 +81,7 @@ mod machine;
 mod mining;
 mod model_tools;
 mod models;
+mod studio_proxy;
 mod tray;
 mod windows;
 // Native Hanzo Engine (in-process mistral.rs fork). Compiled only with the
@@ -104,6 +109,14 @@ fn main() {
     // browser commands reach the extension with or without one running.
     #[cfg(unix)]
     zapd::embed();
+    let context = tauri::generate_context!();
+    // Older builds wrote sidecar key material (and other credentials) to the
+    // log in plaintext. Redact whatever is still on disk before the log
+    // plugin opens the file again. Best effort: a failure here must not stop
+    // the app from starting.
+    if let Some(dir) = hanzo_log_redact::app_log_dir(&context.config().identifier) {
+        let _ = hanzo_log_redact::scrub_log_dir(&dir);
+    }
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             let _ = recreate_window(app.clone(), Window::Main, true);
@@ -113,6 +126,10 @@ fn main() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .format(|out, message, record| {
+                    // Every record, the app's own and each sidecar line, is
+                    // redacted here: this is the one place all of them pass.
+                    let message = message.to_string();
+                    let message = hanzo_log_redact::redact(&message);
                     // Ending with a triple ideographic space as separator so then we can group texts that belongs to the same log
                     out.finish(format_args!(
                         "[{}][{}][{}] {}　　　",
@@ -125,6 +142,11 @@ fn main() {
                 .build(),
         )
         .plugin(tauri_plugin_http::init())
+        // Studio's engine calls, forwarded to studio.hanzo.ai (whose CORS
+        // admits no window origin). See studio_proxy.rs.
+        .register_asynchronous_uri_scheme_protocol(studio_proxy::SCHEME, |ctx, req, responder| {
+            studio_proxy::handle(ctx, req, responder)
+        })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_shell::init())
@@ -194,6 +216,11 @@ fn main() {
             node_remove_storage,
             show_node_manager_window,
             hardware_get_summary,
+            knowledge_graph_read_local,
+            knowledge_graph_sync_apple,
+            knowledge_graph_query_entity,
+            knowledge_graph_update_convo,
+            knowledge_graph_get_ontology,
             galxe_generate_proof,
             get_request,
             post_request,
@@ -419,7 +446,7 @@ fn main() {
             });
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while running tauri application")
         .run(move |app_handle, event| match event {
             RunEvent::ExitRequested { api, .. } => {

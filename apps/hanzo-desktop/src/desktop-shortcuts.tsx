@@ -189,18 +189,36 @@ export function DesktopSettings({
   }, [onBack]);
 
   useEffect(() => {
+    let cancelled = false;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 1200);
+
     fetch('http://127.0.0.1:9630/v1/chain/hanzo/rpc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }),
-      signal: AbortSignal.timeout(1200),
+      signal: ctrl.signal,
     })
-      .then((r) => setHanzodUp(r.ok))
-      .catch(() => setHanzodUp(false));
+      .then((r) => {
+        if (!cancelled) setHanzodUp(r.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setHanzodUp(false);
+      });
 
-    fetch(`${localEngineUrl}/health`, { signal: AbortSignal.timeout(1200) })
-      .then((r) => setEngineUp(r.ok))
-      .catch(() => setEngineUp(false));
+    fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
+      .then((r) => {
+        if (!cancelled) setEngineUp(r.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setEngineUp(false);
+      });
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      ctrl.abort();
+    };
   }, [localEngineUrl]);
 
   const applyTheme = (next: 'dark' | 'light') => {
