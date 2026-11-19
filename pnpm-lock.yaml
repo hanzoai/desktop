@@ -557,7 +557,7 @@ overrides:
   yaml@2: '>=2.8.3'
 
 patchedDependencies:
-  '@hanzo/app@0.2.63': 671e2ac50c7ff39460e61e8e2e27e61b4f172438200658a4701233b9430b90c9
+  '@hanzo/app@0.2.63': 334fbf01e48da282ada010622855afffe9ecc799639c3df073752176a2519ef3
   '@hanzo/build@0.2.99': a08c7ba528738d86a39a8a9b82ee1dbb385f6992f87265da8b436aed35359c99
   '@hanzo/studio@0.1.8': 817ae0169a4e5838aae68d3566da0daf75627679b5bad66049bb0fe88af97f0a
   '@hanzogui/shell@8.4.3': bc6bb68834f778be4185df3076fce2a9ebe0ca820c582d4ef7226023abc8941d
@@ -571,7 +571,7 @@ importers:
         version: 0.6.24(react@19.2.8)
       '@hanzo/app':
         specifier: 'catalog:'
-        version: 0.2.63(patch_hash=671e2ac50c7ff39460e61e8e2e27e61b4f172438200658a4701233b9430b90c9)(6d4bd7ed8883fd3b6d652b90987357c5)
+        version: https://registry.npmjs.org/@hanzo/app/-/app-0.2.63.tgz(patch_hash=334fbf01e48da282ada010622855afffe9ecc799639c3df073752176a2519ef3)(6d4bd7ed8883fd3b6d652b90987357c5)
       '@hanzo/appearance':
         specifier: 'catalog:'
         version: 0.2.13(react@19.2.8)
@@ -1784,8 +1784,9 @@ packages:
       react:
         optional: true
 
-  '@hanzo/app@0.2.63':
-    resolution: {integrity: sha512-kBl9+LfSKVpyqoFkaAk79b9F2e+Wa9dLqI6mKz9REJ58rVhF+EIy+7vEoHhIq7zURAa+pkSeH526rFwyT0RD0A==}
+  '@hanzo/app@https://registry.npmjs.org/@hanzo/app/-/app-0.2.63.tgz':
+    resolution: {integrity: sha512-kBl9+LfSKVpyqoFkaAk79b9F2e+Wa9dLqI6mKz9REJ58rVhF+EIy+7vEoHhIq7zURAa+pkSeH526rFwyT0RD0A==, tarball: https://registry.npmjs.org/@hanzo/app/-/app-0.2.63.tgz}
+    version: 0.2.63
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/ai': '>=0.6.23'
@@ -12607,7 +12608,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/app@0.2.63(patch_hash=671e2ac50c7ff39460e61e8e2e27e61b4f172438200658a4701233b9430b90c9)(6d4bd7ed8883fd3b6d652b90987357c5)':
+  '@hanzo/app@https://registry.npmjs.org/@hanzo/app/-/app-0.2.63.tgz(patch_hash=334fbf01e48da282ada010622855afffe9ecc799639c3df073752176a2519ef3)(6d4bd7ed8883fd3b6d652b90987357c5)':
     dependencies:
       '@hanzo/ai': 0.6.24(react@19.2.8)
       '@hanzo/appearance': 0.2.13(react@19.2.8)

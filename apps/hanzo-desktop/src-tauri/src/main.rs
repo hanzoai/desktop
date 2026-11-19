@@ -401,7 +401,8 @@ fn main() {
                     }
                     drop(hanzo_node_manager_guard);
 
-                    // Ensure local hanzo-site service is reachable on port 3000
+                    // Ensure local hanzo-site service is reachable on port 3000 (Linux systemd)
+                    #[cfg(target_os = "linux")]
                     if std::net::TcpStream::connect("127.0.0.1:3000").is_err() {
                         log::info!("local hanzo-site not reachable on port 3000, ensuring systemd user service is up...");
                         let _ = std::process::Command::new("systemctl")
@@ -466,32 +467,7 @@ fn main() {
             }
             #[cfg(target_os = "macos")]
             RunEvent::Reopen { .. } => {
-                let main_window_label = "main";
-                if let Some(window) = app_handle.get_webview_window(main_window_label) {
-                    window.show().unwrap();
-                    window.center().unwrap();
-                    let _ = window.set_focus();
-                } else {
-                    let main_window_config = app_handle
-                        .config()
-                        .app
-                        .windows
-                        .iter()
-                        .find(|w| w.label == main_window_label)
-                        .unwrap()
-                        .clone();
-                    match tauri::WebviewWindowBuilder::from_config(app_handle, &main_window_config)
-                    {
-                        Ok(builder) => {
-                            if let Err(e) = builder.build() {
-                                log::error!("failed to build main window: {}", e);
-                            }
-                        }
-                        Err(e) => {
-                            log::error!("failed to create WebviewWindowBuilder from config: {}", e);
-                        }
-                    }
-                }
+                let _ = recreate_window(app_handle.clone(), Window::Main, true);
             }
             RunEvent::Ready => {}
             RunEvent::Resumed => {}

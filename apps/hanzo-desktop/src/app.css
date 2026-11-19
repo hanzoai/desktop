@@ -15,35 +15,35 @@
  * order alone. One extra type selector wins on specificity instead.
  */
 html:root {
-  /* The chat's ground: the window's own colour, dark. */
-  --pane-floor: #0a0a0a;
-  --pane-fill: transparent;
-  --pane-edge: transparent;
+  /* Unified Hanzo Dev obsidian outer floor & inset rounded stage pane. */
+  --pane-floor: #050505;
+  --pane-fill: #0f0f12;
+  --pane-edge: rgba(255, 255, 255, 0.08);
+  --pane-round: 12px;
   --pane-ground: none;
 
-  /* The sidebar: one rung up from the chat, the same in every mode. */
-  --desk-panel: #161616;
+  /* Unified collapsible left sidebar (#09090b). */
+  --desk-panel: #09090b;
   --desk-panel-lit: none;
-  --desk-panel-edge: rgb(255 255 255 / 0.055);
+  --desk-panel-edge: rgba(255, 255, 255, 0.08);
 
-  /* A surface inside the chat (Dev's run, Studio's places): the chat's own
-     black, told apart by its hairline rather than by a lighter fill. */
-  --desk-surface: var(--pane-floor);
+  /* Surfaces inside the stage pane. */
+  --desk-surface: #111114;
 }
 
-/* THE WINDOW has no lamp: its bar and its conversation are the same ground. */
+/* THE WINDOW has no lamp: pure obsidian #050505 floor. */
 [data-slot='window'] {
+  background-color: var(--pane-floor) !important;
   background-image: none !important;
 }
 
-/* THE STAGE IS NOT A PANEL. The conversation runs from the bar to the window's
-   foot: no fill, no corner, no edge, no drop. */
+/* THE STAGE PANE: inset rounded #0f0f12 card with 1px rgba(255,255,255,0.08) hairline. */
 [data-slot='pane'],
 [data-slot='side'] {
-  background-color: transparent !important;
+  background-color: var(--pane-fill) !important;
   background-image: none !important;
-  border: 0 !important;
-  border-radius: 0 !important;
+  border: 1px solid var(--pane-edge) !important;
+  border-radius: var(--pane-round) !important;
   box-shadow: none !important;
 }
 

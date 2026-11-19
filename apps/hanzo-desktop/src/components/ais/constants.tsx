@@ -81,7 +81,7 @@ const modelIconRules: {
   icon: ProviderIconComponent;
   providers?: string[];
 }[] = [
-  { test: /^zen[-\d]/i, icon: ZenIcon },
+  { test: /^zen($|[-_:\d])/i, icon: ZenIcon },
   { test: /^claude/i, icon: AnthropicIcon },
   {
     test: /^(gpt-|o\d)/i,

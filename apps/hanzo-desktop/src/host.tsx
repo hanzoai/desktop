@@ -5,18 +5,26 @@ import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Bar } from '@hanzo/app/App';
+import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
+import {
+  createFnVoiceController,
+  createMicLeaseArbitrator,
+  DesktopSettings,
+} from './desktop-shortcuts';
 import { keychain, open as openKeychain, written } from './keychain';
+import { resolveDesktopShellBrand } from './lib/brand-identity';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
 } from './local-ai';
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
+import { UnifiedDesktopShell } from './unified-shell';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
 
@@ -464,6 +472,93 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I and 'navigate-to-path' from Spotlight)
+  useEffect(() => {
+    let unlistenCreate: (() => void) | undefined;
+    let unlistenNavigate: (() => void) | undefined;
+
+    void safeListen('create-chat', () => {
+      stayGuest();
+      setVisiting(true);
+      empty();
+      window.history.pushState(null, '', '/chat');
+      requestAnimationFrame(() => {
+        const field = document.querySelector('[data-slot="composer-field"], textarea') as HTMLElement | null;
+        field?.focus?.();
+      });
+    }).then((fn) => {
+      unlistenCreate = fn ?? undefined;
+    });
+
+    void safeListen<string>('navigate-to-path', (event) => {
+      const target = typeof event.payload === 'string' && event.payload.startsWith('/') ? event.payload : '/chat';
+      stayGuest();
+      setVisiting(true);
+      window.history.pushState(null, '', target);
+    }).then((fn) => {
+      unlistenNavigate = fn ?? undefined;
+    });
+
+    return () => {
+      unlistenCreate?.();
+      unlistenNavigate?.();
+    };
+  }, []);
+
+  // Wire Desktop `Fn` key push-to-talk (hold Fn) and hands-free voice (double-tap Fn)
+  // with cross-window / cross-app mic lease arbitration so multiple open Hanzo apps never fight over the mic.
+  useEffect(() => {
+    const findMic = () =>
+      document.querySelector('button[data-state][aria-pressed]') as HTMLButtonElement | null;
+    const instanceId = `${brand.brand}-${Math.random().toString(36).slice(2, 10)}`;
+    const lease = createMicLeaseArbitrator({
+      instanceId,
+      onPreempted: () => {
+        const mic = findMic();
+        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
+          mic.click();
+        }
+      },
+    });
+    const controller = createFnVoiceController({
+      isListening: () => findMic()?.getAttribute('aria-pressed') === 'true',
+      start: () => {
+        const mic = findMic();
+        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') !== 'true') {
+          lease.claim();
+          mic.click();
+        }
+      },
+      stop: () => {
+        const mic = findMic();
+        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
+          mic.click();
+          lease.release();
+        }
+      },
+      toggle: () => {
+        const mic = findMic();
+        if (!mic || mic.disabled) return;
+        const active = mic.getAttribute('aria-pressed') === 'true';
+        if (active) {
+          mic.click();
+          lease.release();
+        } else {
+          lease.claim();
+          mic.click();
+        }
+      },
+    });
+    window.addEventListener('keydown', controller.onKeyDown);
+    window.addEventListener('keyup', controller.onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', controller.onKeyDown);
+      window.removeEventListener('keyup', controller.onKeyUp);
+      controller.dispose();
+      lease.dispose();
+    };
+  }, []);
+
   // Ensure LSA is armed by default on the embedded engine
   useEffect(() => {
     fetch(LSA_URL)
@@ -485,7 +580,8 @@ function Gate() {
   // is the app's front door, not an address of its own.
   const raw = here.split('?')[0] || '/';
   const path = raw === '/' || raw === '/index.html' ? '/chat' : raw;
-  const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || path === '/settings' || path.startsWith('/settings/');
+  const isSettings = path === '/settings' || path.startsWith('/settings/');
+  const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || isSettings;
 
   if (isLoading && !isBenchOrSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
   if (!isAuthenticated && !isBenchOrSettings && (DOORS.has(path) || !visiting)) {
@@ -522,6 +618,49 @@ function Gate() {
   }
   if (path === '/benchmark' || path === '/lsa') {
     return <BenchmarkPage />;
+  }
+  if (isSettings) {
+    return (
+      <DesktopSettings
+        isAuthenticated={isAuthenticated}
+        siteUrl={SITE}
+        localEngineUrl={LOCAL_ENGINE_URL}
+        barInset={BAR.inset ?? 0}
+        onSignIn={() => {
+          setBusy(true);
+          setError(null);
+          signIn(sdk).catch((err: unknown) => {
+            setBusy(false);
+            setError(err instanceof Error ? err : new Error(String(err)));
+          });
+        }}
+        onBack={() => {
+          stayGuest();
+          setVisiting(true);
+          window.history.pushState(null, '', '/chat');
+        }}
+      />
+    );
+  }
+
+  const shellBrand = resolveDesktopShellBrand({ pathname: path });
+  if (shellBrand === 'bot' || shellBrand === 'team') {
+    return (
+      <UnifiedDesktopShell
+        brand={shellBrand}
+        barInset={BAR.inset ?? 0}
+        isAuthenticated={isAuthenticated}
+        onNavigate={(target) => move(target)}
+        onSignIn={() => {
+          setBusy(true);
+          setError(null);
+          signIn(sdk).catch((err: unknown) => {
+            setBusy(false);
+            setError(err instanceof Error ? err : new Error(String(err)));
+          });
+        }}
+      />
+    );
   }
 
   return (
