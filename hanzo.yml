@@ -49,6 +49,13 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-secret/Cargo.toml
+  # Which local hanzo-server the app may spawn, or none (cloud#760: release
+  # bundles ship no engine, and spawning the bare name logged two errors on
+  # every start). Pure Rust, no dependencies.
+  - name: engine-bin
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/engine-bin/Cargo.toml
   # No secret-bearing value may be printed or logged from the Tauri crate:
   # whole-call (multiline) scan plus Debug-format of credential-like values.
   # The self-test proves the scanner still catches the shapes it must.

@@ -1412,7 +1412,7 @@ export function LocalAiManager() {
                 <strong>Storage Path:</strong> <code>{nodeOptions?.node_storage_path || '~/Library/Application Support/com.hanzo.desktop/node_storage'}</code>
               </div>
               <div>
-                <strong>Default Embedding Model:</strong> <code>{nodeOptions?.default_embedding_model || 'snowflake-arctic-embed:xs'}</code>
+                <strong>Default Embedding Model:</strong> <code>{nodeOptions?.default_embedding_model || 'embeddinggemma:300m'}</code>
               </div>
               <div>
                 <strong>Multimodal Images &amp; Files:</strong> Enabled locally (paste, drag-and-drop, or click <code>+</code> in the chat composer to attach images and files directly without signing in).

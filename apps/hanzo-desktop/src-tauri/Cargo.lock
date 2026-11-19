@@ -3636,6 +3636,7 @@ dependencies = [
  "futures-util",
  "hanzo",
  "hanzo-engine",
+ "hanzo-engine-bin",
  "hanzo-log-redact",
  "hanzo-node-secret",
  "hanzo-mining",
@@ -3795,6 +3796,10 @@ dependencies = [
  "variantly",
  "vob",
 ]
+
+[[package]]
+name = "hanzo-engine-bin"
+version = "0.1.0"
 
 [[package]]
 name = "hanzo-flash-attn"
