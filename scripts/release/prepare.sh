@@ -1,24 +1,12 @@
 #!/usr/bin/env bash
-# What every desktop release job does before it builds: the sibling crates cargo
-# needs to resolve, the Rust toolchain, and the JavaScript workspace.
+# What every desktop release job does before it builds: the Rust toolchain, the
+# git dependencies cargo fetches, and the JavaScript workspace.
 #
 #   prepare.sh [rust-target]...
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 root=$(cd "$here/../.." && pwd)
-
-# src-tauri/Cargo.toml names hanzoai/engine by path, behind the `native-engine`
-# feature that no release enables. Cargo still reads those manifests to resolve the
-# graph, so each needs to exist beside this checkout; nothing compiles them. A
-# manifest with the features src-tauri forwards, and an empty lib, is all it reads.
-engine=$(dirname "$root")/engine
-for crate in hanzo hanzo-engine hanzo-server-core; do
-  mkdir -p "$engine/$crate/src"
-  printf '[workspace]\n\n[package]\nname = "%s"\nversion = "0.1.0"\nedition = "2021"\n\n[features]\nmetal = []\ncuda = []\nvulkan = []\naccelerate = []\nflash-attn = []\n' \
-    "$crate" > "$engine/$crate/Cargo.toml"
-  : > "$engine/$crate/src/lib.rs"
-done
 
 # The cluster image carries Node. A bare host, the Mac, does not.
 if ! command -v node >/dev/null; then
@@ -37,8 +25,8 @@ fi
 
 "$here/rust.sh" "$@"
 
-# src-tauri depends on a git repository GitHub serves only to an account that can see
-# it (zap-proto/zapd), and the job's own token cannot. The deploy token in KMS can.
+# src-tauri depends on git repositories GitHub serves only to an account that can see
+# them (zap-proto/zapd, hanzoai/engine), and the job's own token cannot. The deploy token in KMS can.
 # It goes to the one command that needs it, through git's environment, so the
 # build scripts and install scripts that run after it never hold it. Cargo then
 # finds the locked revisions already fetched.
