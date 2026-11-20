@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.hanzo.desktop</string>
+	<string>ai.hanzo.desktop</string>
 	<!-- macOS kills a process that touches the microphone without this string,
 	     before any prompt is shown. It is the sentence the system prompt reads,
 	     so it says what we listen for and when. -->

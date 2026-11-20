@@ -6,7 +6,7 @@ use tauri::{
 
 use crate::{
     globals::HANZO_NODE_MANAGER_INSTANCE,
-    windows::{recreate_window, Window, show_spotlight_window},
+    windows::{recreate_window, Window},
 };
 
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
@@ -45,12 +45,12 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
             if cfg!(target_os = "windows") {
                 if let TrayIconEvent::Click { button, .. } = event {
                     if button == MouseButton::Left {
-                        recreate_window(tray.app_handle().clone(), Window::Main, true);
+                        let _ = recreate_window(tray.app_handle().clone(), Window::Main, true);
                     }
                 }
             }
         })
-        .menu_on_left_click(!cfg!(target_os = "windows"))
+        .show_menu_on_left_click(!cfg!(target_os = "windows"))
         .menu(&menu)
         .on_menu_event(move |tray, event| match event.id().as_ref() {
             "show" => {
@@ -60,10 +60,10 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
                 let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
             }
             "open_hanzo_node_manager_window" => {
-                recreate_window(tray.app_handle().clone(), Window::HanzoNodeManager, true);
+                let _ = recreate_window(tray.app_handle().clone(), Window::HanzoNodeManager, true);
             }
             "hanzo_spotlight" => {
-                recreate_window(tray.app_handle().clone(), Window::Spotlight, true);
+                let _ = recreate_window(tray.app_handle().clone(), Window::Spotlight, true);
             }
             "quit" => {
                 tauri::async_runtime::spawn(async move {

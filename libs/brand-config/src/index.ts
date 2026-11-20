@@ -67,8 +67,8 @@ export interface BrandConfig {
 const HANZO: BrandConfig = {
   brand: 'hanzo',
   name: 'Hanzo',
-  productName: 'Hanzo Desktop',
-  identifier: 'com.hanzo.desktop',
+  productName: 'Hanzo',
+  identifier: 'ai.hanzo.desktop',
   logo: {
     light: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',
     dark: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',

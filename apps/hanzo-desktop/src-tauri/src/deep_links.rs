@@ -1,4 +1,4 @@
-use tauri::{Emitter, Listener, WindowEvent};
+use tauri::{Emitter, Listener};
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use crate::windows::{get_window, recreate_window, Window};

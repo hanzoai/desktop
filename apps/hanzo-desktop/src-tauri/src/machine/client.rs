@@ -13,7 +13,7 @@ use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 
 use super::socket::machined_socket_path;
-use super::types::{ExecFrame, ExecStream, Health, Machine, MachineEvent, MachineSpec};
+use super::types::{ExecFrame, Health, Machine, MachineEvent, MachineSpec};
 
 #[derive(Debug, Error)]
 pub enum MachinedError {
@@ -312,7 +312,7 @@ async fn stream_sse(
     let mut event_name: Option<String> = None;
     let mut data_buf = String::new();
 
-    let mut flush =
+    let flush =
         |event_name: &mut Option<String>, data_buf: &mut String| -> Option<MachineEvent> {
             if data_buf.is_empty() {
                 event_name.take();

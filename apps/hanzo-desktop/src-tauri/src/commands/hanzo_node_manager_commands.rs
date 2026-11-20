@@ -1,7 +1,6 @@
 use log::error;
 
 use crate::globals::HANZO_NODE_MANAGER_INSTANCE;
-use crate::local_hanzo_node::hanzo_node_manager::HanzoNodeManager;
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
 use crate::windows::{recreate_window, Window};
 

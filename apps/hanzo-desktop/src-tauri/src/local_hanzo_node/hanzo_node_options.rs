@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 
-use crate::hardware::{hardware_get_summary, RequirementsStatus};
 use serde::{Deserialize, Serialize};
 
 /// It matches ENV variables names from HanzoNode
@@ -37,7 +36,7 @@ pub struct HanzoNodeOptions {
 
 impl HanzoNodeOptions {
     pub fn with_app_options(
-        app_resource_dir: PathBuf,
+        _app_resource_dir: PathBuf,
         app_data_dir: PathBuf,
     ) -> HanzoNodeOptions {
         let default_node_storage_path = app_data_dir

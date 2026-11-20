@@ -33,10 +33,10 @@
     },
     "createUpdaterArtifacts": true
   },
-  "productName": "Hanzo Desktop",
+  "productName": "Hanzo",
   "mainBinaryName": "hanzo-desktop",
   "version": "../../../package.json",
-  "identifier": "com.hanzo.desktop",
+  "identifier": "ai.hanzo.desktop",
   "plugins": {
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDcwNEY4MkEzRTk1Q0M5NkYKUldSdnlWenBvNEpQY0p1OGJBMUMrUXpJclVFc2EwMU50U3VUNFR2Um9wbjM2ejAyeCtZb3c5a3EK",
@@ -65,8 +65,10 @@
         "url": "http://localhost:3000/login?next=/chat",
         "transparent": true,
         "title": "Hanzo",
-        "width": 1280,
-        "height": 840,
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 600,
         "resizable": true,
         "dragDropEnabled": false,
         "titleBarStyle": "Overlay",

@@ -7,10 +7,8 @@ use std::path::PathBuf;
 // ollama lifecycle code can run during startup/shutdown/restart.
 use super::process_handlers::hanzo_node_process_handler::HanzoNodeProcessHandler;
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
-use crate::models::embedding_model;
 use anyhow::Result;
 use futures_util::StreamExt;
-use log::error;
 use serde::{Deserialize, Serialize};
 use tauri::path::BaseDirectory;
 use tauri::AppHandle;

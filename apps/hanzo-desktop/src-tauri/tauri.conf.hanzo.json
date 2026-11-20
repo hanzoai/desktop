@@ -1,6 +1,6 @@
 {
-  "productName": "Hanzo Desktop",
-  "identifier": "com.hanzo.desktop",
+  "productName": "Hanzo",
+  "identifier": "ai.hanzo.desktop",
   "bundle": {
     "icon": [
       "icons/32x32.png",

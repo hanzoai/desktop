@@ -7,7 +7,7 @@
  * secrets under different keychain services and a user's saved tokens vanish
  * when they switch build variants. That is exactly what happened while the
  * default config said `ai.hanzo.desktop` and everything else said
- * `com.hanzo.desktop`.
+ * `ai.hanzo.desktop`.
  *
  * These assertions pin the identifier, the deep-link scheme and the macOS
  * Info.plist to `libs/brand-config` — the one brand table — so the next drift

@@ -1409,7 +1409,7 @@ export function LocalAiManager() {
             >
               <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>Node Configuration</div>
               <div>
-                <strong>Storage Path:</strong> <code>{nodeOptions?.node_storage_path || '~/Library/Application Support/com.hanzo.desktop/node_storage'}</code>
+                <strong>Storage Path:</strong> <code>{nodeOptions?.node_storage_path || '~/Library/Application Support/ai.hanzo.desktop/node_storage'}</code>
               </div>
               <div>
                 <strong>Default Embedding Model:</strong> <code>{nodeOptions?.default_embedding_model || 'embeddinggemma:300m'}</code>

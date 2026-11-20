@@ -96,6 +96,20 @@ struct Payload {
     cwd: String,
 }
 
+/// Before the `ai.hanzo.<app>` identifier scheme this app stored its data under
+/// `com.hanzo.desktop`. Moves that directory into place the first time the new
+/// one is needed; an existing new directory is never touched.
+fn migrate_legacy_data_dir(app_data_dir: &std::path::Path) {
+    let Some(parent) = app_data_dir.parent() else { return };
+    let legacy = parent.join("com.hanzo.desktop");
+    if app_data_dir.exists() || !legacy.is_dir() {
+        return;
+    }
+    if let Err(e) = std::fs::rename(&legacy, app_data_dir) {
+        log::warn!("could not move {:?} to {:?}: {}", legacy, app_data_dir, e);
+    }
+}
+
 fn main() {
     // NVIDIA/Linux + WebKitGTK render a blank window with the default DMABUF
     // renderer on many driver combos; fall back to the non-DMABUF path unless
@@ -315,6 +329,7 @@ fn main() {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
             let app_resource_dir = app.path().resource_dir()?;
             let app_data_dir = app.path().app_data_dir()?;
+            migrate_legacy_data_dir(&app_data_dir);
 
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;

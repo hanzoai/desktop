@@ -1,6 +1,6 @@
 {
   "productName": "Hanzo Team",
-  "identifier": "com.hanzo.team",
+  "identifier": "ai.hanzo.team",
   "bundle": {
     "icon": [
       "icons/32x32.png",

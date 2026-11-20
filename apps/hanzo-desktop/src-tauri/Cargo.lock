@@ -3638,8 +3638,8 @@ dependencies = [
  "hanzo-engine",
  "hanzo-engine-bin",
  "hanzo-log-redact",
- "hanzo-node-secret",
  "hanzo-mining",
+ "hanzo-node-secret",
  "hanzo-server-core",
  "hex",
  "http-body-util",
@@ -3975,7 +3975,6 @@ name = "hanzo-node-secret"
 version = "0.1.0"
 dependencies = [
  "rcgen",
- "tempfile",
 ]
 
 [[package]]

@@ -27,4 +27,3 @@ mod commands;
 mod soup;
 
 pub use commands::*;
-pub use soup::*;
