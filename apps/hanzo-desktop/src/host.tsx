@@ -628,6 +628,21 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // ONE SETTINGS FOR EVERY VISITOR. Signed out, every Settings door of the app (the
+  // rail's mark, ⌘,, the palette, a row's menu, the sidebar) raises
+  // 'hanzo:anon-settings' to open its own small pane, which has no Local models: a
+  // guest who downloaded a model could not remove it. The window's Settings answers
+  // instead, on Local models, the part of it a guest has. `{ open: false }` is the
+  // app closing its pane, not a door.
+  useEffect(() => {
+    const door = (e: Event) => {
+      if ((e as CustomEvent<{ open?: boolean } | undefined>).detail?.open === false) return;
+      window.history.pushState(null, '', '/settings/local-models');
+    };
+    window.addEventListener('hanzo:anon-settings', door);
+    return () => window.removeEventListener('hanzo:anon-settings', door);
+  }, []);
+
   // The system-wide ⇧⌘I (src-tauri global_shortcuts) arrives as 'create-chat'.
   useEffect(() => {
     let unlisten: (() => void) | undefined;

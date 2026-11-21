@@ -93,6 +93,27 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
+  it('opens the window’s Settings on Local models from any signed-out Settings door, and lets the app close its own pane', async () => {
+    await open('/chat');
+    fireEvent.click(screen.getByText('welcome: not now'));
+    expect(screen.getByText('the app')).toBeTruthy();
+    // What the app's doors raise signed out (Rail's mark, ⌘,, the palette, a row's menu).
+    act(() => {
+      window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: false } }));
+    });
+    expect(window.location.pathname).toBe('/chat');
+    act(() => {
+      window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: true } }));
+    });
+    expect(window.location.pathname).toBe('/settings/local-models');
+    expect(screen.getByText('Settings back')).toBeTruthy();
+    window.history.replaceState(null, '', '/chat');
+    act(() => {
+      window.dispatchEvent(new CustomEvent('hanzo:anon-settings'));
+    });
+    expect(window.location.pathname).toBe('/settings/local-models');
+  });
+
   it('clears an old guest flag once signed in, so a later sign-out opens on Welcome', async () => {
     window.localStorage.setItem(GUEST, '1');
     iam.state = { isLoading: false, isAuthenticated: true, sdk: {} };

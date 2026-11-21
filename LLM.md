@@ -795,7 +795,10 @@ root.
 
 `src/local-ai.tsx` is the screen, opened from Settings > Local models (Manage local models) and by a
 signed-out answer that needs a model (the app's "Select / Download Local Model", and `needsModel`);
-the bar has no button for it. `src/lib/local-models.ts` is its one
+the bar has no button for it. Signed out, every Settings door of the app (the rail's mark, ⌘,, the
+palette, a row's menu) raises `hanzo:anon-settings` for its own small pane, which has no Local models;
+`host.tsx` answers it with the window's Settings on Local models instead, so a guest can always reach,
+and remove, what they downloaded. `src/lib/local-models.ts` is its one
 seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` granted in
 `capabilities/main.json` to the window's own pages only, so a hanzo.ai page cannot pull models or
 fill the disk (`capabilities_test.rs` resolves the built ACL). The commands also refuse a repository not in `src/lib/local-sources.json`, the one list
