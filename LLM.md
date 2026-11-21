@@ -827,7 +827,8 @@ leave less than 2 GB free (`MIN_FREE_BYTES`):
   window can press Use) a recorded process still alive with that same executable and start time is
   ended; anything else under that id (another program, or none) is left alone, and the record goes.
   Never by name. Until that start, the old engine keeps :36900 and Use says the port is taken.
-- What is offered is `src/lib/local-sources.json` (tag, repo, title, measured download size), and
+- What is offered is `src/lib/local-sources.json` (tag, repo, title, measured download size, and
+  whether its model card says it `reasons` and calls `tools`, which is all the picker claims), and
   nothing else: the screen lists those models and the signed-out composer's picker offers those plus
   the router aliases (`enso`, `enso-free`, `enso-auto`). The 182-entry Ollama catalogue that listed
   models nobody could download is deleted.

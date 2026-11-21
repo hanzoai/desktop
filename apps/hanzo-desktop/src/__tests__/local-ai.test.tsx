@@ -91,6 +91,20 @@ describe('the model list', () => {
     for (const model of body.data) expect(model.class).toBe('free');
   });
 
+  it('claims reasoning and tools only where local-sources.json says so, and vision for none', async () => {
+    const body = await buildLocalModelsCatalogResponse();
+    const said = (id: string) => body.data.find((m) => m.id === id)!;
+    expect(said('smollm2:135m')).toMatchObject({ supports_tools: false, supports_reasoning: false });
+    expect(said('deepseek-r1:1.5b')).toMatchObject({ supports_tools: false, supports_reasoning: true });
+    expect(said('qwen3:4b')).toMatchObject({ supports_tools: true, supports_reasoning: true });
+    for (const src of LOCAL_SOURCES) expect(said(src.tag)).toMatchObject({ supports_tools: src.tools, supports_reasoning: src.reasons });
+    for (const model of body.data) expect(model.supports_vision).toBe(false);
+    // The aliases answer with the chosen model, so they say what it can do.
+    window.localStorage.setItem('hanzo.mind', JSON.stringify({ model: 'smollm2:135m' }));
+    const again = await buildLocalModelsCatalogResponse();
+    expect(again.data.find((m) => m.id === 'enso-free')).toMatchObject({ supports_tools: false, supports_reasoning: false });
+  });
+
   it('judges memory and size the way the cards say them', () => {
     expect(memoryNeededGb(1_208_033_536)).toBe(3);
     expect(fitsThisMac(1_208_033_536, 8)).toBe(true);
