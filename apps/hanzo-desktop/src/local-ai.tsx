@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import { getBrand } from '@hanzo/desktop-brand-config';
 import { XStack, YStack } from '@hanzo/gui';
 import {
   AlertDialog,
@@ -761,7 +762,7 @@ export function LocalAiManager() {
     if (fetching && state.kind !== 'running') {
       return {
         title: `Downloading ${fetching.title}… ${percent[fetching.tag]}%`,
-        body: 'You can keep using Hanzo while it downloads.',
+        body: `You can keep using ${getBrand().name} while it downloads.`,
         action: null,
       };
     }
@@ -769,7 +770,7 @@ export function LocalAiManager() {
       case 'app-only':
         return {
           title: 'Local models are not set up',
-          body: 'Models run on your computer only in the Hanzo desktop app. Open this screen there to download one.',
+          body: `Models run on your computer only in the ${getBrand().name} desktop app. Open this screen there to download one.`,
           action: null,
         };
       case 'no-engine':
@@ -891,8 +892,7 @@ export function LocalAiManager() {
                 signed-in window's chats go to the cloud whatever is downloaded here. */}
             {keychain.getItem('hanzo_iam_access_token') ? (
               <Text data-testid="local-ai-signed-in-note" fontSize="$2" color="$color11">
-                You are signed in, so chat uses Hanzo’s cloud models. A local model answers when you use Hanzo
-                without signing in.
+                {`You are signed in, so chat uses ${getBrand().name}’s cloud models. A local model answers when you use ${getBrand().name} without signing in.`}
               </Text>
             ) : null}
           </YStack>

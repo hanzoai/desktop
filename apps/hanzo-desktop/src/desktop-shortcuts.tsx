@@ -1,4 +1,5 @@
 import { KEYS } from '@hanzo/app/help';
+import { getBrand } from '@hanzo/desktop-brand-config';
 import { apply, read, write, type Preference } from '@hanzo/appearance';
 import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
 import { Button, Kbd, Switch, Text, ToggleGroup, ToggleGroupItem, XStack, YStack } from '@hanzo/ui';
@@ -76,7 +77,8 @@ export function localModelsStatus(
   engineInstalled: boolean | null = null,
   signedIn = false,
 ): LocalModelsStatus {
-  const cloud = signedIn ? ' You are signed in, so chat uses Hanzo’s cloud models.' : '';
+  // The cloud is the brand's; the engine below is Hanzo's under every brand.
+  const cloud = signedIn ? ` You are signed in, so chat uses ${getBrand().name}’s cloud models.` : '';
   if (count === null) return { label: 'Checking…', detail: 'Looking for models on this computer.' };
   if (engineInstalled === false && !serving)
     return {
@@ -274,7 +276,7 @@ export function DesktopSettings({
       <Settings entries={SECTIONS} active={section} onPick={pick} title="Settings">
         {section === 'appearance' ? (
           <YStack gap="$5" data-testid="desktop-appearance">
-            <Heading title="Appearance" detail="How Hanzo looks on this computer." />
+            <Heading title="Appearance" detail={`How ${getBrand().name} looks on this computer.`} />
             <Card>
               <Row
                 first
