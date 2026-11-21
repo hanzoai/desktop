@@ -24,6 +24,8 @@ use proof::{MlDsa65SigningKey, PrivacyLevel};
 
 const HISTORY_CAP: usize = 1000;
 const TICK_SECS: u64 = 60;
+/// What the Settings switch writes to say yes, and the only thing read as one.
+const CONSENT: &[u8] = b"on: the person turned this on in Settings\n";
 
 /// Single proof record persisted in history.json.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -112,20 +114,21 @@ impl MiningManager {
         }
     }
 
-    /// The person's own yes, kept across launches: a file in the mining dir.
-    /// Absent (a new install, or turned off) means no mining at all.
+    /// The person's own yes, kept across launches: a file in the mining dir
+    /// holding exactly `CONSENT`. Anything else there (absent, a folder, other
+    /// bytes) means no mining at all.
     fn consent_path(&self) -> PathBuf {
         self.storage_dir.join("enabled")
     }
 
     pub fn is_enabled(&self) -> bool {
-        self.consent_path().exists()
+        std::fs::read(self.consent_path()).is_ok_and(|b| b == CONSENT)
     }
 
     pub fn set_enabled(&self, on: bool) -> std::io::Result<()> {
         if on {
             std::fs::create_dir_all(&self.storage_dir)?;
-            std::fs::write(self.consent_path(), b"1")
+            std::fs::write(self.consent_path(), CONSENT)
         } else {
             match std::fs::remove_file(self.consent_path()) {
                 Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
@@ -380,6 +383,22 @@ mod tests {
         m.set_enabled(false).unwrap();
         m.set_enabled(false).unwrap();
         assert!(!MiningManager::new(dir).is_enabled());
+    }
+
+    #[test]
+    fn only_the_switch_s_own_file_means_on() {
+        let tmp = fresh_dir();
+        let dir = tmp.path().join("mining");
+        let m = MiningManager::new(dir.clone());
+        std::fs::create_dir_all(dir.join("enabled")).unwrap();
+        assert!(!m.is_enabled(), "a folder named enabled is not a yes");
+        std::fs::remove_dir(dir.join("enabled")).unwrap();
+        for other in [&b""[..], b"1", b"on", b"true\n"] {
+            std::fs::write(dir.join("enabled"), other).unwrap();
+            assert!(!m.is_enabled(), "{:?} is not the switch's yes", String::from_utf8_lossy(other));
+        }
+        m.set_enabled(true).unwrap();
+        assert!(m.is_enabled());
     }
 
     #[test]
