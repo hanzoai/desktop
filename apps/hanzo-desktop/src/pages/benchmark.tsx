@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { HanzoEngineClient } from '../lib/hanzo-engine/client';
 import type { EngineStatus, LsaConfig, LsaStatusResponse } from '../lib/hanzo-engine/types';
 
-// Canonical local Hanzo Engine (:36900) and Embeddings (:36901).
+// The local Hanzo engine (:36900). It serves embeddings on the same port;
+// nothing in this app starts anything on :36901 any more.
 const ENGINE_ORIGIN = 'http://localhost:36900';
 const CHAT_URLS = [
   `${ENGINE_ORIGIN}/v1/chat/completions`,
   `${ENGINE_ORIGIN}/v1/engine/chat/completions`,
 ];
 const EMBED_URLS = [
-  'http://localhost:36901/v1/embeddings',
-  'http://localhost:36901/v1/engine/embeddings',
+  `${ENGINE_ORIGIN}/v1/embeddings`,
+  `${ENGINE_ORIGIN}/v1/engine/embeddings`,
 ];
 export const LSA_URL = `${ENGINE_ORIGIN}/v1/lsa`;
 
@@ -1027,7 +1028,7 @@ start_nodes = 1024`;
                 <Metric highlight label="512K Prefill / Decode" value="35.75× / 42.75×" />
                 <Metric highlight label="1M Prefill / Decode" value="46.29× / 78.57×" />
                 <Metric
-                  label="Embeddings (:36901)"
+                  label="Embeddings (:36900)"
                   value={embed ? `${fmt(embed.avgMs, 0)} ms (${embed.dim}d)` : 'Ready'}
                 />
               </div>
