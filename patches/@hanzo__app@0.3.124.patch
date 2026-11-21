@@ -1,8 +1,8 @@
 diff --git a/dist/Chat.js b/dist/Chat.js
-index 88c81c9..b89d175 100644
+index 8ae1430..fe397ba 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
-@@ -876,10 +876,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -875,10 +875,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      };
      const listed = mind.models;
      const filteredListed = useMemo(() => {
@@ -17,7 +17,7 @@ index 88c81c9..b89d175 100644
      const models = useMemo(() => filteredListed.filter(chats), [filteredListed]);
      // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
      // read from the catalog's own fields (`parseModels`): its class, its family.
-@@ -891,7 +893,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -890,7 +892,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const wanted = mind.model;
      // A model the catalog lists is sent as picked, whatever it answers with; only
      // a name the catalog does not list falls to one that converses (`served`).
@@ -27,7 +27,7 @@ index 88c81c9..b89d175 100644
      const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
      // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
      // headers and read again whenever a send settles, below. The pane draws no
-@@ -1112,7 +1115,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1114,7 +1117,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      // identity changes on every `setMessages` — `useChat` closes over `messages` —
      // so an effect depending on it re-runs after each streamed token.
      const latest = useRef(send);
@@ -36,7 +36,7 @@ index 88c81c9..b89d175 100644
      // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
      // it. `Chat` owns a draft of its own and spreads `composer` after it, so
      // passing value/onChange/onSend takes that ownership over rather than fighting
-@@ -1225,10 +1228,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1227,10 +1230,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const [anonBusy, setAnonBusy] = useState(false);
      const [anonGateOpen, setAnonGateOpen] = useState(false);
      const anonCountRef = useRef(0);
@@ -55,7 +55,7 @@ index 88c81c9..b89d175 100644
          try {
              sessionStorage.setItem("hanzo.build.prompt", clean);
              const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
-@@ -1348,7 +1356,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1350,7 +1358,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
          if (queued === null || resolving)
              return;
          setQueued(null);
@@ -67,7 +67,7 @@ index 88c81c9..b89d175 100644
      }, [queued, resolving]);
      const streaming = useRef(false);
      streaming.current = chat.streaming;
-@@ -1449,16 +1460,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1451,16 +1462,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
       * it leaves its place in the thread and is asked at the end, so it is asked
       * once and not twice.
       */
@@ -88,7 +88,7 @@ index 88c81c9..b89d175 100644
          if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
              apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
              if (again)
-@@ -1466,10 +1475,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1468,10 +1477,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      const { [again]: _gone, ...rest } = all;
                      return rest;
                  });
@@ -101,7 +101,7 @@ index 88c81c9..b89d175 100644
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -1975,6 +1984,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1977,6 +1986,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -130,7 +130,7 @@ index 88c81c9..b89d175 100644
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2037,6 +2068,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2039,6 +2070,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -140,7 +140,7 @@ index 88c81c9..b89d175 100644
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2061,7 +2095,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2063,7 +2097,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                              : how?.provider
                                  ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
                                  : plainly(wrong, t("this conversation"), t);

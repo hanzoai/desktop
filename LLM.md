@@ -326,15 +326,14 @@ owns:
   into the same, so sign-out or checkout never replaces the app with a page.
 - **Look**: `gui.config.ts` is `@hanzo/ui/gui-config`'s `monochrome`, hanzo.ai's
   config, for every window; `main.tsx` loads hanzo.ai's stylesheets in its order.
-- **Both schemes**: `src/app.css` cuts the window's own skin (obsidian floor, one
-  sidebar surface) for the DARK scheme only, scoped `html:root:not(.t_light):not(.light)`;
-  light takes the app's own floor and card and a small block of `--desk-*` aliases.
-  Unscoped, the dark values dressed a system set to light too: the sidebar stayed
-  black under dark ink and every title in it but the lit one disappeared.
-  `e2e-tests/appearance.spec.ts` measures each sidebar title against what is painted
-  behind it (4.5:1) in both schemes. `src/desktop.css` is not imported by this window.
+- **The panels are the app's** (`@hanzo/app` 0.3.124+): a 33px bar for the window (traffic-light
+  inset, toggle, Back, Forward, Local AI, the update mark), then the sidebar and the chat as two
+  panels cut by one `pane()`: one colour, one `--pane-gap` under the bar, between them and at the
+  edges, the chat's icons in the chat's header. `src/app.css` only sets the dark palette
+  (`--pane-*`, scoped to dark; light keeps the app's tokens) and the bar's alignment.
+  `e2e-tests/panels.spec.ts` measures the gaps and the colours, `appearance.spec.ts` the contrast.
 - **Updates**: `src/update.tsx`, in the bar beside Local AI. Once the window is up
-  (15 s) and every 30 minutes it asks the feed (`plugins.updater`); with a newer
+  and every 30 minutes it asks the feed (`plugins.updater`); with a newer
   version the bar says "Update available" and nothing else moves. One press
   downloads, installs, stops the node and relaunches (Windows' installer restarts
   itself). A failed install says so and can be pressed again. The old banner lives

@@ -1,12 +1,4 @@
-/**
- * The window reads in both schemes — measured, not reviewed.
- *
- * The window's skin (src/app.css) is cut for the dark scheme; left unscoped it
- * also dressed a window whose reader's system is light: the sidebar stayed
- * black under dark ink, so every title in it but the lit one vanished and a
- * non-developer saw a column of nothing. Each label in the sidebar must read
- * (WCAG 4.5:1) on whatever it sits on, in light and in dark.
- */
+/** Every title in the sidebar reads (WCAG 4.5:1) on what it sits on, in light and in dark. */
 import { expect, type Page, test } from '@playwright/test';
 
 async function enter(page: Page) {

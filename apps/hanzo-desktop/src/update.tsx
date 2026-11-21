@@ -7,19 +7,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { isTauriAvailable } from './utils/tauri-check';
 
-// A NEW VERSION, SAID QUIETLY, INSTALLED IN ONE PRESS.
-//
-// Hanzo asks the update feed (tauri.conf.json `plugins.updater`) once the window
-// is up and every half hour after. When there is a newer version the bar says
-// "Update available" in its own quiet voice, beside Local AI, and nothing else
-// moves: no banner over the page, no dialog. One press downloads it, installs
-// it and opens Hanzo again, so nobody has to find a download page or a
-// terminal. The Hanzo node is stopped once the download is whole, as it was
-// before the update could replace its files.
+// A newer version is said quietly in the bar, beside Local AI, and installed in one press:
+// download, install, stop the node, relaunch (Windows' installer restarts Hanzo itself).
 
 const EVERY = 30 * 60 * 1000;
-/** Long enough that the update check never competes with the window opening. */
-const FIRST = 15 * 1000;
 
 export type Stage =
   | { name: 'none' }
@@ -78,11 +69,10 @@ export function useUpdate(): { stage: Stage; install: () => void } {
         // No feed, no network or an unsigned local build: the bar says nothing.
       }
     };
-    const first = setTimeout(() => void look(), FIRST);
+    void look();
     const again = setInterval(() => void look(), EVERY);
     return () => {
       stopped = true;
-      clearTimeout(first);
       clearInterval(again);
     };
   }, []);
@@ -105,7 +95,6 @@ export function useUpdate(): { stage: Stage; install: () => void } {
           void invoke('hanzo_node_kill').catch(() => undefined);
         }
       })
-      // Windows' installer restarts Hanzo itself; the others are opened again here.
       .then(() => (platform() === 'windows' ? undefined : relaunch()))
       .catch(() => {
         busy.current = false;
