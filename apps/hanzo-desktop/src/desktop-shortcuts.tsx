@@ -1,4 +1,5 @@
 import { KEYS } from '@hanzo/app/help';
+import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
@@ -201,6 +202,7 @@ export function DesktopSettings({
   );
   const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
+  const [devMode, setDevMode] = useDevMode();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -304,6 +306,54 @@ export function DesktopSettings({
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '28px 24px 48px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <section
+            data-testid="desktop-dev-mode"
+            style={{
+              padding: 20,
+              borderRadius: 14,
+              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+              background: theme === 'light' ? '#ffffff' : '#111114',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+            }}
+          >
+            <div>
+              <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Developer mode</h2>
+              <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>{DEV_MODE_NOTE}</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={devMode}
+              aria-label="Developer mode"
+              data-testid="desktop-dev-mode-switch"
+              onClick={() => setDevMode(!devMode)}
+              style={{
+                flexShrink: 0,
+                width: 44,
+                height: 26,
+                borderRadius: 999,
+                border: 'none',
+                padding: 3,
+                display: 'flex',
+                justifyContent: devMode ? 'flex-end' : 'flex-start',
+                background: devMode ? (theme === 'light' ? '#18181b' : '#fafafa') : theme === 'light' ? '#d4d4d8' : '#3f3f46',
+                cursor: 'pointer',
+              }}
+            >
+              <span
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 999,
+                  background: devMode ? (theme === 'light' ? '#fafafa' : '#09090b') : theme === 'light' ? '#ffffff' : '#a1a1aa',
+                }}
+              />
+            </button>
+          </section>
+
           <section
             style={{
               padding: 20,
