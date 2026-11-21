@@ -1,7 +1,7 @@
 diff --git a/dist/Chat.js b/dist/Chat.js
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
-@@ -875,10 +875,12 @@
+@@ -879,10 +879,12 @@
      };
      const listed = useMemo(() => mind.models.filter(chats), [mind.models]);
      const filteredListed = useMemo(() => {
@@ -16,7 +16,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
      const models = filteredListed;
      // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
      // read from the catalog's own fields (`parseModels`): its class, its family.
-@@ -890,7 +892,8 @@
+@@ -894,7 +896,8 @@
      const wanted = mind.model;
      // A model the catalog lists is sent as picked, whatever it answers with; only
      // a name the catalog does not list falls to one that converses (`served`).
@@ -26,7 +26,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
      const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
      // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
      // headers and read again whenever a send settles, below. The pane draws no
-@@ -1114,7 +1117,7 @@
+@@ -1119,7 +1122,7 @@
      // identity changes on every `setMessages` — `useChat` closes over `messages` —
      // so an effect depending on it re-runs after each streamed token.
      const latest = useRef(send);
@@ -35,10 +35,10 @@ diff --git a/dist/Chat.js b/dist/Chat.js
      // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
      // it. `Chat` owns a draft of its own and spreads `composer` after it, so
      // passing value/onChange/onSend takes that ownership over rather than fighting
-@@ -1227,10 +1230,15 @@
-     const [anonBusy, setAnonBusy] = useState(false);
-     const [anonGateOpen, setAnonGateOpen] = useState(false);
-     const anonCountRef = useRef(0);
+@@ -1239,10 +1242,15 @@
+         anonStopped.current = true;
+         anonRequest.current?.abort();
+     }, []);
 -    const sendAnon = useCallback(async (rawText) => {
 +    const sendAnon = useCallback(async (rawText, images) => {
          const clean = (rawText || "").trim();
@@ -54,7 +54,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
          try {
              sessionStorage.setItem("hanzo.build.prompt", clean);
              const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
-@@ -1350,7 +1358,10 @@
+@@ -1379,7 +1387,10 @@
          if (queued === null || resolving)
              return;
          setQueued(null);
@@ -66,7 +66,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
      }, [queued, resolving]);
      const streaming = useRef(false);
      streaming.current = chat.streaming;
-@@ -1451,16 +1462,14 @@
+@@ -1480,16 +1491,14 @@
       * it leaves its place in the thread and is asked at the end, so it is asked
       * once and not twice.
       */
@@ -87,7 +87,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
          if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
              apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
              if (again)
-@@ -1468,10 +1477,10 @@
+@@ -1497,10 +1506,10 @@
                      const { [again]: _gone, ...rest } = all;
                      return rest;
                  });
@@ -100,7 +100,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -1977,6 +1986,28 @@
+@@ -2006,6 +2015,28 @@
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -129,7 +129,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2039,6 +2070,9 @@
+@@ -2068,6 +2099,9 @@
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -139,7 +139,7 @@ diff --git a/dist/Chat.js b/dist/Chat.js
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2063,7 +2097,7 @@
+@@ -2092,7 +2126,7 @@
                              : how?.provider
                                  ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
                                  : plainly(wrong, t("this conversation"), t);
@@ -183,23 +183,10 @@ diff --git a/dist/help.js b/dist/help.js
      { does: phrase('Send'), mac: 'Enter', pc: 'Enter', group: 'Chat' },
      { does: phrase('New line'), mac: '⇧Enter', pc: 'Shift+Enter', group: 'Chat' },
      { does: phrase('Rename chat'), mac: said('rename', true), pc: said('rename', false), group: 'Chat' },
-diff --git a/dist/lib/local-fs.js b/dist/lib/local-fs.js
-index 6fb93c0..c5d89e9 100644
---- a/dist/lib/local-fs.js
-+++ b/dist/lib/local-fs.js
-@@ -309,6 +309,8 @@ export function desktopLocal() {
-             else
-                 addLocalWorkspace(path);
-         },
-+        // The name `hanzo link` registers this computer under: the OS hostname, from the window's os plugin.
-+        host: async () => (await tauriInvoke('plugin:os|hostname')) ?? '',
-         // Stops the agent being fetched for the first run; the run's own call then answers `Setup was cancelled.` (@hanzo/build `failed`).
-         cancel: async () => {
-             await tauriInvoke('local_dev_setup_cancel');
 diff --git a/dist/pane.js b/dist/pane.js
 --- a/dist/pane.js
 +++ b/dist/pane.js
-@@ -125,11 +125,6 @@
+@@ -129,11 +129,6 @@
  export async function hold(key, list, via) {
      if (!list.length)
          return;
@@ -211,59 +198,3 @@ diff --git a/dist/pane.js b/dist/pane.js
      const taken = list.map((file) => ({
          id: mint('h'),
          name: file.name,
-@@ -147,6 +142,55 @@
-         carrying.set(h.id, { stop, done });
-         return { h, file: list[i], stop, land };
-     });
-+    if (!via.org) {
-+        await Promise.all(jobs.map(async ({ h, file, stop, land }) => {
-+            try {
-+                if (stop.signal.aborted)
-+                    return land(null);
-+                const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(file.name);
-+                if (isImage) {
-+                    const dataUrl = await new Promise((resolve, reject) => {
-+                        const reader = new FileReader();
-+                        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
-+                        reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
-+                        reader.readAsDataURL(file);
-+                    });
-+                    const got = {
-+                        id: `local-${h.id}`,
-+                        name: file.name,
-+                        size: file.size,
-+                        type: file.type || 'image/png',
-+                        status: 'ready',
-+                        dataUrl,
-+                    };
-+                    local.set(got.id, h.href);
-+                    know(got);
-+                    patch(key, h.id, fromFile(got));
-+                    return land(got);
-+                }
-+                const localText = await file.text();
-+                const got = {
-+                    id: `local-${h.id}`,
-+                    name: file.name,
-+                    size: file.size,
-+                    type: file.type || 'text/plain',
-+                    status: 'ready',
-+                    localText,
-+                };
-+                local.set(got.id, h.href);
-+                know(got);
-+                patch(key, h.id, fromFile(got));
-+                return land(got);
-+            }
-+            catch (e) {
-+                if (!stop.signal.aborted)
-+                    patch(key, h.id, { state: 'failed', error: e?.message || `${file.name} could not be read.` });
-+                return land(null);
-+            }
-+        }));
-+        return;
-+    }
-+    const org = via.org;
-     await pool(jobs, FILES_AT_ONCE, async ({ h, file, stop, land }) => {
-         try {
-             if (stop.signal.aborted)
