@@ -79,7 +79,6 @@ function keep(patch: { model?: string; effort?: string }): void {
   }
 }
 
-export const LOCAL_ENGINE_PORT_URL = LOCAL_ENGINE_URL;
 export const OPEN_LOCAL_AI_EVENT = 'hanzo:open-local-ai';
 export const LOCAL_MODELS_UPDATED_EVENT = 'hanzo:local-models-updated';
 const CUSTOM_ENGINE_STORAGE_KEY = 'hanzo:local:engine-url';
@@ -344,7 +343,7 @@ function needsModel(model: string, code: string, message: string): Response {
 
 /**
  * Answers a chat turn on this computer: a custom endpoint when one is set,
- * otherwise the model Hanzo's engine serves on :36900. A downloaded model
+ * otherwise the model Hanzo's engine serves (LOCAL_ENGINE_URL). A downloaded model
  * that is not running yet is started for the turn (the person picked it).
  * With nothing to answer, the Local AI screen opens so one can be downloaded.
  */

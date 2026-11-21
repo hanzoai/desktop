@@ -20,6 +20,7 @@ import {
 import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { ProvidersListSection } from './LibraryPane';
+import { LOCAL_ENGINE_URL } from './lib/local-models';
 import { openLocalAiManager } from './local-ai';
 import { isTauriAvailable, safeInvoke } from './utils/tauri-check';
 
@@ -375,7 +376,6 @@ export function DesktopSettings({
   initialSection,
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',
-  localEngineUrl = 'http://localhost:36900',
   barInset = 0,
   onSignIn,
   onBack,
@@ -383,7 +383,6 @@ export function DesktopSettings({
   initialSection?: SettingsSectionId;
   isAuthenticated: boolean;
   siteUrl?: string;
-  localEngineUrl?: string;
   barInset?: number;
   onSignIn: () => void;
   onBack: () => void;
@@ -476,7 +475,7 @@ export function DesktopSettings({
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 1400);
 
-    fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
+    fetch(`${LOCAL_ENGINE_URL}/health`, { signal: ctrl.signal })
       .then((r) => {
         if (!cancelled) setEngineUp(r.ok);
       })
@@ -500,7 +499,7 @@ export function DesktopSettings({
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [localEngineUrl, refreshZap, refreshTools]);
+  }, [refreshZap, refreshTools]);
 
   const applyProfile = (next: AppearanceProfile) => {
     setProfile(next);
@@ -983,7 +982,7 @@ export function DesktopSettings({
                 <SettingsGroup title="Local Runtimes">
                   <SettingsRow
                     title="Hanzo Engine"
-                    description={`Local inference server (${localEngineUrl})`}
+                    description={`Local inference server (${LOCAL_ENGINE_URL})`}
                     control={<StatusPill online={engineUp} />}
                   />
                   <SettingsRow
