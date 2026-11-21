@@ -485,18 +485,18 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark', onBack }: B
     }
   };
 
-  /** Puts the engine's LSA back to `was`, exactly as it was read. */
+  /** Puts the engine's LSA back to `was`, exactly as it was read: on stays on (with its own config, or none), off stays off. */
   const restoreLsa = async (was: LsaStatusResponse) => {
-    if (was.enabled && was.config) {
+    if (was.enabled) {
       await fetch(LSA_URL, {
-        body: JSON.stringify(was.config),
+        body: JSON.stringify(was.config ?? {}),
         headers: { 'content-type': 'application/json' },
         method: 'POST',
       });
     } else {
       await fetch(LSA_URL, { method: 'DELETE' });
     }
-    setLsaEnabled(Boolean(was.enabled && was.config));
+    setLsaEnabled(was.enabled);
     window.dispatchEvent(new Event('hanzo:lsa-changed'));
   };
 

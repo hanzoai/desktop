@@ -70,6 +70,12 @@ describe('BenchmarkPage', () => {
     expect(writes.at(-1)).toEqual({ method: 'POST', body: own });
   });
 
+  it('a comparison that fails leaves LSA on when the engine had it on with no config of its own', async () => {
+    const writes = failingEngine({ enabled: true, config: null });
+    await compare();
+    expect(writes.at(-1)).toEqual({ method: 'POST', body: {} });
+  });
+
   it('a comparison that fails leaves LSA off when the engine had it off', async () => {
     const writes = failingEngine({ enabled: false, config: null });
     await compare();
