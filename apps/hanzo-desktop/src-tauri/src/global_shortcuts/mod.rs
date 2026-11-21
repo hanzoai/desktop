@@ -8,10 +8,17 @@ pub fn global_shortcut_handler(app: &tauri::AppHandle, shortcut: Shortcut, event
         return;
     }
     match shortcut {
-        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyI) => {
+        // main.rs registers each key under both Super and Control, and the
+        // shortcuts page advertises both. Only Super was matched, so the Control
+        // pair was taken from every other app and then did nothing.
+        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyI)
+            || s.matches(Modifiers::CONTROL | Modifiers::SHIFT, Code::KeyI) =>
+        {
             create_chat::create_chat(app, shortcut, event);
         }
-        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyJ) => {
+        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyJ)
+            || s.matches(Modifiers::CONTROL | Modifiers::SHIFT, Code::KeyJ) =>
+        {
             toggle_spotlight::toggle_spotlight(app, shortcut, event);
         }
         _ => {
