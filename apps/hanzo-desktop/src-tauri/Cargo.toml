@@ -53,6 +53,9 @@ hanzo-engine-bin = { path = "engine-bin" }
 hanzo-dev-agent = { path = "dev-agent" }
 # The project folders Auto can pick from. See projects/src/lib.rs.
 hanzo-projects = { path = "projects" }
+# The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
+# sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
+hanzo-node-env = { path = "node-env" }
 anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
 kill_tree = { version = "0.2", features = ["tokio"] }

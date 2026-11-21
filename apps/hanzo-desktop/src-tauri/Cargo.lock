@@ -3646,6 +3646,7 @@ dependencies = [
  "hanzo-engine-bin",
  "hanzo-log-redact",
  "hanzo-mining",
+ "hanzo-node-env",
  "hanzo-node-secret",
  "hanzo-projects",
  "hanzo-server-core",
@@ -3991,6 +3992,14 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "hanzo-node-env"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]

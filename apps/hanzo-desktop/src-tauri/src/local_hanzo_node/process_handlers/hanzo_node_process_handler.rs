@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
     time::Duration,
@@ -10,6 +11,7 @@ use tauri::AppHandle;
 use tokio::sync::mpsc::Sender;
 
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
+use crate::local_hanzo_node::PINNED_NODE_VERSION;
 
 use super::{
     process_handler::{ProcessHandler, ProcessHandlerEvent},
@@ -176,7 +178,20 @@ impl HanzoNodeProcessHandler {
         Ok(())
     }
 
-    pub async fn spawn(&self) -> Result<(), String> {
+    /// The env the node is spawned with: these options, plus the signed-in
+    /// `session_key` and the embeddings base and model the pinned node release
+    /// understands (hanzo-node-env). Never log its values.
+    pub fn spawn_env(&self, session_key: Option<&str>) -> HashMap<String, String> {
+        hanzo_node_env::spawn_env(
+            options_to_env(&self.options),
+            session_key,
+            PINNED_NODE_VERSION,
+        )
+    }
+
+    /// Starts the node with `env` (from [`Self::spawn_env`]), stopping any
+    /// node already running first.
+    pub async fn spawn(&self, env: HashMap<String, String>) -> Result<(), String> {
         let _ = self.kill().await;
 
         // Earlier builds could write the local node's HTTPS key to the log;
@@ -194,7 +209,6 @@ impl HanzoNodeProcessHandler {
             }
         }
 
-        let env = options_to_env(&self.options.clone());
         self.process_handler.spawn(env, [].to_vec(), None).await?;
         if let Err(e) = self.wait_hanzo_node_server().await {
             self.process_handler.kill().await;
