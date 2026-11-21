@@ -697,7 +697,7 @@ repository, nothing sent to the platform. The window supplies four commands
 - **The agent is fetched when the computer has none**, so a person never meets `npm install`. Lookup
   (`hanzo-dev-agent` crate, `src-tauri/dev-agent`): `HANZO_DEV_BIN`, `~/.local/bin/dev`,
   `~/.cargo/bin/dev`, `PATH`, then the app's own copy in the app data dir
-  (`<data>/dev/<version>/dev`). None found: download `hanzoai/dev`'s pinned release (`VERSION` in
+  (`<data>/dev/<version>/dev`). None found: download `hanzoai/dev-v1`'s pinned release (the terminal agent; `hanzoai/dev` is the app) (`VERSION` in
   `dev-agent/src/lib.rs`, the one place it is written; `dev-<target>.tar.gz`, Windows
   `dev-x86_64-pc-windows-msvc.exe.zip`, ~120 MB), check it against the `.sha256` beside it, unpack the one
   binary, let older versions go. The window hears `local-dev-setup` `{percent}` (0-100) while it

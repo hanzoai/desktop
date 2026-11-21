@@ -21,7 +21,8 @@ pub const VERSION: &str = "0.7.23";
 /// Environment variable naming the agent explicitly.
 pub const OVERRIDE_VAR: &str = "HANZO_DEV_BIN";
 
-const RELEASES: &str = "https://github.com/hanzoai/dev/releases/download";
+/// Hanzo Dev's releases: the terminal agent lives at hanzoai/dev-v1 (hanzoai/dev is the app).
+const RELEASES: &str = "https://github.com/hanzoai/dev-v1/releases/download";
 
 /// The agent's file name on this platform.
 pub const fn file_name() -> &'static str {
@@ -272,7 +273,7 @@ mod tests {
         let a = asset("linux", "x86_64").unwrap();
         assert_eq!(
             a.url(),
-            format!("https://github.com/hanzoai/dev/releases/download/v{VERSION}/dev-x86_64-unknown-linux-musl.tar.gz")
+            format!("https://github.com/hanzoai/dev-v1/releases/download/v{VERSION}/dev-x86_64-unknown-linux-musl.tar.gz")
         );
         assert_eq!(a.digest_url(), format!("{}.sha256", a.url()));
     }
