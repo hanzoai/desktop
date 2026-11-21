@@ -727,7 +727,22 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I, 'navigate-to-path', and 'tabs-split' on ⌘D / ⌘⇧D)
+  // ONE SETTINGS FOR EVERY VISITOR. Signed out, every Settings door of the app (the
+  // rail's mark, ⌘,, the palette, a row's menu, the sidebar) raises
+  // 'hanzo:anon-settings' to open its own small pane, which has no Local models: a
+  // guest who downloaded a model could not remove it. The window's Settings answers
+  // instead, on Local AI & Engine, the part of it a guest has. `{ open: false }` is the
+  // app closing its pane, not a door.
+  useEffect(() => {
+    const door = (e: Event) => {
+      if ((e as CustomEvent<{ open?: boolean } | undefined>).detail?.open === false) return;
+      window.history.pushState(null, '', '/settings/engine');
+    };
+    window.addEventListener('hanzo:anon-settings', door);
+    return () => window.removeEventListener('hanzo:anon-settings', door);
+  }, []);
+
+    // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I, 'navigate-to-path', and 'tabs-split' on ⌘D / ⌘⇧D)
   useEffect(() => {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
