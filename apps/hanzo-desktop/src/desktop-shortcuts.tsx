@@ -7,6 +7,7 @@ import { ArrowLeft } from '@hanzogui/lucide-icons-2';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
+import { engineStatus } from './lib/local-models';
 import { LOCAL_MODELS_UPDATED_EVENT, openLocalAiManager, probeInstalledLocalModels } from './local-ai';
 
 export type Platform = 'mac' | 'other';
@@ -59,13 +60,24 @@ export interface LocalModelsStatus {
 const models = (n: number) => (n === 1 ? '1 model' : `${n} models`);
 
 /**
- * The Local models card's one line, from what this computer answered: how many
- * local models a local server lists (null while still asking), and whether the
- * embedded Hanzo Engine itself is up. Running means the engine is serving them;
- * Ready means another local server (Ollama, a custom engine) has them.
+ * The Local models card's one line, and it says what the Local AI manager says
+ * (lib/local-models `overall`): how many models are downloaded (null while still
+ * asking), whether the engine is answering, and whether an engine is installed
+ * at all (null when that cannot be asked, as in a plain browser). Downloaded
+ * models answer nothing without an engine, so a missing engine is said first.
+ * Ready means downloaded; Running means the engine is serving one.
  */
-export function localModelsStatus(count: number | null, engineUp: boolean | null): LocalModelsStatus {
+export function localModelsStatus(
+  count: number | null,
+  engineUp: boolean | null,
+  engineInstalled: boolean | null = null,
+): LocalModelsStatus {
   if (count === null) return { label: 'Checking…', detail: 'Looking for models on this computer.' };
+  if (engineInstalled === false && !engineUp)
+    return {
+      label: 'Not set up',
+      detail: 'Hanzo’s engine, which runs models on this computer, is not installed.',
+    };
   if (count === 0)
     return {
       label: 'Not set up',
@@ -163,6 +175,7 @@ export function DesktopSettings({
   const [theme, setTheme] = useState<Preference['theme']>(() => read().theme ?? 'system');
   const [devMode, setDevMode] = useDevMode();
   const [count, setCount] = useState<number | null>(null);
+  const [engineInstalled, setEngineInstalled] = useState<boolean | null>(null);
   const engineUp = useUp((signal) => fetch(`${localEngineUrl}/health`, { signal }));
   const hanzodUp = useUp((signal) =>
     fetch(`${HANZOD_URL}/v1/chain/hanzo/rpc`, {
@@ -190,10 +203,14 @@ export function DesktopSettings({
   // The status line follows the Local AI manager: a model added there shows here.
   useEffect(() => {
     let live = true;
-    const probe = () =>
+    const probe = () => {
       void probeInstalledLocalModels(true)
         .then((found) => live && setCount(found.length))
         .catch(() => live && setCount(0));
+      void engineStatus()
+        .then((status) => live && setEngineInstalled(status ? Boolean(status.engine) : null))
+        .catch(() => live && setEngineInstalled(null));
+    };
     probe();
     window.addEventListener(LOCAL_MODELS_UPDATED_EVENT, probe);
     return () => {
@@ -215,7 +232,7 @@ export function DesktopSettings({
     setTheme(next);
   };
 
-  const status = localModelsStatus(count, engineUp);
+  const status = localModelsStatus(count, engineUp, engineInstalled);
 
   return (
     <YStack data-testid="desktop-settings-page" height="100vh" width="100vw" bg="$background">
