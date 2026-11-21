@@ -1255,6 +1255,12 @@ leave less than 2 GB free (`MIN_FREE_BYTES`):
 - `local_models_serve(repo)` runs `hanzo-engine serve -m <repo> -p 36900 --host 127.0.0.1` with
   `HF_HUB_OFFLINE=1`, only when the person presses Use (or chats with a downloaded model chosen). One
   at a time; `local_models_stop`, Remove, and app exit (`local_models::stop_all`) stop it.
+- A crash, Force Quit or kill runs no exit code, so nothing can stop the engine then. While it
+  serves, `<app data>/local-engine.json` records its process id, executable and start time (read
+  back through `sysinfo`), and a stop clears it. At the next start (`at_start`, in `setup`, before a
+  window can press Use) a recorded process still alive with that same executable and start time is
+  ended; anything else under that id (another program, or none) is left alone, and the record goes.
+  Never by name. Until that start, the old engine keeps :36900 and Use says the port is taken.
 - Which catalogue tags can be downloaded is `src/lib/local-sources.json` (repo and measured
   download size). Every other catalogue entry is an Ollama tag and says "Not available yet".
 - Test: `cargo test --bin hanzo-desktop local_models` (a stand-in model library on a local port),

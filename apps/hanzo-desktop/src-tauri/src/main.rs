@@ -398,9 +398,10 @@ fn main() {
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
 
-            // A download an earlier run was cut off in (quit, crash) left files
-            // no screen lists; removing gigabytes is not the window's to wait on.
-            std::thread::spawn(local_models::at_start);
+            // What an earlier run that ended without its exit hook (a crash, a
+            // force quit) left: a served engine holding the port, and a cut-off
+            // download no screen lists.
+            local_models::at_start(app_data_dir.clone());
 
             // Native Hanzo Engine: manage the one shared orchestrator for both
             // the Tauri IPC commands and the `/v1/engine/*` HTTP management

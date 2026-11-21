@@ -15,7 +15,10 @@
 //! and `refs/main` is written last, the way the CLI writes them.
 //!
 //! One model is served at a time, on 127.0.0.1:36900, only after the person
-//! chooses it, and it is stopped when the app exits ([`stop_all`]).
+//! chooses it, and it is stopped when the app exits ([`stop_all`]). An exit
+//! that runs no code (a crash, Force Quit, a kill) cannot stop it, so the
+//! engine is recorded while it serves ([`EngineRecord`]) and the next start
+//! ends it if it is still that engine ([`at_start`]).
 
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -83,6 +86,78 @@ struct Served {
 }
 
 type Pulling = Mutex<Option<(String, Arc<AtomicBool>)>>;
+
+/// The engine this app started, kept in the app's data folder while it serves:
+/// its process id, and what tells it from another process that later got the
+/// same id, its executable and its start time (seconds, as the system says).
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct EngineRecord {
+    pub pid: u32,
+    pub exe: PathBuf,
+    pub started: u64,
+}
+
+/// The app's data folder, once `at_start` has been told it.
+fn data_dir() -> &'static OnceLock<PathBuf> {
+    static D: OnceLock<PathBuf> = OnceLock::new();
+    &D
+}
+
+fn record_file() -> Option<PathBuf> {
+    data_dir().get().map(|d| d.join("local-engine.json"))
+}
+
+/// What runs as `pid` now: its executable and start time, or `None` when no
+/// process has that id (or its executable cannot be read, so it is not ours to end).
+fn running_as(pid: u32) -> Option<(PathBuf, u64)> {
+    let pid = sysinfo::Pid::from_u32(pid);
+    let mut sys = sysinfo::System::new();
+    sys.refresh_process(pid);
+    sys.process(pid).and_then(|p| Some((p.exe()?.to_path_buf(), p.start_time())))
+}
+
+/// Whether the process now running under a recorded id is still the engine
+/// this app started, and so is to be ended. Anything else (no process, another
+/// program, another start of the same program) is left alone. The record goes
+/// either way.
+pub fn still_our_engine(record: &EngineRecord, now: Option<(PathBuf, u64)>) -> bool {
+    now.is_some_and(|(exe, started)| exe == record.exe && started == record.started)
+}
+
+/// At start: end the engine an earlier run left serving, if it is still alive
+/// and still that engine, then forget the record. Never by name.
+fn end_left_engine(file: &Path) {
+    let Some(record) = std::fs::read(file).ok().and_then(|b| serde_json::from_slice::<EngineRecord>(&b).ok()) else {
+        let _ = std::fs::remove_file(file);
+        return;
+    };
+    if still_our_engine(&record, running_as(record.pid)) {
+        let pid = sysinfo::Pid::from_u32(record.pid);
+        let mut sys = sysinfo::System::new();
+        sys.refresh_process(pid);
+        if sys.process(pid).is_some_and(|p| p.kill()) {
+            log::info!("[local-models] ended the engine an earlier run left serving (pid {})", record.pid);
+        }
+    }
+    let _ = std::fs::remove_file(file);
+}
+
+fn remember(child: &Child) {
+    let Some(file) = record_file() else { return };
+    let pid = child.id();
+    // spawn returns after exec, so this is the engine and not the app.
+    let Some((exe, started)) = running_as(pid) else { return };
+    let record = EngineRecord { pid, exe, started };
+    if let Err(e) = serde_json::to_vec(&record).map_err(|e| e.to_string()).and_then(|b| std::fs::write(&file, b).map_err(|e| e.to_string())) {
+        log::warn!("[local-models] could not record the engine: {e}");
+    }
+}
+
+fn forget() {
+    if let Some(file) = record_file() {
+        let _ = std::fs::remove_file(file);
+    }
+}
 
 fn pulling() -> &'static Pulling {
     static P: OnceLock<Pulling> = OnceLock::new();
@@ -418,6 +493,7 @@ fn alive() -> Option<String> {
     if let Ok(None) = up.child.try_wait() {
         return Some(up.repo.clone());
     }
+    forget();
     let said = up.stderr.lock().map(|s| s.trim().to_string()).unwrap_or_default();
     if let Ok(mut e) = last_exit().lock() {
         *e = Some(if said.is_empty() { "The engine stopped as it started.".into() } else { said });
@@ -431,6 +507,7 @@ fn stop_serving() {
         if let Some(mut up) = slot.take() {
             let _ = up.child.kill();
             let _ = up.child.wait();
+            forget();
         }
     }
 }
@@ -484,10 +561,20 @@ pub fn sweep_unfinished(cache: &Path) -> Vec<PathBuf> {
         .collect()
 }
 
+/// At start, before any window can press Use: end an engine an earlier run
+/// left serving (it would hold the port), then sweep its cut-off download.
+pub fn at_start(data: PathBuf) {
+    let _ = data_dir().set(data);
+    if let Some(file) = record_file() {
+        end_left_engine(&file);
+    }
+    std::thread::spawn(sweep_once);
+}
+
 /// Once per run, at start (and before the first status, should that come
 /// first): sweep what an earlier run's cut-off download left, while nothing
 /// downloads.
-pub fn at_start() {
+fn sweep_once() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
         if pulling().lock().map(|p| p.is_some()).unwrap_or(true) {
@@ -501,7 +588,7 @@ pub fn at_start() {
 
 #[tauri::command]
 pub fn local_models_status() -> Status {
-    at_start();
+    sweep_once();
     let cache = this_cache_dir();
     let serving = alive();
     Status {
@@ -620,6 +707,7 @@ pub fn local_models_serve(repo: String) -> Result<(), String> {
         .stderr(Stdio::piped())
         .spawn()
         .map_err(|e| format!("The Hanzo engine did not start: {e}"))?;
+    remember(&child);
     let stderr = Arc::new(Mutex::new(String::new()));
     if let Some(err) = child.stderr.take() {
         let keep = stderr.clone();
@@ -787,6 +875,38 @@ mod tests {
         }
         assert_eq!(list_cached(tmp.path()).len(), 2);
         assert_eq!(installed(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 1 }]);
+    }
+
+    #[test]
+    fn a_left_engine_is_ended_only_while_it_is_still_that_engine() {
+        let record = EngineRecord { pid: 4242, exe: "/Users/a/.local/bin/hanzo-engine".into(), started: 1_700_000_000 };
+        let now = |exe: &str, started| Some((PathBuf::from(exe), started));
+        assert!(still_our_engine(&record, now("/Users/a/.local/bin/hanzo-engine", 1_700_000_000)), "alive and the same engine: end it");
+        assert!(!still_our_engine(&record, now("/Applications/Safari.app/Contents/MacOS/Safari", 1_700_000_000)), "another program: leave it");
+        assert!(!still_our_engine(&record, now("/Users/a/.local/bin/hanzo-engine", 1_700_000_900)), "a later start of the engine: leave it");
+        assert!(!still_our_engine(&record, None), "gone: nothing to end");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn at_start_the_record_is_cleared_and_only_the_recorded_process_is_ended() {
+        let tmp = tempfile::tempdir().unwrap();
+        let file = tmp.path().join("local-engine.json");
+        // A live process recorded as itself: what a crash leaves behind.
+        let mut ours = Command::new("sleep").arg("30").spawn().unwrap();
+        let (exe, started) = running_as(ours.id()).expect("a live process is seen");
+        std::fs::write(&file, serde_json::to_vec(&EngineRecord { pid: ours.id(), exe, started }).unwrap()).unwrap();
+        end_left_engine(&file);
+        assert!(ours.wait().is_ok_and(|s| !s.success()), "the recorded engine was ended");
+        assert!(!file.exists());
+        // A live process whose id is recorded under another executable is left alone.
+        let mut other = Command::new("sleep").arg("30").spawn().unwrap();
+        std::fs::write(&file, serde_json::to_vec(&EngineRecord { pid: other.id(), exe: "/nowhere/hanzo-engine".into(), started: 0 }).unwrap()).unwrap();
+        end_left_engine(&file);
+        assert!(matches!(other.try_wait(), Ok(None)), "another program keeps running");
+        assert!(!file.exists());
+        let _ = other.kill();
+        let _ = other.wait();
     }
 
     /// The tests that touch the one download slot and the served engine take turns.
