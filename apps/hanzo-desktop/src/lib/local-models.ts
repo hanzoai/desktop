@@ -98,19 +98,23 @@ export const removeModel = (repo: string) => invoke<void>('local_models_remove',
 export const serveModel = (repo: string) => invoke<void>('local_models_serve', { repo });
 export const stopModel = () => invoke<void>('local_models_stop');
 
-/** Wait until the served model answers, or give up after `timeoutMs`. */
-export async function waitForEngine(timeoutMs = 120_000, stepMs = 500): Promise<boolean> {
+/**
+ * Wait until `repo`, served by this app, answers; false when it stops or after
+ * `timeoutMs`. What this app serves is asked first: /health alone would take
+ * any process on the port (an engine left from before, someone else's server)
+ * for the model just chosen.
+ */
+export async function waitForEngine(repo: string, timeoutMs = 120_000, stepMs = 500): Promise<boolean> {
   const until = Date.now() + timeoutMs;
   while (Date.now() < until) {
+    const s = await engineStatus().catch(() => null);
+    if (s && s.serving !== repo) return false;
     try {
       const res = await fetch(`${LOCAL_ENGINE_URL}/health`, { signal: AbortSignal.timeout(1000) });
       if (res.ok) return true;
     } catch {
       // not up yet
     }
-    // A process that died while loading will not come up; stop waiting for it.
-    const s = await engineStatus().catch(() => null);
-    if (s && !s.serving) return false;
     await new Promise((r) => setTimeout(r, stepMs));
   }
   return false;

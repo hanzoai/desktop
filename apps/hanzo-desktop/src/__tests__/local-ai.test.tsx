@@ -32,6 +32,7 @@ import {
   memoryNeededGb,
   overall,
   type EngineStatus,
+  waitForEngine,
 } from '../lib/local-models';
 
 import { keychain } from '../keychain';
@@ -213,6 +214,22 @@ describe('the Local AI screen', () => {
     await waitFor(() => expect(screen.getAllByLabelText('Download Zen Nano').length).toBeGreaterThan(0));
   });
 
+  it('a server this app did not start is not taken for the chosen model', async () => {
+    const taken =
+      'Another program on this computer is already using port 36900, where the model answers, so zenlm/zen-nano-0.6b was not started. Quit that program (it may be a Hanzo engine left running), then press Use again.';
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1_208_033_536 }] }), {
+      local_models_serve: () => Promise.reject(taken),
+    });
+    // Someone else's server answers /health on the port.
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
+    expect(await waitForEngine(NANO, 200, 10)).toBe(false);
+    await openScreen();
+    fireEvent.click(screen.getAllByLabelText('Use Zen Nano')[0]);
+    const alert = await screen.findAllByTestId('local-ai-pull-error');
+    expect(alert[0].textContent).toBe(taken);
+    expect(screen.getByTestId('local-ai-status').textContent).not.toMatch(/Running/);
+  });
+
   it('keeps developer details behind Advanced', async () => {
     desktop(() => base);
     await openScreen();
@@ -247,6 +264,21 @@ describe('local chat', () => {
     expect(invoke).toHaveBeenCalledWith('local_models_serve', { repo: NANO });
     expect(res.status).toBe(200);
     expect((await res.json()).choices[0].message.content).toBe('Hello!');
+  });
+
+  it('does not chat with a server on the port that this app did not start', async () => {
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }] }), {
+      local_models_serve: () => Promise.reject('Another program on this computer is already using port 36900.'),
+    });
+    const native = vi.fn(async (url: string) =>
+      url.endsWith('/v1/models') ? new Response(JSON.stringify({ data: [{ id: 'someone-elses-model' }] })) : new Response('{}'),
+    );
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
+    const res = await handleLocalChatCompletion(native as unknown as typeof fetch, {
+      body: JSON.stringify({ model: 'enso-free', messages: [{ role: 'user', content: 'hi' }] }),
+    });
+    expect(res.status).toBe(503);
+    expect(native).not.toHaveBeenCalledWith(expect.stringMatching(/chat\/completions/), expect.anything());
   });
 
   it('with no engine says what is missing instead of failing silently', async () => {

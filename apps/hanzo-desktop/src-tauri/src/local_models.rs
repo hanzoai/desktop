@@ -524,6 +524,14 @@ pub fn local_models_serve(repo: String) -> Result<(), String> {
         return Ok(());
     }
     stop_serving();
+    // Whatever answers now is not ours: a Hanzo engine left from before, or
+    // another program. The new engine could not bind, and chat would talk to
+    // that one while the screen named this model.
+    if port_taken(PORT) {
+        return Err(format!(
+            "Another program on this computer is already using port {PORT}, where the model answers, so {repo} was not started. Quit that program (it may be a Hanzo engine left running), then press Use again."
+        ));
+    }
     if let Ok(mut e) = last_exit().lock() {
         *e = None;
     }
@@ -558,6 +566,11 @@ pub fn local_models_serve(repo: String) -> Result<(), String> {
     }
     *served().lock().map_err(|e| e.to_string())? = Some(Served { repo, child, stderr });
     Ok(())
+}
+
+/// Whether something already listens on 127.0.0.1:`port`.
+fn port_taken(port: u16) -> bool {
+    std::net::TcpStream::connect_timeout(&(std::net::Ipv4Addr::LOCALHOST, port).into(), Duration::from_millis(300)).is_ok()
 }
 
 #[tauri::command]
@@ -639,6 +652,15 @@ mod tests {
         }
         let other = &resolved.allowed_commands["hardware_get_summary"];
         assert!(other.iter().any(|c| main(c) && matches!(c.context, ExecutionContext::Remote { .. })));
+    }
+
+    #[test]
+    fn a_port_someone_else_holds_is_seen() {
+        let held = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = held.local_addr().unwrap().port();
+        assert!(port_taken(port));
+        drop(held);
+        assert!(!port_taken(port));
     }
 
     #[test]
