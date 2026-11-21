@@ -1,10 +1,9 @@
 diff --git a/dist/Chat.js b/dist/Chat.js
-index 8ae1430..fe397ba 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
-@@ -875,10 +875,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -875,10 +875,12 @@
      };
-     const listed = mind.models;
+     const listed = useMemo(() => mind.models.filter(chats), [mind.models]);
      const filteredListed = useMemo(() => {
 -        if (chatPrefs.allowThirdPartyModels)
 +        // Hanzo Desktop: a signed-out reader's catalog is the local engine's
@@ -14,10 +13,10 @@ index 8ae1430..fe397ba 100644
          return listed.filter((m) => isHouseModel(m) || m.id === ENSO);
 -    }, [listed, chatPrefs.allowThirdPartyModels]);
 +    }, [listed, anonymous, chatPrefs.allowThirdPartyModels]);
-     const models = useMemo(() => filteredListed.filter(chats), [filteredListed]);
+     const models = filteredListed;
      // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
      // read from the catalog's own fields (`parseModels`): its class, its family.
-@@ -890,7 +892,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -890,7 +892,8 @@
      const wanted = mind.model;
      // A model the catalog lists is sent as picked, whatever it answers with; only
      // a name the catalog does not list falls to one that converses (`served`).
@@ -27,7 +26,7 @@ index 8ae1430..fe397ba 100644
      const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
      // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
      // headers and read again whenever a send settles, below. The pane draws no
-@@ -1114,7 +1117,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1114,7 +1117,7 @@
      // identity changes on every `setMessages` — `useChat` closes over `messages` —
      // so an effect depending on it re-runs after each streamed token.
      const latest = useRef(send);
@@ -36,7 +35,7 @@ index 8ae1430..fe397ba 100644
      // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
      // it. `Chat` owns a draft of its own and spreads `composer` after it, so
      // passing value/onChange/onSend takes that ownership over rather than fighting
-@@ -1227,10 +1230,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1227,10 +1230,15 @@
      const [anonBusy, setAnonBusy] = useState(false);
      const [anonGateOpen, setAnonGateOpen] = useState(false);
      const anonCountRef = useRef(0);
@@ -55,7 +54,7 @@ index 8ae1430..fe397ba 100644
          try {
              sessionStorage.setItem("hanzo.build.prompt", clean);
              const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
-@@ -1350,7 +1358,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1350,7 +1358,10 @@
          if (queued === null || resolving)
              return;
          setQueued(null);
@@ -67,7 +66,7 @@ index 8ae1430..fe397ba 100644
      }, [queued, resolving]);
      const streaming = useRef(false);
      streaming.current = chat.streaming;
-@@ -1451,16 +1462,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1451,16 +1462,14 @@
       * it leaves its place in the thread and is asked at the end, so it is asked
       * once and not twice.
       */
@@ -88,7 +87,7 @@ index 8ae1430..fe397ba 100644
          if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
              apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
              if (again)
-@@ -1468,10 +1477,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1468,10 +1477,10 @@
                      const { [again]: _gone, ...rest } = all;
                      return rest;
                  });
@@ -101,7 +100,7 @@ index 8ae1430..fe397ba 100644
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -1977,6 +1986,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1977,6 +1986,28 @@
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -130,7 +129,7 @@ index 8ae1430..fe397ba 100644
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2039,6 +2070,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2039,6 +2070,9 @@
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -140,7 +139,7 @@ index 8ae1430..fe397ba 100644
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2063,7 +2097,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2063,7 +2097,7 @@
                              : how?.provider
                                  ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
                                  : plainly(wrong, t("this conversation"), t);
@@ -150,10 +149,9 @@ index 8ae1430..fe397ba 100644
                                      localStorage.removeItem("hanzo_iam_access_token");
                                      localStorage.removeItem("hanzo_iam_refresh_token");
 diff --git a/dist/Setup.js b/dist/Setup.js
-index e86489d..f7b7f23 100644
 --- a/dist/Setup.js
 +++ b/dist/Setup.js
-@@ -112,7 +112,8 @@ export function Setup({ go } = {}) {
+@@ -115,7 +115,8 @@
      const accountList = Array.isArray(googleAccounts) ? googleAccounts : [];
      const hasGoogle = googleDone || accountList.length > 0;
      // Google Workspace is a private beta until Google verifies its scopes.
@@ -164,10 +162,9 @@ index e86489d..f7b7f23 100644
      const openPlugins = () => (pathed && go ? go(app(PLUGINS)) : window.location.assign(site(app(PLUGINS))));
      // The token itself is lib/gmail's to keep; Setup lists the addresses.
 diff --git a/dist/help.js b/dist/help.js
-index 082b539..083f889 100644
 --- a/dist/help.js
 +++ b/dist/help.js
-@@ -33,7 +33,8 @@ export const legal = () => [
+@@ -33,7 +33,8 @@
   */
  export const KEYS = [
      { does: phrase('Search chats'), mac: '⌘K', pc: 'Ctrl+K', group: 'Navigation' },
@@ -177,7 +174,7 @@ index 082b539..083f889 100644
      { does: phrase('Settings'), mac: '⌘,', pc: 'Ctrl+,', group: 'Navigation' },
      { does: phrase('Keyboard shortcuts'), mac: '⌘/', pc: 'Ctrl+/', group: 'Navigation' },
      { does: phrase('Toggle sidebar'), mac: '⌘B', pc: 'Ctrl+B', group: 'Workspace' },
-@@ -41,6 +42,8 @@ export const KEYS = [
+@@ -41,6 +42,8 @@
      { does: phrase('Toggle theme'), mac: '⌘⇧L', pc: 'Ctrl+Shift+L', group: 'Workspace' },
      { does: phrase('Toggle Developer mode'), mac: '⌘⇧D', pc: 'Ctrl+Shift+D', group: 'Workspace' },
      { does: phrase('Attach files'), mac: '⌘U', pc: 'Ctrl+U', group: 'Chat' },
@@ -200,10 +197,9 @@ index 6fb93c0..c5d89e9 100644
          cancel: async () => {
              await tauriInvoke('local_dev_setup_cancel');
 diff --git a/dist/pane.js b/dist/pane.js
-index b1eb15e..1f3e5bc 100644
 --- a/dist/pane.js
 +++ b/dist/pane.js
-@@ -125,11 +125,6 @@ function watch(api, f, key, id) {
+@@ -125,11 +125,6 @@
  export async function hold(key, list, via) {
      if (!list.length)
          return;
@@ -215,7 +211,7 @@ index b1eb15e..1f3e5bc 100644
      const taken = list.map((file) => ({
          id: mint('h'),
          name: file.name,
-@@ -147,6 +142,55 @@ export async function hold(key, list, via) {
+@@ -147,6 +142,55 @@
          carrying.set(h.id, { stop, done });
          return { h, file: list[i], stop, land };
      });

@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev",
+    "tauri:dev": "tauri dev --features devtools",
     "build:hanzo": "node ./scripts/brand-build.cjs hanzo",
     "build:team": "node ./scripts/brand-build.cjs team",
     "build:node": "node ./scripts/brand-build.cjs node",
