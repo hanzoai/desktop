@@ -1,4 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
+import { error as logError } from '@tauri-apps/plugin-log';
 import { platform } from '@tauri-apps/plugin-os';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check, type Update as Release } from '@tauri-apps/plugin-updater';
@@ -65,8 +66,11 @@ export function useUpdate(): { stage: Stage; install: () => void } {
         if (stopped || busy.current) return;
         release.current = found;
         setStage(found ? { name: 'ready', version: found.version } : { name: 'none' });
-      } catch {
+      } catch (err) {
         // No feed, no network or an unsigned local build: the bar says nothing.
+        // The log does, or a bad signature and a missing platform both read as
+        // "no update" and a stuck version cannot be told from a current one.
+        void logError(`update check failed: ${err instanceof Error ? err.message : String(err)}`);
       }
     };
     void look();
@@ -96,9 +100,10 @@ export function useUpdate(): { stage: Stage; install: () => void } {
         }
       })
       .then(() => (platform() === 'windows' ? undefined : relaunch()))
-      .catch(() => {
+      .catch((err: unknown) => {
         busy.current = false;
         setStage({ name: 'failed', version: found.version });
+        void logError(`update to ${found.version} failed: ${err instanceof Error ? err.message : String(err)}`);
       });
   }, []);
 

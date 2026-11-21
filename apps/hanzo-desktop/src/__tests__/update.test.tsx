@@ -7,11 +7,13 @@ const plugin = vi.hoisted(() => ({
   relaunch: vi.fn(async () => undefined),
   invoke: vi.fn(async () => undefined),
   platform: vi.fn(() => 'macos'),
+  log: vi.fn(async () => undefined),
 }));
 
 vi.mock('@tauri-apps/plugin-updater', () => ({ check: plugin.check }));
 vi.mock('@tauri-apps/plugin-process', () => ({ relaunch: plugin.relaunch }));
 vi.mock('@tauri-apps/plugin-os', () => ({ platform: plugin.platform }));
+vi.mock('@tauri-apps/plugin-log', () => ({ error: plugin.log }));
 vi.mock('@tauri-apps/api/core', () => ({ invoke: plugin.invoke }));
 vi.mock('../utils/tauri-check', () => ({ isTauriAvailable: () => true }));
 
@@ -65,6 +67,8 @@ describe('the update mark', () => {
     mount();
     await opened();
     expect(screen.queryByText(/Update/)).toBeNull();
+    // Silent in the bar, not in the log: a check that cannot run is findable.
+    expect(plugin.log).toHaveBeenCalledWith('update check failed: offline');
   });
 
   it('shows one quiet line for a newer version, and asks again every half hour', async () => {
@@ -133,6 +137,7 @@ describe('the update mark', () => {
     });
     const again = screen.getByRole('button', { name: /could not be installed/ });
     expect(again).toHaveTextContent('Update didn’t finish. Try again');
+    expect(plugin.log).toHaveBeenCalledWith('update to 1.2.0 failed: disk full');
     expect(plugin.relaunch).not.toHaveBeenCalled();
     await act(async () => {
       fireEvent.click(again);

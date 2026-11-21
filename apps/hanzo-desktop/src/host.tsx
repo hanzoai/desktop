@@ -271,6 +271,9 @@ function onward(): string {
   return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 }
 
+/** How long the loopback port waits for the browser: `PATIENCE` in loopback.rs. */
+const SIGN_IN_WINDOW = 15 * 60 * 1000;
+
 /**
  * Sign-in in the system browser, as the Hanzo CLI signs in: a loopback port the
  * system picks for this attempt is the redirect (RFC 8252 §7.3), and the page
@@ -286,17 +289,39 @@ async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
   (sdk as unknown as { config: { redirectUri: string } }).config.redirectUri = redirect;
   const issuer = new URL(await sdk.getSigninUrl());
   const url = brand.iam.page ? `${brand.iam.page}${issuer.search}` : issuer.href;
-  await new Promise<void>((resolve, reject) => {
-    void safeListen<{ state: string; code: string }>(brand.iam.callbackEvent, (event) => {
-      const back = new URL(redirect);
-      back.searchParams.set('code', event.payload.code);
-      back.searchParams.set('state', event.payload.state);
-      sdk
-        .handleCallback(back.href)
-        .then(() => share())
-        .then(() => resolve(), reject);
-    }).then(() => openUrl(url), reject);
-  });
+  // The loopback port closes after SIGN_IN_WINDOW (loopback.rs) and nothing can
+  // come back once it has. Without the timer a reader who closed the browser
+  // tab kept a disabled "Finish signing in…" button until the app was quit, and
+  // every retry left another listener behind.
+  let stop: (() => void) | null = null;
+  let expire: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      expire = setTimeout(
+        () => reject(new Error('Sign-in was not finished in the browser. Try again.')),
+        SIGN_IN_WINDOW,
+      );
+      void safeListen<{ state: string; code: string }>(brand.iam.callbackEvent, (event) => {
+        // The browser came back: the exchange below decides the outcome now.
+        clearTimeout(expire);
+        const back = new URL(redirect);
+        back.searchParams.set('code', event.payload.code);
+        back.searchParams.set('state', event.payload.state);
+        sdk
+          .handleCallback(back.href)
+          .then(() => share())
+          .then(() => resolve(), reject);
+      })
+        .then((unlisten) => {
+          stop = unlisten;
+          return openUrl(url);
+        })
+        .then(undefined, reject);
+    });
+  } finally {
+    clearTimeout(expire);
+    (stop as (() => void) | null)?.();
+  }
   window.location.replace(onward());
 }
 
