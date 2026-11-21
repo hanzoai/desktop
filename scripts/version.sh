@@ -30,7 +30,8 @@
 #
 # THE SINGLE SOURCE IS THE ROOT package.json, and the checks below are what keep
 # it single. Tauri reads it by PATH (`"version": "../../../package.json"` in
-# tauri.conf.json), src-tauri/Cargo.toml stays an inert 0.0.0 placeholder, and
+# tauri.conf.json), src-tauri/Cargo.toml repeats it exactly (cargo cannot read a
+# file; src-tauri/build.rs refuses a build where the two differ), and
 # apps/hanzo-desktop/package.json declares no version at all. Every one of those
 # is a place a number could be typed a second time and then disagree, which is
 # how a bundle comes to report a version its repo never released.
@@ -97,10 +98,10 @@ case "${1:-check}" in
 
     cargo="$(sed -n '/^\[package\]/,/^\[/p' apps/hanzo-desktop/src-tauri/Cargo.toml \
              | sed -n 's/^version *= *"\([^"]*\)".*/\1/p' | head -1)"
-    [ "$cargo" = "0.0.0" ] \
-      || fail "src-tauri/Cargo.toml declares version '${cargo}', not the inert 0.0.0." \
-              "tauri.conf.json's pointer overrides it for the bundle, so a real number" \
-              "here is a third source that looks authoritative and governs nothing."
+    [ "$cargo" = "$dec" ] \
+      || fail "src-tauri/Cargo.toml declares version '${cargo}', not package.json's ${dec}." \
+              "src-tauri/build.rs refuses to build when the two differ (cargo cannot" \
+              "read package.json), so set version = \"${dec}\" in Cargo.toml."
 
     # ---- never behind what shipped ------------------------------------------
     pub="$(published)"

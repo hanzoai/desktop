@@ -27,6 +27,7 @@
     "@hanzo/event": "catalog:",
     "@hanzo/font": "catalog:",
     "@hanzo/gui": "catalog:",
+    "@hanzo/i18n": "catalog:",
     "@hanzo/iam": "catalog:",
     "@hanzo/logo": "catalog:",
     "@hanzo/pay": "catalog:",

@@ -22,10 +22,11 @@ test:
   # 2026-07-27 and never re-homed, so since then nothing has asserted it.
   #
   # It also holds the file to being the ONLY declaration: tauri.conf.json must
-  # keep POINTING at it rather than restating a number, Cargo.toml must stay the
-  # inert 0.0.0 the pointer overrides, and apps/hanzo-desktop/package.json must
-  # declare none (it carried a second copy that agreed only by luck). Each is a
-  # place a bundle could come to report a version this repo never released.
+  # keep POINTING at it rather than restating a number, Cargo.toml must repeat
+  # it exactly (src-tauri/build.rs refuses a build where they differ), and
+  # apps/hanzo-desktop/package.json must declare none (it carried a second copy
+  # that agreed only by luck). Each is a place a bundle could come to report a
+  # version this repo never released.
   - name: version-drift
     run: |
       set -e
