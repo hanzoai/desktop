@@ -226,23 +226,29 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(advanced.textContent).toMatch(/127\.0\.0\.1:36900/);
   });
 
-  it('reaches the Local AI screen from Settings > Local models, now that the bar has no button for it', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => {
-      throw new TypeError('Failed to fetch');
-    }));
-    window.history.replaceState(null, '', '/settings/local-models');
-    render(
-      gui(
-        <>
-          <DesktopSettings isAuthenticated={false} onBack={vi.fn()} onSignIn={vi.fn()} />
-          <LocalAiManager />
-        </>,
-      ),
-    );
-    expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Manage local models' }));
-    expect(await screen.findByTestId('local-ai-manager-modal')).toBeTruthy();
-  });
+  it.each([false, true])(
+    'reaches the Local AI screen by clicking from Settings’ first page, signed in: %s',
+    async (signedIn) => {
+      vi.stubGlobal('fetch', vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }));
+      // Where every Settings door lands: Account for a signed-in person (the app's
+      // own doors move to /settings/account), Local models for a guest (host.tsx).
+      window.history.replaceState(null, '', signedIn ? '/settings/account' : '/settings/local-models');
+      render(
+        gui(
+          <>
+            <DesktopSettings isAuthenticated={signedIn} onBack={vi.fn()} onSignIn={vi.fn()} />
+            <LocalAiManager />
+          </>,
+        ),
+      );
+      if (signedIn) fireEvent.click(entry('Local models'));
+      expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
+      fireEvent.click(screen.getByRole('button', { name: 'Manage local models' }));
+      expect(await screen.findByTestId('local-ai-manager-modal')).toBeTruthy();
+    },
+  );
 
   it('answers the window keys @hanzo/app leaves to it: ⌘N and ⌘⇧M', () => {
     const press = (key: string, more: Partial<KeyboardEvent> = {}) =>
