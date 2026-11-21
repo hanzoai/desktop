@@ -9,7 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { isTauriAvailable } from './utils/tauri-check';
 
 // A newer version is said quietly in the bar, beside Local AI, and installed in one press:
-// download, install, stop the node, relaunch (Windows' installer restarts Hanzo itself).
+// download, stop the model and the node, install, relaunch (Windows' installer restarts Hanzo itself).
 
 const EVERY = 30 * 60 * 1000;
 
@@ -89,16 +89,21 @@ export function useUpdate(): { stage: Stage; install: () => void } {
     let done = 0;
     setStage({ name: 'updating', version: found.version, percent: null });
     found
-      .downloadAndInstall((event) => {
+      .download((event) => {
         if (event.event === 'Started') total = event.data.contentLength;
         else if (event.event === 'Progress') {
           done += event.data.chunkLength;
           setStage({ name: 'updating', version: found.version, percent: percent(done, total) });
         } else if (event.event === 'Finished') {
           setStage({ name: 'updating', version: found.version, percent: 100 });
-          void invoke('hanzo_node_kill').catch(() => undefined);
         }
       })
+      // Stopped before install, and awaited: Windows' installer ends this
+      // process with process::exit, which skips the exit hook that would stop
+      // a served model (main.rs), so the model would outlive the app.
+      .then(() => invoke('local_models_stop').catch(() => undefined))
+      .then(() => invoke('hanzo_node_kill').catch(() => undefined))
+      .then(() => found.install())
       .then(() => (platform() === 'windows' ? undefined : relaunch()))
       .catch((err: unknown) => {
         busy.current = false;

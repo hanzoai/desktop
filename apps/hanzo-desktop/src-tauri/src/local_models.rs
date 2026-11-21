@@ -529,6 +529,32 @@ mod tests {
         assert_eq!(list_cached(tmp.path()).len(), 1);
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn leaving_the_app_ends_the_served_engine() {
+        let child = Command::new("sleep").arg("30").spawn().unwrap();
+        *served().lock().unwrap() = Some(Served { repo: "zenlm/zen-nano-0.6b".into(), child, stderr: Default::default() });
+        assert_eq!(alive().as_deref(), Some("zenlm/zen-nano-0.6b"));
+        stop_all();
+        assert_eq!(alive(), None);
+    }
+
+    /// Tray Quit ends the process with process::exit, which skips RunEvent::Exit,
+    /// so it stops the model itself; the node's kill(), behind "Reset connection"
+    /// and respawn, must not.
+    #[test]
+    fn only_the_exit_paths_stop_the_model() {
+        let tray = include_str!("tray.rs");
+        let quit = &tray[tray.find("\"quit\" =>").unwrap()..];
+        assert!(quit[..quit.find("std::process::exit(0)").unwrap()].contains("crate::local_models::stop_all();"));
+        let node = include_str!("local_hanzo_node/hanzo_node_manager.rs");
+        let kill = &node[node.find("pub async fn kill").unwrap()..];
+        assert!(!kill[..kill.find("\n    }\n").unwrap()].contains("crate::local_models::stop_all();"));
+        let main = include_str!("main.rs");
+        let exit = &main[main.find("RunEvent::Exit {").unwrap()..];
+        assert!(exit[..exit.find("std::process::exit(0)").unwrap()].contains("local_models::stop_all();"));
+    }
+
     /// A stand-in model library on a local port: metadata and two files.
     async fn library() -> String {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
