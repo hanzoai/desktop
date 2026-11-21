@@ -63,7 +63,34 @@ configure({
   // The session is in the keychain, never the webview's localStorage: the rooms
   // read the token, its expiry and its claims there.
   session: keychain,
+  // Dev's runtime is the Dev server on this computer (src-tauri local_dev.rs): the address it
+  // published, and a one-time pairing credential its CLI issues for each session.
+  runtime: async () => {
+    const here = await invoke<{ id: string; origin: string } | null>('dev_local_runtime');
+    return here
+      ? {
+          kind: 'machine',
+          id: here.id,
+          label: 'This computer',
+          zap: here.origin,
+          token: () => invoke<string>('dev_local_pairing'),
+        }
+      : null;
+  },
 });
+
+// A release window has no native context menu: Hanzo's own (the app's row menu) is the only one.
+// Text fields keep cut, copy and paste; Inspect Element is a dev build's alone.
+if (!import.meta.env.DEV) {
+  window.addEventListener(
+    'contextmenu',
+    (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('input, textarea, [contenteditable=""], [contenteditable="true"]')) event.preventDefault();
+    },
+    true,
+  );
+}
 
 // THE WINDOW IS THE APP, so there is no site behind it to send a guest to: a
 // signed-out reader who chose "Not now" gets Chat, answered by the local engine

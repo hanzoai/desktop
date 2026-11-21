@@ -78,6 +78,7 @@ mod galxe;
 mod global_shortcuts;
 mod globals;
 mod hardware;
+mod local_dev;
 mod local_hanzo_node;
 mod identity;
 mod loopback;
@@ -210,6 +211,8 @@ fn main() {
             loopback::iam_loopback,
             identity::identity_adopt,
             identity::identity_file,
+            local_dev::dev_local_runtime,
+            local_dev::dev_local_pairing,
             hide_spotlight_window_app,
             show_spotlight_window_app,
             open_main_window_with_path_app,

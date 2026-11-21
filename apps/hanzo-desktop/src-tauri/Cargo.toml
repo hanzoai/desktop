@@ -13,7 +13,7 @@ edition = "2021"
 tauri-build = { version = "2.6", features = [] }
 
 [dependencies]
-tauri = { version = "2.11", features = [ "macos-private-api", "tray-icon", "image-png", "devtools"] }
+tauri = { version = "2.11", features = [ "macos-private-api", "tray-icon", "image-png"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # fix this dependency later on
@@ -151,6 +151,9 @@ custom-protocol = ["tauri/custom-protocol"]
 # hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
 # Other brands can opt out by disabling default-features.
 machine = []
+
+# Inspect Element: a dev build's alone (`pnpm tauri:dev`); a release window has none.
+devtools = ["tauri/devtools"]
 
 # Embed the native Hanzo Engine for in-process inference. This runs the canonical
 # `hanzo-server-core` server (all protocols: chat/responses/messages) on

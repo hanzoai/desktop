@@ -194,6 +194,8 @@
     "allow-engine-list-zen5-models",
     "allow-engine-load-gguf",
     "allow-engine-load-model",
+    "allow-dev-local-pairing",
+    "allow-dev-local-runtime",
     "allow-engine-probe",
     "allow-engine-unload-model",
     "allow-engines-discover",
