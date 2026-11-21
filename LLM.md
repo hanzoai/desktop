@@ -719,6 +719,21 @@ Auto (the Folder pill) is `@hanzo/build` `route(folders, ask)`: the folder whose
 folders it sits in, else the folder used last; same words, same folder, a tie goes to the more recent. The
 pill reads `Auto · <folder>` as the ask is typed, and a folder the person chose is never moved by the words.
 
+## Let the web use a folder of this computer (hanzo-inc/app#310)
+
+A run started from hanzo.app on a machine linked with `hanzo link` works in a folder of it only inside one the
+machine's owner granted (cloud `apps/agents/folders.go`: `POST|GET|DELETE /v1/agent/targets/:id/folders`, the grant
+and the revoke the owner's alone, 403 to anyone else, an org admin included). The window grants from Settings →
+Machines (`@hanzo/build` `settings/shared.tsx`): the machine that is this computer, found by its hostname, has **Let
+the web use a folder…**, which opens the OS folder dialog (`local_workspace_open_dialog`) and grants the folder chosen
+with the window's own session; every machine lists its shared folders with **Stop sharing**. A refusal is shown as
+the platform says it. The hostname is `@hanzo/app` `desktopLocal().host` (0.3.143; carried by
+`patches/@hanzo__app@0.3.124.patch` while the pin is 0.3.124), the os plugin's `hostname` (`os:allow-hostname` in
+`capabilities/main.json`), the same name `hanzo link` registers the machine under. `e2e-tests/share-folder.spec.ts`
+drives it against a stand-in IPC and a stubbed platform. A computer
+that is not linked has no machine to share from: link it with `hanzo link` first. Grants are unix paths; a Windows
+folder is refused by the platform, said as it comes.
+
 ## Redesign a site: open it, critique it, rebuild it, watch it live (hanzo-inc/app#312)
 
 A person pastes a site's address in Dev's New on This computer (or picks **Redesign a site…**). The agent that

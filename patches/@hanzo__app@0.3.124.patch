@@ -186,6 +186,19 @@ index 082b539..083f889 100644
      { does: phrase('Send'), mac: 'Enter', pc: 'Enter', group: 'Chat' },
      { does: phrase('New line'), mac: '⇧Enter', pc: 'Shift+Enter', group: 'Chat' },
      { does: phrase('Rename chat'), mac: said('rename', true), pc: said('rename', false), group: 'Chat' },
+diff --git a/dist/lib/local-fs.js b/dist/lib/local-fs.js
+index 6fb93c0..c5d89e9 100644
+--- a/dist/lib/local-fs.js
++++ b/dist/lib/local-fs.js
+@@ -309,6 +309,8 @@ export function desktopLocal() {
+             else
+                 addLocalWorkspace(path);
+         },
++        // The name `hanzo link` registers this computer under: the OS hostname, from the window's os plugin.
++        host: async () => (await tauriInvoke('plugin:os|hostname')) ?? '',
+         // Stops the agent being fetched for the first run; the run's own call then answers `Setup was cancelled.` (@hanzo/build `failed`).
+         cancel: async () => {
+             await tauriInvoke('local_dev_setup_cancel');
 diff --git a/dist/pane.js b/dist/pane.js
 index b1eb15e..1f3e5bc 100644
 --- a/dist/pane.js

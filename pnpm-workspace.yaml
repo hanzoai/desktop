@@ -84,8 +84,10 @@ overrides:
 # window does: a signed-out reader chats with the local engine (any local model,
 # images and text files read in the window, Local AI from a failed turn), lists
 # that stay empty without a session, the desktop's ⌘N and ⇧⌘M in the shortcut
-# list, and no Google Workspace until Google verifies its scopes. Drop each when
-# its pin moves to a release that carries it.
+# list, no Google Workspace until Google verifies its scopes, and the
+# computer's hostname (`desktopLocal().host`, 0.3.143) by which Settings →
+# Machines shares a folder with the web. Drop each when its pin moves to a
+# release that carries it.
 patchedDependencies:
   '@hanzo/app@0.3.124': patches/@hanzo__app@0.3.124.patch
   '@hanzo/ui@8.33.6': patches/@hanzo__ui@8.33.6.patch
@@ -101,6 +103,7 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
+  - '@hanzo/build@0.2.144'
   - '@hanzo/app@0.3.124'
   - '@hanzo/app@0.3.117'
   - '@hanzo/app@0.3.115'
@@ -250,7 +253,7 @@ catalog:
   '@hanzo/ai': '0.7.0'
   '@hanzo/appearance': '0.2.15'
   '@hanzo/brand': '1.4.8'
-  '@hanzo/build': '0.2.141'
+  '@hanzo/build': '0.2.144'
   '@hanzo/composer': '0.2.1'
   '@hanzo/data': '1.2.4'
   '@hanzo/design': '0.5.44'
