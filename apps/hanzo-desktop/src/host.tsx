@@ -22,7 +22,6 @@ import {
   handleLocalChatCompletion,
   LocalAiManager,
 } from './local-ai';
-import BenchmarkPage from './pages/benchmark';
 import { LibraryOverlay, ProvidersPluginsOverlay } from './LibraryPane';
 import {
   BottomTerminalDrawer,
@@ -589,10 +588,6 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
   };
 }
 
-if (typeof window !== 'undefined') {
-  (window as any).__HANZO_BENCHMARK_COMPONENT__ = BenchmarkPage;
-}
-
 function Gate() {
   const { isLoading: iamLoading, isAuthenticated, user, sdk } = useIam();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
@@ -824,10 +819,9 @@ function Gate() {
   const raw = here.split('?')[0] || '/';
   const path = raw === '/' || raw === '/index.html' ? '/chat' : raw;
   const isSettings = path === '/settings' || path.startsWith('/settings/');
-  const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || isSettings;
 
-  if (isLoading && !isBenchOrSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
-  if (!isAuthenticated && !isBenchOrSettings && (DOORS.has(path) || !visiting)) {
+  if (isLoading && !isSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
+  if (!isAuthenticated && !isSettings && (DOORS.has(path) || !visiting)) {
     return (
       <Welcome
         busy={busy}
@@ -847,10 +841,6 @@ function Gate() {
   if (isAuthenticated && DOORS.has(path)) {
     window.history.replaceState(null, '', onward());
     return null;
-  }
-  if (path === '/benchmark' || path === '/lsa') {
-    // Benchmarks open from Settings > Local AI & Engine, so Back returns there.
-    return <BenchmarkPage onBack={() => window.history.pushState(null, '', '/settings/engine')} />;
   }
   if (isSettings) {
     return (

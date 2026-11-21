@@ -994,6 +994,7 @@ export function DesktopSettings({
                   <SettingsRow
                     title="Manage local weights & diagnostics"
                     description="Download Zen models and inspect GPU VRAM allocation."
+                    last
                     control={
                       <XStack gap="$2">
                         <Button
@@ -1011,21 +1012,6 @@ export function DesktopSettings({
                           Diagnostics
                         </Button>
                       </XStack>
-                    }
-                  />
-                  <SettingsRow
-                    title="Local engine benchmarks"
-                    description="Throughput and D-LSA sparse-attention runs against the local engine."
-                    last
-                    control={
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        data-testid="desktop-benchmarks"
-                        onPress={() => window.history.pushState(null, '', '/benchmark')}
-                      >
-                        Open benchmarks
-                      </Button>
                     }
                   />
                 </SettingsGroup>

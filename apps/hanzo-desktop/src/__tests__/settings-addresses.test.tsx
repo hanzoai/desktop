@@ -30,14 +30,14 @@ describe('settings addresses', () => {
     expect(screen.getByRole('button', { name: 'Open on hanzo.ai' })).toBeTruthy();
   });
 
-  it('Local AI & Engine opens the benchmarks page, the only way to it, and Settings offers no Node Manager', () => {
+  it('Local AI & Engine offers no benchmarks and no Node Manager', () => {
     render(
       <GuiProvider config={config} defaultTheme="dark">
         <DesktopSettings initialSection="engine" isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
       </GuiProvider>,
     );
     expect(screen.queryByText(/Node Manager|Blockchain Node|hanzod/)).toBeNull();
-    fireEvent.click(screen.getByTestId('desktop-benchmarks'));
-    expect(window.location.pathname).toBe('/benchmark');
+    expect(screen.queryByTestId('desktop-benchmarks')).toBeNull();
+    expect(screen.queryByText(/benchmark/i)).toBeNull();
   });
 });

@@ -39,7 +39,6 @@ vi.mock('../../gui.config', () => ({ default: {} }));
 vi.mock('../identity', () => ({ adopt: vi.fn(async () => false), share: vi.fn() }));
 vi.mock('../update', () => ({ Update: () => null }));
 vi.mock('../Welcome', () => ({ Welcome: () => <div>welcome</div> }));
-vi.mock('../pages/benchmark', () => ({ default: () => null }));
 vi.mock('../local-ai', () => ({
   buildLocalModelsCatalogResponse: vi.fn(async () => ({ data: [] })),
   handleLocalChatCompletion: vi.fn(),
