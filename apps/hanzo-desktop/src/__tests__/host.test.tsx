@@ -61,6 +61,7 @@ vi.mock('../desktop-shortcuts', () => ({
   ),
 }));
 
+import { empty } from '@hanzo/app/open';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
 import { keychain } from '../keychain';
@@ -138,12 +139,15 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
-  it('⌘N on Welcome does not skip sign-in', async () => {
-    await open('/chat');
+  it('⌘N on Welcome does nothing: no guest, no new chat, and the address keeps its next', async () => {
+    vi.mocked(empty).mockClear();
+    await open('/login?next=/settings/appearance');
     fireEvent.keyDown(window, { key: 'n', metaKey: true });
     expect(screen.getByText('welcome: not now')).toBeTruthy();
     expect(screen.queryByText('the app')).toBeNull();
+    expect(`${window.location.pathname}${window.location.search}`).toBe('/login?next=/settings/appearance');
     expect(window.localStorage.getItem(GUEST)).toBeNull();
+    expect(empty).not.toHaveBeenCalled();
   });
 
   it('an address does not make a guest: ?guest=1 still opens on Welcome', async () => {
