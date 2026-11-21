@@ -406,11 +406,11 @@ export function DesktopSettings({
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
               <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
                 hanzod (127.0.0.1:9630):{' '}
-                <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'offline'}</strong>
+                <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'not running'}</strong>
               </span>
               <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
                 Hanzo Engine (127.0.0.1:36900):{' '}
-                <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'standby'}</strong>
+                <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'not running'}</strong>
               </span>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

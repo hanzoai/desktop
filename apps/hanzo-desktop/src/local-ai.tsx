@@ -40,6 +40,21 @@ function keep(patch: { model?: string; effort?: string }): void {
 
 export const LOCAL_ENGINE_PORT_URL = 'http://127.0.0.1:36900';
 export const LOCAL_OLLAMA_URL = 'http://127.0.0.1:11434';
+
+// Release bundles ship no engine (src-tauri/engine-bin), and a download goes to
+// Ollama's API on :11434 and nowhere else. With nothing listening there the
+// request is refused and fetch() rejects with a TypeError whose text is the
+// webview's own ("Load failed" in WebKit, "Failed to fetch" in Chromium), which
+// says nothing a reader can act on.
+export const DOWNLOAD_UNREACHABLE_MESSAGE =
+  'The download did not start: nothing on this computer is answering at 127.0.0.1:11434. Model downloads use Ollama. Start Ollama and try again. Cloud models are not affected.';
+export const ENGINE_NOT_RUNNING_MESSAGE =
+  'The Hanzo Engine is not running on this computer (127.0.0.1:36900), so there is nothing to load a model into.';
+
+/** True when a request found nothing listening, rather than a server that said no. */
+function unreachable(err: unknown): boolean {
+  return err instanceof TypeError;
+}
 export const OPEN_LOCAL_AI_EVENT = 'hanzo:open-local-ai';
 export const LOCAL_MODELS_UPDATED_EVENT = 'hanzo:local-models-updated';
 const CUSTOM_ENGINE_STORAGE_KEY = 'hanzo:local:engine-url';
@@ -526,6 +541,7 @@ export function LocalAiManager() {
   const [customEngineUrlState, setCustomEngineUrlState] = useState<string>(() => getCustomEngineUrl());
   const [lanEngines, setLanEngines] = useState<DiscoveredEngine[]>([]);
   const [discoveringLan, setDiscoveringLan] = useState<boolean>(false);
+  const [lanMessage, setLanMessage] = useState<string>('');
   const [ggufRepoOrPath, setGgufRepoOrPath] = useState<string>('Qwen/Qwen3-0.6B');
   const [loadingEngineModel, setLoadingEngineModel] = useState<boolean>(false);
   const [engineMessage, setEngineMessage] = useState<string>('');
@@ -618,6 +634,9 @@ export function LocalAiManager() {
     setPullPercent(2);
 
     const pullTarget = OLLAMA_PULL_ALIASES[tag] || tag;
+    // A stream that drops half-way is a TypeError too, and that is a download
+    // that broke, not one that never started.
+    let connected = false;
 
     try {
       // Ensure local node/engine is spawned if Ollama is not answering yet
@@ -636,6 +655,7 @@ export function LocalAiManager() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: pullTarget, stream: true }),
       });
+      connected = true;
 
       if (!res.ok || !res.body) {
         throw new Error(`Local runtime returned HTTP ${res.status}. Make sure Ollama or Hanzo Engine is running.`);
@@ -678,9 +698,13 @@ export function LocalAiManager() {
       handleSelectModel(tag);
     } catch (err) {
       setPullError(
-        err instanceof Error
-          ? err.message
-          : 'Could not download model. Ensure local inference engine (:11434 or :36900) is running.',
+        unreachable(err)
+          ? connected
+            ? `The download of ${tag} stopped part-way: the connection to Ollama was lost. Try again.`
+            : DOWNLOAD_UNREACHABLE_MESSAGE
+          : err instanceof Error
+            ? err.message
+            : 'Could not download model. Ensure local inference engine (:11434 or :36900) is running.',
       );
     } finally {
       setPullingTag(null);
@@ -690,14 +714,20 @@ export function LocalAiManager() {
   const handleDeleteModel = async (tag: string) => {
     const deleteTarget = OLLAMA_PULL_ALIASES[tag] || tag;
     try {
-      await fetch(`${LOCAL_OLLAMA_URL}/api/delete`, {
+      const res = await fetch(`${LOCAL_OLLAMA_URL}/api/delete`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: deleteTarget }),
       });
+      if (!res.ok) throw new Error(`the local runtime returned HTTP ${res.status}`);
+      setPullError(null);
       await refreshState();
-    } catch {
-      // ignore
+    } catch (err) {
+      setPullError(
+        unreachable(err)
+          ? `Could not remove ${tag}: no local model engine is running on this computer.`
+          : `Could not remove ${tag}: ${err instanceof Error ? err.message : String(err)}.`,
+      );
     }
   };
 
@@ -707,7 +737,14 @@ export function LocalAiManager() {
     setNodeMessage('Starting local Hanzo Node…');
     try {
       await invoke('hanzo_node_spawn');
-      setNodeMessage('Local Hanzo Node is running.');
+      // The node left this app (HIP-1330) and `hanzo_node_spawn` now returns Ok
+      // without starting one, so ask instead of assuming.
+      const running = await invoke<boolean>('hanzo_node_is_running').catch(() => false);
+      setNodeMessage(
+        running
+          ? 'Local Hanzo Node is running.'
+          : 'No Hanzo Node started: this app no longer includes one. The node on this computer is hanzod, which runs separately.',
+      );
       await refreshState();
     } catch (err) {
       setNodeMessage(err instanceof Error ? err.message : String(err));
@@ -743,11 +780,15 @@ export function LocalAiManager() {
   const handleDiscoverLan = async () => {
     if (!isTauri()) return;
     setDiscoveringLan(true);
+    setLanMessage('');
     try {
       const found = await invoke<DiscoveredEngine[]>('engines_discover');
-      setLanEngines(Array.isArray(found) ? found : []);
-    } catch {
+      const engines = Array.isArray(found) ? found : [];
+      setLanEngines(engines);
+      if (engines.length === 0) setLanMessage('No engines found on this network.');
+    } catch (err) {
       setLanEngines([]);
+      setLanMessage(`The scan failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDiscoveringLan(false);
     }
@@ -774,9 +815,11 @@ export function LocalAiManager() {
       await refreshState();
     } catch (err) {
       setEngineMessage(
-        err instanceof Error
-          ? `Engine load error: ${err.message}`
-          : 'Hanzo Engine (:36900) is not listening.',
+        unreachable(err)
+          ? ENGINE_NOT_RUNNING_MESSAGE
+          : err instanceof Error
+            ? `Engine load error: ${err.message}`
+            : 'Hanzo Engine (:36900) is not listening.',
       );
     } finally {
       setLoadingEngineModel(false);
@@ -919,7 +962,7 @@ export function LocalAiManager() {
               [
                 { id: 'models', label: `Local AI Models (${ALL_CATALOG_MODELS.filter((m) => !m.embedding).length})` },
                 { id: 'node', label: `Local Hanzo Node (${nodeRunning ? 'Running' : 'Stopped'})` },
-                { id: 'engine', label: `Inference Engine (${engine36900Up || ollama11434Up ? 'Online' : 'Offline'})` },
+                { id: 'engine', label: `Inference Engine (${engine36900Up || ollama11434Up ? 'Online' : 'Not running'})` },
               ] as const
             ).map((t) => (
               <button
@@ -966,7 +1009,9 @@ export function LocalAiManager() {
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
               <span>
                 {pullError ? (
-                  <span style={{ color: '#f87171' }}>{pullError}</span>
+                  <span data-testid="local-ai-pull-error" role="alert" style={{ color: '#f87171' }}>
+                    {pullError}
+                  </span>
                 ) : (
                   <>
                     Downloading <strong>{pullingTag}</strong>: {pullStatus}
@@ -1550,6 +1595,11 @@ export function LocalAiManager() {
                   {discoveringLan ? 'Scanning LAN…' : 'Scan LAN'}
                 </button>
               </div>
+              {lanMessage && (
+                <div data-testid="local-ai-lan-message" style={{ fontSize: 12, color: '#d4d4d8' }}>
+                  {lanMessage}
+                </div>
+              )}
               {lanEngines.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
                   {lanEngines.map((eng) => (
