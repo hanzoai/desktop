@@ -9,9 +9,10 @@
  * default config said `ai.hanzo.desktop` and everything else said
  * `ai.hanzo.desktop`.
  *
- * These assertions pin the identifier, the deep-link scheme and the macOS
- * Info.plist to `libs/brand-config` — the one brand table — so the next drift
- * fails here instead of in a user's keychain.
+ * These assertions pin the identifier and the deep-link scheme to
+ * `libs/brand-config` — the one brand table — and keep the identifier out of
+ * the macOS Info.plist, so the next drift fails here instead of in a person's
+ * data folder.
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -98,15 +99,13 @@ describe('brand identity', () => {
     expect(base.mainBinaryName).toBe(hanzo.mainBinaryName);
   });
 
-  it('Info.plist CFBundleIdentifier matches the default identifier', () => {
-    // tauri-bundler merges Info.plist OVER the generated plist, so a stale
-    // value here silently wins on macOS regardless of tauri.conf.json.
+  it('Info.plist carries no CFBundleIdentifier, so the config is the one source', () => {
+    // tauri-bundler writes CFBundleIdentifier from the config, then merges
+    // Info.plist OVER that plist key by key (bundle/macos/app.rs). An identifier
+    // here replaces the config's wherever nothing patches it: the .local and
+    // .dev builds and plain `tauri dev` were all ai.hanzo.desktop to macOS.
     const plist = readFileSync(join(TAURI_DIR, 'Info.plist'), 'utf8');
-    const found =
-      /<key>CFBundleIdentifier<\/key>\s*<string>([^<]*)<\/string>/.exec(
-        plist,
-      )?.[1];
-    expect(found).toBe(base.identifier);
+    expect(plist).not.toMatch(/<key>CFBundleIdentifier<\/key>/);
   });
 
   it.each(['development', 'local'] as const)(
