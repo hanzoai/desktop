@@ -4,6 +4,9 @@
 <img width="36" height="36" src="assets/icon.png"/>
   Hanzo
   </h1>
+
+[![Open in Hanzo](https://hanzo.app/badges/open-in-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/desktop&ref=main&action=open) [![Edit with Hanzo](https://hanzo.app/badges/edit-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/desktop&ref=main&action=edit) [![Deploy with Hanzo](https://hanzo.app/badges/deploy-with-hanzo.svg)](https://hanzo.app/dev/open?repo=github.com/hanzoai/desktop&ref=main&action=deploy)
+
 <div align="center">
 
 > Create Powerful AI Agents using local or remote AIs
