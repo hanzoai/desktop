@@ -26,7 +26,7 @@ fi
 "$here/rust.sh" "$@"
 
 # src-tauri depends on git repositories GitHub serves only to an account that can see
-# them (zap-proto/zapd, hanzoai/engine), and the job's own token cannot. The deploy token in KMS can.
+# them (zap-proto/zapd), and the job's own token cannot. The deploy token in KMS can.
 # It goes to the one command that needs it, through git's environment, so the
 # build scripts and install scripts that run after it never hold it. Cargo then
 # finds the locked revisions already fetched.

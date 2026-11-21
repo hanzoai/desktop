@@ -40,7 +40,6 @@ fn node() -> &'static zapd::Node {
 }
 
 /// The browsers registered on this user's router.
-#[tauri::command]
 pub async fn browsers() -> Result<Vec<Browser>, String> {
     let nodes = node()
         .nodes(Duration::from_secs(2))
@@ -57,8 +56,8 @@ pub async fn browsers() -> Result<Vec<Browser>, String> {
         .collect())
 }
 
-/// Run `method` with `params` on the first registered browser.
-#[tauri::command]
+/// Run `method` with `params` on the first registered browser (local_site's
+/// screenshot; no window calls it).
 pub async fn browser(method: String, params: HashMap<String, String>) -> Result<Value, String> {
     let to = browsers().await?.into_iter().next().ok_or(UNPAIRED)?.id;
     let raw = node()

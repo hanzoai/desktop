@@ -3,19 +3,8 @@
 
 use std::sync::Arc;
 
-#[cfg(unix)]
-use crate::commands::browser::{browser, browsers};
-use crate::commands::engines::{engine_probe, engines_discover};
-use crate::commands::galxe::galxe_generate_proof;
+use crate::commands::engines::engines_discover;
 use crate::commands::hardware::hardware_get_summary;
-use crate::commands::knowledge_graph::{
-    knowledge_graph_get_ontology, knowledge_graph_query_entity, knowledge_graph_read_local,
-    knowledge_graph_sync_apple, knowledge_graph_update_convo,
-};
-use crate::commands::gpu::{
-    gpu_connect_get_state, gpu_connect_start, gpu_connect_stop, GpuConnectManager,
-};
-use crate::commands::studio::{studio_get_state, studio_start, studio_stop, StudioManager};
 use crate::commands::mining::{
     mining_get_enabled, mining_set_enabled,
 };
@@ -37,26 +26,18 @@ use tray::create_tray;
 use windows::{recreate_window, Window};
 mod commands;
 mod deep_links;
-mod galxe;
 mod global_shortcuts;
 mod hardware;
 mod local_dev;
 mod local_models;
 mod identity;
 mod loopback;
-#[cfg(feature = "machine")]
-mod machine;
 mod mining;
 mod report;
 mod models;
 mod studio_proxy;
 mod tray;
 mod windows;
-// Native Hanzo Engine (in-process mistral.rs fork). Compiled only with the
-// `native-engine` feature; the default build keeps using the node
-// sidecars and skips the heavy inference stack entirely.
-#[cfg(feature = "native-engine")]
-mod embedded_engine;
 
 #[derive(Clone, serde::Serialize)]
 struct Payload {
@@ -183,26 +164,9 @@ fn main() {
             local_models::local_models_remove,
             local_models::local_models_serve,
             local_models::local_models_stop,
-            knowledge_graph_read_local,
-            knowledge_graph_sync_apple,
-            knowledge_graph_query_entity,
-            knowledge_graph_update_convo,
-            knowledge_graph_get_ontology,
-            galxe_generate_proof,
             engines_discover,
-            engine_probe,
-            #[cfg(unix)]
-            browser,
-            #[cfg(unix)]
-            browsers,
             mining_get_enabled,
             mining_set_enabled,
-            gpu_connect_get_state,
-            gpu_connect_start,
-            gpu_connect_stop,
-            studio_get_state,
-            studio_start,
-            studio_stop,
             local_workspace_open_dialog,
             local_workspace_open_file_dialog,
             local_workspace_clone_repo,
@@ -221,39 +185,6 @@ fn main() {
             local_preview_start,
             local_preview_stop,
             local_preview_open,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_health,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_list,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_get,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_create,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_start,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_stop,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_delete,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_exec,
-            #[cfg(feature = "machine")]
-            machine::commands::machine_events_subscribe,
-            // Native Hanzo Engine IPC commands (only when `native-engine` is on).
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_get_status,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_load_gguf,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_load_model,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_unload_model,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_is_model_loaded,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_get_model_id,
-            #[cfg(feature = "native-engine")]
-            embedded_engine::engine_list_zen5_models,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
@@ -277,13 +208,6 @@ fn main() {
             let mining_manager = Arc::new(MiningManager::new(mining_storage_dir));
             app.manage(mining_manager.clone());
 
-            // "Share this device's GPU with Hanzo Cloud" toggle: Arc-managed
-            // managers that spawn/stop the light Rust `hanzo-fleet-worker`
-            // (commands/gpu.rs) and the local studio render child
-            // (commands/studio.rs). The frontend hook drives both together.
-            app.manage(Arc::new(GpuConnectManager::new()));
-            app.manage(Arc::new(StudioManager::new()));
-
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
 
@@ -291,26 +215,6 @@ fn main() {
             // force quit) left: a served engine holding the port, and a cut-off
             // download no screen lists.
             local_models::at_start(app_data_dir.clone());
-
-            // Native Hanzo Engine: manage the one shared orchestrator for both
-            // the Tauri IPC commands and the `/v1/engine/*` HTTP management
-            // routes. The canonical server (chat/responses/messages on
-            // 127.0.0.1:36900, what the frontend client targets) is bound lazily
-            // by the orchestrator on the first model load -- building an
-            // `Arc<Hanzo>` requires a model, so there is nothing to serve until
-            // one is loaded via `engine_load_model` / `/v1/engine/load`.
-            #[cfg(feature = "native-engine")]
-            {
-                // `new_state` already wired the orchestrator's self-handle so the
-                // merged `/v1/engine/*` management routes drive this same
-                // instance.
-                let engine_state = embedded_engine::new_state();
-                app.manage(engine_state);
-                log::info!(
-                    "Hanzo Engine (native) ready; canonical server binds on 127.0.0.1:{} at first model load",
-                    embedded_engine::DEFAULT_PORT
-                );
-            }
 
             /*
                 This is the initialization pipeline

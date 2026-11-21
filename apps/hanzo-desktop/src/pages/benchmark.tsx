@@ -1162,7 +1162,7 @@ start_nodes = 1024`;
                     Embedded Hanzo Engine (`127.0.0.1:36900`) · Model & Accelerator Management
                   </h2>
                   <p style={{ margin: '4px 0 0', color: '#a1a1aa', fontSize: 12 }}>
-                    Hanzo Desktop embeds `hanzo-server-core` + `hanzo-engine` directly in the desktop runtime (`src-tauri/src/embedded_engine`).
+                    The Hanzo engine on this computer (`hanzo-engine serve`, which Local AI starts on a model you choose).
                   </p>
                 </div>
                 <button
