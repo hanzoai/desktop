@@ -122,7 +122,7 @@ describe('the update mark', () => {
     });
     // The model is stopped before the installer runs, which on Windows ends
     // this process without the exit hook.
-    expect(order).toEqual(['local_models_stop', 'hanzo_node_kill', 'install']);
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'hanzo_node_kill', 'install']);
     expect(plugin.relaunch).toHaveBeenCalledTimes(1);
   });
 
@@ -134,8 +134,37 @@ describe('the update mark', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /is ready/ }));
     });
-    expect(order).toEqual(['local_models_stop', 'hanzo_node_kill', 'install']);
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'hanzo_node_kill', 'install']);
     expect(plugin.relaunch).not.toHaveBeenCalled();
+  });
+
+  it('calls a model download off and waits for it to clear up before installing', async () => {
+    plugin.platform.mockReturnValue('windows');
+    let polls = 0;
+    plugin.invoke.mockImplementation(async (cmd: string) => {
+      order.push(cmd);
+      if (cmd === 'local_models_cancel') return true;
+      if (cmd === 'local_models_status') return { pulling: ++polls < 3 ? 'zenlm/zen-nano-0.6b' : null };
+      return undefined;
+    });
+    plugin.check.mockResolvedValue(release(async () => undefined));
+    mount();
+    await opened();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /is ready/ }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(order).toEqual([
+      'local_models_cancel',
+      'local_models_status',
+      'local_models_status',
+      'local_models_status',
+      'local_models_stop',
+      'hanzo_node_kill',
+      'install',
+    ]);
   });
 
   it('says a failed install and can be pressed again', async () => {

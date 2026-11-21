@@ -1243,6 +1243,12 @@ leave less than 2 GB free (`MIN_FREE_BYTES`):
   `HF_HOME/hub`, else `~/.cache/huggingface/hub`), the layout `hanzo-engine serve -m org/name` loads and
   `hanzo engine list` reads (checked: it lists a model written here). Progress is the
   `local-models-progress` event, `{repo, done, total}` in bytes. `local_models_cancel` calls it off.
+- A download that does not finish takes back what it wrote. Every exit path (tray Quit,
+  `RunEvent::Exit`, and the update's install, which on Windows ends the process without that hook)
+  cancels it and waits up to 2 s for that. What a crash or power cut still leaves is removed at the
+  next start (`at_start`, also before the first status): the folder of an OFFERED model with no
+  `refs/main`, which every download here writes last. A complete model and any model the app does
+  not offer are never touched; the cache is shared with other tools.
 - It does not shell out to `hanzo engine pull`: that CLI is not in the app, and it fetches the WHOLE
   repository, 6.6 GB for `zenlm/zen-nano-0.6b` (eight GGUFs and an MLX copy) where the engine needs
   1.2 GB. `wanted()` keeps top-level files and drops duplicate weight formats.

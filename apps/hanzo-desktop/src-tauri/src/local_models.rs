@@ -343,10 +343,18 @@ pub async fn pull_into(
             let mut stream = res.bytes_stream();
             let mut got = 0u64;
             loop {
-                if cancel.load(Ordering::Relaxed) {
-                    return Err(CANCELLED.into());
-                }
-                let Some(chunk) = stream.next().await else { break };
+                // A stalled connection must not hold a cancel up: the app's exit
+                // waits for it (`cancel_and_wait`), so the flag is read at least
+                // every 200 ms, not only when bytes arrive.
+                let next = loop {
+                    if cancel.load(Ordering::Relaxed) {
+                        return Err(CANCELLED.into());
+                    }
+                    if let Ok(next) = tokio::time::timeout(Duration::from_millis(200), stream.next()).await {
+                        break next;
+                    }
+                };
+                let Some(chunk) = next else { break };
                 let chunk = chunk.map_err(network)?;
                 out.write_all(&chunk).map_err(|e| format!("Could not write {file}: {e}"))?;
                 got += chunk.len() as u64;
@@ -428,14 +436,72 @@ fn stop_serving() {
 }
 
 /// The app is leaving: stop the model this app serves (nothing else on the
-/// port) and call off a download.
+/// port) and call off a download. Every exit path ends the process right after
+/// this, so it waits (bounded) for the download to take its files back.
 pub fn stop_all() {
     stop_serving();
-    local_models_cancel();
+    cancel_and_wait(Duration::from_secs(2));
+}
+
+/// Calls the running download off and waits up to `limit` for it to end, which
+/// is after `pull_into` has taken back what it wrote. True when none is left.
+/// A download still running at `limit` is left to [`sweep_unfinished`] at the
+/// next start.
+fn cancel_and_wait(limit: Duration) -> bool {
+    if !local_models_cancel() {
+        return true;
+    }
+    let start = Instant::now();
+    loop {
+        if pulling().lock().map(|p| p.is_none()).unwrap_or(true) {
+            return true;
+        }
+        if start.elapsed() >= limit {
+            return false;
+        }
+        std::thread::sleep(Duration::from_millis(25));
+    }
+}
+
+/// Remove what a download that never finished left in `cache`: the folder of a
+/// model this app offers that has no `refs/main`. Every download here writes
+/// that last, so such a folder is one of this app's that was cut off (a quit,
+/// a crash, a power cut) and that no screen lists. A folder with `refs/main` is
+/// complete and kept, and so is any model this app does not offer, whatever
+/// state it is in: the cache is shared with other tools. Returns what went.
+pub fn sweep_unfinished(cache: &Path) -> Vec<PathBuf> {
+    let Ok(entries) = std::fs::read_dir(cache) else { return Vec::new() };
+    entries
+        .flatten()
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            name.strip_prefix("models--").is_some_and(|r| offered(&r.replacen("--", "/", 1)))
+                && e.file_type().is_ok_and(|t| t.is_dir())
+                && !e.path().join("refs").join("main").exists()
+        })
+        .map(|e| e.path())
+        .filter(|p| std::fs::remove_dir_all(p).is_ok())
+        .collect()
+}
+
+/// Once per run, at start (and before the first status, should that come
+/// first): sweep what an earlier run's cut-off download left, while nothing
+/// downloads.
+pub fn at_start() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| {
+        if pulling().lock().map(|p| p.is_some()).unwrap_or(true) {
+            return;
+        }
+        for gone in sweep_unfinished(&this_cache_dir()) {
+            log::info!("[local-models] removed an unfinished download: {}", gone.display());
+        }
+    });
 }
 
 #[tauri::command]
 pub fn local_models_status() -> Status {
+    at_start();
     let cache = this_cache_dir();
     let serving = alive();
     Status {
@@ -456,24 +522,31 @@ pub async fn local_models_pull(app: tauri::AppHandle, repo: String) -> Result<()
     if !offered(&repo) {
         return Err(not_offered(&repo));
     }
+    let endpoint = std::env::var("HF_ENDPOINT").unwrap_or_else(|_| "https://huggingface.co".into());
+    let result = pull(endpoint.trim_end_matches('/'), &this_cache_dir(), &repo, |done, total| {
+        let _ = app.emit(PROGRESS_EVENT, Progress { repo: &repo, done, total });
+    })
+    .await;
+    if let Err(e) = &result {
+        log::info!("[local-models] download of {repo} ended: {e}");
+    }
+    result
+}
+
+/// The one download at a time: [`pull_into`] while it holds the slot that
+/// cancel and exit see. The slot is freed only after the files are taken back.
+async fn pull(endpoint: &str, cache: &Path, repo: &str, progress: impl FnMut(u64, u64)) -> Result<(), String> {
     let cancel = Arc::new(AtomicBool::new(false));
     {
         let mut p = pulling().lock().map_err(|e| e.to_string())?;
         if let Some((other, _)) = p.as_ref() {
             return Err(format!("{other} is still downloading. One download at a time."));
         }
-        *p = Some((repo.clone(), cancel.clone()));
+        *p = Some((repo.to_string(), cancel.clone()));
     }
-    let endpoint = std::env::var("HF_ENDPOINT").unwrap_or_else(|_| "https://huggingface.co".into());
-    let result = pull_into(endpoint.trim_end_matches('/'), &this_cache_dir(), &repo, &cancel, |done, total| {
-        let _ = app.emit(PROGRESS_EVENT, Progress { repo: &repo, done, total });
-    })
-    .await;
+    let result = pull_into(endpoint, cache, repo, &cancel, progress).await;
     if let Ok(mut p) = pulling().lock() {
         *p = None;
-    }
-    if let Err(e) = &result {
-        log::info!("[local-models] download of {repo} ended: {e}");
     }
     result
 }
@@ -716,9 +789,13 @@ mod tests {
         assert_eq!(installed(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 1 }]);
     }
 
+    /// The tests that touch the one download slot and the served engine take turns.
+    static GLOBALS: Mutex<()> = Mutex::new(());
+
     #[cfg(unix)]
     #[test]
     fn leaving_the_app_ends_the_served_engine() {
+        let _turn = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
         let child = Command::new("sleep").arg("30").spawn().unwrap();
         *served().lock().unwrap() = Some(Served { repo: "zenlm/zen-nano-0.6b".into(), child, stderr: Default::default() });
         assert_eq!(alive().as_deref(), Some("zenlm/zen-nano-0.6b"));
@@ -744,12 +821,13 @@ mod tests {
 
     /// A stand-in model library on a local port: metadata and two files.
     async fn library() -> String {
-        library_with(300000, 300000, 0).await
+        library_with(300000, 300000, 0, 0).await
     }
 
     /// The same library, whose model.safetensors (declared 300000 bytes) sends
-    /// `sent` bytes under a `claimed` content-length, after `delay_ms`.
-    async fn library_with(sent: usize, claimed: usize, delay_ms: u64) -> String {
+    /// `sent` bytes under a `claimed` content-length, after `delay_ms`, then holds
+    /// the connection open for `hold_ms` before closing it.
+    async fn library_with(sent: usize, claimed: usize, delay_ms: u64, hold_ms: u64) -> String {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move {
@@ -768,6 +846,7 @@ mod tests {
                         let head = format!("HTTP/1.1 200 OK\r\ncontent-length: {claimed}\r\nconnection: close\r\n\r\n");
                         let _ = sock.write_all(head.as_bytes()).await;
                         let _ = sock.write_all(&vec![7u8; sent]).await;
+                        tokio::time::sleep(Duration::from_millis(hold_ms)).await;
                         return;
                     } else {
                         let _ = sock.write_all(b"HTTP/1.1 404 Not Found\r\ncontent-length: 0\r\n\r\n").await;
@@ -815,7 +894,7 @@ mod tests {
     async fn cancel_after_one_file_finished_takes_that_file_back_too() {
         // config.json arrives at once; model.safetensors waits, so the progress
         // report that fires on its first bytes is where Cancel is pressed.
-        let endpoint = library_with(300000, 300000, 300).await;
+        let endpoint = library_with(300000, 300000, 300, 0).await;
         let tmp = tempfile::tempdir().unwrap();
         let cancel = AtomicBool::new(false);
         let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &cancel, |done, _| {
@@ -832,7 +911,7 @@ mod tests {
     #[tokio::test]
     async fn a_dropped_connection_leaves_nothing_nobody_can_see() {
         // The connection closes 1000 bytes into a 300000-byte file.
-        let endpoint = library_with(1000, 300000, 0).await;
+        let endpoint = library_with(1000, 300000, 0, 0).await;
         let tmp = tempfile::tempdir().unwrap();
         let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
             .await
@@ -850,7 +929,7 @@ mod tests {
         let root = tmp.path().join("models--zenlm--zen-nano-0.6b");
         // Make the weights look unfinished so the second download fetches them again, and fails.
         std::fs::write(root.join("snapshots/0123abcd/model.safetensors"), b"old").unwrap();
-        let err = pull_into(&library_with(1000, 300000, 0).await, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
+        let err = pull_into(&library_with(1000, 300000, 0, 0).await, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
             .await
             .unwrap_err();
         assert!(err.starts_with("The download stopped"), "{err}");
@@ -863,7 +942,7 @@ mod tests {
     #[tokio::test]
     async fn a_short_file_is_not_taken_for_a_whole_one() {
         // The server says 1000 bytes and sends them, but the library declared 300000.
-        let endpoint = library_with(1000, 1000, 0).await;
+        let endpoint = library_with(1000, 1000, 0, 0).await;
         let tmp = tempfile::tempdir().unwrap();
         let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
             .await
@@ -872,6 +951,60 @@ mod tests {
         assert!(list_cached(tmp.path()).is_empty());
         let snap = tmp.path().join("models--zenlm--zen-nano-0.6b/snapshots/0123abcd");
         assert!(!snap.join("model.safetensors").exists(), "a short file is never renamed into place");
+    }
+
+    /// A cache with one model folder: `complete` writes refs/main, else it is a
+    /// download cut off with a .part file.
+    fn model_folder(cache: &Path, repo: &str, complete: bool) -> PathBuf {
+        let root = cache.join(repo_folder(repo));
+        let snap = root.join("snapshots/abc");
+        std::fs::create_dir_all(&snap).unwrap();
+        if complete {
+            std::fs::write(snap.join("model.safetensors"), b"w").unwrap();
+            std::fs::create_dir_all(root.join("refs")).unwrap();
+            std::fs::write(root.join("refs/main"), "abc").unwrap();
+        } else {
+            std::fs::write(snap.join("model.safetensors.part"), b"half").unwrap();
+        }
+        root
+    }
+
+    #[test]
+    fn at_start_an_unfinished_download_of_ours_is_removed_and_nothing_else() {
+        let tmp = tempfile::tempdir().unwrap();
+        let cut_off = model_folder(tmp.path(), "zenlm/zen-nano-0.6b", false);
+        let complete = model_folder(tmp.path(), "Qwen/Qwen3-4B", true);
+        let not_ours = model_folder(tmp.path(), "sentence-transformers/all-MiniLM-L6-v2", false);
+        assert_eq!(sweep_unfinished(tmp.path()), vec![cut_off.clone()]);
+        assert!(!cut_off.exists(), "an offered model with no refs/main goes");
+        assert!(complete.join("snapshots/abc/model.safetensors").exists(), "a complete offered model stays");
+        assert!(not_ours.join("snapshots/abc/model.safetensors.part").exists(), "another tool's download stays");
+        assert!(sweep_unfinished(&tmp.path().join("missing")).is_empty());
+    }
+
+    /// Quit mid-download: the exit path cancels and waits, and by the time it
+    /// returns the partial files are gone, even while the connection is stalled.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn quitting_mid_download_takes_the_partial_files_back() {
+        // 1000 bytes of the weights, then a connection that stays silent for 30 s.
+        let _turn = GLOBALS.lock().unwrap_or_else(|e| e.into_inner());
+        let endpoint = library_with(1000, 300000, 0, 30_000).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let cache = tmp.path().to_path_buf();
+        let task = tokio::spawn(async move { pull(&endpoint, &cache, "zenlm/zen-nano-0.6b", |_, _| {}).await });
+        let root = tmp.path().join("models--zenlm--zen-nano-0.6b");
+        let part = root.join("snapshots/0123abcd/model.safetensors.part");
+        for _ in 0..200 {
+            if std::fs::metadata(&part).is_ok_and(|m| m.len() == 1000) {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        assert!(part.exists(), "the download is under way");
+        let ended = tokio::task::spawn_blocking(|| cancel_and_wait(Duration::from_secs(2))).await.unwrap();
+        assert!(ended, "the download ended within the wait");
+        assert!(!root.exists(), "no partial file is left behind");
+        assert_eq!(task.await.unwrap().unwrap_err(), CANCELLED);
     }
 
     #[tokio::test]

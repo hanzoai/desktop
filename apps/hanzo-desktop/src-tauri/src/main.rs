@@ -398,6 +398,10 @@ fn main() {
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
 
+            // A download an earlier run was cut off in (quit, crash) left files
+            // no screen lists; removing gigabytes is not the window's to wait on.
+            std::thread::spawn(local_models::at_start);
+
             // Native Hanzo Engine: manage the one shared orchestrator for both
             // the Tauri IPC commands and the `/v1/engine/*` HTTP management
             // routes. The canonical server (chat/responses/messages on
