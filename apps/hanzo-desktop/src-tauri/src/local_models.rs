@@ -43,7 +43,11 @@ pub const MIN_FREE_BYTES: u64 = 2_000_000_000;
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct Cached {
     pub repo: String,
+    /// The model's files: what the engine loads.
     pub bytes: u64,
+    /// Everything in its `models--org--name` folder, which is what Remove
+    /// deletes: other snapshots and blobs another tool fetched into it too.
+    pub folder_bytes: u64,
 }
 
 #[derive(Serialize)]
@@ -307,7 +311,7 @@ pub fn list_cached(cache: &Path) -> Vec<Cached> {
                 }
                 bytes += std::fs::metadata(&f).map(|m| m.len()).unwrap_or(0);
             }
-            (bytes > 0).then_some(Cached { repo, bytes })
+            (bytes > 0).then_some(Cached { repo, bytes, folder_bytes: folder_bytes(&e.path()) })
         })
         .collect();
     out.sort_by(|a, b| a.repo.cmp(&b.repo));
@@ -320,6 +324,21 @@ pub fn list_cached(cache: &Path) -> Vec<Cached> {
 /// chat never starts a model the person did not choose here.
 pub fn installed(cache: &Path) -> Vec<Cached> {
     list_cached(cache).into_iter().filter(|c| offered(&c.repo)).collect()
+}
+
+/// The bytes `remove_dir_all(dir)` frees: every real file under it, once. A
+/// link (a snapshot entry pointing at its blob) is not followed, so a blob is
+/// not counted again through it, and nothing outside the folder is counted.
+fn folder_bytes(dir: &Path) -> u64 {
+    let Ok(entries) = std::fs::read_dir(dir) else { return 0 };
+    entries
+        .flatten()
+        .map(|e| match e.path().symlink_metadata() {
+            Ok(m) if m.is_dir() => folder_bytes(&e.path()),
+            Ok(m) if m.is_file() => m.len(),
+            _ => 0,
+        })
+        .sum()
 }
 
 fn walk(dir: &Path) -> Vec<PathBuf> {
@@ -857,7 +876,7 @@ mod tests {
         assert!(list_cached(tmp.path()).is_empty(), "a .part file means unfinished");
         std::fs::rename(snap.join("model.safetensors.part"), snap.join("model.safetensors")).unwrap();
         std::fs::write(snap.join("config.json"), b"{}").unwrap();
-        assert_eq!(list_cached(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 6 }]);
+        assert_eq!(list_cached(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 6, folder_bytes: 6 + 3 }]);
         // No refs/main: the download never got to the end.
         std::fs::create_dir_all(tmp.path().join("models--Qwen--Qwen3-0.6B/snapshots/x")).unwrap();
         assert_eq!(list_cached(tmp.path()).len(), 1);
@@ -874,7 +893,33 @@ mod tests {
             std::fs::write(root.join("refs/main"), "abc").unwrap();
         }
         assert_eq!(list_cached(tmp.path()).len(), 2);
-        assert_eq!(installed(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 1 }]);
+        assert_eq!(installed(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 1, folder_bytes: 1 + 3 }]);
+    }
+
+    /// Remove deletes the whole folder, so that is the size it names: blobs and
+    /// other snapshots another tool fetched, each real file once, links not followed.
+    #[cfg(unix)]
+    #[test]
+    fn remove_names_everything_it_deletes() {
+        let tmp = tempfile::tempdir().unwrap();
+        let root = tmp.path().join("models--zenlm--zen-nano-0.6b");
+        // This app's snapshot: real files.
+        std::fs::create_dir_all(root.join("snapshots/abc")).unwrap();
+        std::fs::write(root.join("snapshots/abc/model.safetensors"), vec![0u8; 100]).unwrap();
+        std::fs::create_dir_all(root.join("refs")).unwrap();
+        std::fs::write(root.join("refs/main"), "abc").unwrap();
+        // Another tool's: a 1000-byte blob, linked from its snapshot twice.
+        std::fs::create_dir_all(root.join("blobs")).unwrap();
+        std::fs::write(root.join("blobs/f00d"), vec![0u8; 1000]).unwrap();
+        std::fs::create_dir_all(root.join("snapshots/def")).unwrap();
+        std::os::unix::fs::symlink("../../blobs/f00d", root.join("snapshots/def/model.gguf")).unwrap();
+        std::os::unix::fs::symlink("../../blobs/f00d", root.join("snapshots/def/copy.gguf")).unwrap();
+        // A link out of the folder is not counted: remove_dir_all does not follow it.
+        std::fs::write(tmp.path().join("outside"), vec![0u8; 5000]).unwrap();
+        std::os::unix::fs::symlink(tmp.path().join("outside"), root.join("snapshots/def/out")).unwrap();
+        let got = &installed(tmp.path())[0];
+        assert_eq!(got.bytes, 100, "the model this app downloaded");
+        assert_eq!(got.folder_bytes, 100 + 3 + 1000, "what Remove deletes");
     }
 
     #[test]

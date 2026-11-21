@@ -193,7 +193,8 @@ describe('the Local AI screen', () => {
 
   it('Use starts the engine on that model and Remove deletes it', async () => {
     let serving: string | null = null;
-    let installed = [{ repo: NANO, bytes: 1_208_033_536 }];
+    // Its folder also holds another tool's GGUF copies: Remove deletes those too.
+    let installed = [{ repo: NANO, bytes: 1_208_033_536, folder_bytes: 7_812_000_000 }];
     desktop(() => ({ ...base, installed, serving }), {
       local_models_serve: ({ repo }) => {
         serving = repo;
@@ -213,7 +214,7 @@ describe('the Local AI screen', () => {
     // Asked first, with the size and who else loses it; nothing is deleted yet.
     const ask = await screen.findByTestId('local-ai-remove-confirm');
     expect(ask.textContent).toMatch(/Remove Zen Nano\?/);
-    expect(ask.textContent).toMatch(/deletes 1\.2 GB from this computer/);
+    expect(ask.textContent).toMatch(/deletes 7\.8 GB from this computer/);
     expect(ask.textContent).toMatch(/Other programs that use the same model .* lose it too/);
     expect(invoke).not.toHaveBeenCalledWith('local_models_remove', expect.anything());
     // eslint-disable-next-line no-console

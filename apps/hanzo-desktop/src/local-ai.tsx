@@ -1027,7 +1027,7 @@ export function LocalAiManager() {
           <AlertDialogContent data-testid="local-ai-remove-confirm">
             <AlertDialogTitle>{`Remove ${removing.title}?`}</AlertDialogTitle>
             <AlertDialogDescription>
-              {`This deletes ${formatSize(status?.installed.find((m) => m.repo === removing.repo)?.bytes ?? removing.bytes)} from this computer. Other programs that use the same model from the shared Hugging Face folder lose it too. You can download it again later.`}
+              {`This deletes ${formatSize(status?.installed.find((m) => m.repo === removing.repo)?.folder_bytes ?? removing.bytes)} from this computer. Other programs that use the same model from the shared Hugging Face folder lose it too. You can download it again later.`}
             </AlertDialogDescription>
             <AlertDialogFooter>
               <AlertDialogCancel>Keep it</AlertDialogCancel>

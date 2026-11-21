@@ -56,7 +56,8 @@ export interface EngineStatus {
   /** The engine binary, or null when none is installed. */
   engine: string | null;
   cache_dir: string;
-  installed: Array<{ repo: string; bytes: number }>;
+  /** `bytes` is the model the engine loads; `folder_bytes` all Remove deletes (its whole folder). */
+  installed: Array<{ repo: string; bytes: number; folder_bytes?: number }>;
   pulling: string | null;
   serving: string | null;
   serve_error: string | null;
