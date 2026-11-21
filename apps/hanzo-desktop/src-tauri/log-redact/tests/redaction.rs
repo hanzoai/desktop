@@ -301,3 +301,31 @@ fn pkce_and_oauth_fields_are_redacted_even_when_short_and_alphabetic() {
         assert!(!out.contains("abcdefghijklmnop"), "leaked: {out}");
     }
 }
+
+#[test]
+fn basic_credentials_and_passwords_in_addresses_are_redacted() {
+    let pair = ["dXNlcjpo", "dW50ZXIy"].concat(); // base64 of a made-up user:password
+    let pw = ["hun", "ter2"].concat();
+    for c in [format!("sent Basic {pair} to the proxy"), format!("fetch https://alice:{pw}@example.com/x failed")] {
+        let out = redact(&c);
+        assert!(!out.contains(&pair) && !out.contains(&pw), "leaked: {out}");
+        assert!(out.contains(REDACTED));
+    }
+    assert_eq!(redact("https://example.com/x"), "https://example.com/x");
+}
+
+#[test]
+fn a_report_also_drops_home_folder_names_and_quoted_text() {
+    let key = format!("sk-{}", "A1b2C3d4E5f6G7h8I9j0K1l2");
+    let text = format!(
+        "TypeError at /Users/alice/Library/app.js and C:\\Users\\Alice\\x.js; key {key}; \
+         Authorization: Basic {b}; sent \"call my doctor about the results\"",
+        b = ["dXNlcjpo", "dW50ZXIy"].concat()
+    );
+    let out = hanzo_log_redact::redact_report(&text);
+    for leaked in ["alice", "Alice", key.as_str(), "dW50ZXIy", "doctor"] {
+        assert!(!out.contains(leaked), "{leaked} leaked: {out}");
+    }
+    assert!(out.contains("TypeError at /Users/[REDACTED]/Library/app.js"), "{out}");
+}
+

@@ -58,6 +58,20 @@ static OAUTH_CODE: Lazy<Regex> = Lazy::new(|| {
 static BEARER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?i)\bbearer\s+[A-Za-z0-9\-._~+/]+=*").unwrap());
 
+/// HTTP Basic credentials (`Basic <base64 of user:password>`) wherever they appear.
+static BASIC: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)\bbasic\s+[A-Za-z0-9+/]{8,}={0,2}").unwrap());
+
+/// A password in an address (`scheme://user:password@host`).
+static URL_PASSWORD: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?P<k>[a-z][a-z0-9+.\-]*://[^\s:/@]+:)[^\s/@]+@").unwrap());
+
+/// A person's account name in a home folder path (macOS, Linux, Windows).
+static HOME_PATH: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)(?P<k>/Users/|/home/|[A-Z]:\\Users\\)[^/\\\s\x22']+").unwrap());
+
+/// Quoted text: in an error report this is most often what the person typed.
+static QUOTED: Lazy<Regex> = Lazy::new(|| Regex::new(r#""[^"\r\n]{2,}"|“[^”\r\n]{2,}”"#).unwrap());
+
 static KNOWN_TOKEN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(concat!(
         r"\b(?:",
@@ -95,6 +109,8 @@ pub fn redact(input: &str) -> Cow<'_, str> {
     s = apply(s, &UNTERMINATED_PRIVATE_KEY, |_| format!("-----BEGIN PRIVATE KEY----- {REDACTED}"));
     s = apply(s, &AUTH_HEADER, |c| format!("{}{REDACTED}", &c["k"]));
     s = apply(s, &BEARER, |_| format!("Bearer {REDACTED}"));
+    s = apply(s, &BASIC, |_| format!("Basic {REDACTED}"));
+    s = apply(s, &URL_PASSWORD, |c| format!("{}{REDACTED}@", &c["k"]));
     s = apply(s, &SECRET_FIELD, |c| {
         let v = &c["v"];
         if v.contains(REDACTED) || v.starts_with("-----") {
@@ -111,6 +127,17 @@ pub fn redact(input: &str) -> Cow<'_, str> {
     s = apply(s, &LONG_BASE58, |_| REDACTED.to_string());
     s = redact_base64_runs(s);
     redact_mnemonics(s)
+}
+
+/// Redacts a report that leaves this computer (the crash screen's Copy
+/// details): everything [`redact`] removes, plus what is personal rather than
+/// secret, which a log kept here may hold but a report must not: the account
+/// name in a home folder path, and quoted text, which is mostly what the person
+/// wrote.
+pub fn redact_report(input: &str) -> String {
+    let s = redact(input);
+    let s = apply(s, &HOME_PATH, |c| format!("{}{REDACTED}", &c["k"]));
+    apply(s, &QUOTED, |_| format!("\"{REDACTED}\"")).into_owned()
 }
 
 fn apply<'a>(s: Cow<'a, str>, re: &Regex, f: impl Fn(&Captures) -> String) -> Cow<'a, str> {

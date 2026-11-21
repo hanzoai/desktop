@@ -85,6 +85,7 @@ mod loopback;
 #[cfg(feature = "machine")]
 mod machine;
 mod mining;
+mod report;
 mod model_tools;
 mod models;
 mod studio_proxy;
@@ -209,6 +210,7 @@ fn main() {
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             loopback::iam_loopback,
+            report::report_redact,
             identity::identity_adopt,
             identity::identity_file,
             local_dev::dev_local_runtime,

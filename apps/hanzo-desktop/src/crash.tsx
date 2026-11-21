@@ -1,19 +1,15 @@
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { getVersion } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
 import { useState } from 'react';
 
-/** Bearer tokens, JWTs and `token=`/`key=`-style values, which an error message can carry. */
-export function scrub(text: string): string {
-  return text
-    .replace(/eyJ[\w-]+\.[\w-]+\.[\w-]*/g, '[redacted]')
-    .replace(/(bearer\s+)[^\s"']+/gi, '$1[redacted]')
-    .replace(/((?:token|code|key|secret|password|verifier|state)["']?\s*[=:]\s*["']?)[^\s&"',}]+/gi, '$1[redacted]');
-}
-
-/** What "Copy details" puts on the clipboard: the error with its stack, the screen, the version. */
-export function details(error: unknown, version: string): string {
+/**
+ * What "Copy details" puts on the clipboard: the error with its stack, the screen and the
+ * version, through the app's one redactor (report.rs, hanzo-log-redact). Without it, nothing.
+ */
+export async function details(error: unknown, version: string): Promise<string> {
   const text = error instanceof Error ? `${error.name}: ${error.message}\n\n${error.stack ?? ''}` : String(error);
-  return scrub(`App version: ${version}\nScreen: ${window.location.pathname}\n\n${text}`.trim());
+  return invoke<string>('report_redact', { text: `App version: ${version}\nScreen: ${window.location.pathname}\n\n${text}`.trim() });
 }
 
 /**
@@ -25,7 +21,7 @@ export function Crash({ error }: { error: unknown }) {
   const copy = async () => {
     const version = await getVersion().catch(() => 'unknown');
     try {
-      await navigator.clipboard.writeText(details(error, version));
+      await navigator.clipboard.writeText(await details(error, version));
       setCopied('done');
     } catch {
       setCopied('failed');
