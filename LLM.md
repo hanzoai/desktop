@@ -8,22 +8,22 @@ Desktop AI agent app. React + Vite + Tauri (Rust backend).
 
 ```
 apps/hanzo-desktop/
-  src/               # React frontend
+  src/               # React frontend: one window, src/main.tsx -> src/host.tsx
   src-tauri/         # Rust Tauri backend
   public/            # Static assets
 libs/
-  hanzo-ui/          # Shared UI components
-  hanzo-i18n/        # Internationalization
-  hanzo-message-ts/  # Message/job API types
+  brand-config/      # THE brand table (see "Brand + sign-in")
+  hanzo-logo/        # <BrandMark brand/>, the one brand glyph
 ```
 
-## UI stack — the 8.x convergence (state, not aspiration)
+## UI stack
 
-One framework, every platform: **@hanzo/gui** (8.2.1, a hard fork of Tamagui with
-~184 `@tamagui/*` packages renamed `@hanzogui/*`) with **@hanzo/ui** (8.4.13) as
-the shared component layer. Both ship zero Tailwind, zero Radix, zero shadcn.
-The runtime config is `apps/hanzo-desktop/gui.config.ts`; every window mounts it
-through `src/gui.tsx`.
+The window is `@hanzo/app`'s, so its components are **@hanzo/gui** (a hard fork of
+Tamagui, `@hanzogui/*`) and **@hanzo/ui**, both from npm; the desktop draws its own
+few screens (Welcome, Settings, Local AI, the error screen) with the same two. The
+runtime config is `apps/hanzo-desktop/gui.config.ts`. There is no local component
+library any more: `libs/hanzo-ui` (the `@hanzo/desktop-ui` barrel and its
+`gui-repairs`) served only the Spotlight and Node Manager windows and went with them.
 
 gui writes its stylesheet at run time (a `<style data-href="hanzogui-css">`), so
 `style-src` must keep `'unsafe-inline'` working. Tauri hashes the inline
@@ -34,125 +34,15 @@ unstyled while the same `dist/` rendered correctly in a browser. So
 scripts keep their hashes and nonces. Check it in the Tauri window, not a
 browser: every `<style>` there has a `.sheet`.
 
-`libs/hanzo-ui/src/components/index.ts` is the seam and reads as one:
-
-- **From `@hanzo/ui`** — Radix-free and gui-native: Accordion, AlertDialog,
-  Avatar, Badge, Card, Checkbox, Collapsible, Command, Dialog, DropdownMenu,
-  HoverCard, Label, Popover, Progress, RadioGroup, Resizable, ScrollArea,
-  Select, Separator, Slider, Switch, Tabs, Textarea, ToggleGroup, Tooltip.
-- **From `./gui-repairs`** — the same upstream components with ONE prop
-  corrected, re-exported from there INSTEAD of from `@hanzo/ui` so a call site
-  cannot reach the unrepaired original. Each repair states the condition under
-  which it gets deleted.
-- **Still local** — no upstream equivalent yet: breadcrumb, drawer, form,
-  sheet, toggle, plus the non-Radix locals (button, input, table, …).
-
-A name must never appear in more than one of those — that is a fork, and the
-file exists to prevent it. **context-menu is done** (its 15 parts come from
-`@hanzo/ui`, the Radix fork and `@radix-ui/react-context-menu` are gone), so
-drawer, sheet and toggle are the Radix gaps that remain — and `@hanzo/ui`
-publishes no equivalent for any of the three. `pagination` went at the same
-time: seven exported parts and no consumer anywhere in the tree.
-
-Four dependencies outlived the components that used them —
-`@radix-ui/react-{dropdown-menu,scroll-area,select}` and `cmdk` were still
-declared after their forks had already moved upstream. Step 3 of the method
-below is the one that gets skipped; run `grep -rn '@radix-ui/'` over `apps` and
-`libs` and compare it against `package.json` before calling a deletion finished.
-
-The version numbers are load-bearing and move TOGETHER: `@hanzo/ui` peers
-`@hanzo/gui >= 8.1.0`, so the gui family had to reach 8.1.1 before @hanzo/ui
-could leave 8.0.39. The five backends above (accordion, alert-dialog,
-hover-card, radio-group, toggle-group) landed in **8.0.68** specifically — they
-are absent from 8.0.64/65/66. `pnpm-workspace.yaml`'s `minimumReleaseAgeExclude`
-has to name the exact @hanzo/ui version or the install silently keeps the old
-one — and on a version published within the release-age window the install does
-not keep the old one quietly, it FAILS the supply-chain check and names the
-offending entry, which is the good outcome.
-
-### What 8.0.115 would cost, measured
-
-Do not take the bump for tidiness. Against 8.0.68 it adds the ContextMenu family
-as per-member `./primitives/*` files (the barrel already exported all 15 on
-8.0.68, which is what this app migrated through), `Spinner`, the `MenuRow` and
-`Workbench` product components, and a `./tw` export. Nothing else — the
-`./product`, `./product/*`, `./primitives` and `./primitives/*` entries all
-predate 8.0.68, so nothing here is unblocked by moving.
-
-What it changes is **Popover placement, silently**. 8.0.115 splits the fact in
-two the way the compound API spells it — `placement` on the root carries the
-SIDE, `align` on Content carries the rest — and joins them through a new
-`place(side, align = 'center')` that takes `side.split('-')[0]`. A composed
-`placement="bottom-start"` on the root therefore resolves to `bottom`: the
-alignment is dropped, no type error, no warning. **Fifteen call sites in this
-app pass a composed placement to a Popover** and every one of them would go
-centre-aligned. `HoverCard` already behaved this way on 8.0.68 (the two copies
-of the helper had diverged, which is why it was hoisted into one leaf), and
-Tooltip and DropdownMenu pass `placement` straight through and are unaffected.
-
-So the bump is a fifteen-call-site edit — `placement="bottom"` on the root plus
-`align="start"` on the Content — not a version number. `ui-primitives.test.tsx`
-catches it: the Popover placement spec is the one that fails, and it fails for
-the right reason.
-
-**The tree is past that version now, and the cost did not appear.** It runs
-@hanzo/gui 8.2.1 / @hanzo/ui 8.4.13, where a composed `placement="bottom-start"`
-Popover still publishes `data-placement="bottom-start"` — the Popover,
-DropdownMenu and Tooltip placement specs all pass, and 45 composed placements
-across `apps` and `libs` needed no split. The spec that was meant to fail for the
-right reason does not fail. Keep the mechanism above; check it against the specs
-before assuming it applies to a given version.
-
-What that jump DID change is **Separator**. It is a gui `styled(View)` with a
-`vertical` variant now — it takes no `orientation` prop and emits no
-`data-orientation`, so a spec asserting that attribute cannot pass on any input.
-Orientation is observable only as geometry: `vertical` puts the 1px rule on the
-right edge (`_brw-1px`), the default puts it on the bottom
-(`_borderBottomWidth-1px`). The spec renders both and compares them, because a
-silently-dropped `vertical` renders as horizontal and would otherwise pass.
-
-What is in `gui-repairs`, and why:
-
-- **`asChild` press composition** (trap 5) — Dialog/Popover trigger + close,
-  Collapsible and Tooltip triggers. 54 controls were inert (17 DialogClose,
-  19 DialogTrigger, 10 PopoverTrigger, 7 PopoverClose, 1 CollapsibleTrigger),
-  plus 70 TooltipTriggers whose press handler was dropped. NOT
-  DropdownMenuTrigger: @hanzogui/menu implements `asChild` itself and binds a
-  real `onPointerDown`, so it opens either way (measured raw and wrapped).
-- **`DialogFooter`** — gui bakes a plain row; the fork was
-  `flex flex-col-reverse sm:flex-row sm:justify-end`.
-- **Command listbox/option/combobox semantics** — gui renders
-  `<li role="listitem">` with only `data-selected`. `aria-selected` has to MIRROR
-  that attribute (one MutationObserver per list) because the cursor lives in
-  gui's Command context and nothing exports it; the same mirror publishes the
-  input's `aria-activedescendant`, which is what actually announces the
-  selection since focus stays in the input.
-
-Two controls have no gui expression and were changed rather than degraded:
-gui's `SelectTrigger` is a `ListItem` with children of its own, so `asChild`
-fails `React.Children.only`; it also drops `className` and `title`, and its
-height floor is 44px. An icon-only picker therefore cannot be a Select trigger —
-the agent side-chat's chat-history control is a `DropdownMenu` (navigation, not
-form input). Separately, and PRE-EXISTING: a `Tooltip` wrapping a
-`DropdownMenuTrigger` stops the menu opening at all, measured on the raw
-@hanzo/ui parts in both nesting orders — `ai-update-selection-tool.tsx` still
-has that shape and its menu is dead.
-
-**Tailwind is still here** and is the large remaining piece: ~4,300 `className=`
-sites in `apps/hanzo-desktop/src` and ~580 in `libs/`, plus the token set in
-`libs/hanzo-ui/src/styles/styles.css`. It cannot be deleted component-by-
-component; it goes when the markup does.
-
-### Migrating a component — the five traps
+### Writing gui — the five traps
 
 @hanzo/gui **silently drops props it does not recognise**. No throw, no type
 error — just an element that never got the style or the handler. So:
 
-1. **A green `vite build` proves nothing.** Assert the props reach the DOM.
-   `src/__tests__/ui-primitives.test.tsx` renders each migrated primitive through
-   the app's own barrel and checks roles, aria state, `htmlFor`, `className`,
-   fired callbacks. `e2e-tests/ui-convergence.spec.ts` does the same against the
-   built bundle in Chromium.
+1. **A green `vite build` proves nothing.** Assert the props reach the DOM: roles,
+   aria state, `htmlFor`, fired callbacks (as `developer-mode.test.tsx` and
+   `mining-switch.test.tsx` do). `e2e-tests/ui-convergence.spec.ts` checks the built
+   bundle boots and paints from gui in Chromium.
 2. **Tailwind loses ties.** Tamagui injects its stylesheet at RUNTIME, i.e. after
    the bundled CSS, so a utility class that collides with a gui style prop
    (`w-[500px]` vs Popover's hardcoded `width: 288`) is overridden. Express those
@@ -180,8 +70,7 @@ error — just an element that never got the style or the handler. So:
    `getWebEvents(events, webStyle)` in @hanzogui/web. With a plain `asChild` the
    handler reaches the child as `onPress`, React drops it, and the control is
    inert while looking perfect: the child renders, its own onClick still fires,
-   and the dialog never opens or closes. `libs/hanzo-ui/src/components/gui-repairs.tsx`
-   normalises `true` → `'web'` once for every part that has a press.
+   and the dialog never opens or closes. Pass `asChild="web"`.
 
 Testing gui components under jsdom needs `src/test-setup.ts`'s matchMedia (gui
 reads it at module load), ResizeObserver (tabs) and IntersectionObserver
@@ -191,9 +80,8 @@ react-native-svg's unbuilt TypeScript.
 
 ### Every menu in the main window was unclickable, and nothing said so
 
-Measured in Chromium, on untouched `main`: open the model picker in
-`src/hanzo/Shell.tsx` and its rows paint, position correctly against the
-trigger, and **cannot be clicked at all** — `getComputedStyle(panel)
+Measured in Chromium: open a model picker and its rows paint, position correctly
+against the trigger, and **cannot be clicked at all** — `getComputedStyle(panel)
 .pointerEvents === 'none'`, and `elementFromPoint` over a row returns the page
 behind it. Same for the sidebar's `ContextMenu`. Every menu in the converged
 shell was decorative.
@@ -211,8 +99,8 @@ Second defect in the same component: `FloatingMenu` focuses its PANEL inside
 the same layout effect that computes the panel's position, so at that moment
 the panel is still `visibility: hidden` and cannot take focus. A menu opened
 from the keyboard therefore left focus on the trigger and the arrow keys went
-nowhere. `src/hanzo/PanelControls.tsx` focuses the first `[role="menuitem"]` on
-open instead — which is what the ARIA menu-button pattern asks for anyway.
+nowhere. Focus the first `[role="menuitem"]` on open instead, which is what the
+ARIA menu-button pattern asks for anyway.
 
 Third: **`tag` is not typed on gui primitives in 8.x.** `<XStack tag="button">`
 works at runtime and is a type error, so anything wanting real button semantics
@@ -227,58 +115,6 @@ today, but keep reading dist from the APP's resolution
 (`node -e "require.resolve('@hanzo/ui/package.json')"` run from
 `apps/hanzo-desktop`) rather than the hoisted root — the split is a property of
 hoisting, not of a particular version, and it comes back silently.
-
-## Deleting a fork — the method, and what it costs
-
-Fourteen shadcn/Radix forks have been deleted this way (badge, button-no, card,
-command, dialog, dropdown-menu, resizable, scroll-area, select, textarea, then
-accordion, alert-dialog, hover-card, radio-group, toggle-group). The method:
-
-1. Move the name ABOVE the line in `libs/hanzo-ui/src/components/index.ts`,
-   delete the local file, fix the call sites. A name on both sides is a fork.
-2. Assert it in `src/__tests__/ui-primitives.test.tsx` THROUGH the app's own
-   barrel — role, aria state, `htmlFor`, and that callbacks FIRE. That file is
-   the only evidence that counts; a green `vite build` proves nothing.
-3. Drop the now-unreferenced `@radix-ui/react-*` dependency. If it is still in
-   `package.json`, the deletion is not finished.
-
-**Where the line falls.** gui bakes a design recipe as runtime style props, and
-its stylesheet is injected AFTER the bundled CSS, so a colliding Tailwind
-utility always loses. Converting every collision is not the goal — converting
-the ones that change MEANING is:
-
-- **Convert** what breaks structure or behaviour: `sr-only` radios (gui bakes
-  16px width/height, so four hidden radios painted inside their cards),
-  `grid grid-cols-4` (gui's frame is `.is_View{display:flex}`, so the row
-  collapsed to a column), `justify-between` on an AlertDialogFooter (gui bakes
-  `justify:flex-end`), a segmented control's `rounded-none first:rounded-s-lg`
-  (gui bakes `rounded:$3`), `border-b-0` on an AccordionItem (gui bakes
-  `borderBottomWidth:1`), `inline-flex w-auto` on a pill trigger (gui bakes
-  `width:100%`), `w-[300px]` on a HoverCardContent (gui bakes `width:256`).
-- **Accept** what is only a different-but-valid appearance inside gui's own
-  system: panel padding, surface colour, and the type scale that `ink()` applies
-  to STRING children. `ink()` wraps only strings and numbers — an element child
-  passes through untouched, which is the escape hatch when a label really must
-  keep its own class.
-
-Two call-site shapes stop type-checking on the way and both are real: gui's
-`RadioGroup` speaks `(value: string)`, not a narrowed union, and gui's
-`ToggleGroup` types `onValueChange` as a union over `single | multiple`, so the
-single-select parameter has to be spelled `(value: string)` or it is implicitly
-`any`.
-
-**`asChild` is no longer press-dead on 8.0.68.** Measured on the RAW,
-unrepaired `@hanzo/ui` DialogTrigger and on AlertDialogTrigger, both with a
-plain `asChild`: both open. `gui-repairs`' Repair 1 therefore no longer fixes a
-reproducible defect — it normalises `true` → `'web'`, which is now a no-op. It
-is kept because standing it down is its own audit across 124 controls, and NO
-new repair was added for AlertDialogTrigger: a repair whose defect cannot be
-reproduced is speculative code.
-
-**`disabled` on a gui Button is not the DOM attribute.** `AlertDialogAction
-disabled` publishes `aria-disabled="true"` and `pointer-events:none`, and Enter
-does not activate it — but the DOM `disabled` property stays `false` and the
-control keeps `tabindex="0"`. Assert the aria/behaviour, never `.disabled`.
 
 ## The main window is hanzo.ai's app
 
@@ -298,13 +134,12 @@ owns:
   `e2e-tests/window-chrome.spec.ts` measures it against the Vite frontend.
 
 - **Session**: `@hanzo/iam`'s `IamProvider` with `storage: keychain`
-  (`src/keychain.ts`), one OS-keychain record (`iam-session`) read before mount
-  and written whole on each change. No token in localStorage, so the rooms are
-  told where it is (`configure({ session: keychain })`, @hanzo/rooms 0.1.71+):
-  their organization gate and every call read the token there. The keychain is
-  real only with the `keyring` crate's store features (Cargo.toml): keyring 3
-  has no default store, and without them it was the mock, whose entries die
-  with each `Entry`, so a sign-in was lost on the reload that finishes it.
+  (`src/keychain.ts`), held in memory only. The one durable sign-in is the
+  credentials file the Hanzo CLI keeps (`src-tauri/src/identity.rs`): each launch
+  adopts its active identity (`identity_adopt`), a sign-in here files the new one
+  there (`identity_file`), so a sign-in here is a sign-in there and the reverse. No
+  token in localStorage, so the rooms are told where it is
+  (`configure({ session: keychain })`).
 - **Proving the packaged app on Linux**: unpack the `.deb` and drive
   `usr/bin/hanzo-desktop` through `tauri-driver` + `WebKitWebDriver` under
   `xvfb-run`, inside `dbus-run-session` with `gnome-keyring-daemon --unlock
@@ -335,8 +170,8 @@ owns:
 - **Updates**: `src/update.tsx`, in the bar beside Local AI. Once the window is up
   and every 30 minutes it asks the feed (`plugins.updater`); with a newer
   version the bar says "Update available" and nothing else moves. One press
-  downloads, installs, stops the node and relaunches (Windows' installer restarts
-  itself). A failed install says so and can be pressed again. The old banner lives
+  downloads, stops a served model and calls off a download, installs and
+  relaunches (Windows' installer restarts itself). A failed install says so and can be pressed again. The old banner lives
   in the retired layout and is not mounted here.
 - **Developer mode**: the window's own `/settings` page (`DesktopSettings`) holds
   the same switch as the account card, the palette (⌘K), ⌘⇧D and a run's menu:
@@ -412,9 +247,6 @@ Two things about that pin are worth knowing before moving it:
   fails at every tool execution with `exec format error`. Build each target
   natively, and check all three members.
 
-The `soup` CLI is no longer fetched: the whole `hanzo-ml/` prefix answers 404,
-so the fetch could only ever print a warning. `src/model_tools/soup.rs` still
-finds it via `HANZO_SOUP_BIN`, beside the app executable, or on `PATH`.
 **Two TypeScripts, and which one is the CHECKER.** `pnpm typecheck` runs
 **7.0.2**, the compiler rewritten in Go, invoked BY PATH
 (`node ../../node_modules/typescript-7/bin/tsc`) — two packages here ship a `tsc`
@@ -463,20 +295,6 @@ fixtures synthetic and assembled at run time.
   `authorization_code`, and a bare `code` inside a `grant_type`/`redirect_uri`
   exchange) are redacted like any other secret field.
 
-### Localhost TLS certificate rotation (node-secret crate)
-
-`apps/hanzo-desktop/src-tauri/node-secret` (`hanzo-node-secret`) runs from
-`HanzoNodeProcessHandler::spawn`, after the old node is killed and before the
-new one starts. Once per `ROTATION_ID` (marker file
-`node_storage/.localhost-tls-rotated`; a separate file because hanzo-node
-rewrites `.secret` with only its five fields on every start) it replaces
-`PRIVATE_HTTPS_CERTIFICATE`/`PUBLIC_HTTPS_CERTIFICATE` in `.secret` with a new
-self-signed `localhost` cert + PKCS#8 key (rcgen, the same shape the node
-generates), leaving identity/encryption keys and the name untouched. Write is
-temp file at 0600 + rename; `.secret` is re-chmodded 0600 on every start
-because the node recreates it with the default umask. No `.secret` or empty
-HTTPS values: nothing to rotate. Bump `ROTATION_ID` to force another rotation.
-
 ### Secret-logging check
 
 `scripts/check-secret-logging.py` (gate `no-secret-logging`) scans whole macro
@@ -485,81 +303,6 @@ formatting (`{:?}`) of credential-like values (provider, credential, keypair,
 token, env, headers, auth...). Test code and `tests/` are skipped. A deliberate
 exception needs `// secret-log-ok: <reason>` on the line. Its self-test,
 `scripts/test_check_secret_logging.py`, holds the shapes it must keep catching.
-
-## Local node startup: what the pinned node can and cannot do (cloud#760)
-
-Four startup errors were reported from 1.1.54's log. Their causes, measured
-against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
-
-- **No engine binary.** Release bundles ship `hanzo-node`, `deno` and `uv`, not
-  the engine. `src-tauri/engine-bin` (crate `hanzo-engine-bin`, gate `engine-bin`)
-  answers whether one exists: `HANZO_ENGINE_BIN` as written, then `hanzo-engine`
-  (the name hanzoai/engine's release ships) or `hanzo-server` (the old name)
-  beside the app executable, then on `PATH`. Nothing starts an engine at boot any
-  more, and there is no Ollama fallback: see "Local AI" below. Whether bundles
-  ship an engine is an owner decision, not a code one.
-- **384 vs 768.** The node sizes its `vec0` tables from `DEFAULT_EMBEDDING_MODEL`
-  when it CREATES its database, and seeds 130 static prompts whose embeddings are
-  precomputed with `embeddinggemma:300m` (768 floats). The app passed
-  `all-minilm:l6-v2` (384), so every seed insert failed. The default is now
-  `embeddinggemma:300m`. A database already created at 384 keeps its tables and
-  its stored model (the database wins over the env on later starts), and the
-  Settings migration cannot rescue it: the node first asks an Ollama for the
-  model and gives up without one.
-- **"Query is not read-only" is not a read-only connection.** It is how rusqlite
-  0.32 prints `Error::InvalidQuery`, which the node returns when its embedding
-  request fails. Rust tools carry no embedding, so `add_tool` asks
-  `POST {EMBEDDINGS_SERVER_URL}/api/embeddings` (Ollama's shape) for one;
-  api.hanzo.ai answers that path 404 and serves only `/v1/embeddings` with a key.
-  So nothing that needs a fresh embedding works in the pinned node: the
-  built-in Rust tools, imported tools, file chunks. Node **v1.19.4** fixes it on
-  its side (next section); this repo feeds it the key.
-- **The tool directory 404s.** `store-api.hanzo.ai` falls through to the
-  `*.hanzo.ai` ingress; nothing serves `/store/defaults`. `hanzoai/store-api`
-  answers `{tools, prompts}` with stub entries, where the node needs an array of
-  `{name, file, routerKey}`. The app now sets `SKIP_IMPORT_FROM_DIRECTORY=true`
-  (option `skip_import_from_directory`, editable in the Node Manager), which skips
-  only that fetch: the local-directory import it also gates needs
-  `INSTALL_FOLDER_PATH`, which the app never sets. Flip it once a directory is served.
-
-### The node's Hanzo key (node-env crate)
-
-Node v1.19.4 embeds over `POST {EMBEDDINGS_SERVER_URL}/embeddings` when the URL
-ends in `/v1` (Ollama's path otherwise), sends `EMBEDDINGS_SERVER_API_KEY` as
-the bearer, and knows `zen-embedding`, the one embedding model api.hanzo.ai
-serves (768 wide, the seeded prompts' width). api.hanzo.ai refuses it without
-a key, so the node needs the signed-in person's.
-
-- **Where the key comes from.** The main window's IAM session is one keychain
-  record, `iam-session` (`src/keychain.ts`), holding the `@hanzo/iam` SDK's
-  entries. Rust reads `hanzo_iam_access_token` from it at every node start
-  (`local_hanzo_node/session.rs`, through `secure_storage::read`), and treats an
-  expired `hanzo_iam_expires_at` as signed out, as `@hanzo/app` does.
-- **When the node restarts.** `secure_storage_set` / `_delete` of `iam-session`
-  call `session::changed`, which waits 1.5 s for a sign-in's burst of writes,
-  reads the record once, and restarts the node alone (not the engines) when the
-  key it would get differs from the one it holds (a SHA-256 digest is kept,
-  never the key). That is sign-in, sign-out, and a refreshed token: `hanzo-app`
-  issues 7-day access tokens, so about once a week.
-- **The version guard.** `build.rs` reads `HANZO_NODE_VERSION` from `pins`
-  into `env!("HANZO_NODE_VERSION")`. Below v1.19.4 the spawn env is exactly what
-  it was (no key, `https://api.hanzo.ai`, `embeddinggemma:300m`) and a sign-in
-  restarts nothing: v1.15.0 would send the key to a 404 and cannot size a table
-  for `zen-embedding`. Moving the pin to v1.19.4+ switches the defaults to
-  `https://api.hanzo.ai/v1` + `zen-embedding`, rewrites an api.hanzo.ai URL and
-  model an older install saved, and adds the key.
-- **Where the key may go.** Only to `https://api.hanzo.ai` (any path, port 443).
-  A Node Manager URL pointing anywhere else (a local Ollama, another provider,
-  plain HTTP) keeps its settings and gets no key. The key is never a
-  `HanzoNodeOptions` field: those are serialized to the webview and saved by the
-  Node Manager. It reaches the node through its env, not its arguments, so the
-  process list shows it to no other user; `ProcessHandler::spawn` logs env
-  names only; log-redact covers `EMBEDDINGS_SERVER_API_KEY=`, the Debug field,
-  bearer headers and JWTs (fixture in `log-redact/tests/redaction.rs`).
-
-`cargo test --manifest-path apps/hanzo-desktop/src-tauri/node-env/Cargo.toml`
-is the `node-env` gate: signed in, signed out, sign-in later, refresh, the old
-node left as it was, and the hosts the key may reach.
 
 ## Release Pipeline
 
@@ -639,19 +382,6 @@ setup are signed themselves, so there is no second 600 MB `.tar.gz` per platform
   unset in release builds; PostHog is off and the proof key is the compiled default.
 - The two archives `pins` warns about ship the wrong CPU's deno and uv; the universal
   macOS app therefore carries arm64-only tool runtimes.
-
-## Model Tools (hanzo-ml integration)
-
-The Node Manager window has a **Model Tools** tab (`components/hanzo-node-manager/model-tools.tsx`)
-that drives the `hanzoai/ml` features via the Tauri backend (`src-tauri/src/model_tools`):
-
-- **Model soups + BitDelta** — fully wired. Shells out to the `hanzo-ml` `soup`
-  CLI (`hanzo_ml::model_delta`): `average` (uniform/weighted soup), `delta`
-  (base + mean fine-tune delta), `bitdelta-encode` / `bitdelta-apply` (1-bit
-  delta compress/restore). Binary resolved via `HANZO_SOUP_BIN`, a bundled
-  `soup-<arch>` next to the app, or `soup` on PATH. The UI gates on availability.
-- Frontend: `lib/model-tools/model-tools-client.ts` (invoke wrappers + React
-  Query hooks). Tauri commands: `model_tools_soup_*`, `model_tools_bitdelta_*`.
 
 ## Browser (the user's real one, over ZAP)
 
@@ -806,40 +536,6 @@ apps/hanzo-desktop/
 the create dialog round-trip. CI must pass `VITE_BRAND=hanzo` so the
 Machines route renders.
 
-## GRPO Status
-
-Trainer-free GRPO lives in `hanzo_training::grpo` (a Rust **library** + a runnable
-`grpo_toy` example) — there is no GRPO server/daemon yet. The desktop exposes a
-**developer-preview** entry (`model_tools_grpo_run`, surfaced in the Model Tools
-tab) that runs `cargo run -p hanzo-training --example grpo_toy` from a local
-checkout (`HANZO_ML_DIR`). This is plumbing/demo only.
-
-Productizing GRPO in-app still needs: experience/trajectory storage, agent
-versioning / A/B testing, a real training job pipeline (driving the `Policy`
-trait on a packaged model), feedback→reward mapping, and ML metrics. Foundation
-exists (agent CRUD, message history with tool metadata, Zustand, React Query).
-
-## Network + Wallet (the ONE standard)
-
-Shared components from `@hanzo/ui/network` + `@hanzo/ui/wallet`
-(npm alias `@hanzo/ui` -> `@hanzo/ui-shadcn@^5.7.3`, the 5.x line —
-same standard as the hanzo CLI `network.rs` and the console):
-
-- Model: Network = (env, label, networkID, evmChainID, rpcEndpoint,
-  apiEndpoint). Sovereign L1 => networkID === evmChainID. Hanzo envs:
-  mainnet 36963 / testnet 36964 / devnet 36965 / local 31337; public
-  envs share api.hanzo.ai; RPC per env (rpc.hanzo[-test|-dev].network).
-- `src/lib/network.ts` is the ONE composition point (brand -> network
-  list -> shared store). Endpoint consumers: `lux-wallet/chains.ts`
-  (`brandRpcConfig`/`defaultChainId`) + `hooks/useChainBalance.ts`
-  read the SELECTED network via `getNetwork()`/`useNetwork()`.
-- Wallet: `lux-wallet/ui-adapter.ts` adapts the PQ HD keychain wallet
-  to the shared `<WalletMenu/>` (auto-provisions on first connect;
-  secrets never leave the store/keychain).
-- Mounted in the sidebar footer of `pages/layout/main-layout.tsx`
-  (menuSide="top"). Semantic token aliases live in
-  `libs/hanzo-ui/src/styles/styles.css`.
-
 ## Brand + sign-in (the ONE standard)
 
 `libs/brand-config/src/index.ts` is **THE** brand table. Nothing brand-varying
@@ -868,9 +564,11 @@ bundle identifier nothing read.
 - **Mark**: `libs/hanzo-logo` `<BrandMark brand/>` is the only brand glyph. Do
   NOT use `@hanzo/ui`'s `BrandMark` — it white-labels the wordmark text only and
   always paints the Hanzo block-H.
-- **Secrets**: `src/lib/secure-storage.ts` (OS keychain via `secure_storage_*`,
-  in-memory outside Tauri, **never** localStorage). The keychain service name is
-  the running bundle's identifier, resolved in Rust from `app.config()`.
+- **Secrets**: never in localStorage. The session is in memory and the shared
+  CLI credentials file (above). The browser's hand-back reaches the window on a
+  loopback port (`loopback.rs` `iam_loopback`, granted to the window's own pages
+  only), emitted as the event the window names, one of `<brand>-iam-callback`;
+  `deep_links.rs`'s brand list is tested against this table.
 - **Identifier**: `com.<brand>.desktop`, and it must be the SAME string in
   `tauri.conf.json`, `tauri.conf.<brand>.json`, `Info.plist` and the brand
   table. Because the keychain service, the log file name and the `.app` name
@@ -896,12 +594,12 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   `allow-<command>` permission (kebab-case: `hanzo_node_spawn` is
   `allow-hanzo-node-spawn`) and a window calls only what its capability grants.
   Without that, Tauri v2 lets every window call every command. `main.json` grants
-  all of them, and the build refuses one it misses or a grant no handler serves;
-  spotlight and node-manager grant the commands their own bundles
-  call, measured from the build's module graph. A new command reaches only the
-  main window until a capability names it. Capabilities never share a window:
-  Tauri merges overlapping ones, which is how spotlight once held all of main's
-  permissions. The one deliberate overlap is `main-local.json` on the main window: Tauri
+  all of them, and the build refuses one it misses or a grant no handler serves.
+  The main window is the only window. A command that a hanzo.ai page in it must
+  not call (models, mining, the sign-in port, sign-out, the report redactor) is
+  granted in `main-local.json` instead, and a test resolves the built ACL to prove
+  no remote origin reaches it. Capabilities never share a window: Tauri merges
+  overlapping ones. The one deliberate overlap is `main-local.json` on the main window: Tauri
   keeps each capability's origins with its own grants (tauri-utils `resolve_command`), so it
   narrows what remote pages reach rather than widening anything. The old `commands.allow` key was inert (not in the v2 schema) and
   is gone.
@@ -923,22 +621,17 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   web-lite alias) and unhoists katex out from under the vite build. Keep the
   `react-native` override's major in step with the direct
   `@hanzogui/react-native-web-lite` dependency, or you ship two copies.
-- The main window renders `@hanzo/rooms/App` (above). `src/pages/*` and
-  `src/routes/*` are dead for the main window but still imported by the spotlight
-  and node-manager bundles (neither created at launch any more), so do not delete
-  them while those windows are kept. The Coordinator and the never-shown
-  Artifacts window are deleted. The wdio specs under `e2e/` other than
-  `login.e2e.ts` still drive those pre-convergence routes.
+- The main window renders `@hanzo/app`'s App (above) and is the only window:
+  Spotlight, the Node Manager, the Coordinator and the Artifacts window are
+  deleted, with everything only they reached (traced from `src/main.tsx` and every
+  test with esbuild and `tsc --listFilesOnly`, not by name). The wdio specs under
+  `e2e/` other than `login.e2e.ts` drive routes that no longer exist.
 - `@hanzo/ai` is now only a package.json dependency, not an import of
   `src/main.tsx`. Keep it declared regardless (it was once undeclared and an
   install pruned it).
-- The workspace libs are `@hanzo/desktop-*` (ui, i18n, message-ts, node-state,
-  artifacts, logo, brand-config). The `desktop-` segment is **required**, not
-  cosmetic: `@hanzo/ui` and `@hanzo/logo` are separate published packages this
-  app already depends on and imports, so shortening a lib to a bare `@hanzo/ui`
-  or `@hanzo/logo` collides with a real dependency. Note the two `ui` sources
-  are unrelated — `@hanzo/desktop-ui` is `libs/hanzo-ui/`, `@hanzo/ui` is npm.
-  Nothing resolves through node_modules (there is no `@hanzo/desktop-*` there):
+- The workspace libs are `@hanzo/desktop-brand-config` and `@hanzo/desktop-logo`.
+  The `desktop-` segment is **required**, not cosmetic: `@hanzo/logo` is a separate
+  published package, so a bare name collides with a real dependency. Nothing resolves through node_modules (there is no `@hanzo/desktop-*` there):
   the specifiers exist only as `tsconfig.base.json` paths, which vite reads via
   `tsconfigPaths()`. To rename one, change the paths key and the lib's
   package.json `name` — those two carry the whole graph.
@@ -1140,32 +833,6 @@ touched for another reason, and let the rest age out with the branches.
 never with the working tree — and then decide the remedy from what is actually
 exposed and to whom, not from the size of the number the measurement produced.
 
-## The typecheck gate is red, and what is behind it
-
-`pnpm typecheck` reports 108 errors. CI reaches it now — until 2026-09-11 every
-run queued for a runner and was cancelled, so nothing on main had been
-typechecked or built for as long as that had been true. Two things were in the
-way and both are fixed: the reusable defaults to `linux-amd64` and the only
-runner holding that label is evo, which is off the network, so the caller asks
-for `linux-arm64` and runs on spark; and spark's `stable` toolchain could not be
-reinstalled because rustup's manifest for `rust-src` named a file the tree did
-not have.
-
-149 of the original 257 were one signature. `pressable` in
-`libs/hanzo-ui/src/components/gui-repairs.tsx` was written
-`<P extends { asChild?: AsChild }>(Part: ComponentType<P>)`; a gui component's
-type is not a plain function component, so inference had nothing to take P from
-and fell back to the constraint, and the repaired export accepted `asChild` and
-nothing else. Taking the props from the component with `ComponentProps<C>`
-cleared them.
-
-The remaining 108 are the port's backlog, and they are real rather than
-cosmetic. The largest is primereact: v11 is a headless parts API and the tree
-still calls v10 — `primereact/treenode` no longer exists, and `TreeNode` under
-`primereact/tree` is a component rather than the data interface those call sites
-annotate with. `agent-form.tsx` alone carries 17. Porting a page into the shell
-is what clears its share; there is no import that fixes it.
-
 ## Dependency floors live in pnpm-workspace.yaml, one per installed major
 
 `pnpm-workspace.yaml` is where pnpm 11 reads `overrides` — its own header says
@@ -1218,17 +885,17 @@ root.
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).
   - `⇧⌘M` / `Ctrl+Shift+M`: Toggle voice microphone input. There is no Fn voice key: Windows and Linux keyboards resolve Fn in firmware, so no key event ever reaches the app (`desktop-shortcuts.tsx`).
-  - `⌘,` / `Ctrl+,`: Opens `DesktopSettings` (`/settings`, with Appearance, Local AI / Node / Embedded Engine `:36900` / `hanzod` `:9630` status, Cloud Settings link, and Shortcuts table; `Esc` / `⌘[` returns to `/chat`).
+  - `⌘,` / `Ctrl+,`: Opens `DesktopSettings` (`/settings`). A bare `/settings` (the app's Profile, Personalization and Account) opens Account, which says those pages are on hanzo.ai and opens them there; `/settings/<section>` opens that section. The app's `/settings/organization…`, `/billing`, `/usage` and `/keys` have no page in this window: `host.tsx` (`onTheWeb`) opens them on hanzo.ai in the browser and the window stays put. `Esc` / `⌘[` returns to `/chat`.
   - `⌘/` / `Ctrl+/`: Opens Keyboard Shortcuts dialog in both signed-in and Guest / Local AI modes (`Me.js`).
   - `⌘.` / `Ctrl+.` & `⌘⇧B`: Toggle right side Tabs panel (`@hanzo/build`).
   - `⇧⌘I` / `Ctrl+Shift+I`: System-wide global New Chat (`create-chat` Tauri event wired in `host.tsx`).
-  - `⇧⌘J` / `Ctrl+Shift+J`: not registered. Spotlight (`src/windows/spotlight`) still sends through the retired hanzo-node, so it showed "Unable to connect"; it has no tray entry, no shortcut, and `main.rs` no longer creates it (nor the Coordinator, which only synced its legacy stores). To bring it back, its quick ask must send through the main window's chat path (`@hanzo/app` under `IamProvider` with the keychain session) first.
+  - `⇧⌘J` / `Ctrl+Shift+J`: not registered. Spotlight sent through the retired hanzo-node and is deleted; a quick-ask window would have to be built on the main window's chat path (`@hanzo/app` under `IamProvider` with the keychain session).
   - Unit tests: `./node_modules/.bin/vitest run --pool=threads --root apps/hanzo-desktop src/__tests__/keybindings.test.tsx`.
 
 ## Canonical `@hanzo/app` Shell + Zen 6 Catalog (2026-11-19)
 - **Single Canonical Shell (`apps/hanzo-desktop/src/host.tsx`, `src/app.css`, `index.html`)**: Desktop mounts directly on `@hanzo/app`'s canonical `<Rooms><App bar={BAR} /></Rooms>` shell (no duplicate `UnifiedDesktopShell` wrapper). `app.css` and `index.html` apply the obsidian `#050505` outer floor, `#09090b` collapsible left sidebar, and inset rounded `#0f0f12` stage pane (`1px solid rgba(255,255,255,0.08)` hairline border) directly onto `@hanzo/app`'s slots.
 - **Multi-Brand Shell Identity (`apps/hanzo-desktop/src/lib/brand-identity.ts`)**: `resolveDesktopShellBrand({ viteBrand, hostname, pathname })` resolves `'hanzo' | 'dev' | 'bot' | 'team'` across `VITE_BRAND`, hostnames (`hanzo.bot`, `hanzo.team`), and internal paths (`/bots`, `/team`, `/channels`, `/dev`), plus `DESKTOP_CROSS_APPS` for cross-surface switching (`Chat`, `Dev`, `Bot`, `Team`, `Console`, `Desktop / Mobile`).
-- **Local AI Test Stability & Zen 6 Catalog (`apps/hanzo-desktop/src/local-ai.tsx`, `src/lib/hanzo-node-manager/model-catalog.json`, `src/components/ais/constants.tsx`)**: Upgraded all active Zen model SKUs and UI badges/placeholders to **Zen 6** (`zen6`, `zen6-coder`, `zen6-flash`, `zen6-max`, `zen6-free`, `zen-vl`) mapped to `qwen3+` / `qwen3-vl` local weights with zero `zen4`, `zen5`, or `qwen2` entries in `model-catalog.json` or rendered UI; parallelized localhost probes (`Promise.all` with fast test-mode timeout), skipped eager hidden-mount probes, and windowed initial unsearched `All` catalog view (`20` models + "Show all" toggle) so `src/__tests__/local-ai.test.tsx` completes deterministically in <3s.
+- **Local AI Test Stability & Zen 6 Catalog (`apps/hanzo-desktop/src/local-ai.tsx`, `src/lib/hanzo-node-manager/model-catalog.json`)**: Upgraded all active Zen model SKUs and UI badges/placeholders to **Zen 6** (`zen6`, `zen6-coder`, `zen6-flash`, `zen6-max`, `zen6-free`, `zen-vl`) mapped to `qwen3+` / `qwen3-vl` local weights with zero `zen4`, `zen5`, or `qwen2` entries in `model-catalog.json` or rendered UI; parallelized localhost probes (`Promise.all` with fast test-mode timeout), skipped eager hidden-mount probes, and windowed initial unsearched `All` catalog view (`20` models + "Show all" toggle) so `src/__tests__/local-ai.test.tsx` completes deterministically in <3s.
 
 ## Local AI: models on this computer, on Hanzo's engine
 
