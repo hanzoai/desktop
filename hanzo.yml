@@ -57,6 +57,18 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/engine-bin/Cargo.toml
+  # Hanzo Dev on this computer: where the app finds it, the release it fetches
+  # when there is none, the checksum it checks, the binary it unpacks, and how a
+  # run's answer is told from its log. Pure Rust, no Tauri or system libraries.
+  - name: dev-agent
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/dev-agent/Cargo.toml
+  # The project folders Auto can pick from (Documents, work, code, ...). Pure Rust.
+  - name: projects
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/projects/Cargo.toml
   # No secret-bearing value may be printed or logged from the Tauri crate:
   # whole-call (multiline) scan plus Debug-format of credential-like values.
   # The self-test proves the scanner still catches the shapes it must.

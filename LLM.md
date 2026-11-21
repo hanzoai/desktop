@@ -619,6 +619,40 @@ browser works with or without one running. The Hanzo extension registers as
   checkout builds with `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}'`
   when the sidecars are not downloaded.
 
+## Local runs: Dev in a folder, no terminal
+
+Dev's New starts on **This computer** (`desktopLocal()` in `@hanzo/app` `lib/local-fs.ts`, handed to
+`@hanzo/build` as `Host.local`). A run is the `dev` agent in one folder (`dev exec -C <folder>`), no
+repository, nothing sent to the platform. The window supplies four commands
+(`src-tauri/src/commands/local_workspace.rs`), each its own `allow-` entry in `capabilities/main.json`:
+
+- `local_workspace_open_dialog` — the OS folder dialog.
+- `local_workspace_discover` — the project folders found where people keep them (`~/Documents`, `Projects`,
+  `work`, `code`, ...: at most two folders down, never inside another project, never hidden or generated;
+  names and times only, no file is read), newest first, at most 50. The logic is the `hanzo-projects` crate
+  (`src-tauri/projects`); `desktopLocal()` asks once when Dev opens and merges the answer after the
+  folders Hanzo opened, so Auto has folders to pick from on a first run. On macOS the first look into
+  Documents and Desktop shows the system's own permission prompt.
+- `local_workspace_run_dev` — runs the agent with `--color never --skip-git-repo-check -s workspace-write
+  -C <folder> -o <file> -- <prompt>` and answers `{session_id, output, process, success}`: `output` is the
+  agent's final message (`-o`, else stdout), `process` its log (stderr). `-s workspace-write` is passed
+  because `dev exec` otherwise runs read-only and cannot edit. The window shows `output` in words and
+  `process` only in Developer mode (`@hanzo/build` `plainAnswer`, `RanHere`).
+- **The agent is fetched when the computer has none**, so a person never meets `npm install`. Lookup
+  (`hanzo-dev-agent` crate, `src-tauri/dev-agent`): `HANZO_DEV_BIN`, `~/.local/bin/dev`,
+  `~/.cargo/bin/dev`, `PATH`, then the app's own copy in the app data dir
+  (`<data>/dev/<version>/dev`). None found: download `hanzoai/dev`'s pinned release (`VERSION` in
+  `dev-agent/src/lib.rs`, the one place it is written; `dev-<target>.tar.gz`, Windows
+  `dev-x86_64-pc-windows-msvc.exe.zip`, ~120 MB), check it against the `.sha256` beside it, unpack the one
+  binary, let older versions go. The window hears `local-dev-setup` `{percent}` (0-100) while it
+  downloads and says "Setting up Hanzo Dev on this computer…". One download at a time; a failure is a
+  plain sentence the window shows as it is (no connection, a download that did not check out). Move the
+  pin by changing `VERSION` and running `cargo test --manifest-path src-tauri/dev-agent/Cargo.toml`.
+
+Auto (the Folder pill) is `@hanzo/build` `route(folders, ask)`: the folder whose name the ask says, then the
+folders it sits in, else the folder used last; same words, same folder, a tie goes to the more recent. The
+pill reads `Auto · <folder>` as the ask is typed, and a folder the person chose is never moved by the words.
+
 ## Machines (Docker Desktop replacement)
 
 Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the

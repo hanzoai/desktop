@@ -53,7 +53,7 @@ use crate::commands::local_workspace::{
     local_workspace_open_dialog, local_workspace_open_file_dialog, local_workspace_clone_repo,
     local_workspace_import_file, local_workspace_list, local_workspace_read_file,
     local_workspace_write_file, local_workspace_create_file, local_workspace_create_dir,
-    local_workspace_delete, local_workspace_run_dev,
+    local_workspace_delete, local_workspace_discover, local_workspace_run_dev,
 };
 use crate::mining::MiningManager;
 use crate::model_tools::{
@@ -284,6 +284,7 @@ fn main() {
             local_workspace_create_dir,
             local_workspace_delete,
             local_workspace_run_dev,
+            local_workspace_discover,
             #[cfg(feature = "machine")]
             machine::commands::machine_health,
             #[cfg(feature = "machine")]

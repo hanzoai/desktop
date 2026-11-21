@@ -49,6 +49,10 @@ hanzo-log-redact = { path = "log-redact" }
 hanzo-node-secret = { path = "node-secret" }
 # Finds a local hanzo-server, or says there is none (cloud#760). See engine-bin/src/lib.rs.
 hanzo-engine-bin = { path = "engine-bin" }
+# Finds Hanzo Dev, or names the release the app fetches so a local run needs no terminal. See dev-agent/src/lib.rs.
+hanzo-dev-agent = { path = "dev-agent" }
+# The project folders Auto can pick from. See projects/src/lib.rs.
+hanzo-projects = { path = "projects" }
 anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
 kill_tree = { version = "0.2", features = ["tokio"] }
