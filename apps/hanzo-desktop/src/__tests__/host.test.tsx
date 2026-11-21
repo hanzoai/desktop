@@ -4,6 +4,12 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const iam = vi.hoisted(() => ({ state: { isLoading: false, isAuthenticated: false, sdk: {} } }));
+// The network the host's fetch bridge wraps: offline. Set before host.tsx is imported, which is when it wraps.
+vi.hoisted(() => {
+  window.fetch = (async () => {
+    throw new TypeError('Failed to fetch');
+  }) as typeof window.fetch;
+});
 
 vi.mock('@hanzo/app', () => ({
   configure: vi.fn(),
@@ -48,6 +54,7 @@ vi.mock('../desktop-shortcuts', () => ({
 }));
 
 import { Host } from '../host';
+import { keychain } from '../keychain';
 
 const GUEST = 'hanzo:guest';
 
@@ -80,5 +87,30 @@ describe('Host', () => {
     fireEvent.click(screen.getByText('Settings back'));
     expect(window.location.pathname).toBe('/chat');
     expect(window.localStorage.getItem(GUEST)).toBe('1');
+  });
+
+  describe('offline', () => {
+    const API = 'https://api.hanzo.ai';
+    const guestChats = [{ id: 'local-1', title: 'a guest chat', updatedAt: '', createdAt: '', messages: [] }];
+    beforeEach(() => {
+      window.localStorage.setItem('hanzo:local:conversations', JSON.stringify(guestChats));
+    });
+    afterEach(() => keychain.clear());
+
+    it('never answers a signed-in window from the guest chats, and a failed save fails', async () => {
+      keychain.setItem('hanzo_iam_access_token', 'signed-in');
+      await expect(window.fetch(`${API}/v1/agents/chat/conversations`)).rejects.toThrow('Failed to fetch');
+      await expect(
+        window.fetch(`${API}/v1/agents/chat/conversations`, { method: 'POST', body: '{"messages":[]}' }),
+      ).rejects.toThrow('Failed to fetch');
+      await expect(window.fetch(`${API}/v1/pref`, { method: 'POST', body: '{}' })).rejects.toThrow('Failed to fetch');
+      // A side list still reads as empty rather than an error.
+      expect(await (await window.fetch(`${API}/v1/agents`)).json()).toEqual({ agents: [] });
+    });
+
+    it('still answers a guest from the chats on this computer', async () => {
+      const res = await window.fetch(`${API}/v1/agents/chat/conversations`);
+      expect((await res.json()).conversations.map((c: { id: string }) => c.id)).toEqual(['local-1']);
+    });
   });
 });

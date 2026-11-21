@@ -528,12 +528,12 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
     try {
       return await nativeFetch(input, init);
     } catch (err) {
-      // Graceful fallback if cloud endpoint is unreachable in desktop webview
-      if (isCloudApi && parsed) {
+      // Offline, a signed-in window's side lists read as empty rather than
+      // erroring. Only reads: a write, or anything about conversations, fails as
+      // itself. The guest conversations on this computer are never the account's.
+      const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      if (isCloudApi && parsed && method === 'GET') {
         const path = parsed.pathname;
-        if (path.startsWith('/v1/agents/chat/conversations')) {
-          return jsonResponse({ conversations: readLocalConversations() });
-        }
         if (path === '/v1/agent/sessions' || path === '/v1/agents/sessions') {
           return jsonResponse({ sessions: [] });
         }
