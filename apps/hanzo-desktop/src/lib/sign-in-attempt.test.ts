@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { awaitCallback, type Callback, EXPIRED_MESSAGE, SignInCancelled } from './sign-in-attempt';
+import { awaitCallback, type Callback, EXPIRED_MESSAGE, finishAttempt, SignInCancelled } from './sign-in-attempt';
 
 /** A stand-in for the Tauri event: who is subscribed, and a way to fire it. */
 function bus() {
@@ -105,5 +105,34 @@ describe('a sign-in attempt', () => {
     });
     await expect(done).rejects.toThrow('no browser');
     expect(b.subs.size).toBe(0);
+  });
+});
+
+describe('finishing a sign-in attempt', () => {
+  it('Cancel after the browser came back stops the exchange and the navigation', async () => {
+    const ctrl = new AbortController();
+    const exchange = vi.fn(async () => undefined);
+    const go = vi.fn();
+    ctrl.abort();
+    await expect(finishAttempt(ctrl.signal, [exchange, go])).rejects.toBeInstanceOf(SignInCancelled);
+    expect(exchange).not.toHaveBeenCalled();
+    expect(go).not.toHaveBeenCalled();
+  });
+
+  it('Cancel during the exchange stops what comes after it', async () => {
+    const ctrl = new AbortController();
+    const share = vi.fn(async () => undefined);
+    const go = vi.fn();
+    const exchange = vi.fn(async () => ctrl.abort());
+    await expect(finishAttempt(ctrl.signal, [exchange, share, go])).rejects.toBeInstanceOf(SignInCancelled);
+    expect(exchange).toHaveBeenCalledTimes(1);
+    expect(share).not.toHaveBeenCalled();
+    expect(go).not.toHaveBeenCalled();
+  });
+
+  it('an attempt nobody cancelled runs every step in order', async () => {
+    const order: string[] = [];
+    await finishAttempt(new AbortController().signal, [() => order.push('exchange'), () => order.push('go')]);
+    expect(order).toEqual(['exchange', 'go']);
   });
 });
