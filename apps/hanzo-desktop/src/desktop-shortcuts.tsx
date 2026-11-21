@@ -17,15 +17,15 @@ export type Platform = 'mac' | 'other';
 export const platformOf = (ua: string): Platform => (/Mac|iPhone|iPad/.test(ua) ? 'mac' : 'other');
 
 /**
- * The two system-wide keys main.rs registers (`super+shift+i|j` and
- * `control+shift+i|j`, both on every platform). Hold / double-tap Fn is not
+ * The system-wide key main.rs registers (`super+shift+i` and
+ * `control+shift+i`, both on every platform). ⇧⌘J (Spotlight) is not
+ * registered until Spotlight can send. Hold / double-tap Fn is not
  * here: Windows and Linux keyboards resolve Fn in firmware, so no key event ever
  * reaches the window, and macOS gives a Fn (Globe) press to Dictation or the
  * emoji picker by default. ⌘⇧M is the voice key.
  */
 export const DESKTOP_GLOBAL_KEYS = [
   { does: 'New chat', mac: '⇧⌘I', pc: 'Ctrl+Shift+I' },
-  { does: 'Hanzo Spotlight', mac: '⇧⌘J', pc: 'Ctrl+Shift+J' },
 ] as const;
 
 export interface ShortcutGroup {
@@ -35,7 +35,7 @@ export interface ShortcutGroup {
 
 /**
  * Every shortcut, grouped, spelled for one platform: @hanzo/app's KEYS (each
- * answered where its comment in help.js says) and then the system-wide two.
+ * answered where its comment in help.js says) and then the system-wide one.
  * A row with alternatives ("⌘N / ⌘⇧O") becomes one keycap per alternative.
  */
 export function shortcutGroups(platform: Platform): ShortcutGroup[] {

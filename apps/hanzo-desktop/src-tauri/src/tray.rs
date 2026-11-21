@@ -10,19 +10,17 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let quit_menu_item = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
     let show_menu_item = MenuItemBuilder::with_id("show", "Hanzo AI").build(app)?;
     let team_menu_item = MenuItemBuilder::with_id("team", "Hanzo Team").build(app)?;
-    let hanzo_spotlight_menu_item = MenuItemBuilder::with_id("hanzo_spotlight", "Hanzo Spotlight")
-        .accelerator("CmdOrCtrl+Shift+J")
-        .build(app)?;
 
     // No "Hanzo Node Manager" entry: hanzo-node no longer ships in this app
     // (hanzo_node_manager.rs), so that window starts and stops nothing. Local
-    // models are managed from the main window's Local AI manager.
+    // models are managed from the main window's Local AI manager. No "Hanzo
+    // Spotlight" either: its quick ask still sends through that node, so it
+    // could only say "Unable to connect" (main.rs no longer creates it).
 
     let menu = MenuBuilder::new(app)
         .items(&[
             &show_menu_item,
             &team_menu_item,
-            &hanzo_spotlight_menu_item,
             &quit_menu_item,
         ])
         .build()?;
@@ -52,9 +50,6 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
             }
             "team" => {
                 let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
-            }
-            "hanzo_spotlight" => {
-                let _ = recreate_window(tray.app_handle().clone(), Window::Spotlight, true);
             }
             "quit" => {
                 // process::exit skips RunEvent::Exit (main.rs), so what that

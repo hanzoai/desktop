@@ -1220,7 +1220,7 @@ root.
   - `⌘/` / `Ctrl+/`: Opens Keyboard Shortcuts dialog in both signed-in and Guest / Local AI modes (`Me.js`).
   - `⌘.` / `Ctrl+.` & `⌘⇧B`: Toggle right side Tabs panel (`@hanzo/build`).
   - `⇧⌘I` / `Ctrl+Shift+I`: System-wide global New Chat (`create-chat` Tauri event wired in `host.tsx`).
-  - `⇧⌘J` / `Ctrl+Shift+J`: System-wide global Hanzo Spotlight (`toggle_spotlight`, with `navigate-to-path` wired in `host.tsx`).
+  - `⇧⌘J` / `Ctrl+Shift+J`: not registered. Spotlight (`src/windows/spotlight`) still sends through the retired hanzo-node, so it showed "Unable to connect"; it has no tray entry, no shortcut, and `main.rs` no longer creates it (nor the Coordinator, which only synced its legacy stores). To bring it back, its quick ask must send through the main window's chat path (`@hanzo/app` under `IamProvider` with the keychain session) first.
   - Unit tests: `./node_modules/.bin/vitest run --pool=threads --root apps/hanzo-desktop src/__tests__/keybindings.test.tsx`.
 
 ## Canonical `@hanzo/app` Shell + Zen 6 Catalog (2026-11-19)

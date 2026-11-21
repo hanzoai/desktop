@@ -359,12 +359,8 @@ fn main() {
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;
                 let gs = app.global_shortcut();
-                for s in [
-                    "super+shift+i",
-                    "control+shift+i",
-                    "super+shift+j",
-                    "control+shift+j",
-                ] {
+                // No ⇧⌘J: Spotlight is not created until it can send (see below).
+                for s in ["super+shift+i", "control+shift+i"] {
                     if let Err(e) = gs.register(s) {
                         log::warn!("global shortcut '{}' not registered (already held by another app?): {}", s, e);
                     }
@@ -430,8 +426,10 @@ fn main() {
             tauri::async_runtime::spawn({
                 let app_handle = app.handle().clone();
                 async move {
-                    let _ = recreate_window(app_handle.clone(), Window::Coordinator, false);
-                    let _ = recreate_window(app_handle.clone(), Window::Spotlight, false);
+                    // Only the main window. Spotlight's quick ask still sends through the
+                    // retired hanzo-node (it showed "Unable to connect" and Send did
+                    // nothing), and the hidden Coordinator only synced that window's
+                    // legacy stores; each cost a webview process at every launch.
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);
 
                     // Kill any existing process related to hanzo and/or using hanzo ports

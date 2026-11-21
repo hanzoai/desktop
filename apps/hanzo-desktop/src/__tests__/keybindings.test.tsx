@@ -53,9 +53,10 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(macChords).toContain('⌘]');
 
     const globalChords = DESKTOP_GLOBAL_KEYS.map((k) => k.mac);
-    // main.rs registers these two system-wide; Fn never reaches a window on
-    // Windows or Linux and is the Globe key on a Mac, so it is not listed.
-    expect(globalChords).toEqual(['⇧⌘I', '⇧⌘J']);
+    // main.rs registers this one system-wide (⇧⌘J waits until Spotlight can
+    // send); Fn never reaches a window on Windows or Linux and is the Globe key
+    // on a Mac, so it is not listed.
+    expect(globalChords).toEqual(['⇧⌘I']);
     const all = shortcutGroups('mac').flatMap((g) => g.rows.flatMap((r) => r.keys));
     expect(all.join(' ')).not.toMatch(/Fn/);
   });
@@ -122,7 +123,7 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
 
     expect(screen.getByTestId('desktop-settings-page')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Keyboard shortcuts' })).toBeTruthy();
-    expect(screen.getByText('Hanzo Spotlight')).toBeTruthy();
+    expect(screen.queryByText('Hanzo Spotlight')).toBeNull();
     expect(screen.getByText('Anywhere on this computer')).toBeTruthy();
 
     // Theme is Appearance's: one press there, and the document follows.
@@ -150,8 +151,7 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
       groups.flatMap((g) => g.rows).find((r) => r.does === does)?.keys;
     expect(keysOf(mac, 'New chat')).toEqual(['⌘N', '⌘⇧O']);
     expect(keysOf(pc, 'New chat')).toEqual(['Ctrl+N', 'Ctrl+Shift+O']);
-    expect(keysOf(mac, 'Hanzo Spotlight')).toEqual(['⇧⌘J']);
-    expect(keysOf(pc, 'Hanzo Spotlight')).toEqual(['Ctrl+Shift+J']);
+    expect(keysOf(mac, 'Hanzo Spotlight')).toBeUndefined();
     // No ⌘ anywhere a PC reader looks, and every app key is listed once.
     expect(pc.flatMap((g) => g.rows.flatMap((r) => r.keys)).join(' ')).not.toMatch(/[⌘⌥⇧⌃]/);
     expect(mac.flatMap((g) => g.rows).length).toBe(KEYS.length + DESKTOP_GLOBAL_KEYS.length);
