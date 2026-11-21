@@ -118,15 +118,17 @@ describe('Host', () => {
     });
     afterEach(() => keychain.clear());
 
-    it('never answers a signed-in window from the guest chats, and a failed save fails', async () => {
+    it('never answers a signed-in window itself: every call fails as the network failed', async () => {
       keychain.setItem('hanzo_iam_access_token', 'signed-in');
       await expect(window.fetch(`${API}/v1/agents/chat/conversations`)).rejects.toThrow('Failed to fetch');
       await expect(
         window.fetch(`${API}/v1/agents/chat/conversations`, { method: 'POST', body: '{"messages":[]}' }),
       ).rejects.toThrow('Failed to fetch');
       await expect(window.fetch(`${API}/v1/pref`, { method: 'POST', body: '{}' })).rejects.toThrow('Failed to fetch');
-      // A side list still reads as empty rather than an error.
-      expect(await (await window.fetch(`${API}/v1/agents`)).json()).toEqual({ agents: [] });
+      // No side list is made up either: the app shows its own error for each.
+      for (const path of ['/v1/agents', '/v1/agent/sessions', '/v1/project', '/v1/pref']) {
+        await expect(window.fetch(`${API}${path}`)).rejects.toThrow('Failed to fetch');
+      }
     });
 
     it('still answers a guest from the chats on this computer', async () => {
