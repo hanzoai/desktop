@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Tauri commands binding the Phase 1 mining manager: the Settings switch, and
-//! nothing else. Both are granted to the window's own pages only
-//! (capabilities/main-local.json), never to a remote origin.
+//! nothing else (capabilities_test.rs holds it to that).
 
 use crate::mining::MiningManager;
 use std::sync::Arc;
@@ -30,26 +29,4 @@ pub async fn mining_set_enabled(
         mining_manager.stop_mining().await;
     }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    /// No remote origin (a hanzo.ai page in the main window) reaches any mining command:
-    /// mining uses this computer's power, so only the window's own Settings may touch it.
-    #[test]
-    fn no_remote_page_reaches_a_mining_command() {
-        use std::collections::BTreeMap;
-        use tauri::utils::acl::{capability::Capability, manifest::Manifest, resolved::Resolved, ExecutionContext};
-        let acl: BTreeMap<String, Manifest> =
-            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/acl-manifests.json"))).unwrap();
-        let caps: BTreeMap<String, Capability> =
-            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/capabilities.json"))).unwrap();
-        let resolved = Resolved::resolve(&acl, caps, tauri::utils::platform::Target::current()).unwrap();
-        let mining: Vec<_> = resolved.allowed_commands.iter().filter(|(cmd, _)| cmd.starts_with("mining_")).collect();
-        let names: Vec<_> = mining.iter().map(|(cmd, _)| cmd.as_str()).collect();
-        assert_eq!(names, ["mining_get_enabled", "mining_set_enabled"], "the switch is the one way");
-        for (cmd, grants) in mining {
-            assert!(grants.iter().all(|c| c.context == ExecutionContext::Local), "{cmd}: a remote page");
-        }
-    }
 }

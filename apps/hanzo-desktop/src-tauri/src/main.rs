@@ -34,6 +34,8 @@ mod identity;
 mod loopback;
 mod mining;
 mod report;
+#[cfg(test)]
+mod capabilities_test;
 mod studio_proxy;
 mod tray;
 mod windows;

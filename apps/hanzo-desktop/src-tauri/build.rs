@@ -4,7 +4,7 @@
 //! manifest, Tauri v2 lets every window call every registered command.
 //!
 //! The list is read from `generate_handler![...]` in src/main.rs, the one place
-//! it is written. The build refuses a main window (`main` plus `main-local`)
+//! it is written. The build refuses a main window (`capabilities/main.json`)
 //! that is not granted all of them, and any capability that names a command no
 //! handler serves.
 
@@ -63,10 +63,8 @@ fn granted(json: &str) -> BTreeSet<String> {
         .collect()
 }
 
-/// The main window's capabilities: `main.json`, and `main-local.json`, which
-/// grants to the window's own pages only (no remote origin) what a remote page
-/// must not reach. Together they must grant every command.
-const MAIN: [&str; 2] = ["main", "main-local"];
+/// The main window's one capability, which must grant every command.
+const MAIN: &str = "main";
 
 fn check(commands: &[String]) {
     let known: BTreeSet<String> = commands.iter().map(|c| c.replace('_', "-")).collect();
@@ -84,14 +82,14 @@ fn check(commands: &[String]) {
             "{} grants commands no handler serves: {unknown:?}",
             path.display()
         );
-        if path.file_stem().and_then(|s| s.to_str()).is_some_and(|s| MAIN.contains(&s)) {
+        if path.file_stem().and_then(|s| s.to_str()) == Some(MAIN) {
             main_grants.extend(grants);
         }
     }
     let missing: Vec<_> = known.iter().filter(|c| !main_grants.contains(*c)).collect();
     assert!(
         missing.is_empty(),
-        "capabilities/main.json (or main-local.json) must grant every command the app registers; add allow-<name> for {missing:?}"
+        "capabilities/main.json must grant every command the app registers; add allow-<name> for {missing:?}"
     );
 }
 

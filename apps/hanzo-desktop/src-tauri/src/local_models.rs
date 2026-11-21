@@ -820,28 +820,6 @@ mod tests {
         }
     }
 
-    /// The ACL the app is built with (Tauri resolves the same files at run time):
-    /// the window's own pages reach the model commands, a hanzo.ai page in the
-    /// same window does not, while it still reaches what main.json grants.
-    #[test]
-    fn only_the_windows_own_pages_reach_the_model_commands() {
-        use std::collections::BTreeMap;
-        use tauri::utils::acl::{capability::Capability, manifest::Manifest, resolved::Resolved, ExecutionContext};
-        let acl: BTreeMap<String, Manifest> =
-            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/acl-manifests.json"))).unwrap();
-        let caps: BTreeMap<String, Capability> =
-            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/capabilities.json"))).unwrap();
-        let resolved = Resolved::resolve(&acl, caps, tauri::utils::platform::Target::current()).unwrap();
-        let main = |c: &tauri::utils::acl::resolved::ResolvedCommand| c.windows.iter().any(|w| w.matches("main"));
-        for cmd in ["local_models_status", "local_models_pull", "local_models_cancel", "local_models_remove", "local_models_serve", "local_models_stop"] {
-            let grants = &resolved.allowed_commands[cmd];
-            assert!(grants.iter().any(|c| main(c) && c.context == ExecutionContext::Local), "{cmd}: the window's own page");
-            assert!(grants.iter().all(|c| c.context == ExecutionContext::Local), "{cmd}: a remote page");
-        }
-        let other = &resolved.allowed_commands["hardware_get_summary"];
-        assert!(other.iter().any(|c| main(c) && matches!(c.context, ExecutionContext::Remote { .. })));
-    }
-
     #[test]
     fn a_port_someone_else_holds_is_seen() {
         let held = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
