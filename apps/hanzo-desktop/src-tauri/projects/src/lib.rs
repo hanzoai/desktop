@@ -3,7 +3,7 @@
 //! A run on this computer works in a folder, and the person should not have to browse for it: Auto
 //! picks the one the ask is about (build's `local.ts`), from the folders Hanzo opened and the ones
 //! found here. A folder is a project when it holds something projects hold (a git checkout, a
-//! package manifest, a page), and it is looked for in the usual places under the home folder, at most
+//! package manifest, a page), and it is looked for in the usual places under the home folder (`PLACES`), at most
 //! two folders down (`~/work/app`, `~/work/org/app`), never inside another project and never in a
 //! hidden or generated folder. Only names and times are read; no file's contents are.
 
@@ -12,9 +12,10 @@ use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
 /// The places under the home folder projects usually live in.
-pub const PLACES: &[&str] = &[
-    "Documents", "Projects", "Developer", "code", "Code", "src", "work", "dev", "repos", "GitHub", "github", "Sites", "Desktop",
-];
+///
+/// Not Documents or Desktop: macOS asks the person's permission the first time an app reads them, and a
+/// folder there is rarely a project. A project kept anywhere else is found once it has been opened in Hanzo.
+pub const PLACES: &[&str] = &["code", "dev", "src", "Projects", "work", "git"];
 
 /// What a project folder holds: a git checkout, a manifest of a language's tooling, or a page.
 pub const MARKERS: &[&str] = &[
@@ -163,11 +164,25 @@ mod tests {
         let home = tempfile::tempdir().unwrap();
         mark(&home.path().join("work/shop"), "package.json", 300);
         mark(&home.path().join("work/hanzo/desktop"), "Cargo.toml", 100);
-        mark(&home.path().join("Documents/blog"), "index.html", 200);
+        mark(&home.path().join("src/blog"), "index.html", 200);
         let found = discover(home.path());
         assert_eq!(names(&found), ["desktop", "blog", "shop"]);
         assert_eq!(found[0].path, home.path().join("work/hanzo/desktop"));
         assert!(found[0].modified > found[1].modified);
+    }
+
+    #[test]
+    fn looks_in_the_six_usual_places_and_nowhere_else() {
+        let home = tempfile::tempdir().unwrap();
+        for (i, place) in ["code", "dev", "src", "Projects", "work", "git"].iter().enumerate() {
+            mark(&home.path().join(place).join(format!("p{i}")), "package.json", 10 + i as u64);
+        }
+        // Documents and Desktop are never read, nor is any other folder under home.
+        for place in ["Documents", "Desktop", "Developer", "repos", "Downloads", "Sites"] {
+            mark(&home.path().join(place).join("elsewhere"), "package.json", 5);
+        }
+        assert_eq!(PLACES, ["code", "dev", "src", "Projects", "work", "git"]);
+        assert_eq!(names(&discover(home.path())), ["p0", "p1", "p2", "p3", "p4", "p5"]);
     }
 
     #[test]
