@@ -86,7 +86,7 @@ test:
     run: |
       set -e
       rustup target add x86_64-pc-windows-msvc
-      for crate in log-redact engine-bin dev-agent projects; do
+      for crate in log-redact engine-bin dev-agent node-env projects; do
         cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
       done
   # No secret-bearing value may be printed or logged from the Tauri crate:
