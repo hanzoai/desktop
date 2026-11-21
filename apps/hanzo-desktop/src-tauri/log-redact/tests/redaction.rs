@@ -225,6 +225,31 @@ fn node_stdout_credentials_are_redacted() {
 }
 
 #[test]
+fn the_nodes_embeddings_key_is_redacted_wherever_the_node_prints_it() {
+    // cloud#760: the node is spawned with the signed-in Hanzo key as
+    // EMBEDDINGS_SERVER_API_KEY. An IAM access token is a JWT; an opaque one
+    // is covered by the field name.
+    let jwt_tail = "Q9w8E7r6T5y4U3i2O1p0";
+    let jwt = format!("eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJ1In0.{jwt_tail}AaSsDdFf");
+    let opaque = format!("o{}", "Zx7Kq2Lm9Vb4".repeat(3));
+    let cases = [
+        (format!("EMBEDDINGS_SERVER_API_KEY={jwt}"), jwt_tail.to_string()),
+        (format!("EMBEDDINGS_SERVER_API_KEY={opaque}"), opaque.clone()),
+        (format!("{{\"EMBEDDINGS_SERVER_API_KEY\": \"{opaque}\", \"NODE_API_PORT\": \"3690\"}}"), opaque.clone()),
+        (format!("embeddings: EmbeddingsConfig {{ embeddings_server_api_key: Some(\"{opaque}\") }}"), opaque.clone()),
+        (format!("POST https://api.hanzo.ai/v1/embeddings authorization: Bearer {opaque}"), opaque.clone()),
+        (format!("sending embeddings with {jwt}"), jwt_tail.to_string()),
+    ];
+    for (line, secret) in cases {
+        let out = redact(&line);
+        assert!(!out.contains(&secret), "{out}");
+    }
+    // The refusal line the node prints without a key stays readable.
+    let refusal = "embedding request to https://api.hanzo.ai/v1/embeddings failed: 401 Unauthorized";
+    assert_eq!(redact(refusal), refusal);
+}
+
+#[test]
 fn tool_keys_and_paths_are_not_mistaken_for_secrets() {
     for l in [
         "found tool_router_key: local:::hanzo_tools:::hanzo_web_search",

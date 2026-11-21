@@ -2,7 +2,14 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-/// It matches ENV variables names from HanzoNode
+use super::PINNED_NODE_VERSION;
+
+/// It matches ENV variables names from HanzoNode.
+///
+/// These options are serialized to the webview and saved there by the Node
+/// Manager, so the signed-in key is not one of them: `EMBEDDINGS_SERVER_API_KEY`
+/// is added to the env at spawn time only, by `HanzoNodeManager` through
+/// hanzo-node-env.
 #[derive(Serialize, Deserialize, Clone)]
 pub struct HanzoNodeOptions {
     pub node_api_ip: Option<String>,
@@ -228,9 +235,17 @@ impl Default for HanzoNodeOptions {
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
             // Inference and embedding both go to api.hanzo.ai, the one API
-            // origin: /v1/chat/completions and /v1/embeddings. Chain mining
-            // checkpoints go through the native RPC.
-            embeddings_server_url: Some("https://api.hanzo.ai".to_string()),
+            // origin. Which base the node needs depends on its release: v1.19.4+
+            // posts to `{base}/embeddings` on `https://api.hanzo.ai/v1` with the
+            // signed-in key (EMBEDDINGS_SERVER_API_KEY, added at spawn from the
+            // session, never stored here); older ones append Ollama's
+            // `/api/embeddings` to `https://api.hanzo.ai`, which answers 404
+            // (cloud#760). hanzo-node-env picks by the pinned release, and
+            // rewrites an api.hanzo.ai URL saved by an older install at spawn.
+            // Chain mining checkpoints go through the native RPC.
+            embeddings_server_url: Some(
+                hanzo_node_env::default_embeddings_url(PINNED_NODE_VERSION).to_string(),
+            ),
             first_device_needs_registration_code: Some("false".to_string()),
             initial_agent_urls: Some(
                 "https://api.hanzo.ai,https://api.hanzo.ai".to_string(),
@@ -264,8 +279,18 @@ impl Default for HanzoNodeOptions {
             // dimensions but received 768" (cloud#760). 768 is also the node's
             // own default. A database already created at 384 keeps its tables
             // and its stored model; only a new one picks this up.
-            default_embedding_model: Some("embeddinggemma:300m".to_string()),
-            supported_embedding_models: Some("snowflake-arctic-embed:xs,embeddinggemma:300m,all-minilm:l6-v2".to_string()),
+            //
+            // api.hanzo.ai serves no embeddinggemma: it serves `zen-embedding`,
+            // which node v1.19.4+ knows and stores 768 wide, and whose start-up
+            // relabels a 768 database and recreates an empty 384 one. So with a
+            // v1.19.4+ pin the default is `zen-embedding`; with an older pin it
+            // stays `embeddinggemma:300m`, which that node can parse.
+            default_embedding_model: Some(
+                hanzo_node_env::default_embedding_model(PINNED_NODE_VERSION).to_string(),
+            ),
+            supported_embedding_models: Some(hanzo_node_env::default_supported_models(
+                PINNED_NODE_VERSION,
+            )),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
             hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),

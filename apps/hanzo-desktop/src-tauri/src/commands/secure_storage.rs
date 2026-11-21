@@ -1,7 +1,9 @@
 use keyring::Entry;
 use std::collections::HashMap;
 use std::sync::Mutex;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
+
+use crate::local_hanzo_node::session;
 
 // In-memory fallback for development
 pub type SecureStore = Mutex<HashMap<String, String>>;
@@ -45,21 +47,23 @@ pub async fn secure_storage_set(
     _store: State<'_, SecureStore>,
 ) -> Result<(), String> {
     // Try to use OS keyring first
-    match Entry::new(&service_name(&app), &key) {
-        Ok(entry) => {
-            entry
-                .set_password(&value)
-                .map_err(|e| format!("Failed to store in keyring: {}", e))?;
-            Ok(())
-        }
+    let result = match Entry::new(&service_name(&app), &key) {
+        Ok(entry) => entry
+            .set_password(&value)
+            .map_err(|e| format!("Failed to store in keyring: {}", e)),
         Err(e) => {
             // Fallback to in-memory storage (development only)
             log::warn!("Keyring unavailable, using in-memory storage: {}", e);
             let mut store = _store.lock().unwrap();
-            store.insert(key, value);
+            store.insert(key.clone(), value);
             Ok(())
         }
+    };
+    if session::is_session_record(&key) {
+        // Signed in, or a refreshed token: the local node embeds with it.
+        session::changed(app);
     }
+    result
 }
 
 #[tauri::command]
@@ -68,22 +72,42 @@ pub async fn secure_storage_get(
     key: String,
     _store: State<'_, SecureStore>,
 ) -> Result<String, String> {
+    lookup(&app, &key, &_store)
+}
+
+/// One entry: the keychain (moving a legacy entry over), or the in-memory
+/// fallback when the keychain is unavailable.
+fn lookup(app: &AppHandle, key: &str, store: &SecureStore) -> Result<String, String> {
     // Try keyring first
-    match Entry::new(&service_name(&app), &key) {
+    match Entry::new(&service_name(app), key) {
         Ok(entry) => match entry.get_password() {
             Ok(value) => Ok(value),
-            Err(keyring::Error::NoEntry) => legacy_get(&service_name(&app), &key),
+            Err(keyring::Error::NoEntry) => legacy_get(&service_name(app), key),
             Err(e) => Err(format!("Failed to retrieve from keyring: {}", e)),
         },
         Err(_) => {
             // Fallback to in-memory storage
-            let store = _store.lock().unwrap();
+            let store = store.lock().unwrap();
             store
-                .get(&key)
+                .get(key)
                 .cloned()
                 .ok_or_else(|| "Key not found".to_string())
         }
     }
+}
+
+/// The value `secure_storage_get` would answer for `key`, for the Rust side
+/// (the node reads the signed-in session through it), or `None`.
+pub fn read(app: &AppHandle, key: &str) -> Option<String> {
+    let fallback;
+    let store = match app.try_state::<SecureStore>() {
+        Some(state) => state.inner(),
+        None => {
+            fallback = init_secure_storage();
+            &fallback
+        }
+    };
+    lookup(app, key, store).ok()
 }
 
 #[tauri::command]
@@ -93,20 +117,22 @@ pub async fn secure_storage_delete(
     _store: State<'_, SecureStore>,
 ) -> Result<(), String> {
     // Try keyring first
-    match Entry::new(&service_name(&app), &key) {
-        Ok(entry) => {
-            entry
-                .delete_credential()
-                .map_err(|e| format!("Failed to delete from keyring: {}", e))?;
-            Ok(())
-        }
+    let result = match Entry::new(&service_name(&app), &key) {
+        Ok(entry) => entry
+            .delete_credential()
+            .map_err(|e| format!("Failed to delete from keyring: {}", e)),
         Err(_) => {
             // Fallback to in-memory storage
             let mut store = _store.lock().unwrap();
             store.remove(&key);
             Ok(())
         }
+    };
+    if session::is_session_record(&key) {
+        // Signed out: the local node stops embedding with the old key.
+        session::changed(app);
     }
+    result
 }
 
 pub fn init_secure_storage() -> SecureStore {

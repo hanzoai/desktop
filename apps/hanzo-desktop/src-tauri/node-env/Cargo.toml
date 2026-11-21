@@ -1,0 +1,11 @@
+[package]
+name = "hanzo-node-env"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "The Hanzo sign-in and embeddings env the desktop spawns hanzo-node with, and when a change of session needs a restart"
+license = "Apache-2.0"
+
+[dependencies]
+serde_json = "1.0"
+sha2 = "0.10"

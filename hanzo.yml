@@ -64,6 +64,15 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/dev-agent/Cargo.toml
+  # The env hanzo-node is spawned with for embeddings (cloud#760): the
+  # signed-in Hanzo key as EMBEDDINGS_SERVER_API_KEY, sent only to api.hanzo.ai
+  # and only to a node (v1.19.4+, per src-tauri/pins) that embeds over /v1;
+  # signed in, signed out, sign-in later, and when a new key restarts the node.
+  # Pure Rust.
+  - name: node-env
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-env/Cargo.toml
   # The project folders Auto can pick from (Documents, work, code, ...). Pure Rust.
   - name: projects
     run: |

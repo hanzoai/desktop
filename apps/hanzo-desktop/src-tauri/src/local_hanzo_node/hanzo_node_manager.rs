@@ -7,7 +7,9 @@ use std::path::PathBuf;
 // ollama lifecycle code can run during startup/shutdown/restart.
 use super::process_handlers::hanzo_node_process_handler::HanzoNodeProcessHandler;
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
+use crate::local_hanzo_node::session;
 use anyhow::Result;
+use hanzo_node_env::SpawnedKey;
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use tauri::path::BaseDirectory;
@@ -56,7 +58,12 @@ enum EngineLaunch {
 }
 
 pub struct HanzoNodeManager {
+    app: AppHandle,
     hanzo_node_process: HanzoNodeProcessHandler,
+    /// The Hanzo key the running node was spawned with (a digest, never the
+    /// key), or `None` while no node of ours runs. A new sign-in restarts the
+    /// node when it would get a different one (`session_changed`).
+    node_key: Option<SpawnedKey>,
     event_broadcaster: broadcast::Sender<HanzoNodeManagerEvent>,
     app_resource_dir: PathBuf,
     llm_models_path: PathBuf,
@@ -79,6 +86,8 @@ impl HanzoNodeManager {
         // No OllamaProcessHandler is constructed: ollama is retired and the
         // desktop never starts or kills it.
         HanzoNodeManager {
+            app: app.clone(),
+            node_key: None,
             hanzo_node_process: HanzoNodeProcessHandler::new(
                 app,
                 hanzo_node_sender,
@@ -285,25 +294,64 @@ impl HanzoNodeManager {
             }
         }
 
-        self.emit_event(HanzoNodeManagerEvent::StartingHanzoNode);
-        match self.hanzo_node_process.spawn().await {
-            Ok(_) => {
-                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStarted);
-            }
-            Err(e) => {
-                self.kill().await;
-                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError {
-                    error: e.clone(),
-                });
-                return Err(e);
-            }
+        let session_key = session::current_key(&self.app);
+        if let Err(e) = self.spawn_node(session_key.as_deref()).await {
+            self.kill().await;
+            self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError {
+                error: e.clone(),
+            });
+            return Err(e);
         }
         Ok(())
+    }
+
+    /// Starts (or restarts) the node alone, with the signed-in `session_key`,
+    /// and remembers which key it holds. The engines are left as they are.
+    /// The caller reports a failure (`HanzoNodeStartError`).
+    async fn spawn_node(&mut self, session_key: Option<&str>) -> Result<(), String> {
+        let env = self.hanzo_node_process.spawn_env(session_key);
+        let key = SpawnedKey::of(&env);
+        self.node_key = None;
+        self.emit_event(HanzoNodeManagerEvent::StartingHanzoNode);
+        match self.hanzo_node_process.spawn(env).await {
+            Ok(_) => {
+                log::info!(
+                    "hanzo-node started {} a Hanzo key for embeddings",
+                    if key.is_signed_in() { "with" } else { "without" }
+                );
+                self.node_key = Some(key);
+                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStarted);
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    /// The app's sign-in changed (signed in, signed out, or a refreshed
+    /// token): `session_key` is the key now. Restarts the node, and only the
+    /// node, when the one it runs with differs from the one it would get. A
+    /// node that is not running is left alone; its next start reads the
+    /// session itself.
+    pub async fn session_changed(&mut self, session_key: Option<String>) {
+        if !self.hanzo_node_process.is_running().await {
+            self.node_key = None;
+            return;
+        }
+        let next = self.hanzo_node_process.spawn_env(session_key.as_deref());
+        if !hanzo_node_env::needs_restart(self.node_key.as_ref(), &next) {
+            return;
+        }
+        log::info!("Hanzo sign-in changed; restarting hanzo-node so its embeddings use it");
+        if let Err(e) = self.spawn_node(session_key.as_deref()).await {
+            log::error!("[hanzo-node] restart after sign-in change failed: {}", e);
+            self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError { error: e });
+        }
     }
 
     pub async fn kill(&mut self) {
         self.emit_event(HanzoNodeManagerEvent::StoppingHanzoNode);
         self.hanzo_node_process.kill().await;
+        self.node_key = None;
         self.emit_event(HanzoNodeManagerEvent::HanzoNodeStopped);
         self.emit_event(HanzoNodeManagerEvent::StoppingEngine);
         // Stop the daemon-managed engine (only if we started it).

@@ -512,10 +512,9 @@ against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
   request fails. Rust tools carry no embedding, so `add_tool` asks
   `POST {EMBEDDINGS_SERVER_URL}/api/embeddings` (Ollama's shape) for one;
   api.hanzo.ai answers that path 404 and serves only `/v1/embeddings` with a key.
-  So nothing that needs a fresh embedding works in the local node today: the
-  built-in Rust tools, imported tools, file chunks. Fixing it needs an embedding
-  backend the node can call (a bundled engine, or a cloud endpoint plus a key)
-  and therefore a node build, which is not this repo's to make.
+  So nothing that needs a fresh embedding works in the pinned node: the
+  built-in Rust tools, imported tools, file chunks. Node **v1.19.4** fixes it on
+  its side (next section); this repo feeds it the key.
 - **The tool directory 404s.** `store-api.hanzo.ai` falls through to the
   `*.hanzo.ai` ingress; nothing serves `/store/defaults`. `hanzoai/store-api`
   answers `{tools, prompts}` with stub entries, where the node needs an array of
@@ -523,6 +522,45 @@ against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
   (option `skip_import_from_directory`, editable in the Node Manager), which skips
   only that fetch: the local-directory import it also gates needs
   `INSTALL_FOLDER_PATH`, which the app never sets. Flip it once a directory is served.
+
+### The node's Hanzo key (node-env crate)
+
+Node v1.19.4 embeds over `POST {EMBEDDINGS_SERVER_URL}/embeddings` when the URL
+ends in `/v1` (Ollama's path otherwise), sends `EMBEDDINGS_SERVER_API_KEY` as
+the bearer, and knows `zen-embedding`, the one embedding model api.hanzo.ai
+serves (768 wide, the seeded prompts' width). api.hanzo.ai refuses it without
+a key, so the node needs the signed-in person's.
+
+- **Where the key comes from.** The main window's IAM session is one keychain
+  record, `iam-session` (`src/keychain.ts`), holding the `@hanzo/iam` SDK's
+  entries. Rust reads `hanzo_iam_access_token` from it at every node start
+  (`local_hanzo_node/session.rs`, through `secure_storage::read`), and treats an
+  expired `hanzo_iam_expires_at` as signed out, as `@hanzo/app` does.
+- **When the node restarts.** `secure_storage_set` / `_delete` of `iam-session`
+  call `session::changed`, which waits 1.5 s for a sign-in's burst of writes,
+  reads the record once, and restarts the node alone (not the engines) when the
+  key it would get differs from the one it holds (a SHA-256 digest is kept,
+  never the key). That is sign-in, sign-out, and a refreshed token: `hanzo-app`
+  issues 7-day access tokens, so about once a week.
+- **The version guard.** `build.rs` reads `HANZO_NODE_VERSION` from `pins`
+  into `env!("HANZO_NODE_VERSION")`. Below v1.19.4 the spawn env is exactly what
+  it was (no key, `https://api.hanzo.ai`, `embeddinggemma:300m`) and a sign-in
+  restarts nothing: v1.15.0 would send the key to a 404 and cannot size a table
+  for `zen-embedding`. Moving the pin to v1.19.4+ switches the defaults to
+  `https://api.hanzo.ai/v1` + `zen-embedding`, rewrites an api.hanzo.ai URL and
+  model an older install saved, and adds the key.
+- **Where the key may go.** Only to `https://api.hanzo.ai` (any path, port 443).
+  A Node Manager URL pointing anywhere else (a local Ollama, another provider,
+  plain HTTP) keeps its settings and gets no key. The key is never a
+  `HanzoNodeOptions` field: those are serialized to the webview and saved by the
+  Node Manager. It reaches the node through its env, not its arguments, so the
+  process list shows it to no other user; `ProcessHandler::spawn` logs env
+  names only; log-redact covers `EMBEDDINGS_SERVER_API_KEY=`, the Debug field,
+  bearer headers and JWTs (fixture in `log-redact/tests/redaction.rs`).
+
+`cargo test --manifest-path apps/hanzo-desktop/src-tauri/node-env/Cargo.toml`
+is the `node-env` gate: signed in, signed out, sign-in later, refresh, the old
+node left as it was, and the hosts the key may reach.
 
 ## Release Pipeline
 
