@@ -267,6 +267,7 @@ pub async fn pull_into(
             .map_err(|e| format!("The model library refused {file} ({e})."))?;
         let mut out = std::fs::File::create(&part).map_err(|e| format!("Could not write {file}: {e}"))?;
         let mut stream = res.bytes_stream();
+        let mut got = 0u64;
         loop {
             if cancel.load(Ordering::Relaxed) {
                 drop(out);
@@ -276,6 +277,7 @@ pub async fn pull_into(
             let Some(chunk) = stream.next().await else { break };
             let chunk = chunk.map_err(network)?;
             out.write_all(&chunk).map_err(|e| format!("Could not write {file}: {e}"))?;
+            got += chunk.len() as u64;
             done += chunk.len() as u64;
             if last.elapsed() >= Duration::from_millis(200) {
                 last = Instant::now();
@@ -284,6 +286,13 @@ pub async fn pull_into(
         }
         out.flush().map_err(|e| format!("Could not write {file}: {e}"))?;
         drop(out);
+        // A connection that closes cleanly but early still ends the stream; only
+        // the size the library declared tells a short file from a whole one.
+        if *size > 0 && got != *size {
+            return Err(format!(
+                "{file} arrived incomplete ({got} of {size} bytes), so the model was not saved. Try the download again."
+            ));
+        }
         std::fs::rename(&part, &dest).map_err(|e| format!("Could not finish {file}: {e}"))?;
     }
     let refs = root.join("refs");
@@ -557,6 +566,12 @@ mod tests {
 
     /// A stand-in model library on a local port: metadata and two files.
     async fn library() -> String {
+        library_with(300000, 300000, 0).await
+    }
+
+    /// The same library, whose model.safetensors (declared 300000 bytes) sends
+    /// `sent` bytes under a `claimed` content-length, after `delay_ms`.
+    async fn library_with(sent: usize, claimed: usize, delay_ms: u64) -> String {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let addr = listener.local_addr().unwrap();
         tokio::spawn(async move {
@@ -571,7 +586,11 @@ mod tests {
                     } else if path.ends_with("/config.json") {
                         b"{}".to_vec()
                     } else if path.ends_with("/model.safetensors") {
-                        vec![7u8; 300000]
+                        tokio::time::sleep(Duration::from_millis(delay_ms)).await;
+                        let head = format!("HTTP/1.1 200 OK\r\ncontent-length: {claimed}\r\nconnection: close\r\n\r\n");
+                        let _ = sock.write_all(head.as_bytes()).await;
+                        let _ = sock.write_all(&vec![7u8; sent]).await;
+                        return;
                     } else {
                         let _ = sock.write_all(b"HTTP/1.1 404 Not Found\r\ncontent-length: 0\r\n\r\n").await;
                         return;
@@ -613,6 +632,20 @@ mod tests {
         assert!(list_cached(tmp.path()).is_empty());
         let snap = tmp.path().join("models--zenlm--zen-nano-0.6b/snapshots/0123abcd");
         assert!(walk(&snap).iter().all(|f| !f.to_string_lossy().ends_with(".part")));
+    }
+
+    #[tokio::test]
+    async fn a_short_file_is_not_taken_for_a_whole_one() {
+        // The server says 1000 bytes and sends them, but the library declared 300000.
+        let endpoint = library_with(1000, 1000, 0).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
+            .await
+            .unwrap_err();
+        assert!(err.contains("model.safetensors arrived incomplete (1000 of 300000 bytes)"), "{err}");
+        assert!(list_cached(tmp.path()).is_empty());
+        let snap = tmp.path().join("models--zenlm--zen-nano-0.6b/snapshots/0123abcd");
+        assert!(!snap.join("model.safetensors").exists(), "a short file is never renamed into place");
     }
 
     #[tokio::test]
