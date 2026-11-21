@@ -9,5 +9,9 @@
 	     so it says what we listen for and when. -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Hanzo listens while you hold a voice turn, so you can talk to your agent instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Hanzo transcribes your speech into text for hands-free and push-to-talk dictation.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Hanzo reads the active application name so Hanzo Command knows what you are viewing.</string>
 </dict>
 </plist>

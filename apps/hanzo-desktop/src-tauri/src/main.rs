@@ -48,7 +48,20 @@ use crate::commands::mining::{
 use crate::commands::secure_storage::{
     init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
 };
-use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
+use crate::commands::spotlight_commands::{
+    hide_spotlight_window_app, open_main_window_with_path_app, show_spotlight_window_app,
+    spotlight_dispatch_prompt, spotlight_resize_window,
+};
+use crate::commands::spotlight_engine::{
+    spotlight_copy_to_clipboard, spotlight_get_clipboard_history, spotlight_launch_app,
+    spotlight_list_apps, spotlight_list_system_actions, spotlight_run_system_action,
+    spotlight_search_files, ClipboardHistoryState,
+};
+use crate::commands::system_permissions::{
+    desktop_check_system_permission, desktop_get_frontmost_context,
+    desktop_get_spotlight_shortcut, desktop_open_system_settings,
+    desktop_set_spotlight_shortcut, SpotlightState,
+};
 use crate::commands::local_workspace::{
     local_workspace_open_dialog, local_workspace_open_file_dialog, local_workspace_clone_repo,
     local_workspace_import_file, local_workspace_list, local_workspace_read_file,
@@ -213,6 +226,20 @@ fn main() {
             hide_spotlight_window_app,
             show_spotlight_window_app,
             open_main_window_with_path_app,
+            spotlight_dispatch_prompt,
+            spotlight_resize_window,
+            spotlight_list_apps,
+            spotlight_launch_app,
+            spotlight_search_files,
+            spotlight_get_clipboard_history,
+            spotlight_copy_to_clipboard,
+            spotlight_list_system_actions,
+            spotlight_run_system_action,
+            desktop_check_system_permission,
+            desktop_open_system_settings,
+            desktop_get_frontmost_context,
+            desktop_get_spotlight_shortcut,
+            desktop_set_spotlight_shortcut,
             show_hanzo_node_manager_window,
             hanzo_node_is_running,
             hanzo_node_get_options,
@@ -346,16 +373,31 @@ fn main() {
             let app_data_dir = app.path().app_data_dir()?;
             migrate_legacy_data_dir(&app_data_dir);
 
+            let spotlight_state = SpotlightState::new(&app_data_dir);
+            let custom_spotlight_shortcut = spotlight_state.current_shortcut();
+            app.manage(spotlight_state);
+
+            let clipboard_state = ClipboardHistoryState::new();
+            clipboard_state.spawn_watcher();
+            app.manage(clipboard_state);
+
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;
                 let gs = app.global_shortcut();
-                for s in [
-                    "super+shift+i",
-                    "control+shift+i",
-                    "super+shift+j",
-                    "control+shift+j",
-                ] {
-                    if let Err(e) = gs.register(s) {
+                let mut shortcuts: Vec<String> = vec![
+                    "super+shift+i".to_string(),
+                    "control+shift+i".to_string(),
+                    "super+shift+j".to_string(),
+                    "control+shift+j".to_string(),
+                ];
+                if !shortcuts
+                    .iter()
+                    .any(|s| s.eq_ignore_ascii_case(&custom_spotlight_shortcut))
+                {
+                    shortcuts.push(custom_spotlight_shortcut);
+                }
+                for s in shortcuts {
+                    if let Err(e) = gs.register(s.as_str()) {
                         log::warn!("global shortcut '{}' not registered (already held by another app?): {}", s, e);
                     }
                 }

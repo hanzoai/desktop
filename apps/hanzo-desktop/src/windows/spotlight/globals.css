@@ -1,12 +1,17 @@
-@import '../../../../../libs/hanzo-ui/src/styles/styles.css';
-
 html,
 body,
 #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent !important;
   overscroll-behavior: none;
-  @apply size-full overflow-hidden rounded-xl;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-#root {
-  @apply bg-bg-default text-text-default border-divider rounded-xl border shadow-xl;
+* {
+  box-sizing: border-box;
 }

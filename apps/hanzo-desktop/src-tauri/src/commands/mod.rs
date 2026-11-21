@@ -12,6 +12,8 @@ pub mod mcp_clients_install;
 pub mod mining;
 pub mod secure_storage;
 pub mod spotlight_commands;
+pub mod spotlight_engine;
 pub mod studio;
+pub mod system_permissions;
 pub mod local_site;
 pub mod local_workspace;

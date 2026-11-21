@@ -4,6 +4,11 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
 import { openLocalAiManager } from './local-ai';
+import {
+  COMMAND_SHORTCUT_PRESETS,
+  useDesktopPermissionSnapshot,
+} from './OnboardingPermissions';
+import { safeInvoke } from './utils/tauri-check';
 
 export interface FnVoiceHooks {
   isListening: () => boolean;
@@ -150,8 +155,8 @@ export function createFnVoiceController(hooks: FnVoiceHooks) {
 }
 
 export const DESKTOP_GLOBAL_KEYS = [
+  { does: 'Hanzo Command floating bar (system-wide)', mac: '⌥ Space / ⇧⌘J', pc: 'Alt+Space / Ctrl+Shift+J' },
   { does: 'Global New Chat (system-wide)', mac: '⇧⌘I', pc: 'Ctrl+Shift+I' },
-  { does: 'Global Spotlight (system-wide)', mac: '⇧⌘J', pc: 'Ctrl+Shift+J' },
   { does: 'Push-to-talk voice', mac: 'Hold Fn', pc: 'Hold Fn' },
   { does: 'Hands-free voice toggle', mac: 'Double-tap Fn', pc: 'Double-tap Fn' },
 ] as const;
@@ -187,6 +192,7 @@ export function DesktopSettings({
   localEngineUrl = 'http://localhost:36900',
   barInset = 0,
   onSignIn,
+  onOpenOnboarding,
   onBack,
 }: {
   isAuthenticated: boolean;
@@ -194,6 +200,7 @@ export function DesktopSettings({
   localEngineUrl?: string;
   barInset?: number;
   onSignIn: () => void;
+  onOpenOnboarding?: () => void;
   onBack: () => void;
 }) {
   const apple = /Mac|iPhone|iPad/.test(navigator.userAgent);
@@ -203,6 +210,15 @@ export function DesktopSettings({
   const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
   const [devMode, setDevMode] = useDevMode();
+  const [commandShortcut, setCommandShortcut] = useState('Alt+Space');
+  const [shortcutNotice, setShortcutNotice] = useState<string | null>(null);
+  const permissions = useDesktopPermissionSnapshot(true);
+
+  useEffect(() => {
+    void safeInvoke<string>('desktop_get_spotlight_shortcut').then((saved) => {
+      if (saved) setCommandShortcut(saved);
+    });
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -515,6 +531,116 @@ export function DesktopSettings({
                   Sign in to Hanzo Cloud
                 </button>
               )}
+            </div>
+          </section>
+
+          <section
+            data-testid="desktop-hanzo-command"
+            style={{
+              padding: 20,
+              borderRadius: 14,
+              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+              background: theme === 'light' ? '#ffffff' : '#111114',
+            }}
+          >
+            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Hanzo Command &amp; Permissions</h2>
+            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+              Summon the floating Hanzo Command HUD over any app, bind its global hotkey, and manage macOS permissions.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13 }}>
+                <span>Command Hotkey:</span>
+                <select
+                  aria-label="Hanzo Command Hotkey"
+                  value={commandShortcut}
+                  onChange={(e) => {
+                    const nextShortcut = e.target.value;
+                    setCommandShortcut(nextShortcut);
+                    setShortcutNotice(null);
+                    void safeInvoke<string>('desktop_set_spotlight_shortcut', { shortcut: nextShortcut }).then((res) => {
+                      setShortcutNotice(res ? `Active: ${res}` : 'Saved');
+                    });
+                  }}
+                  style={{
+                    padding: '6px 10px',
+                    borderRadius: 8,
+                    border: '1px solid #3f3f46',
+                    background: theme === 'light' ? '#fafafa' : '#18181b',
+                    color: 'inherit',
+                    fontSize: 13,
+                  }}
+                >
+                  {COMMAND_SHORTCUT_PRESETS.map((preset) => (
+                    <option key={preset.value} value={preset.value}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => void safeInvoke('show_spotlight_window_app')}
+                  style={{
+                    padding: '7px 14px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: theme === 'light' ? '#18181b' : '#fafafa',
+                    color: theme === 'light' ? '#fafafa' : '#09090b',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Launch Hanzo Command
+                </button>
+                {onOpenOnboarding ? (
+                  <button
+                    type="button"
+                    onClick={onOpenOnboarding}
+                    style={{
+                      padding: '7px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #3f3f46',
+                      background: 'transparent',
+                      color: 'inherit',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Permissions Setup
+                  </button>
+                ) : null}
+              </div>
+            </div>
+            {shortcutNotice ? (
+              <div style={{ fontSize: 12, opacity: 0.75, marginBottom: 10 }}>{shortcutNotice}</div>
+            ) : null}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', fontSize: 12 }}>
+              {[
+                { id: 'accessibility', label: 'Accessibility', ok: permissions.status.accessibility },
+                { id: 'screen-recording', label: 'Screen Recording', ok: permissions.status.screenRecording },
+                { id: 'full-disk-access', label: 'Full Disk Access', ok: permissions.status.fullDiskAccess },
+                { id: 'microphone', label: 'Microphone', ok: permissions.status.microphone },
+              ].map((perm) => (
+                <button
+                  key={perm.id}
+                  type="button"
+                  onClick={() => void permissions.openSettings(perm.id as 'accessibility' | 'screen-recording' | 'full-disk-access' | 'microphone')}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 999,
+                    border: '1px solid #3f3f46',
+                    background: 'transparent',
+                    color: 'inherit',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {perm.label}: <strong style={{ opacity: perm.ok ? 1 : 0.65 }}>{perm.ok ? 'Allowed ✓' : 'Allow'}</strong>
+                </button>
+              ))}
             </div>
           </section>
 

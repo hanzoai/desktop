@@ -29,6 +29,10 @@ import {
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Update } from './update';
 import { Welcome } from './Welcome';
+import {
+  isPermissionsOnboardingComplete,
+  OnboardingPermissions,
+} from './OnboardingPermissions';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -566,6 +570,7 @@ function Gate() {
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
   const [visiting, setVisiting] = useState(guest);
+  const [onboardingDone, setOnboardingDone] = useState(() => !MAC || isPermissionsOnboardingComplete());
 
   useEffect(() => {
     const timer = setTimeout(() => setLoadingTimedOut(true), 1500);
@@ -607,10 +612,11 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I and 'navigate-to-path' from Spotlight)
+  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I, 'navigate-to-path', and 'spotlight:dispatch' from Hanzo Command)
   useEffect(() => {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
+    let unlistenDispatch: (() => void) | undefined;
 
     void safeListen('create-chat', () => started.current()).then((fn) => {
       unlistenCreate = fn ?? undefined;
@@ -625,9 +631,33 @@ function Gate() {
       unlistenNavigate = fn ?? undefined;
     });
 
+    void safeListen<{ prompt?: string; contextApp?: string | null; mode?: string }>('spotlight:dispatch', (event) => {
+      const prompt = event.payload?.prompt?.trim() ?? '';
+      const mode = event.payload?.mode === 'dev' ? '/dev' : '/chat';
+      stayGuest();
+      setVisiting(true);
+      setOnboardingDone(true);
+      window.history.pushState(null, '', mode);
+      if (!prompt) return;
+      const prefixed = event.payload?.contextApp
+        ? `[Context: ${event.payload.contextApp}]\n${prompt}`
+        : prompt;
+      requestAnimationFrame(() => {
+        const field = document.querySelector('[data-slot="composer-field"], textarea') as HTMLTextAreaElement | null;
+        if (!field) return;
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        setter?.call(field, prefixed);
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.focus();
+      });
+    }).then((fn) => {
+      unlistenDispatch = fn ?? undefined;
+    });
+
     return () => {
       unlistenCreate?.();
       unlistenNavigate?.();
+      unlistenDispatch?.();
     };
   }, []);
 
@@ -753,6 +783,16 @@ function Gate() {
     window.history.replaceState(null, '', onward());
     return null;
   }
+  if (path === '/onboarding') {
+    return (
+      <OnboardingPermissions
+        onDone={() => {
+          setOnboardingDone(true);
+          window.history.pushState(null, '', '/chat');
+        }}
+      />
+    );
+  }
   if (path === '/benchmark' || path === '/lsa') {
     return <BenchmarkPage />;
   }
@@ -771,10 +811,22 @@ function Gate() {
             setError(err instanceof Error ? err : new Error(String(err)));
           });
         }}
+        onOpenOnboarding={() => {
+          window.history.pushState(null, '', '/onboarding');
+        }}
         onBack={() => {
           stayGuest();
           setVisiting(true);
           window.history.pushState(null, '', '/chat');
+        }}
+      />
+    );
+  }
+  if (!onboardingDone) {
+    return (
+      <OnboardingPermissions
+        onDone={() => {
+          setOnboardingDone(true);
         }}
       />
     );
