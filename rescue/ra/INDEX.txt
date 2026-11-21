@@ -1,0 +1,11 @@
+What was on ra.local (~/work/hanzo/desktop, a Mac) on 2026-11-21 and not on GitHub.
+
+Commits: none. `git log github/main..HEAD` on ra is empty; d6b36802, 496621bc, 117e46ab, 16d47920 and 4cf060d7 are all on hanzoai/desktop main. (ra's `origin` is hanzoai/desktop-v1, the archived earlier name of this repo, pushed last 2026-09-15; ra's `github` remote is this repo.)
+
+Dirty working tree, kept here:
+- Welcome.tsx.patch / Welcome.tsx.ra: the sign-in screen restyled as the unified pitch-black first-run screen (centred mark, heading, 42px full-width buttons, a drag strip across the top). Based on main's blob 4253345c, so it applies as it was.
+- env.example: an untracked root .env.example from March (names only, values are KMS paths).
+- GEMINI.md: a symlink to LLM.md (policy: never tracked).
+- stack/: a nested checkout of hanzoai/stack with 15 modified and 7 untracked paths; saved as the rescue/ra branch of hanzoai/stack, not here.
+
+Local-only branches (16, June to September, 1 to 195 commits each not on github or desktop-v1) and 3 stashes: listed in local-branches.txt. Their commits are kept in git bundles on ra (~/rescue) and on dgx (~/rescue/ra), not published here because this repository is public and that history is not.
