@@ -173,6 +173,7 @@
     "allow-local-workspace-delete",
     "allow-local-workspace-run-dev",
     "allow-local-workspace-discover",
+    "allow-local-dev-setup-cancel",
     "allow-local-site-folder",
     "allow-local-site-capture",
     "allow-local-preview-start",

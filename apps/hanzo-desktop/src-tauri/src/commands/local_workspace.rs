@@ -2,7 +2,9 @@ use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use futures_util::StreamExt;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use futures_util::{Stream, StreamExt};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, Manager};
@@ -47,6 +49,73 @@ const SETUP_EVENT: &str = "local-dev-setup";
 
 /// One fetch at a time: a second run that needs the agent waits for the first run's download.
 static SETUP: Lazy<tokio::sync::Mutex<()>> = Lazy::new(|| tokio::sync::Mutex::new(()));
+
+/// What the person is told when they call the download off. `local_workspace_run_dev` answers with exactly this.
+pub const SETUP_CANCELLED: &str = "Setup was cancelled.";
+
+/// The first-run download in flight, if any: what `local_dev_setup_cancel` reaches.
+static CURRENT: Lazy<Mutex<Option<Arc<Setup>>>> = Lazy::new(|| Mutex::new(None));
+
+/// One first-run download, and the way to call it off. Cancelling stops the request or the stream at once
+/// (every wait on the network also waits on this), and once the download is whole there is nothing left to cancel:
+/// checking and unpacking are local and quick.
+struct Setup {
+    off: tokio::sync::watch::Sender<bool>,
+    whole: AtomicBool,
+}
+
+impl Setup {
+    fn new() -> Arc<Setup> {
+        Arc::new(Setup { off: tokio::sync::watch::channel(false).0, whole: AtomicBool::new(false) })
+    }
+
+    /// Calls the download off. False when it was already whole (or already off): there was nothing to stop.
+    fn cancel(&self) -> bool {
+        if self.whole.load(Ordering::SeqCst) || self.is_cancelled() {
+            return false;
+        }
+        self.off.send_replace(true);
+        true
+    }
+
+    fn is_cancelled(&self) -> bool {
+        *self.off.borrow()
+    }
+
+    /// The download is all here: from now on a cancel finds nothing to stop.
+    fn finished(&self) {
+        self.whole.store(true, Ordering::SeqCst);
+    }
+
+    async fn called_off(&self) {
+        let mut seen = self.off.subscribe();
+        loop {
+            if *seen.borrow_and_update() {
+                return;
+            }
+            if seen.changed().await.is_err() {
+                std::future::pending::<()>().await;
+            }
+        }
+    }
+
+    /// Waits for `step`, unless the download is called off first (then `Cancelled`, and `step` is dropped).
+    async fn or_off<T>(&self, step: impl std::future::Future<Output = T>) -> Result<T, SetupError> {
+        tokio::select! {
+            biased;
+            _ = self.called_off() => Err(SetupError::Cancelled),
+            out = step => Ok(out),
+        }
+    }
+}
+
+/// Calls off the first-run download of Hanzo Dev. Answers whether one was in flight: false means there was none,
+/// or it had already arrived. The run that was waiting on it fails with "Setup was cancelled.", the partial file
+/// is removed, and the window hears no more of `local-dev-setup`.
+#[tauri::command]
+pub fn local_dev_setup_cancel() -> bool {
+    CURRENT.lock().unwrap_or_else(|e| e.into_inner()).as_ref().is_some_and(|setup| setup.cancel())
+}
 
 #[tauri::command]
 pub async fn local_workspace_open_dialog(app: tauri::AppHandle) -> Result<Option<String>, String> {
@@ -237,8 +306,11 @@ fn data_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     app.path().app_data_dir().map_err(|e| e.to_string())
 }
 
-fn say_setup(app: &tauri::AppHandle, percent: u8) {
-    let _ = app.emit(SETUP_EVENT, serde_json::json!({ "percent": percent }));
+/// Tells the window how far the download has come, unless it was called off (then it hears nothing more).
+fn say_setup(app: &tauri::AppHandle, setup: &Setup, percent: u8) {
+    if !setup.is_cancelled() {
+        let _ = app.emit(SETUP_EVENT, serde_json::json!({ "percent": percent }));
+    }
 }
 
 /// The agent a run uses: the computer's own `dev` when it has one, else the copy the app fetched.
@@ -263,7 +335,11 @@ async fn dev_bin(app: &tauri::AppHandle) -> Result<PathBuf, String> {
     if let Some(bin) = found_dev(&own_copy) {
         return Ok(bin);
     }
-    if let Err(e) = fetch_dev(app, &own_copy).await {
+    let setup = Setup::new();
+    *CURRENT.lock().unwrap_or_else(|e| e.into_inner()) = Some(setup.clone());
+    let fetched = fetch_dev(app, &own_copy, &setup).await;
+    *CURRENT.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    if let Err(e) = fetched {
         log::warn!("Hanzo Dev setup failed: {e}");
         return Err(e.plain());
     }
@@ -277,6 +353,7 @@ enum SetupError {
     Network(String),
     Mismatch,
     Unpack(String),
+    Cancelled,
 }
 
 impl SetupError {
@@ -286,6 +363,7 @@ impl SetupError {
             SetupError::Network(_) => "Hanzo Dev could not be downloaded. Check your internet connection and try again.".to_string(),
             SetupError::Mismatch => "The download of Hanzo Dev did not check out, so it was not used. Try again.".to_string(),
             SetupError::Unpack(_) => "Hanzo Dev could not be set up on this computer. Try again.".to_string(),
+            SetupError::Cancelled => SETUP_CANCELLED.to_string(),
         }
     }
 }
@@ -297,26 +375,31 @@ impl std::fmt::Display for SetupError {
             SetupError::Network(why) => write!(f, "download failed: {why}"),
             SetupError::Mismatch => write!(f, "checksum mismatch"),
             SetupError::Unpack(why) => write!(f, "unpack failed: {why}"),
+            SetupError::Cancelled => write!(f, "called off by the person"),
         }
     }
 }
 
 /// Downloads the pinned release, checks it against the checksum published beside it, and unpacks the
-/// one program it holds to `dest`. The download is 0-90%, checking and unpacking the rest.
-async fn fetch_dev(app: &tauri::AppHandle, dest: &Path) -> Result<(), SetupError> {
+/// one program it holds to `dest`. The download is 0-90%, checking and unpacking the rest. Called off, it
+/// stops where it is and the partly downloaded file goes.
+async fn fetch_dev(app: &tauri::AppHandle, dest: &Path, setup: &Setup) -> Result<(), SetupError> {
     let asset = hanzo_dev_agent::here().ok_or(SetupError::Unsupported)?;
     let net = |e: reqwest::Error| SetupError::Network(e.to_string());
     let io = |e: std::io::Error| SetupError::Unpack(e.to_string());
     let client = reqwest::Client::new();
-    say_setup(app, 0);
+    say_setup(app, setup, 0);
 
-    let digest = client.get(asset.digest_url()).send().await.and_then(|r| r.error_for_status()).map_err(net)?.text().await.map_err(net)?;
+    let digest = setup
+        .or_off(async { client.get(asset.digest_url()).send().await?.error_for_status()?.text().await })
+        .await?
+        .map_err(net)?;
     let expected = hanzo_dev_agent::expected(&digest).ok_or_else(|| SetupError::Network("no checksum published".to_string()))?;
 
     let dir = dest.parent().ok_or_else(|| SetupError::Unpack("no folder".to_string()))?;
     fs::create_dir_all(dir).map_err(io)?;
     let archive = dir.join(asset.name);
-    let result = download_and_unpack(app, &client, &asset, &expected, &archive, dest).await;
+    let result = download_and_unpack(app, setup, &client, &asset, &expected, &archive, dest).await;
     let _ = fs::remove_file(&archive);
     result?;
 
@@ -328,12 +411,44 @@ async fn fetch_dev(app: &tauri::AppHandle, dest: &Path) -> Result<(), SetupError
             }
         }
     }
-    say_setup(app, 100);
+    say_setup(app, setup, 100);
     Ok(())
+}
+
+/// Writes a download to `file` as it arrives, calling `progress` with each new whole percent (of `total`, scaled
+/// to 90). Called off, it stops at the next wait and writes no more.
+async fn copy_stream<S, B, E>(
+    setup: &Setup,
+    stream: S,
+    total: u64,
+    file: &mut impl Write,
+    mut progress: impl FnMut(u8),
+) -> Result<(), SetupError>
+where
+    S: Stream<Item = Result<B, E>>,
+    B: AsRef<[u8]>,
+    E: std::fmt::Display,
+{
+    let mut stream = Box::pin(stream);
+    let (mut got, mut shown) = (0u64, 0u8);
+    while let Some(chunk) = setup.or_off(stream.next()).await? {
+        let chunk = chunk.map_err(|e| SetupError::Network(e.to_string()))?;
+        file.write_all(chunk.as_ref()).map_err(|e| SetupError::Unpack(e.to_string()))?;
+        got += chunk.as_ref().len() as u64;
+        if total > 0 {
+            let percent = ((got * 90) / total).min(90) as u8;
+            if percent != shown {
+                shown = percent;
+                progress(percent);
+            }
+        }
+    }
+    file.flush().map_err(|e| SetupError::Unpack(e.to_string()))
 }
 
 async fn download_and_unpack(
     app: &tauri::AppHandle,
+    setup: &Setup,
     client: &reqwest::Client,
     asset: &hanzo_dev_agent::Asset,
     expected: &str,
@@ -341,25 +456,15 @@ async fn download_and_unpack(
     dest: &Path,
 ) -> Result<(), SetupError> {
     let net = |e: reqwest::Error| SetupError::Network(e.to_string());
-    let res = client.get(asset.url()).send().await.and_then(|r| r.error_for_status()).map_err(net)?;
+    let res = setup
+        .or_off(async { client.get(asset.url()).send().await?.error_for_status() })
+        .await?
+        .map_err(net)?;
     let total = res.content_length().unwrap_or(0);
     let mut file = fs::File::create(archive).map_err(|e| SetupError::Unpack(e.to_string()))?;
-    let mut stream = res.bytes_stream();
-    let (mut got, mut shown) = (0u64, 0u8);
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(net)?;
-        file.write_all(&chunk).map_err(|e| SetupError::Unpack(e.to_string()))?;
-        got += chunk.len() as u64;
-        if total > 0 {
-            let percent = ((got * 90) / total).min(90) as u8;
-            if percent != shown {
-                shown = percent;
-                say_setup(app, percent);
-            }
-        }
-    }
-    file.flush().map_err(|e| SetupError::Unpack(e.to_string()))?;
+    copy_stream(setup, res.bytes_stream(), total, &mut file, |percent| say_setup(app, setup, percent)).await?;
     drop(file);
+    setup.finished();
 
     let (archive, dest, expected, kind) = (archive.to_path_buf(), dest.to_path_buf(), expected.to_string(), asset.kind);
     tokio::task::spawn_blocking(move || {
@@ -418,7 +523,7 @@ pub async fn local_workspace_run_dev(app: tauri::AppHandle, workspace_path: Stri
     })
 }
 
-/// The project folders found where people keep them (Documents, Projects, work, code, ...), newest first.
+/// The project folders found where people keep them (~/code, ~/dev, ~/src, ~/Projects, ~/work, ~/git), newest first.
 /// Auto picks from these and from the folders Hanzo opened.
 #[tauri::command]
 pub async fn local_workspace_discover() -> Result<Vec<LocalFolder>, String> {
@@ -433,4 +538,123 @@ pub async fn local_workspace_discover() -> Result<Vec<LocalFolder>, String> {
     })
     .await
     .map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::atomic::AtomicUsize;
+
+    use futures_util::stream;
+
+    use super::*;
+
+    fn chunks(n: usize, size: usize) -> impl Stream<Item = Result<Vec<u8>, std::io::Error>> {
+        stream::iter((0..n).map(move |i| Ok(vec![i as u8; size])))
+    }
+
+    #[tokio::test]
+    async fn a_download_is_written_whole_and_its_progress_said_as_whole_percent_to_ninety() {
+        let setup = Setup::new();
+        let mut file = Vec::new();
+        let mut said = Vec::new();
+        copy_stream(&setup, chunks(4, 25), 100, &mut file, |p| said.push(p)).await.unwrap();
+        assert_eq!(file.len(), 100);
+        assert_eq!(said, [22, 45, 67, 90]);
+    }
+
+    #[tokio::test]
+    async fn a_download_of_unknown_size_says_no_progress() {
+        let setup = Setup::new();
+        let mut file = Vec::new();
+        let mut said = Vec::new();
+        copy_stream(&setup, chunks(3, 10), 0, &mut file, |p| said.push(p)).await.unwrap();
+        assert_eq!(file.len(), 30);
+        assert!(said.is_empty());
+    }
+
+    #[tokio::test]
+    async fn a_broken_connection_is_a_network_error() {
+        let setup = Setup::new();
+        let mut file = Vec::new();
+        let broken = stream::iter(vec![Ok(vec![1u8; 4]), Err(std::io::Error::other("reset"))]);
+        let err = copy_stream(&setup, broken, 100, &mut file, |_| {}).await.unwrap_err();
+        assert!(matches!(err, SetupError::Network(_)), "{err}");
+        assert_eq!(file.len(), 4);
+    }
+
+    #[tokio::test]
+    async fn calling_it_off_mid_download_stops_it_at_once_and_writes_and_says_no_more() {
+        let setup = Setup::new();
+        let said = Arc::new(AtomicUsize::new(0));
+        let arrived = Arc::new(tokio::sync::Notify::new());
+        // Two chunks arrive, then the connection goes quiet for good.
+        let quiet = stream::iter(vec![Ok::<_, std::io::Error>(vec![7u8; 30]), Ok(vec![7u8; 30])]).chain(stream::pending());
+        let run = {
+            let (setup, said, arrived) = (setup.clone(), said.clone(), arrived.clone());
+            tokio::spawn(async move {
+                let mut file = Vec::new();
+                let out = copy_stream(&setup, quiet, 100, &mut file, |_| {
+                    if said.fetch_add(1, Ordering::SeqCst) == 1 {
+                        arrived.notify_one();
+                    }
+                })
+                .await;
+                (out, file.len())
+            })
+        };
+        arrived.notified().await;
+        assert!(setup.cancel(), "a download in flight is called off");
+        let (out, written) = tokio::time::timeout(std::time::Duration::from_secs(5), run).await.expect("stops at once").unwrap();
+        assert!(matches!(out, Err(SetupError::Cancelled)));
+        assert_eq!(written, 60, "what had arrived stays; nothing arrives after");
+        assert_eq!(said.load(Ordering::SeqCst), 2, "no progress after the cancel");
+        assert!(setup.is_cancelled());
+    }
+
+    #[tokio::test]
+    async fn a_download_called_off_before_it_starts_says_nothing() {
+        let setup = Setup::new();
+        assert!(setup.cancel());
+        let mut file = Vec::new();
+        let mut said = 0;
+        let out = copy_stream(&setup, chunks(5, 20), 100, &mut file, |_| said += 1).await;
+        assert!(matches!(out, Err(SetupError::Cancelled)));
+        assert!(file.is_empty());
+        assert_eq!(said, 0);
+    }
+
+    #[tokio::test]
+    async fn a_request_waiting_on_the_network_is_dropped_when_called_off() {
+        let setup = Setup::new();
+        let waiting = {
+            let setup = setup.clone();
+            tokio::spawn(async move { setup.or_off(std::future::pending::<()>()).await })
+        };
+        tokio::task::yield_now().await;
+        assert!(setup.cancel());
+        let out = tokio::time::timeout(std::time::Duration::from_secs(5), waiting).await.expect("stops at once").unwrap();
+        assert!(matches!(out, Err(SetupError::Cancelled)));
+    }
+
+    #[test]
+    fn there_is_nothing_to_call_off_once_the_download_is_whole_or_already_off() {
+        let whole = Setup::new();
+        whole.finished();
+        assert!(!whole.cancel());
+        assert!(!whole.is_cancelled());
+        let off = Setup::new();
+        assert!(off.cancel());
+        assert!(!off.cancel(), "a second cancel finds nothing to stop");
+    }
+
+    #[test]
+    fn the_command_says_false_when_no_download_is_in_flight() {
+        assert!(!local_dev_setup_cancel());
+    }
+
+    #[test]
+    fn a_cancelled_run_is_told_exactly_that() {
+        assert_eq!(SETUP_CANCELLED, "Setup was cancelled.");
+        assert_eq!(SetupError::Cancelled.plain(), "Setup was cancelled.");
+    }
 }

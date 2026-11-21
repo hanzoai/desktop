@@ -53,7 +53,7 @@ use crate::commands::local_workspace::{
     local_workspace_open_dialog, local_workspace_open_file_dialog, local_workspace_clone_repo,
     local_workspace_import_file, local_workspace_list, local_workspace_read_file,
     local_workspace_write_file, local_workspace_create_file, local_workspace_create_dir,
-    local_workspace_delete, local_workspace_discover, local_workspace_run_dev,
+    local_dev_setup_cancel, local_workspace_delete, local_workspace_discover, local_workspace_run_dev,
 };
 use crate::commands::local_site::{
     local_preview_open, local_preview_start, local_preview_stop, local_site_capture, local_site_folder,
@@ -288,6 +288,7 @@ fn main() {
             local_workspace_delete,
             local_workspace_run_dev,
             local_workspace_discover,
+            local_dev_setup_cancel,
             local_site_folder,
             local_site_capture,
             local_preview_start,
