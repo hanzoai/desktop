@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 
-import { keychain, written } from './keychain';
+import { keychain } from './keychain';
 
 // One local identity (src-tauri/src/identity.rs): a sign-in here is filed where
 // the Hanzo CLI keeps its own, and one the CLI already holds signs this window in
@@ -35,7 +35,6 @@ export async function adopt(ask: () => Promise<Tokens | null> = () => invoke<Tok
   if (held.id_token) keychain.setItem(SESSION.id, held.id_token);
   const until = expiry(held.access_token);
   if (until !== null) keychain.setItem(SESSION.expires, String(until));
-  await written();
   return true;
 }
 
@@ -49,5 +48,4 @@ export async function share(file: (tokens: Tokens) => Promise<unknown> = (tokens
     id_token: keychain.getItem(SESSION.id) ?? undefined,
   });
   keychain.removeItem(SESSION.refresh);
-  await written();
 }

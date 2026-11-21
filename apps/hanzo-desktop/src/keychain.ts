@@ -1,49 +1,12 @@
-import { secureStorage } from './lib/secure-storage';
-
-// The IAM session's storage: the OS keychain, never localStorage.
+// The IAM session's storage, held in memory and nowhere else.
 //
-// @hanzo/iam keeps its tokens in a `Storage`, which is synchronous, and the
-// keychain is asynchronous. So the session is one keychain record read once
-// before the app mounts (`open`), held in memory, and written back whole on
-// every change. A bearer token never reaches the webview's localStorage.
-
-const RECORD = 'iam-session';
+// @hanzo/iam keeps its tokens in a `Storage`. The one durable store of a sign-in is the
+// shared credentials vault (src-tauri/src/identity.rs, the file the Hanzo CLI keeps its own
+// in), so nothing is written to the OS keychain: a rebuilt app has no keychain item to be
+// asked about. Each launch adopts the vault's identity into this map before the app mounts
+// (identity.ts `adopt`).
 
 const held = new Map<string, string>();
-let writing: Promise<void> = Promise.resolve();
-
-function save(): void {
-  const blob = JSON.stringify(Object.fromEntries(held));
-  // Each write runs after the one before it, whether that one succeeded or not:
-  // a write that failed rejects for whoever awaits it (`written`) and must not
-  // stop every write after it, which a chain that only follows success does.
-  writing = writing.catch(() => undefined).then(async () => {
-    if (held.size) {
-      await secureStorage.setItem(RECORD, blob);
-      return;
-    }
-    try {
-      await secureStorage.removeItem(RECORD);
-    } catch {
-      // Nothing held and nothing in the keychain: the record is already gone.
-      // The keychain refuses to delete an entry that does not exist.
-    }
-  });
-}
-
-/** Resolves once every change so far is in the keychain. Await it before a reload. */
-export const written = (): Promise<void> => writing;
-
-/** Reads the keychain record into memory. Await it before mounting IamProvider. */
-export async function open(): Promise<void> {
-  const raw = await secureStorage.getItem(RECORD);
-  if (!raw) return;
-  try {
-    for (const [k, v] of Object.entries(JSON.parse(raw) as Record<string, string>)) held.set(k, v);
-  } catch {
-    await secureStorage.removeItem(RECORD);
-  }
-}
 
 export const keychain: Storage = {
   get length() {
@@ -53,13 +16,11 @@ export const keychain: Storage = {
   getItem: (k: string) => held.get(k) ?? null,
   setItem: (k: string, v: string) => {
     held.set(k, String(v));
-    save();
   },
   removeItem: (k: string) => {
-    if (held.delete(k)) save();
+    held.delete(k);
   },
   clear: () => {
     held.clear();
-    save();
   },
 };

@@ -20,7 +20,7 @@ import {
   windowKey,
 } from './desktop-shortcuts';
 import { adopt, share } from './identity';
-import { keychain, open as openKeychain, written } from './keychain';
+import { keychain } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
@@ -293,7 +293,6 @@ async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
       back.searchParams.set('state', event.payload.state);
       sdk
         .handleCallback(back.href)
-        .then(() => written())
         .then(() => share())
         .then(() => resolve(), reject);
     }).then(() => openUrl(url), reject);
@@ -681,19 +680,6 @@ function Gate() {
       .catch(() => {});
   }, []);
 
-  // A sign-in the CLI or the node already holds is this window's too. Asked once
-  // a minute at most, so a token the SDK refuses cannot reload the window forever.
-  useEffect(() => {
-    if (isAuthenticated || iamLoading) return;
-    const ASKED = 'hanzo.adopted';
-    const last = Number(window.sessionStorage.getItem(ASKED) ?? 0);
-    if (Date.now() - last < 60_000) return;
-    window.sessionStorage.setItem(ASKED, String(Date.now()));
-    void adopt().then((signedIn) => {
-      if (signedIn) window.location.reload();
-    });
-  }, [isAuthenticated, iamLoading]);
-
   const isLoading = iamLoading && !loadingTimedOut;
   // A bundled window starts on its own index (windows/mod.rs `main_url`); that
   // is the app's front door, not an address of its own.
@@ -818,7 +804,7 @@ export function Host() {
 
   useEffect(() => {
     const fallback = setTimeout(() => setReady(true), 1200);
-    void openKeychain()
+    void adopt()
       .then(() => {
         clearTimeout(fallback);
         setReady(true);
