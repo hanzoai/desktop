@@ -19,15 +19,20 @@ export type Platform = 'mac' | 'other';
 export const platformOf = (ua: string): Platform => (/Mac|iPhone|iPad/.test(ua) ? 'mac' : 'other');
 
 /**
- * The system-wide key main.rs registers (`super+shift+i` and
- * `control+shift+i`, both on every platform). ⇧⌘J (Spotlight) is not
- * registered until Spotlight can send. Hold / double-tap Fn is not
- * here: Windows and Linux keyboards resolve Fn in firmware, so no key event ever
- * reaches the window, and macOS gives a Fn (Globe) press to Dictation or the
- * emoji picker by default. ⌘⇧M is the voice key.
+ * What the window adds to @hanzo/app's KEYS, each answered by the host
+ * (host.tsx, `windowKey`) or by main.rs, and merged into the app's row of the
+ * same name below: one row per action, never a second "New chat". ⇧⌘I is the
+ * system-wide key main.rs registers (`super+shift+i` and `control+shift+i`,
+ * both on every platform); ⇧⌘J (Spotlight) is not registered until Spotlight
+ * can send. Hold / double-tap Fn is not here: Windows and Linux keyboards
+ * resolve Fn in firmware, so no key event ever reaches the window, and macOS
+ * gives a Fn (Globe) press to Dictation or the emoji picker by default. ⌘⇧M is
+ * the voice key.
  */
-export const DESKTOP_GLOBAL_KEYS = [
-  { does: 'New chat', mac: '⇧⌘I', pc: 'Ctrl+Shift+I' },
+export const DESKTOP_KEYS = [
+  { does: 'New chat', mac: '⌘N', pc: 'Ctrl+N', group: 'Navigation' },
+  { does: 'New chat', mac: '⇧⌘I', pc: 'Ctrl+Shift+I', group: 'Navigation' },
+  { does: 'Voice input', mac: '⌘⇧M', pc: 'Ctrl+Shift+M', group: 'Chat' },
 ] as const;
 
 export interface ShortcutGroup {
@@ -37,22 +42,20 @@ export interface ShortcutGroup {
 
 /**
  * Every shortcut, grouped, spelled for one platform: @hanzo/app's KEYS (each
- * answered where its comment in help.js says) and then the system-wide one.
- * A row with alternatives ("⌘N / ⌘⇧O") becomes one keycap per alternative.
+ * answered where its comment in help.js says) and the window's own, one row per
+ * action with a keycap per way to do it.
  */
 export function shortcutGroups(platform: Platform): ShortcutGroup[] {
   const spell = (k: { mac: string; pc: string }) => (platform === 'mac' ? k.mac : k.pc).split(' / ');
   const groups: ShortcutGroup[] = [];
-  for (const k of KEYS) {
+  for (const k of [...KEYS, ...DESKTOP_KEYS]) {
     const title = String(k.group ?? 'General');
     let g = groups.find((x) => x.title === title);
     if (!g) groups.push((g = { title, rows: [] }));
-    g.rows.push({ does: String(k.does), keys: spell(k) });
+    const row = g.rows.find((r) => r.does === k.does);
+    if (row) row.keys.push(...spell(k));
+    else g.rows.push({ does: String(k.does), keys: spell(k) });
   }
-  groups.push({
-    title: 'Anywhere on this computer',
-    rows: DESKTOP_GLOBAL_KEYS.map((k) => ({ does: k.does, keys: spell(k) })),
-  });
   return groups;
 }
 

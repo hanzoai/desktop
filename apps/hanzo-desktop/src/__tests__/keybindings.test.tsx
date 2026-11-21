@@ -10,7 +10,7 @@ import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  DESKTOP_GLOBAL_KEYS,
+  DESKTOP_KEYS,
   DesktopSettings,
   localModelsStatus,
   platformOf,
@@ -40,13 +40,14 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     vi.restoreAllMocks();
   });
 
-  it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
-    const macChords = KEYS.map((k) => k.mac);
+  it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_KEYS', () => {
+    const macChords = [...KEYS, ...DESKTOP_KEYS].map((k) => k.mac);
     expect(macChords).toContain('⌘K');
     expect(macChords).toContain('⌘⇧O');
     expect(macChords).toContain('⌘N');
     expect(macChords).toContain('⌘B');
     expect(macChords).toContain('⌘⇧M');
+    expect(macChords).toContain('⇧⌘I');
     expect(macChords).toContain('⌘,');
     expect(macChords).toContain('⌘/');
     expect(macChords).toContain('⌘.');
@@ -56,11 +57,9 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(macChords).toContain('⌘[');
     expect(macChords).toContain('⌘]');
 
-    const globalChords = DESKTOP_GLOBAL_KEYS.map((k) => k.mac);
-    // main.rs registers this one system-wide (⇧⌘J waits until Spotlight can
-    // send); Fn never reaches a window on Windows or Linux and is the Globe key
-    // on a Mac, so it is not listed.
-    expect(globalChords).toEqual(['⇧⌘I']);
+    // main.rs registers ⇧⌘I system-wide (⇧⌘J waits until Spotlight can send);
+    // Fn never reaches a window on Windows or Linux and is the Globe key on a
+    // Mac, so it is not listed.
     const all = shortcutGroups('mac').flatMap((g) => g.rows.flatMap((r) => r.keys));
     expect(all.join(' ')).not.toMatch(/Fn/);
   });
@@ -139,7 +138,6 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(screen.getByTestId('desktop-settings-page')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Keyboard shortcuts' })).toBeTruthy();
     expect(screen.queryByText('Hanzo Spotlight')).toBeNull();
-    expect(screen.getByText('Anywhere on this computer')).toBeTruthy();
 
     // Theme is Appearance's: one press there, and the document follows.
     fireEvent.click(entry('Appearance'));
@@ -165,14 +163,16 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     const keysOf = (groups: typeof mac, does: string) =>
       groups.flatMap((g) => g.rows).find((r) => r.does === does)?.keys;
     const rowsOf = (groups: typeof mac, does: string) => groups.flatMap((g) => g.rows).filter((r) => r.does === does).map((r) => r.keys);
-    // The app's row, the window's ⌘N, and the desktop's ⇧⌘I anywhere on this computer.
-    expect(rowsOf(mac, 'New chat')).toEqual([['⌘⇧O'], ['⌘N'], ['⇧⌘I']]);
-    expect(rowsOf(pc, 'New chat')).toEqual([['Ctrl+Shift+O'], ['Ctrl+N'], ['Ctrl+Shift+I']]);
+    // ONE row: the app's key, the window's ⌘N and the desktop's system-wide ⇧⌘I as three keycaps.
+    expect(rowsOf(mac, 'New chat')).toEqual([['⌘⇧O', '⌘N', '⇧⌘I']]);
+    expect(rowsOf(pc, 'New chat')).toEqual([['Ctrl+Shift+O', 'Ctrl+N', 'Ctrl+Shift+I']]);
     expect(keysOf(mac, 'Hanzo Spotlight')).toBeUndefined();
     // No ⌘ anywhere a PC reader looks, and every app key is listed once.
     expect(pc.flatMap((g) => g.rows.flatMap((r) => r.keys)).join(' ')).not.toMatch(/[⌘⌥⇧⌃]/);
-    expect(mac.flatMap((g) => g.rows).length).toBe(KEYS.length + DESKTOP_GLOBAL_KEYS.length);
-    expect(mac.at(-1)?.title).toBe('Anywhere on this computer');
+    // No action is listed twice.
+    const names = mac.flatMap((g) => g.rows.map((r) => r.does));
+    expect(new Set(names).size).toBe(names.length);
+    expect(mac.flatMap((g) => g.rows.flatMap((r) => r.keys))).toHaveLength(KEYS.length + DESKTOP_KEYS.length);
   });
 
   it('shows the Back shortcut that works on this platform', () => {
@@ -279,13 +279,13 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
 
   it('the palette’s New chat row shows the app’s own keys, and every command row splits into keycaps', () => {
     // The palette draws a command's keys with chip(), which splits the row's pc
-    // spelling on '+'. The desktop's ⌘N is its own row with no command.
+    // spelling on '+'. The desktop's keys are its own (DESKTOP_KEYS), not rows of KEYS.
     expect(chip('chat.new')).toEqual(['Mod', 'Shift', 'O']);
     for (const k of KEYS.filter((k) => k.command)) {
       expect(k.pc, k.command).not.toMatch(/ \/ /);
       for (const cap of chip(k.command!)!) expect(cap.trim(), k.command).toBe(cap);
     }
-    expect(KEYS.filter((k) => k.mac === '⌘N').map((k) => [k.pc, 'command' in k])).toEqual([['Ctrl+N', false]]);
+    expect(KEYS.some((k) => k.mac === '⌘N' || k.mac === '⌘⇧M')).toBe(false);
   });
 
   it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
