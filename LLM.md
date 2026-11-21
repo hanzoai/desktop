@@ -787,10 +787,9 @@ root.
   - `⇧⌘J` / `Ctrl+Shift+J`: not registered. Spotlight sent through the retired hanzo-node and is deleted; a quick-ask window would have to be built on the main window's chat path (`@hanzo/app` under `IamProvider` with the keychain session).
   - Unit tests: `./node_modules/.bin/vitest run --pool=threads --root apps/hanzo-desktop src/__tests__/keybindings.test.tsx`.
 
-## Canonical `@hanzo/app` Shell + Zen 6 Catalog (2026-11-19)
+## Canonical `@hanzo/app` Shell (2026-11-19)
 - **Single Canonical Shell (`apps/hanzo-desktop/src/host.tsx`, `src/app.css`, `index.html`)**: Desktop mounts directly on `@hanzo/app`'s canonical `<Rooms><App bar={BAR} /></Rooms>` shell (no duplicate `UnifiedDesktopShell` wrapper). `app.css` and `index.html` apply the obsidian `#050505` outer floor, `#09090b` collapsible left sidebar, and inset rounded `#0f0f12` stage pane (`1px solid rgba(255,255,255,0.08)` hairline border) directly onto `@hanzo/app`'s slots.
 - **Multi-Brand Shell Identity (`apps/hanzo-desktop/src/lib/brand-identity.ts`)**: `resolveDesktopShellBrand({ viteBrand, hostname, pathname })` resolves `'hanzo' | 'dev' | 'bot' | 'team'` across `VITE_BRAND`, hostnames (`hanzo.bot`, `hanzo.team`), and internal paths (`/bots`, `/team`, `/channels`, `/dev`), plus `DESKTOP_CROSS_APPS` for cross-surface switching (`Chat`, `Dev`, `Bot`, `Team`, `Console`, `Desktop / Mobile`).
-- **Local AI Test Stability & Zen 6 Catalog (`apps/hanzo-desktop/src/local-ai.tsx`, `src/lib/hanzo-node-manager/model-catalog.json`)**: Upgraded all active Zen model SKUs and UI badges/placeholders to **Zen 6** (`zen6`, `zen6-coder`, `zen6-flash`, `zen6-max`, `zen6-free`, `zen-vl`) mapped to `qwen3+` / `qwen3-vl` local weights with zero `zen4`, `zen5`, or `qwen2` entries in `model-catalog.json` or rendered UI; parallelized localhost probes (`Promise.all` with fast test-mode timeout), skipped eager hidden-mount probes, and windowed initial unsearched `All` catalog view (`20` models + "Show all" toggle) so `src/__tests__/local-ai.test.tsx` completes deterministically in <3s.
 
 ## Local AI: models on this computer, on Hanzo's engine
 
@@ -823,7 +822,9 @@ leave less than 2 GB free (`MIN_FREE_BYTES`):
   window can press Use) a recorded process still alive with that same executable and start time is
   ended; anything else under that id (another program, or none) is left alone, and the record goes.
   Never by name. Until that start, the old engine keeps :36900 and Use says the port is taken.
-- Which catalogue tags can be downloaded is `src/lib/local-sources.json` (repo and measured
-  download size). Every other catalogue entry is an Ollama tag and says "Not available yet".
+- What is offered is `src/lib/local-sources.json` (tag, repo, title, measured download size), and
+  nothing else: the screen lists those models and the signed-out composer's picker offers those plus
+  the router aliases (`enso`, `enso-free`, `enso-auto`). The 182-entry Ollama catalogue that listed
+  models nobody could download is deleted.
 - Test: `cargo test --bin hanzo-desktop local_models` (a stand-in model library on a local port),
   `src/__tests__/local-ai.test.tsx` (mocked `invoke`).

@@ -18,7 +18,6 @@ import {
   Text,
 } from '@hanzo/ui';
 
-import rawCatalog from './lib/hanzo-node-manager/model-catalog.json';
 import {
   CANCELLED,
   ENGINE_RELEASES_URL,
@@ -83,25 +82,6 @@ export const OPEN_LOCAL_AI_EVENT = 'hanzo:open-local-ai';
 export const LOCAL_MODELS_UPDATED_EVENT = 'hanzo:local-models-updated';
 const CUSTOM_ENGINE_STORAGE_KEY = 'hanzo:local:engine-url';
 
-export interface CatalogTag {
-  name: string;
-  hash: string;
-  size: string;
-  isDefault?: boolean;
-}
-
-export interface CatalogModel {
-  name: string;
-  description: string;
-  supportTools: boolean;
-  defaultTag: string;
-  tags: CatalogTag[];
-  embedding: boolean;
-  vision: boolean;
-  thinking: boolean;
-  cloud: boolean;
-}
-
 export interface InstalledModelInfo {
   id: string;
   sizeBytes?: number;
@@ -118,13 +98,6 @@ export interface DiscoveredEngine {
   latency_ms?: number | null;
   base_url: string;
 }
-
-// Filter out legacy models (Zen models: zen6 / qwen3+ only)
-const LEGACY_MODEL_RE = /qwen2|zen[45]/i;
-const ALL_CATALOG_MODELS: CatalogModel[] = (rawCatalog as CatalogModel[]).filter(
-  (m) => !LEGACY_MODEL_RE.test(m.name),
-);
-const CHAT_MODELS = ALL_CATALOG_MODELS.filter((m) => !m.embedding);
 
 export function getCustomEngineUrl(): string {
   try {
@@ -193,26 +166,13 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
   return found;
 }
 
-function formatModelTitle(model: CatalogModel, tag: CatalogTag, installed: boolean): string {
-  const baseName = model.name
-    .split(/[-_]/)
-    .map((w) => (w.toLowerCase() === 'zen' ? 'Zen' : w.toLowerCase() === 'zen6' ? 'Zen 6' : w.toLowerCase() === 'vl' ? 'VL' : w.toLowerCase() === 'r1' ? 'R1' : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(' ');
-  const paramPart = tag.name.includes(':') ? tag.name.split(':')[1] : '';
-  const suffix = paramPart && paramPart !== 'latest' ? ` ${paramPart.toUpperCase()}` : '';
-  const sizeBadge = tag.size && tag.size !== 'Unknown' ? ` · ${tag.size}` : '';
-  const statusBadge = installed ? ' · Installed' : '';
-  return `${baseName}${suffix} (Local${sizeBadge}${statusBadge})`;
-}
-
 /**
- * Builds the OpenAI-compatible `/v1/models` list for local / signed-out mode,
- * combining installed models with the curated local AI catalog so the composer's
- * ModelPicker lets the user browse and pick any local model.
+ * Builds the OpenAI-compatible `/v1/models` list for local / signed-out mode:
+ * the router aliases, what is installed, then every model this app can download
+ * (local-sources.json), so the composer's picker offers nothing it cannot fetch.
  */
 export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list'; data: Array<Record<string, unknown>> }> {
   const installed = await probeInstalledLocalModels();
-  const installedSet = new Set(installed.map((m) => m.id));
   const data: Array<Record<string, unknown>> = [];
   const added = new Set<string>();
 
@@ -269,47 +229,22 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
     });
   }
 
-  // Third: all chat models from model-catalog.json (default tag + popular size tags)
-  for (const model of CHAT_MODELS) {
-    const isZen = model.name.toLowerCase().startsWith('zen');
-    const ownedBy = isZen
-      ? 'zenlm'
-      : model.name.startsWith('qwen')
-        ? 'zenlm'
-        : model.name.startsWith('deepseek')
-          ? 'deepseek'
-          : model.name.startsWith('llama')
-            ? 'meta-llama'
-            : model.name.startsWith('gemma')
-              ? 'google'
-              : model.name.startsWith('mistral') || model.name.startsWith('devstral') || model.name.startsWith('ministral')
-                ? 'mistralai'
-                : 'local';
-
-    // Include the default tag plus up to 3 local (non-cloud) tags per model family
-    const localTags = model.tags.filter((t) => !t.name.endsWith('-cloud') && t.size !== 'Unknown');
-    const chosenTags = localTags.slice(0, 4);
-    if (chosenTags.length === 0 && model.tags.length > 0) {
-      chosenTags.push(model.tags[0]);
-    }
-
-    for (const tag of chosenTags) {
-      const isInstalled = installedSet.has(tag.name);
-      pushModel({
-        id: tag.name,
-        name: formatModelTitle(model, tag, isInstalled),
-        description: model.description,
-        object: 'model',
-        created: 1793775303,
-        owned_by: ownedBy,
-        ...(isZen ? { family: 'zen' } : {}),
-        class: 'free',
-        context_window: 131072,
-        supports_vision: Boolean(model.vision),
-        supports_tools: Boolean(model.supportTools),
-        supports_reasoning: Boolean(model.thinking),
-      });
-    }
+  // Third: every model the app can download, by its catalogue tag.
+  for (const src of LOCAL_SOURCES) {
+    pushModel({
+      id: src.tag,
+      name: `${src.title} (Local · ${formatSize(src.bytes)})`,
+      description: src.blurb,
+      object: 'model',
+      created: 1793775303,
+      owned_by: src.repo.split('/')[0],
+      ...(src.tag.startsWith('zen') ? { family: 'zen' } : {}),
+      class: 'free',
+      context_window: 131072,
+      supports_vision: false,
+      supports_tools: true,
+      supports_reasoning: true,
+    });
   }
 
   return { object: 'list', data };
@@ -418,25 +353,8 @@ export function openLocalAiManager(
   window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: normalized }));
 }
 
-type Category = 'all' | 'installed' | 'zen' | 'vision' | 'coding' | 'reasoning';
-
-const CATEGORIES: Array<{ id: Category; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'installed', label: 'Downloaded' },
-  { id: 'zen', label: 'Zen' },
-  { id: 'vision', label: 'Images' },
-  { id: 'coding', label: 'Coding' },
-  { id: 'reasoning', label: 'Reasoning' },
-];
-
 /** Memory to judge "fits" against when the app cannot read it (a plain browser). */
 const ASSUMED_RAM_GB = 8;
-
-function firstSentence(text: string): string {
-  const clean = text.replace(/\s*Runs fully local out of the box\.?/i, '').trim();
-  const m = clean.match(/^.*?[.!?](\s|$)/);
-  return (m ? m[0] : clean).trim();
-}
 
 function openOutside(url: string) {
   if (isTauri()) void openUrl(url).catch(() => undefined);
@@ -450,9 +368,6 @@ export function LocalAiManager() {
   const [ram, setRam] = useState<number | null>(null);
   // The model Remove was pressed on, while the person is asked to confirm.
   const [removing, setRemoving] = useState<LocalSource | null>(null);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<Category>('all');
-  const [showAll, setShowAll] = useState(false);
   const [selected, setSelected] = useState<string>(() => kept().model);
   const [percent, setPercent] = useState<Record<string, number>>({});
   const [starting, setStarting] = useState<string | null>(null);
@@ -476,7 +391,6 @@ export function LocalAiManager() {
     const onOpen = (e: Event) => {
       const detail = (e as CustomEvent<{ tab?: 'models' | 'node' | 'engine'; model?: string }>).detail;
       if (detail?.tab === 'node' || detail?.tab === 'engine') setAdvanced(true);
-      if (detail?.model && !ROUTER_ALIASES.has(detail.model)) setSearch(detail.model.split(':')[0]);
       setOpen(true);
       void refresh();
       void memoryGb().then(setRam);
@@ -493,11 +407,7 @@ export function LocalAiManager() {
       if (!current || ROUTER_ALIASES.has(current)) return;
       if (keychain.getItem('hanzo_iam_access_token')) return;
       const models = await probeInstalledLocalModels();
-      const isCatalogModel = CHAT_MODELS.some((m) => m.tags.some((t) => t.name === current));
-      if (isCatalogModel && !models.some((m) => m.id === current)) {
-        setSearch(current.split(':')[0]);
-        setOpen(true);
-      }
+      if (sourceForTag(current) && !models.some((m) => m.id === current)) setOpen(true);
     };
     window.addEventListener(MIND_CHANGE_EVENT, onMindChange);
     return () => window.removeEventListener(MIND_CHANGE_EVENT, onMindChange);
@@ -605,26 +515,6 @@ export function LocalAiManager() {
     setCustomNote(url.trim() ? `Chat will use ${url.trim()} first.` : 'Chat uses this computer’s engine again.');
   };
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return CHAT_MODELS.filter((m) => {
-      const sources = m.tags.map((t) => sourceForTag(t.name)).filter(Boolean) as LocalSource[];
-      if (category === 'installed' && !sources.some((s) => installedRepos.has(s.repo))) return false;
-      if (category === 'zen' && !m.name.toLowerCase().startsWith('zen')) return false;
-      if (category === 'vision' && !m.vision) return false;
-      if (category === 'coding' && !/code|coder|devstral/i.test(m.name)) return false;
-      if (category === 'reasoning' && !m.thinking) return false;
-      if (!q) return true;
-      return (
-        m.name.toLowerCase().includes(q) ||
-        m.description.toLowerCase().includes(q) ||
-        m.tags.some((t) => t.name.toLowerCase().includes(q)) ||
-        sources.some((s) => s.title.toLowerCase().includes(q))
-      );
-    });
-  }, [search, category, installedRepos]);
-  const visible = search.trim() || showAll || category !== 'all' ? filtered : filtered.slice(0, 12);
-
   if (!open) return null;
 
   const state = overall(checked ? status : null);
@@ -729,28 +619,6 @@ export function LocalAiManager() {
             )}
           </XStack>
         )}
-      </YStack>
-    );
-  };
-
-  const unavailable = (m: CatalogModel) => {
-    const size = m.tags.find((t) => !t.name.endsWith('-cloud') && t.size !== 'Unknown')?.size;
-    return (
-      <YStack key={m.name} gap="$1" p="$3" rounded="$4" borderWidth={1} borderColor="$borderColor">
-        <XStack items="center" justify="space-between" gap="$3" flexWrap="wrap">
-          <YStack gap="$1" flex={1} minW={200}>
-            <Text fontSize="$4" fontWeight="600" color="$color">
-              {m.name}
-            </Text>
-            <Text fontSize="$2" color="$color11">
-              {firstSentence(m.description)}
-              {size ? ` About ${size}.` : ''}
-            </Text>
-          </YStack>
-          <Button size="sm" variant="outline" disabled aria-label={`${m.name} cannot be downloaded yet`}>
-            Not available yet
-          </Button>
-        </XStack>
       </YStack>
     );
   };
@@ -905,43 +773,9 @@ export function LocalAiManager() {
 
           <YStack gap="$2">
             <Text tag="h3" fontSize="$4" fontWeight="600" color="$color">
-              {`All models (${CHAT_MODELS.length})`}
+              {`All models (${LOCAL_SOURCES.length})`}
             </Text>
-            <Input
-              type="search"
-              data-testid="local-ai-search-input"
-              aria-label="Search models"
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Search models (zen, qwen3, coder…)"
-            />
-            <XStack gap="$1.5" flexWrap="wrap" role="group" aria-label="Show">
-              {CATEGORIES.map((c) => (
-                <Button
-                  key={c.id}
-                  size="xs"
-                  variant={category === c.id ? 'secondary' : 'ghost'}
-                  aria-pressed={category === c.id}
-                  onPress={() => setCategory(c.id)}
-                >
-                  {c.label}
-                </Button>
-              ))}
-            </XStack>
-            {visible.length === 0 && (
-              <Text fontSize="$3" color="$color11">
-                No models match.
-              </Text>
-            )}
-            {visible.flatMap((m) => {
-              const sources = m.tags.map((t) => sourceForTag(t.name)).filter(Boolean) as LocalSource[];
-              return sources.length ? sources.map(card) : [unavailable(m)];
-            })}
-            {visible.length < filtered.length && (
-              <Button size="sm" variant="outline" onPress={() => setShowAll(true)}>
-                {`Show all ${filtered.length}`}
-              </Button>
-            )}
+            {LOCAL_SOURCES.map(card)}
           </YStack>
 
           <details

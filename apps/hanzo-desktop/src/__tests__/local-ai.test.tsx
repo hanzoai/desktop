@@ -27,6 +27,7 @@ import {
 import {
   CANCELLED,
   ENGINE_RELEASES_URL,
+  LOCAL_SOURCES,
   fitsThisMac,
   formatSize,
   memoryNeededGb,
@@ -83,14 +84,10 @@ afterEach(() => {
 });
 
 describe('the model list', () => {
-  it('serves local AI models with free tier access, includes Zen 6 SKUs, and excludes zen4/zen5/qwen2 models', async () => {
+  it('offers the picker only the router aliases and the models this app can download', async () => {
     const body = await buildLocalModelsCatalogResponse();
     expect(body.object).toBe('list');
-    const ids = body.data.map((m) => String(m.id));
-    expect(ids).toContain('enso-free');
-    expect(ids).toContain('zen6:8b');
-    expect(ids).toContain('zen-vl:8b');
-    expect(ids.some((id) => /zen[45]|qwen2/i.test(id))).toBe(false);
+    expect(body.data.map((m) => String(m.id))).toEqual(['enso-auto', 'enso-free', 'enso', ...LOCAL_SOURCES.map((s) => s.tag)]);
     for (const model of body.data) expect(model.class).toBe('free');
   });
 
@@ -113,9 +110,15 @@ describe('the Local AI screen', () => {
     expect(status).toMatch(/Local models are not set up/);
     const text = screen.getByTestId('local-ai-manager-modal').textContent ?? '';
     expect(text).not.toMatch(/zen[45]|qwen2|Ollama|11434|hanzod|Hanzo Node|Inference Engine/i);
-    expect((screen.getByTestId('local-ai-search-input') as HTMLInputElement).placeholder).toBe(
-      'Search models (zen, qwen3, coder…)',
-    );
+  });
+
+  it('lists only models it can download: every one has a Download button, none is "not available"', async () => {
+    desktop(() => base);
+    await openScreen();
+    const text = screen.getByTestId('local-ai-manager-modal').textContent ?? '';
+    expect(text).toContain(`All models (${LOCAL_SOURCES.length})`);
+    expect(text).not.toMatch(/Not available yet|cannot be downloaded/);
+    for (const s of LOCAL_SOURCES) expect(screen.getAllByLabelText(`Download ${s.title}`).length).toBeGreaterThan(0);
   });
 
   it('with no engine installed says what is missing and offers the one thing that fixes it', async () => {
