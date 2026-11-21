@@ -600,7 +600,8 @@ Asset names are what hanzo.ai's `scripts/sync-releases.mjs` resolves:
 `Hanzo_Desktop_<v>_x64-setup.exe`, `Hanzo_Desktop_<v>_x64-portable.zip`,
 `Hanzo_Desktop_<v>_{aarch64,x64,universal}.dmg`, `Hanzo_Desktop_<v>_universal.app.tar.gz`,
 each updater bundle with a `.sig`, plus `SHA256SUMS` (from the sha256 digest GitHub
-computes) and `latest.json`. Change a name and the download page loses a tile.
+computes; `manifest.sh` waits until every asset has one, since GitHub adds it a moment after an upload) and
+`latest.json`. Change a name and the download page loses a tile.
 
 `bundle.linux.rpm.compression` in `apps/hanzo-desktop/src-tauri/tauri.conf.json`
 must stay `{"type": "none"}` while `@tauri-apps/cli` bundles `rpm 0.16.0`:
@@ -710,7 +711,7 @@ repository, nothing sent to the platform. The window supplies four commands
   no more `local-dev-setup`; the run that was waiting fails with exactly `Setup was cancelled.`
   (`SETUP_CANCELLED`), which the window shows as "cancelled", not as an error to retry.
 - **Windows** is `dev-x86_64-pc-windows-msvc.exe.zip` (one file, a 370 MB `.exe`), unpacked to `dev.exe`; there
-  is no windows-arm64 asset in hanzoai/dev's release. The agent is started with `CREATE_NO_WINDOW`. Nothing
+  is no windows-arm64 asset in hanzoai/dev-v1's release. The agent is started with `CREATE_NO_WINDOW`. Nothing
   here is run on a Windows host: CI type-checks the pure crates (and their tests) for
   `x86_64-pc-windows-msvc` (`hanzo.yml` `windows-cross-check`, `cargo check --tests`, no linker needed), and
   the release lane's cross-build (cargo-xwin) compiles the app itself.
@@ -742,7 +743,7 @@ rebuilds it has no network, so the window does what the agent cannot
 `@hanzo/app` `lib/local-site.ts` `desktopSite()` is `@hanzo/build`'s `Host.site` over them, `site.ts` there is the
 contract and the prompt the agent is given):
 
-- `local_site_folder(name)` names a new folder `<Documents>/Hanzo/<name>` (`-2`, `-3`… when taken) and makes
+- `local_site_folder(name)` names a new folder `~/Hanzo/<name>` (`-2`, `-3`… when taken) and makes
   nothing: a site that will not open leaves no folder behind. A folder the person chose is built in instead.
 - `local_site_capture(url, dir)` opens the site from this computer's connection (`fetch.rs`) and saves
   `<dir>/.hanzo/reference/` (`page.rs`): `page.html`, `text.md` (address, description, words in reading order,

@@ -53,18 +53,31 @@ pub fn generate_proof(node_signature: String, payload: String) -> Result<(String
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ed25519_dalek::{Signature, Verifier};
+
+    const PAYLOAD: &str = r#"{"number_of_qa_subscriptions":3, "number_of_subscriptions":5}"#;
+
+    /// The proof's three parts and its signature, each re-derived on its own from the node's signature
+    /// and the payload, so the test holds whatever desktop key the build compiled in.
+    #[test]
+    fn the_proof_binds_the_payload_to_the_node_and_the_desktop_key() {
+        let (signature, concatenated) = generate_proof("test_node_signature".to_string(), PAYLOAD.to_string()).unwrap();
+        let (_, public) = unsafe_deterministic_signature_keypair(b"test_node_signature");
+        let parts: Vec<&str> = concatenated.split(":::").collect();
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts[0], hex::encode(public.to_bytes()));
+        let key = option_env!("SECRET_DESKTOP_INSTALLATION_PROOF_KEY").unwrap_or("Dc9{3R9JmXe7£w9Fs](7");
+        let tag = hex::encode(blake3::hash(format!("{}{}", parts[0], key).as_bytes()).as_bytes());
+        assert_eq!(parts[1], &tag[tag.len() - 8..]);
+        assert_eq!(parts[2], base64::Engine::encode(&base64::engine::general_purpose::STANDARD, PAYLOAD));
+        let signature = Signature::from_bytes(&hex::decode(signature).unwrap().try_into().unwrap());
+        assert!(public.verify(blake3::hash(concatenated.as_bytes()).as_bytes(), &signature).is_ok());
+    }
 
     #[test]
-    fn test_generate_proof() {
-        let node_signature = "test_node_signature".to_string();
-        let json_string =
-            r#"{"number_of_qa_subscriptions":3, "number_of_subscriptions":5}"#.to_string();
-        let result = generate_proof(node_signature, json_string);
-        assert!(result.is_ok());
-        let expected_signature = "5d59de6abc995c26e95cd88cb78983200e7ef0984761eeae2fad311e500adfcdf95c15b11e55b673052269a3b46e075a760a8a952521dd36057574f55f7e8d0f";
-        let expected_concatenated = r#"c069738b90a4a0f136c08097cc9dcd9eeaf6b2a9c491f82b0706c8e3c0820b0f:::365feac9:::{"number_of_qa_subscriptions":3, "number_of_subscriptions":5}"#;
-        let (signature, concatenated) = result.unwrap();
-        assert_eq!(signature, expected_signature);
-        assert_eq!(concatenated, expected_concatenated);
+    fn another_node_or_payload_is_another_proof() {
+        let base = generate_proof("test_node_signature".to_string(), PAYLOAD.to_string()).unwrap();
+        assert_ne!(base, generate_proof("another_node".to_string(), PAYLOAD.to_string()).unwrap());
+        assert_ne!(base, generate_proof("test_node_signature".to_string(), "{}".to_string()).unwrap());
     }
 }
