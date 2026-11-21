@@ -51,45 +51,10 @@ EXT=""
 case "$TARGET" in *-pc-windows-msvc) EXT=".exe" ;; esac
 echo "Target: $TARGET"
 
-NODE_DIR="$BINARIES_DIR/hanzo-node"
-mkdir -p "$NODE_DIR/hanzo-tools-runner-resources"
 mkdir -p "$LLM_MODELS_DIR"
 
-# Which release to fetch. One home, read here and named nowhere else.
-. "$SCRIPT_DIR/pins"
-
-# Download and extract Hanzo Node
-echo "Downloading Hanzo Node ${HANZO_NODE_VERSION} for ${TARGET}..."
-HANZO_NODE_URL="https://download.hanzo.ai/hanzo-node/binaries/production/${TARGET}/${HANZO_NODE_VERSION}.zip"
-
-# Tauri resolves a sidecar by the name in tauri.conf.json plus the target
-# triple, so each binary the archive carries is renamed once, here. The archive
-# names them with the platform's own extension — hanzo-node.exe on Windows —
-# and the suffix goes BEFORE it: hanzo-node-x86_64-pc-windows-msvc.exe.
-SIDECARS="hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv"
-
-if [ ! -f "$NODE_DIR/hanzo-node-${TARGET}${EXT}" ]; then
-    echo "Downloading from: $HANZO_NODE_URL"
-    if curl -L -f --retry 5 --retry-all-errors -o "$NODE_DIR/hanzo-node.zip" "$HANZO_NODE_URL"; then
-        unzip -o "$NODE_DIR/hanzo-node.zip" -d "$NODE_DIR/"
-
-        for s in $SIDECARS; do
-            src="$NODE_DIR/${s}${EXT}"
-            dst="$NODE_DIR/${s}-${TARGET}${EXT}"
-            [ -f "$src" ] || { echo "Archive is missing ${s}${EXT}"; exit 1; }
-            mv "$src" "$dst"
-            chmod +x "$dst"
-        done
-
-        rm "$NODE_DIR/hanzo-node.zip"
-        echo "Downloaded Hanzo Node successfully with bundled tools"
-    else
-        echo "Failed to download Hanzo Node binary"
-        exit 1
-    fi
-else
-    echo "Hanzo Node already downloaded"
-fi
+# hanzo-node is not fetched: it left this app (HIP-1330). The one per-machine
+# daemon, hanzod, is installed at ~/.hanzo/bin by the CLI.
 
 # Ollama dropped per zoo/universe architecture: AI inference + embeddings
 # go through the brand inference endpoint (cloud or hanzo-engine), not a
