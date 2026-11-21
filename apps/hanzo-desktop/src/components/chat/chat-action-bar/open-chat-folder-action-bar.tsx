@@ -1,6 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipTrigger,
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Folder } from 'lucide-react';
 
 import { actionButtonClassnames } from '../conversation-footer';
@@ -33,7 +38,7 @@ function OpenChatFolderActionBarBase({
 
   return (
     <>
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild>
           <button
             className={cn(actionButtonClassnames, 'p-2', {
@@ -46,7 +51,11 @@ function OpenChatFolderActionBarBase({
             <Folder className="h-full w-full" />
           </button>
         </TooltipTrigger>
-        <TooltipContent>{t('chat.openChatFolder')}</TooltipContent>
+        <TooltipPortal>
+          <TooltipContent align="center" side="top">
+            {t('chat.openChatFolder')}
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
     </>
   );

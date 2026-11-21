@@ -81,7 +81,7 @@ test.describe('Message Sending via API', () => {
     console.log('Sending test message via API...');
 
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
         data: message,
         timeout: TEST_TIMEOUT,
       });
@@ -115,7 +115,7 @@ test.describe('Message Sending via API', () => {
     console.log('Testing chat completion endpoint...');
 
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/chat/completions`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/chat/completions`, {
         data: chatPayload,
         timeout: TEST_TIMEOUT,
       });
@@ -220,7 +220,7 @@ test.describe('Response Streaming', () => {
   test('should verify streaming endpoint availability', async ({ request }) => {
     // Test the streaming endpoint exists
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference_stream`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference_stream`, {
         data: {
           prompt: 'Count to 5',
           max_tokens: 30,
@@ -267,7 +267,7 @@ test.describe('Message Persistence', () => {
 
   test('should check conversation storage via API', async ({ request }) => {
     // Get list of conversations
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/all_inboxes_for_profile`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/all_inboxes_for_profile`);
 
     if (response.ok()) {
       const inboxes = await response.json();
@@ -296,7 +296,7 @@ test.describe('Multi-Turn Conversations', () => {
       console.log(`\nSending message ${i + 1}/${messages.length}: "${messages[i]}"`);
 
       try {
-        const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+        const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
           data: {
             prompt: messages[i],
             max_tokens: 50,
@@ -326,7 +326,7 @@ test.describe('Chat Performance', () => {
   test('should measure response time', async ({ request }) => {
     const startTime = Date.now();
 
-    const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+    const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
       data: {
         prompt: 'Say hello',
         max_tokens: 10,
@@ -353,7 +353,7 @@ test.describe('Chat Performance', () => {
 
   test('should verify concurrent request handling', async ({ request }) => {
     const requests = Array(3).fill(null).map((_, i) =>
-      request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+      request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
         data: {
           prompt: `Test message ${i + 1}`,
           max_tokens: 10,
@@ -377,7 +377,7 @@ test.describe('Chat Performance', () => {
 
 test.describe('Error Handling in Chat', () => {
   test('should handle empty messages gracefully', async ({ request }) => {
-    const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+    const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
       data: {
         prompt: '',
         max_tokens: 10,
@@ -395,7 +395,7 @@ test.describe('Error Handling in Chat', () => {
     const longMessage = 'test '.repeat(1000); // 5000 characters
 
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
         data: {
           prompt: longMessage,
           max_tokens: 10,

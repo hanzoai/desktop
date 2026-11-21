@@ -4,9 +4,8 @@ import { Crypto } from '@peculiar/webcrypto';
 
 import { generateEncryptionKeys, generateSignatureKeys } from './wasm_helpers';
 
-// The module under test supplies this too; setting it here keeps the test
-// honest if it is ever imported before that module.
-ed.hashes.sha512 = sha512;
+// Enable synchronous methods
+ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
 const crypto = new Crypto();
 Object.defineProperty(globalThis, 'crypto', {

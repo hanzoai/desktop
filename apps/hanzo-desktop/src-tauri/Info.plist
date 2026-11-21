@@ -3,11 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>ai.hanzo.desktop</string>
-	<!-- macOS kills a process that touches the microphone without this string,
-	     before any prompt is shown. It is the sentence the system prompt reads,
-	     so it says what we listen for and when. -->
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Hanzo listens while you hold a voice turn, so you can talk to your agent instead of typing.</string>
+	<string>com.hanzo.desktop</string>
 </dict>
 </plist>

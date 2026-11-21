@@ -1,20 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type ToolArgs,
   ToolStatusType,
-} from '@hanzo/desktop-message-ts/api/general/types';
-import { type MessageTrace } from '@hanzo/desktop-message-ts/api/jobs/types';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils';
+} from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type MessageTrace } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
 import { getProviderModelLabel } from '../../../lib/hanzo-node-manager/local-model-names';
 import {
   type AssistantMessage,
   type FormattedMessage,
   type TextStatus,
-} from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
-import { useGetMessageTraces } from '@hanzo/desktop-node-state/v2/queries/getMessageTraces/useGetMessageTraces';
-import { useGetNetworkAgents } from '@hanzo/desktop-node-state/v2/queries/getNetworkAgents/useGetNetworkAgents';
+} from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
+import { useGetMessageTraces } from '@hanzo_network/hanzo-node-state/v2/queries/getMessageTraces/useGetMessageTraces';
+import { useGetNetworkAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getNetworkAgents/useGetNetworkAgents';
 import {
   Accordion,
   AccordionContent,
@@ -37,9 +36,10 @@ import {
   SheetTitle,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
   PrettyJsonPrint,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AIAgentIcon,
   AisIcon,
@@ -47,12 +47,12 @@ import {
   ReasoningIcon,
   ToolsIcon,
   TracingIcon,
-} from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { format } from 'date-fns';
 import equal from 'fast-deep-equal';
-import { AnimatePresence, motion, type Variants } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   BotIcon,
   CornerDownRight,
@@ -124,7 +124,7 @@ type MessageProps = {
   minimalistMode?: boolean;
 };
 
-const actionBar: Variants = {
+const actionBar = {
   rest: {
     opacity: 0.8,
     scale: 0.8,
@@ -438,7 +438,6 @@ export const MessageBase = ({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          model={message.provider?.agent?.model}
           provider={(message.provider?.agent?.model ?? '').split(':')[0]}
         />
       );
@@ -588,13 +587,9 @@ export const MessageBase = ({
                               className={cn(
                                 'w-full min-w-[10rem] gap-3 py-0 pr-2 no-underline hover:no-underline',
                                 'hover:bg-bg-default transition-colors [&[data-state=open]]:w-full [&[data-state=open]]:border-b',
+                                tool.status !== ToolStatusType.Complete &&
+                                  '[&>svg]:hidden',
                               )}
-                              // gui wraps the chevron in its own XStack, so the
-                              // `[&>svg]:hidden` that used to hide it on an
-                              // unfinished tool no longer matches anything.
-                              hideArrow={
-                                tool.status !== ToolStatusType.Complete
-                              }
                             >
                               <ToolCard
                                 args={tool.args}
@@ -813,7 +808,7 @@ export const MessageBase = ({
                       onClick={handleAskHanzo}
                       size="xs"
                       variant="outline"
-                      aria-label={`Ask ${getBrand().name} about selection`}
+                      aria-label="Ask Hanzo about selection"
                       title={truncatedSelection ?? undefined}
                     >
                       <CornerDownRight className="size-4" />
@@ -832,7 +827,7 @@ export const MessageBase = ({
                 >
                   <div className="flex items-center gap-1.5">
                     {message.role === 'user' && !disabledEdit && (
-                      <Tooltip placement="top">
+                      <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             className={cn(
@@ -845,16 +840,18 @@ export const MessageBase = ({
                             <Edit3 />
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t('common.editMessage')}</p>
-                        </TooltipContent>
+                        <TooltipPortal>
+                          <TooltipContent>
+                            <p>{t('common.editMessage')}</p>
+                          </TooltipContent>
+                        </TooltipPortal>
                       </Tooltip>
                     )}
                     {message.role === 'assistant' &&
                       !disabledRetry &&
                       message.status.type === 'complete' && (
                         <>
-                          <Tooltip placement="top">
+                          <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 className={cn(
@@ -865,11 +862,13 @@ export const MessageBase = ({
                                 <GitFork />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Fork</p>
-                            </TooltipContent>
+                            <TooltipPortal>
+                              <TooltipContent>
+                                <p>Fork</p>
+                              </TooltipContent>
+                            </TooltipPortal>
                           </Tooltip>
-                          <Tooltip placement="top">
+                          <Tooltip>
                             <TooltipTrigger asChild>
                               <button
                                 className={cn(
@@ -880,16 +879,18 @@ export const MessageBase = ({
                                 <RotateCcw />
                               </button>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{t('common.retry')}</p>
-                            </TooltipContent>
+                            <TooltipPortal>
+                              <TooltipContent>
+                                <p>{t('common.retry')}</p>
+                              </TooltipContent>
+                            </TooltipPortal>
                           </Tooltip>
                         </>
                       )}
 
                     {message.role === 'assistant' &&
                       message.status.type === 'complete' && (
-                        <Tooltip placement="top">
+                        <Tooltip>
                           <TooltipTrigger asChild>
                             <button
                               className={cn(
@@ -900,9 +901,11 @@ export const MessageBase = ({
                               <TracingIcon />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{t('chat.tracing.title')}</p>
-                          </TooltipContent>
+                          <TooltipPortal>
+                            <TooltipContent>
+                              <p>{t('chat.tracing.title')}</p>
+                            </TooltipContent>
+                          </TooltipPortal>
                           <TracingDialog
                             open={tracingOpen}
                             onOpenChange={setTracingOpen}
@@ -914,7 +917,7 @@ export const MessageBase = ({
                     {((message.role === 'assistant' &&
                       message.status.type === 'complete') ||
                       message.role === 'user') && (
-                      <Tooltip placement="top">
+                      <Tooltip>
                         <TooltipTrigger asChild>
                           <div>
                             <CopyToClipboardIcon
@@ -928,9 +931,11 @@ export const MessageBase = ({
                             />
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{t('common.copy')}</p>
-                        </TooltipContent>
+                        <TooltipPortal>
+                          <TooltipContent>
+                            <p>{t('common.copy')}</p>
+                          </TooltipContent>
+                        </TooltipPortal>
                       </Tooltip>
                     )}
                   </div>
@@ -1065,6 +1070,8 @@ export function ToolCard({
   );
 }
 
+const MotionAccordionTrigger = motion(AccordionTrigger);
+
 export function Reasoning({
   reasoning,
   status,
@@ -1107,17 +1114,13 @@ export function Reasoning({
         )}
         value="reasoning"
       >
-        <AccordionTrigger
+        <MotionAccordionTrigger
           className={cn(
-            'bg-bg-secondary gap-3 px-[6px] py-[3px] no-underline hover:text-white hover:no-underline',
+            'bg-bg-secondary inline-flex w-auto gap-3 px-[6px] py-[3px] no-underline hover:text-white hover:no-underline',
             'hover:bg-bg-secondary transition-colors',
             status?.type === 'running' && 'p-0',
           )}
           hideArrow={status?.type === 'running'}
-          // The reasoning header is a PILL, not a bar. gui bakes width:100% as
-          // a style prop, so `inline-flex w-auto` lost the tie and it stretched
-          // the width of the message.
-          width="auto"
         >
           <AnimatePresence initial={false} mode="popLayout">
             <motion.div
@@ -1143,7 +1146,7 @@ export function Reasoning({
               </div>
             </motion.div>
           </AnimatePresence>
-        </AccordionTrigger>
+        </MotionAccordionTrigger>
         <AccordionContent className="bg-bg-secondary text-em-sm flex flex-col gap-1 rounded-b-lg px-3 pt-2 pb-3">
           <span className="text-text-secondary break-words whitespace-pre-line">
             <MarkdownText

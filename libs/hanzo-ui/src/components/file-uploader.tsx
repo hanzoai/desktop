@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { partial } from 'filesize';
 import { Loader2, Trash, Upload } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -7,9 +7,8 @@ import { useDropzone } from 'react-dropzone';
 import { fileIconMap, FileTypeIcon, PaperClipIcon } from '../assets';
 import { getFileExt } from '../helpers/file';
 import { cn } from '../utils';
-import { ScrollArea } from '@hanzo/ui';
-
 import { Button } from './button';
+import { ScrollArea } from './scroll-area';
 
 const openFile = (file: File): void => {
   const fileURL = window.URL.createObjectURL(file);

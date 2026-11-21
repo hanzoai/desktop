@@ -1,5 +1,5 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
-import { type UndoToolImplementationResponse } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type UndoToolImplementationResponse } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 export type RestoreToolConversationInput = Token & {
   nodeAddress: string;

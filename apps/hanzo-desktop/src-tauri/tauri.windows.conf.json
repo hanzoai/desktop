@@ -9,7 +9,8 @@
       }
     },
     "resources": {
-      "llm-models/": "llm-models/"
+      "llm-models/": "llm-models/",
+      "external-binaries/ollama/lib/": "lib/"
     }
   }
 }

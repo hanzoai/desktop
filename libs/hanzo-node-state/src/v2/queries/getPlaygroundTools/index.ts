@@ -1,4 +1,4 @@
-import { getPlaygroundTools as getPlaygroundToolsApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getPlaygroundTools as getPlaygroundToolsApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type GetPlaygroundToolsInput } from './types';
 

@@ -1,9 +1,9 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useRemoveAssetTool } from '@hanzo/desktop-node-state/v2/mutations/removeAssetTool/useRemoveAssetTool';
-import { useUploadAssetsTool } from '@hanzo/desktop-node-state/v2/mutations/uploadAssetsTool/useUploadAssetsTool';
-import { useGetAllToolAssets } from '@hanzo/desktop-node-state/v2/queries/getAllToolAssets/useGetAllToolAssets';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useRemoveAssetTool } from '@hanzo_network/hanzo-node-state/v2/mutations/removeAssetTool/useRemoveAssetTool';
+import { useUploadAssetsTool } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadAssetsTool/useUploadAssetsTool';
+import { useGetAllToolAssets } from '@hanzo_network/hanzo-node-state/v2/queries/getAllToolAssets/useGetAllToolAssets';
 import {
-  DialogClose,
   Badge,
   Button,
   Separator,
@@ -15,15 +15,16 @@ import {
   DialogTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   fileIconMap,
   FileTypeIcon,
   ToolAssetsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { getFileExt } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { getFileExt } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Loader2, Paperclip, Upload, XIcon } from 'lucide-react';
 import { memo } from 'react';
 import { useDropzone } from 'react-dropzone';
@@ -96,10 +97,7 @@ function ManageSourcesButtonBase() {
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent
-        className="flex h-[60vh] max-w-[500px] flex-col gap-4"
-        showCloseButton={false}
-      >
+      <DialogContent className="flex h-[60vh] max-w-[500px] flex-col gap-4">
         <DialogClose className="absolute top-4 right-4">
           <XIcon className="text-text-secondary h-5 w-5" />
         </DialogClose>
@@ -131,7 +129,7 @@ function ManageSourcesButtonBase() {
 
           <input {...getInputFileProps({})} />
         </div>
-        <Separator className="my-1" />
+        <Separator className="my-1" orientation="horizontal" />
         <div
           className={cn(
             'flex flex-1 flex-col gap-2 overflow-y-auto pr-2',
@@ -168,13 +166,17 @@ function ManageSourcesButtonBase() {
                       <Paperclip className="text-text-secondary h-3.5 w-3.5 shrink-0" />
                     )}
                   </div>
-                  <Tooltip placement="top-start" delay={1000}>
+                  <Tooltip delayDuration={1000}>
                     <TooltipTrigger>
                       <span className="overflow-hidden text-sm text-ellipsis">
                         {decodeURIComponent(asset)}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent>{decodeURIComponent(asset)}</TooltipContent>
+                    <TooltipPortal>
+                      <TooltipContent align="start" side="top">
+                        {decodeURIComponent(asset)}
+                      </TooltipContent>
+                    </TooltipPortal>
                   </Tooltip>
                 </div>
                 <Button

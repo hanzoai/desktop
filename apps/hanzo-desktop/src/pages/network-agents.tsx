@@ -1,13 +1,12 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useAddNetworkTool } from '@hanzo/desktop-node-state/v2/mutations/addNetworkTool/useAddNetworkTool';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetInstalledNetworkTools } from '@hanzo/desktop-node-state/v2/queries/getInstalledNetworkTools/useGetInstalledNetworkTools';
-import { type FormattedNetworkAgent } from '@hanzo/desktop-node-state/v2/queries/getNetworkAgents/types';
-import { useGetNetworkAgents } from '@hanzo/desktop-node-state/v2/queries/getNetworkAgents/useGetNetworkAgents';
-import { useGetToolsWithOfferings } from '@hanzo/desktop-node-state/v2/queries/getToolsWithOfferings/useGetToolsWithOfferings';
-import { useGetWalletBalance } from '@hanzo/desktop-node-state/v2/queries/getWalletBalance/useGetWalletBalance';
-import { useGetWalletList } from '@hanzo/desktop-node-state/v2/queries/getWalletList/useGetWalletList';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useAddNetworkTool } from '@hanzo_network/hanzo-node-state/v2/mutations/addNetworkTool/useAddNetworkTool';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetInstalledNetworkTools } from '@hanzo_network/hanzo-node-state/v2/queries/getInstalledNetworkTools/useGetInstalledNetworkTools';
+import { type FormattedNetworkAgent } from '@hanzo_network/hanzo-node-state/v2/queries/getNetworkAgents/types';
+import { useGetNetworkAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getNetworkAgents/useGetNetworkAgents';
+import { useGetToolsWithOfferings } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsWithOfferings/useGetToolsWithOfferings';
+import { useGetWalletBalance } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletBalance/useGetWalletBalance';
+import { useGetWalletList } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletList/useGetWalletList';
 import {
   Card,
   CardContent,
@@ -42,13 +41,13 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   CryptoWalletIcon,
   EthereumIcon,
   USDCIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 
 import {
   User,
@@ -76,7 +75,6 @@ import {
 } from '../components/crypto-wallet/utils';
 import RemoveNetworkAgentButton from '../components/network/remove-network-agent-button';
 import RemoveToolOfferingButton from '../components/network/remove-tool-offering-button';
-import { status } from '../hanzo/status';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 
@@ -125,7 +123,7 @@ export const NetworkAgentPage = () => {
           <div className="flex items-center justify-between gap-4">
             <div
               className={cn(
-                'font-sans inline-flex items-center gap-3 text-3xl font-medium',
+                'font-inter inline-flex items-center gap-3 text-3xl font-medium',
               )}
             >
               <h1>
@@ -179,7 +177,7 @@ export const NetworkAgentPage = () => {
               )}
 
               {isWalletConnected && (
-                <Popover placement="bottom-end">
+                <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" size="sm">
                       <CryptoWalletIcon className="size-4" />
@@ -190,7 +188,7 @@ export const NetworkAgentPage = () => {
                       <ChevronDownIcon className="size-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent width={320}>
+                  <PopoverContent className="w-80" align="end">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium">
@@ -364,12 +362,7 @@ const DiscoverNetworkAgents = ({
               setPricingFilter(value)
             }
           >
-            <SelectTrigger
-              height="auto"
-              rounded={9999}
-              width={128}
-              className="!h-[auto] w-32 rounded-full bg-transparent py-2 [&>svg]:top-[12px]"
-            >
+            <SelectTrigger className="!h-[auto] w-32 rounded-full bg-transparent py-2 [&>svg]:top-[12px]">
               <SelectValue placeholder="Pricing" />
             </SelectTrigger>
             <SelectContent>
@@ -385,17 +378,12 @@ const DiscoverNetworkAgents = ({
               setProviderFilter(value)
             }
           >
-            <SelectTrigger
-              height="auto"
-              rounded={9999}
-              width={144}
-              className="!h-[auto] w-36 rounded-full bg-transparent py-2 [&>svg]:top-[12px]"
-            >
+            <SelectTrigger className="!h-[auto] w-36 rounded-full bg-transparent py-2 [&>svg]:top-[12px]">
               <SelectValue placeholder="Provider" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Providers</SelectItem>
-              <SelectItem value="hanzo">{getBrand().name}</SelectItem>
+              <SelectItem value="hanzo">Hanzo</SelectItem>
               <SelectItem value="community">Community</SelectItem>
             </SelectContent>
           </Select>
@@ -574,15 +562,15 @@ const AgentCard = ({
               <Circle
                 className={cn(
                   'h-3 w-3',
-                  nodeStatus === 'online' && `fill-brand ${status.up.ink}`,
-                  nodeStatus !== 'online' && `fill-text-tertiary ${status.quiet.ink}`,
+                  nodeStatus === 'online' && 'fill-green-500 text-green-500',
+                  nodeStatus !== 'online' && 'fill-red-500 text-red-500',
                 )}
               />
               <span
                 className={cn(
                   'text-xs',
-                  nodeStatus === 'online' && status.up.ink,
-                  nodeStatus !== 'online' && status.quiet.ink,
+                  nodeStatus === 'online' && 'text-green-600',
+                  nodeStatus !== 'online' && 'text-red-600',
                 )}
               >
                 {nodeStatus === 'online' ? 'Online' : 'Offline'}
@@ -647,7 +635,6 @@ const AgentCard = ({
                 <DialogContent
                   showCloseButton
                   className="max-h-[80vh] max-w-xl overflow-y-auto"
-                  maxW={576}
                 >
                   <DialogHeader>
                     <DialogTitle className="text-xl">{agent?.name}</DialogTitle>
@@ -701,11 +688,11 @@ const AgentCard = ({
                       )}
                     </div>
 
-                    <div className="border-divider bg-bg-tertiary rounded-md border p-3">
+                    <div className="rounded-md border border-cyan-800 bg-cyan-900/10 p-3">
                       <div className="flex gap-2">
-                        <Info className="text-text-secondary mt-0.5 h-4 w-4 shrink-0" />
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-cyan-400" />
                         <div>
-                          <p className="text-text-default text-sm font-medium">
+                          <p className="text-sm font-medium text-cyan-400">
                             {t('networkAgentsPage.howPaymentsWork')}
                           </p>
                           <p className="text-text-secondary text-sm">
@@ -729,11 +716,7 @@ const AgentCard = ({
                   </div>
 
                   {allowInstall && (
-                    <DialogFooter
-                      className="ml-auto w-full max-w-[300px]"
-                      flexDirection="row"
-                      gap={4}
-                    >
+                    <DialogFooter className="ml-auto w-full max-w-[300px] flex-row gap-1">
                       <Button
                         variant="outline"
                         size="md"
@@ -884,11 +867,7 @@ export const InstallAgentModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent
-        className="text-text-default max-w-xl"
-        showCloseButton={false}
-        maxW={576}
-      >
+      <DialogContent className="text-text-default max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-3 text-xl">
             {/* <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 text-xl">
@@ -907,11 +886,11 @@ export const InstallAgentModal = ({
         )}
         {step === 1 && (
           <div className="space-y-6">
-            <div className="border-divider bg-bg-tertiary rounded-lg border p-4">
+            <div className="rounded-lg border border-cyan-800 bg-cyan-900/10 p-4">
               <div className="flex flex-col gap-2.5">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="text-text-secondary h-4 w-4" />
-                  <p className="text-text-default text-sm font-medium">
+                  <Sparkles className="h-4 w-4 text-cyan-400" />
+                  <p className="text-sm font-medium text-cyan-400">
                     {t('networkAgentsPage.howPaymentsWork')}
                   </p>
                 </div>
@@ -996,7 +975,7 @@ export const InstallAgentModal = ({
 
         {step === 2 && (
           <div className="py-8 text-center">
-            <CheckCircle className={`mx-auto mb-4 h-12 w-12 ${status.up.ink}`} />
+            <CheckCircle className="mx-auto mb-4 h-12 w-12 text-green-400" />
             <h3 className="text-text-default mb-2 text-base font-semibold">
               {t('networkAgentsPage.addedSuccess')}
             </h3>
@@ -1041,7 +1020,7 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
   const { t } = useTranslation();
 
   return (
-    <Alert variant="warning" className="bg-bg-tertiary mb-6 border-0 p-6">
+    <Alert variant="warning" className="mb-6 border-0 bg-yellow-300/5 p-6">
       <div className="flex flex-col gap-4">
         <AlertTitle className="text-text-default text-base font-semibold">
           {t('networkAgentsPage.setupRequired')}
@@ -1051,9 +1030,9 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-start gap-3">
                 {isWalletConnected ? (
-                  <CheckCircle2 className={`mt-0.5 size-4 shrink-0 ${status.up.ink}`} />
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-green-500" />
                 ) : (
-                  <AlertCircle className={`mt-0.5 size-4 shrink-0 ${status.act.ink}`} />
+                  <AlertCircle className="mt-0.5 size-4 shrink-0 text-yellow-400" />
                 )}
                 <div>
                   <p className="text-text-default text-sm font-medium">
@@ -1069,7 +1048,7 @@ function SetupGuide({ isWalletConnected }: SetupGuideProps) {
                   to="/settings/crypto-wallet"
                   className={cn(
                     buttonVariants({ variant: 'outline', size: 'md' }),
-                    'shrink-0', status.act.panel,
+                    'shrink-0 bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black',
                   )}
                 >
                   {t('networkAgentsPage.connectWallet')}
@@ -1094,7 +1073,7 @@ function Disclaimer() {
   if (dismissedCommunityAgentsDisclaimer) return null;
 
   return (
-    <Alert variant="warning" className="bg-bg-tertiary mb-6 border-0 p-6">
+    <Alert variant="warning" className="mb-6 border-0 bg-orange-300/5 p-6">
       <button
         className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-text-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
         onClick={() => setDismissedCommunityAgentsDisclaimer(true)}
@@ -1103,14 +1082,14 @@ function Disclaimer() {
         <span className="sr-only">Close</span>
       </button>
       <div className="flex items-start gap-3">
-        <AlertCircle className={`mt-0.5 size-4 shrink-0 ${status.act.ink}`} />
+        <AlertCircle className="mt-0.5 size-4 shrink-0 text-orange-400" />
         <div>
           <p className="text-text-default text-sm font-medium">
             Community Agents
           </p>
           <p className="text-text-secondary text-sm">
-            Community agents are not verified by {getBrand().name}. We may
-            remove agents that violate our terms. Use at your own risk.
+            Community agents are not verified by Hanzo. We may remove agents
+            that violate our terms. Use at your own risk.
           </p>
         </div>
       </div>

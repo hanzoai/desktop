@@ -1,6 +1,7 @@
 import './globals.css';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PlayIcon, StopIcon } from '@radix-ui/react-icons';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,22 +23,21 @@ import {
   Toaster,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { info } from '@tauri-apps/plugin-log';
-import { Loader2, PlayIcon, SquareIcon, Trash2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
-import { Gui } from '../../gui';
 import logo from '../../../src-tauri/icons/128x128@2x.png';
 import { LocalModels } from '../../components/hanzo-node-manager/local-models';
-import { ModelTools } from '../../components/hanzo-node-manager/model-tools';
 import {
   hanzoNodeQueryClient,
   useHanzoNodeGetOptionsQuery,
@@ -82,18 +82,20 @@ const App = () => {
     refetchInterval: 1000,
   });
 
-  const { isPending: hanzoNodeSpawnIsPending, mutateAsync: hanzoNodeSpawn } =
-    useHanzoNodeSpawnMutation({
-      onMutate: () => {
-        startingHanzoNodeToast();
-      },
-      onSuccess: () => {
-        hanzoNodeStartedToast();
-      },
-      onError: () => {
-        hanzoNodeStartErrorToast();
-      },
-    });
+  const {
+    isPending: hanzoNodeSpawnIsPending,
+    mutateAsync: hanzoNodeSpawn,
+  } = useHanzoNodeSpawnMutation({
+    onMutate: () => {
+      startingHanzoNodeToast();
+    },
+    onSuccess: () => {
+      hanzoNodeStartedToast();
+    },
+    onError: () => {
+      hanzoNodeStartErrorToast();
+    },
+  });
   const { isPending: hanzoNodeKillIsPending, mutateAsync: hanzoNodeKill } =
     useHanzoNodeKillMutation({
       onMutate: () => {
@@ -119,11 +121,12 @@ const App = () => {
       errorRemovingHanzoNodeStorageToast();
     },
   });
-  const { mutateAsync: hanzoNodeSetOptions } = useHanzoNodeSetOptionsMutation({
-    onSuccess: (options) => {
-      setHanzoNodeOptions(options);
-    },
-  });
+  const { mutateAsync: hanzoNodeSetOptions } =
+    useHanzoNodeSetOptionsMutation({
+      onSuccess: (options) => {
+        setHanzoNodeOptions(options);
+      },
+    });
   const { mutateAsync: hanzoNodeSetDefaultOptions } =
     useHanzoNodeSetDefaultOptionsMutation({
       onSuccess: (options) => {
@@ -186,7 +189,7 @@ const App = () => {
           <span className="text-text-secondary text-xs">{`API URL: http://${hanzoNodeOptions?.node_api_ip}:${hanzoNodeOptions?.node_api_port}`}</span>
         </div>
         <div className="flex grow flex-row items-center justify-end space-x-4">
-          <Tooltip placement="bottom">
+          <Tooltip>
             <TooltipTrigger>
               <Button
                 disabled={
@@ -208,12 +211,14 @@ const App = () => {
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Start Node</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="bottom">
+                <p>Start Node</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
 
-          <Tooltip placement="bottom">
+          <Tooltip>
             <TooltipTrigger>
               <Button
                 disabled={
@@ -228,16 +233,18 @@ const App = () => {
                 {hanzoNodeKillIsPending ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : (
-                  <SquareIcon className="size-4" />
+                  <StopIcon className="size-4" />
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Stop Node</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="bottom">
+                <p>Stop Node</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
 
-          <Tooltip placement="bottom">
+          <Tooltip>
             <TooltipTrigger>
               <Button
                 disabled={hanzoNodeIsRunning}
@@ -252,9 +259,11 @@ const App = () => {
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Reset Node</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="bottom">
+                <p>Reset Node</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         </div>
       </div>
@@ -296,17 +305,6 @@ const App = () => {
             value="models"
           >
             Models
-          </TabsTrigger>
-          <TabsTrigger
-            className={cn(
-              'flex flex-col rounded-full px-4 py-1.5 text-base font-medium transition-colors',
-              'data-[state=active]:bg-bg-quaternary data-[state=active]:text-text-default',
-              'data-[state=inactive]:text-text-tertiary data-[state=inactive]:bg-transparent',
-              'focus-visible:outline-hidden',
-            )}
-            value="model-tools"
-          >
-            Model Tools
           </TabsTrigger>
         </TabsList>
         <TabsContent className="h-full overflow-hidden" value="app-logs">
@@ -357,19 +355,12 @@ const App = () => {
         <TabsContent className="h-full overflow-hidden pb-2" value="models">
           <LocalModels />
         </TabsContent>
-
-        <TabsContent
-          className="h-full overflow-hidden pb-2"
-          value="model-tools"
-        >
-          <ModelTools />
-        </TabsContent>
       </Tabs>
       <AlertDialog
         onOpenChange={setIsConfirmResetDialogOpened}
         open={isConfirmResetDialogOpened}
       >
-        <AlertDialogContent width="75%">
+        <AlertDialogContent className="w-[75%]">
           <AlertDialogHeader>
             <AlertDialogTitle>Reset your Node</AlertDialogTitle>
             <AlertDialogDescription>
@@ -383,7 +374,7 @@ const App = () => {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4" gap={4}>
+          <AlertDialogFooter className="mt-4 flex justify-end gap-1">
             <AlertDialogCancel
               className="mt-0 min-w-[120px]"
               onClick={() => {
@@ -406,14 +397,12 @@ const App = () => {
 };
 
 ReactDOM.createRoot(document.querySelector('#root') as HTMLElement).render(
-  <Gui>
-    <QueryClientProvider client={hanzoNodeQueryClient}>
-      <React.StrictMode>
-        <TooltipProvider delay={0}>
-          <App />
-          <Toaster />
-        </TooltipProvider>
-      </React.StrictMode>
-    </QueryClientProvider>
-  </Gui>,
+  <QueryClientProvider client={hanzoNodeQueryClient}>
+    <React.StrictMode>
+      <TooltipProvider>
+        <App />
+        <Toaster />
+      </TooltipProvider>
+    </React.StrictMode>
+  </QueryClientProvider>,
 );

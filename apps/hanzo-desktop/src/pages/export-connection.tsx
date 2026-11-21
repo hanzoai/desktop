@@ -1,11 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { encryptMessageWithPassphrase } from '@hanzo/desktop-message-ts/cryptography';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { encryptMessageWithPassphrase } from '@hanzo_network/hanzo-message-ts/cryptography';
 import {
   type ExportConnectionFormSchema,
   exportConnectionFormSchema,
-} from '@hanzo/desktop-node-state/forms/settings/export-connection';
-import { Button, Form, FormField, Input, TextField } from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-node-state/forms/settings/export-connection';
+import {
+  Button,
+  Form,
+  FormField,
+  Input,
+  TextField,
+} from '@hanzo_network/hanzo-ui';
 import {} from '@tauri-apps/api';
 import { save } from '@tauri-apps/plugin-dialog';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
@@ -36,6 +42,7 @@ export const ExportConnection = () => {
   const exportConnection = async (
     values: ExportConnectionFormSchema,
   ): Promise<void> => {
+    // TODO: Convert to a common format shared by visor, app and desktop
     const parsedSetupData = JSON.stringify(auth);
     const encryptedSetupData = await encryptMessageWithPassphrase(
       parsedSetupData,

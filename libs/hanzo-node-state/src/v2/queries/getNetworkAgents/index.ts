@@ -1,4 +1,4 @@
-import { getNetworkAgents as getNetworkAgentsApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getNetworkAgents as getNetworkAgentsApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 export const getNetworkAgents = async () => {
   const response = await getNetworkAgentsApi();

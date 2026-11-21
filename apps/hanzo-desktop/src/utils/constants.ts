@@ -1,8 +1,19 @@
-import { ModelPrefix } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { ModelPrefix } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import MODEL_CATALOG from '../lib/hanzo-node-manager/model-catalog.json';
 
 export const HANZO_DOCS_URL = 'https://docs.hanzo.ai';
+
+export const HANZO_TUTORIALS = {
+  'add-ai':
+    'https://pub-0f9ce9e619a7477aa6e92197a3ec4a1e.r2.dev/assets/agents.mp4',
+  'file-explorer':
+    'https://pub-5b510bf382c744c093bdd1619d2d6d3e.r2.dev/file-explorer.mp4',
+  'scheduled-tasks':
+    'https://pub-5b510bf382c744c093bdd1619d2d6d3e.r2.dev/scheduled-tasks.mp4',
+  'hanzo-tools':
+    'https://pub-0f9ce9e619a7477aa6e92197a3ec4a1e.r2.dev/assets/tools.mp4',
+} as const;
 
 export const MODELS_WITH_THINKING_SUPPORT = {
   // Local-engine models with thinking support. Keyed by the node's wire model

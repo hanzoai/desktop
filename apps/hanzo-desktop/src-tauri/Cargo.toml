@@ -1,26 +1,25 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.59"
+version = "0.0.0"
 description = "A first class Desktop application to interact with Hanzo Node"
-authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
-license = "Apache-2.0"
-repository = "https://github.com/hanzoai/desktop"
+authors = ["nico@dcspark.io"]
+license = ""
+repository = ""
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.6", features = [] }
+tauri-build = { version = "2.4.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.11", features = [ "macos-private-api", "tray-icon", "image-png", "devtools"] }
+tauri = { version = "2.4", features = [ "macos-private-api", "tray-icon", "image-png", "devtools"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
-mdns-sd = "0.20.1"
 lazy_static = "1.4.0"
-tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "rt", "net", "sync", "io-util", "time"] }
+tokio = { version = "1.36.0", features = ["macros"] }
 chrono = "0.4.38"
 futures-util = "0.3"
 regex = "1.10.4"
@@ -29,139 +28,67 @@ wgpu = "0.20.0"
 sysinfo = "0.30.12"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 blake3 = "1.5.1"
-# Phase-2 on-chain claim signer (mining/claim.rs) — lean secp256k1 stack (not
-# alloy/ethers): BIP-39 mnemonic → BIP-44 (m/44'/60'/0'/0/0) → k256 ECDSA, with
-# EIP-1559 RLP via `rlp` and keccak via `tiny-keccak`. Derives the SAME address
-# as the frontend ethers wallet, so the mining wallet == the user's wallet.
-coins-bip39 = { version = "0.8.7", default-features = false, features = ["english"] }
-k256 = "0.13"
-rlp = "0.5"
-tiny-keccak = { version = "2.0", features = ["keccak"] }
 opener = "0.7.2"
 hex = "0.4.3"
 base64 = "0.22.1"
 time = "^0.3.36"
 listeners = "0.2"
 log = "0.4"
-# Scrubs key material and credentials out of every log record (and the log
-# files older builds left on disk). See log-redact/src/lib.rs.
-hanzo-log-redact = { path = "log-redact" }
-hanzo-node-secret = { path = "node-secret" }
-# Finds a local hanzo-server, or says there is none (cloud#760). See engine-bin/src/lib.rs.
-hanzo-engine-bin = { path = "engine-bin" }
-# Finds Hanzo Dev, or names the release the app fetches so a local run needs no terminal. See dev-agent/src/lib.rs.
-hanzo-dev-agent = { path = "dev-agent" }
-# The project folders Auto can pick from. See projects/src/lib.rs.
-hanzo-projects = { path = "projects" }
-# The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
-# sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
-hanzo-node-env = { path = "node-env" }
 anyhow = "1.0.89"
-uuid = { version = "1.10.0", features = ["v4"] }
+uuid = "1.10.0"
 kill_tree = { version = "0.2", features = ["tokio"] }
 semver = "1.0"
 sha2 = "0.10"
-rand = "0.8"
-# The OS keychain on every platform the app ships for: Keychain on macOS, the
-# Credential Manager on Windows, the Secret Service (libsecret, over D-Bus) on
-# Linux. keyring 3 has NO default store: with no feature it is the mock, whose
-# entries live and die with one `Entry`, so a session written at sign-in was
-# gone by the reload that follows it and the app came back signed out.
-keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
 
-# hanzo-machined client (UNIX-socket HTTP/JSON)
-hyper = { version = "1.4", features = ["client", "http1"] }
-http-body-util = "0.1"
-bytes = "1"
-thiserror = "1.0"
-dirs = "6.0"
-
-# Shared AI-chain mining crate (canonical hanzo core), pinned to latest.
-# Same crate Zoo & Lux use so all three mine off the same network protocol.
-hanzo-mining = "1.1.21"
+# Embedded inference engine (in-process mistralrs / hanzo-engine). Used by the
+# `embedded_engine` module to run chat + embeddings without spawning an external
+# `mistralrs-server`. Path deps point at the local hanzo-engine checkout (the
+# same checkout the external `mistralrs-server` binary is built from; cf.
+# HANZO_ENGINE_BIN default `/home/z/src/hanzo/engine/target/release/...`).
+# Absolute paths so the dep resolves identically from the live checkout and any
+# git worktree (relative depth differs between them). default-features = false
+# so device backends are selected explicitly via this crate's features below.
+mistralrs = { path = "/home/z/src/hanzo/engine/mistralrs", default-features = false }
+mistralrs-core = { path = "/home/z/src/hanzo/engine/mistralrs-core", default-features = false }
+# HTTP server for the embedded engine's OpenAI-compatible surface. Matches the
+# axum version used by the engine workspace (0.8.x).
+axum = { version = "0.8", features = ["json", "tokio"] }
 
 tauri-plugin-global-shortcut = "2.3"
 tauri-plugin-shell = "2.3"
-tauri-plugin-single-instance = { version = "2.4", features = ["deep-link"] }
-tauri-plugin-updater = "2.10"
-tauri-plugin-dialog = "2.7"
-tauri-plugin-fs = "2.5"
-tauri-plugin-os = "2.3"
+tauri-plugin-single-instance = { version = "2.3", features = ["deep-link"] }
+tauri-plugin-updater = "2.9"  
+tauri-plugin-dialog = "2.3"
+tauri-plugin-fs ="2.2"
+tauri-plugin-os = "2.2"
 tauri-plugin-process = "2.3"
-tauri-plugin-log = "~2.9"
-tauri-plugin-deep-link = "2.4"
+tauri-plugin-log = "2.6"
+tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-http = "2.5"
 
-# Phase 1 AI mining — native-Rust precompile (`mining/precompile.rs`), a pure
-# port of lux/precompile/ai/ai_mining.go. No Go FFI / libluxprecompile shared
-# library: the crypto is FIPS 204 ML-DSA (`fips204`) + BLAKE3 (`blake3`), so
-# hanzo mines with no Go build chain and is identical on every platform.
-fips204 = "0.4"
-
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
-# --- Native Hanzo Engine (embedded, in-process) -----------------------------
-# In-process LLM inference via hanzoai/engine, pinned to a release tag. The engine workspace was
-# rebranded mistralrs-* -> hanzo-*: `hanzo` is the high-level SDK, `hanzo-engine`
-# is the core. Optional and OFF by default so the standard build stays light. Enable with the
-# `native-engine` feature plus a backend, e.g.
-#   cargo build --release --features "native-engine metal"   (Apple Silicon)
-#   cargo build --release --features "native-engine cuda"    (NVIDIA)
-#   cargo build --release --features "native-engine vulkan"  (AMD/Linux)
-hanzo = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
-hanzo-engine = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
-# The canonical server: the SAME crate `hanzo serve` builds on. The desktop's
-# embedded engine reuses its `HanzoForServerBuilder` (state) +
-# `HanzoServerRouterBuilder` (axum Router) instead of a hand-rolled server, so
-# the node serves /v1/chat/completions, /v1/responses and /v1/messages
-# identically. `default-features = false` drops the bundled swagger-ui (the
-# inference routes don't need it; the builder gates docs behind that feature).
-hanzo-server-core = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true, default-features = false }
-axum = { version = "0.8", optional = true }
-
-# SIGTERM the managed GPU-fleet / studio children so they mark the machine
-# offline (fleet) and shut down cleanly, instead of a hard SIGKILL that waits
-# out the heartbeat window. Already in the dependency tree.
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-# The ZAP router (commands/browser.rs): Desktop embeds it, as every hanzo-mcp
-# does, and reaches the user's browser through the Hanzo extension. A tag, not
-# crates.io: crates.io stops at 1.1.2, before the extension could join the door
-# without pairing (1.1.4) and before the door took 9998 (1.1.5).
-zapd = { git = "https://github.com/zap-proto/zapd", tag = "v1.1.5" }
-
-# WebKitGTK denies `getUserMedia` unless the app answers its permission-request
-# signal (windows/microphone.rs). Pinned to what tauri-runtime-wry links, so
-# cargo unifies on one binding rather than two views of the same C library.
-[target.'cfg(target_os = "linux")'.dependencies]
-webkit2gtk = { version = "=2.0", features = ["v2_40"] }
-
-[dev-dependencies]
-tempfile = "3"
-
 [features]
-default = ["machine"]
+# DEFAULT: enable CUDA for the embedded engine. The live target is the DGX Spark
+# (GB10, sm_121); the engine build script auto-detects the compute capability via
+# nvidia-smi. macOS/CPU builds should override with `--no-default-features` and add
+# the desired features, e.g. `--features metal` or `--features custom-protocol`.
+default = ["cuda"]
+
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
 
-# hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
-# Other brands can opt out by disabling default-features.
-machine = []
-
-# Embed the native Hanzo Engine for in-process inference. This runs the canonical
-# `hanzo-server-core` server (all protocols: chat/responses/messages) on
-# 127.0.0.1:36900 plus a thin /v1/engine/* management surface and Tauri IPC
-# commands. Pair with a backend feature.
-native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:hanzo-server-core", "dep:axum"]
-# GPU/CPU backends forwarded to the engine AND the server crate so their shared
-# `hanzo-engine` resolves to one feature set. Weak deps (`pkg?/feat`) so selecting
-# a backend never force-enables the engine unless `native-engine` is also on.
-metal = ["hanzo?/metal", "hanzo-engine?/metal", "hanzo-server-core?/metal"]
-cuda = ["hanzo?/cuda", "hanzo-engine?/cuda", "hanzo-server-core?/cuda"]
-vulkan = ["hanzo?/vulkan", "hanzo-engine?/vulkan", "hanzo-server-core?/vulkan"]
-accelerate = ["hanzo-engine?/accelerate", "hanzo-server-core?/accelerate"]
-flash-attn = ["hanzo?/flash-attn", "hanzo-server-core?/flash-attn"]
-
+# Embedded engine device backends. These forward to the mistralrs crate and also
+# gate the desktop's own device-detection (`#[cfg(feature = "cuda")]` etc. in
+# embedded_engine/engine.rs).
+# NVIDIA CUDA GPU support (Linux/Windows; GB10 on the Spark).
+cuda = ["mistralrs/cuda", "mistralrs-core/cuda"]
+# cuDNN acceleration (requires cuda).
+cudnn = ["cuda", "mistralrs/cudnn", "mistralrs-core/cudnn"]
+# Apple Metal GPU support (macOS/Apple Silicon).
+metal = ["mistralrs/metal", "mistralrs-core/metal"]
+# Flash Attention 2 kernels (requires cuda).
+flash-attn = ["cuda", "mistralrs/flash-attn"]

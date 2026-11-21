@@ -1,4 +1,4 @@
-import { searchVectorFs } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { searchVectorFs } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import {
   type GetVRSearchSimplifiedInput,

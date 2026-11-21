@@ -1,4 +1,4 @@
-import { removeToolAsset as removeToolAssetApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { removeToolAsset as removeToolAssetApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type RemoveAssetToToolInput } from './types';
 

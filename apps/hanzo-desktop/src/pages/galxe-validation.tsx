@@ -1,8 +1,7 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { QuestNames } from '@hanzo/desktop-message-ts/api/quests/types';
-import { useUpdateQuestsStatus } from '@hanzo/desktop-node-state/v2/mutations/updateQuestsStatus/useUpdateQuestsStatus';
-import { useGetQuestsStatus } from '@hanzo/desktop-node-state/v2/queries/getQuestsStatus/useGetQuestsStatus';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { QuestNames } from '@hanzo_network/hanzo-message-ts/api/quests/types';
+import { useUpdateQuestsStatus } from '@hanzo_network/hanzo-node-state/v2/mutations/updateQuestsStatus/useUpdateQuestsStatus';
+import { useGetQuestsStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getQuestsStatus/useGetQuestsStatus';
 import {
   Alert,
   AlertDescription,
@@ -13,7 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { Check, CircleIcon, Info, RefreshCw } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -25,60 +24,71 @@ const questStatusInfoMap: Record<
   { name: string; description: string }
 > = {
   [QuestNames.InstalledApp]: {
-    name: `Try ${getBrand().name}`,
-    description: `Download and Install ${getBrand().name}.`,
+    name: 'Try Hanzo Desktop',
+    description: 'Download and Install Hanzo Desktop.',
   },
   [QuestNames.CreateIdentity]: {
-    name: `Create Your ${getBrand().name} Identity`,
-    description: `Create an on-chain ${getBrand().name} Identity! This is require to participate in the decentralized peer to peer network.`,
+    name: 'Create Your Hanzo Identity',
+    description:
+      'Create an on-chain Hanzo Identity! This is require to participate in the decentralized peer to peer network.',
   },
   [QuestNames.DownloadFromStore]: {
     name: 'Download Your First Tool',
-    description: `Download your first tool from the ${getBrand().name} store.`,
+    description: 'Download your first tool from the Hanzo AI store.',
   },
   [QuestNames.ComeBack2Days]: {
-    name: `Return to ${getBrand().name} in 2 different days`,
-    description: `Return to ${getBrand().name} in 2 different days. Remember to create new chats each day!`,
+    name: 'Return to Hanzo in 2 different days',
+    description:
+      'Return to Hanzo in 2 different days. Remember to create new chats each day!',
   },
   [QuestNames.ComeBack4Days]: {
-    name: `Return to ${getBrand().name} in 4 different days`,
-    description: `Return to ${getBrand().name} in 4 different days. Remember to create new chats each day!`,
+    name: 'Return to Hanzo in 4 different days',
+    description:
+      'Return to Hanzo in 4 different days. Remember to create new chats each day!',
   },
   [QuestNames.ComeBack7Days]: {
-    name: `Return to ${getBrand().name} in 7 different days`,
-    description: `Return to ${getBrand().name} in 7 different days. Remember to create new chats each day!`,
+    name: 'Return to Hanzo in 7 different days',
+    description:
+      'Return to Hanzo in 7 different days. Remember to create new chats each day!',
   },
   [QuestNames.CreateTool]: {
     name: 'Create Your First Tool',
-    description: `Create and publish your first tool on ${getBrand().name}. Share your creativity with the community.`,
+    description:
+      'Create and publish your first tool on Hanzo. Share your creativity with the community.',
   },
   [QuestNames.SubmitAndGetApprovalForTool]: {
     name: 'Submit and Get Approval for 1 Tool',
-    description: `Submit your tool for review and get it approved by the ${getBrand().name} team.`,
+    description:
+      'Submit your tool for review and get it approved by the Hanzo team.',
   },
   [QuestNames.SubmitAndGetApprovalFor2Tool]: {
     name: 'Submit and Get Approval for 2 Tools',
-    description: `Submit your tool for review and get it approved by the ${getBrand().name} team.`,
+    description:
+      'Submit your tool for review and get it approved by the Hanzo team.',
   },
   [QuestNames.SubmitAndGetApprovalFor3Tool]: {
     name: 'Submit and Get Approval for 3 Tools',
-    description: `Submit your tool for review and get it approved by the ${getBrand().name} team.`,
+    description:
+      'Submit your tool for review and get it approved by the Hanzo team.',
   },
   [QuestNames.FeaturedInRanking]: {
     name: 'Featured in Ranking',
-    description: `Get featured in the ${getBrand().name} Store`,
+    description: 'Get featured in the Hanzo AI Store',
   },
   [QuestNames.WriteHonestReview]: {
     name: 'Write a Review',
-    description: `Go to ${getBrand().name} Store and write a detailed and honest review about your experience with a ${getBrand().name} tool.`,
+    description:
+      'Go to Hanzo Store and write a detailed and honest review about your experience with a Hanzo tool.',
   },
   [QuestNames.Write5HonestReview]: {
     name: 'Write 5 Reviews',
-    description: `Go to ${getBrand().name} Store and write 5 detailed and honest reviews about your experience with ${getBrand().name} tools.`,
+    description:
+      'Go to Hanzo Store and write 5 detailed and honest reviews about your experience with Hanzo tools.',
   },
   [QuestNames.Write10HonestReview]: {
     name: 'Write 10 Reviews',
-    description: `Go to ${getBrand().name} Store and write 10 detailed and honest reviews about your experience with ${getBrand().name} tools.`,
+    description:
+      'Go to Hanzo Store and write 10 detailed and honest reviews about your experience with Hanzo tools.',
   },
   [QuestNames.UseRAG3Days]: {
     name: 'Chat with files 3 different days',
@@ -133,11 +143,11 @@ export const GalxeValidation = () => {
         <Alert className="rounded-xs border-none bg-cyan-900/20 p-3.5 shadow-none">
           <Info className="mt-1 size-4 text-cyan-400" />
           <AlertTitle className="text-sm">
-            Setup Your {getBrand().name} Identity
+            Setup Your Hanzo Identity
           </AlertTitle>
           <AlertDescription className="text-text-secondary text-xs">
             Before you can sync and track your quest progress, you&apos;ll need
-            to set up your {getBrand().name} identity.
+            to set up your Hanzo identity.
           </AlertDescription>
         </Alert>
         {isPending &&
@@ -147,10 +157,7 @@ export const GalxeValidation = () => {
         {isSuccess &&
           quests?.map((quest, index) => (
             <Card className="m-0 mb-4 p-3 px-4" key={index}>
-              <CardHeader
-                className="flex flex-row items-start gap-2.5 space-y-0 p-0"
-                flexDirection="row"
-              >
+              <CardHeader className="flex flex-row items-start gap-2.5 space-y-0 p-0">
                 <span className="pt-1">
                   {quest.progress === 100 ? (
                     <div className="flex size-5 items-center justify-center rounded-full bg-green-600 p-0.5">

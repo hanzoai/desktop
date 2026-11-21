@@ -1,5 +1,5 @@
-import { Button } from '@hanzo/desktop-ui';
-import { PartyIcon } from '@hanzo/desktop-ui/assets';
+import { Button } from '@hanzo_network/hanzo-ui';
+import { PartyIcon } from '@hanzo_network/hanzo-ui/assets';
 import { invoke } from '@tauri-apps/api/core';
 import { relaunch } from '@tauri-apps/plugin-process';
 

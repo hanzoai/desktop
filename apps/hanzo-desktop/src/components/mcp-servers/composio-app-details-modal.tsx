@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,7 @@ import {
   DialogDescription,
   MarkdownText,
   Skeleton,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { useState } from 'react';
 import { useApp } from '../../lib/composio';
 
@@ -66,11 +66,7 @@ export const ComposioAppDetailsModal = ({
 
   return (
     <Dialog onOpenChange={(open: boolean) => !open && onClose()} open={isOpen}>
-      <DialogContent
-        className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden"
-        showCloseButton={false}
-        maxW={672}
-      >
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden">
         {isLoading ? (
           <LoadingSkeleton />
         ) : (

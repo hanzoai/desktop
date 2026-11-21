@@ -1,4 +1,4 @@
-import { testLLMProvider as testLLMProviderApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { testLLMProvider as testLLMProviderApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type TestLLMProviderInput } from './types';
 

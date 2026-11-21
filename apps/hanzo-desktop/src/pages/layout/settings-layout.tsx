@@ -1,20 +1,21 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Badge,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   ExportIcon,
   PromptLibraryIcon,
   ShortcutsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   BarChart2,
-  ScanBoxIcon,
+  CodesandboxIcon,
   LaptopMinimal,
   PaintbrushIcon,
   SettingsIcon,
@@ -22,6 +23,7 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import { Link, Outlet, useMatch } from 'react-router';
+
 
 import { openHanzoNodeManagerWindow } from '../../lib/hanzo-node-manager/hanzo-node-manager-windows-utils';
 import { useAuth } from '../../store/auth';
@@ -99,7 +101,9 @@ const NavLink = ({
 
 export function MainNav() {
   const { t } = useTranslation();
-  const isLocalHanzoNodeInUse = useHanzoNodeManager((state) => state.isInUse);
+  const isLocalHanzoNodeInUse = useHanzoNodeManager(
+    (state) => state.isInUse,
+  );
 
   const navigationLinks = [
     {
@@ -123,7 +127,7 @@ export function MainNav() {
       onClick: () => {
         void openHanzoNodeManagerWindow();
       },
-      icon: <ScanBoxIcon className="text-text-secondary h-4 w-4" />,
+      icon: <CodesandboxIcon className="text-text-secondary h-4 w-4" />,
     },
     {
       title: t('settings.layout.remoteAccess'),
@@ -183,10 +187,10 @@ export function MainNav() {
           if (item.disabled) {
             return (
               <TooltipProvider
-                delay={item.disabled ? 0 : 10000}
+                delayDuration={item.disabled ? 0 : 10000}
                 key={item.title}
               >
-                <Tooltip placement="bottom-start">
+                <Tooltip>
                   <TooltipTrigger>
                     <NavLink
                       disabled={item.disabled}
@@ -196,16 +200,22 @@ export function MainNav() {
                       title={item.title}
                     />
                   </TooltipTrigger>
-                  <TooltipContent
-                    className="max-w-[240px]"
-                    sideOffset={-6}
-                  >
-                    <p>
-                      {' '}
-                      Galxe is going to come back the first week of October.
-                      More details soon.
-                    </p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent
+                      align="start"
+                      alignOffset={16}
+                      arrowPadding={2}
+                      className="max-w-[240px]"
+                      side="bottom"
+                      sideOffset={-6}
+                    >
+                      <p>
+                        {' '}
+                        Galxe is going to come back the first week of October.
+                        More details soon.
+                      </p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 </Tooltip>
               </TooltipProvider>
             );

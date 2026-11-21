@@ -1,5 +1,5 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
-import { type MoveFolderResponse } from '@hanzo/desktop-message-ts/api/vector-fs/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type MoveFolderResponse } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
 
 export type MoveFolderOutput = MoveFolderResponse;
 

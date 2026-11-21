@@ -4,10 +4,11 @@ import {
   AlertTitle,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, XIcon } from 'lucide-react';
 
@@ -84,14 +85,14 @@ export const ResourcesBanner = ({
             We recommend to use{' '}
             <TextLink
               className="text-yellow-200"
-              label={`${getBrand().name} Hosting`}
+              label={'Hanzo Hosting'}
               url={'https://hanzo.ai/get-hanzo'}
             />
           </div> */}
         </div>
       </AlertDescription>
       <button
-        className="absolute top-2 right-2 z-[100] text-gray-500 hover:text-gray-700"
+        className="absolute right-2 top-2 z-[100] text-gray-500 hover:text-gray-700"
         onClick={() => setCompatibilityBannerDismissed(true)}
         type="button"
       >
@@ -102,8 +103,8 @@ export const ResourcesBanner = ({
   if (isInSidebar && !isOptimal && !compatibilityBannerDismissed) {
     return (
       <div className={cn('flex w-full flex-col text-xs', className)}>
-        <TooltipProvider delay={0}>
-          <Tooltip placement="right">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
             <TooltipTrigger className="flex items-center gap-1">
               <Alert
                 className={cn(
@@ -117,7 +118,7 @@ export const ResourcesBanner = ({
                   {sidebarExpanded && (
                     <motion.span
                       animate="show"
-                      className="text-xs whitespace-nowrap"
+                      className="whitespace-nowrap text-xs"
                       exit="hidden"
                       initial="hidden"
                       variants={showAnimation}
@@ -128,9 +129,16 @@ export const ResourcesBanner = ({
                 </AnimatePresence>
               </Alert>
             </TooltipTrigger>
-            <TooltipContent className="max-w-md p-0">
-              {alertContent}
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent
+                align="center"
+                arrowPadding={2}
+                className="max-w-md p-0"
+                side="right"
+              >
+                {alertContent}
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         </TooltipProvider>
       </div>

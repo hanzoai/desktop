@@ -1,7 +1,6 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useSetToolMcpEnabled } from '@hanzo/desktop-node-state/v2/mutations/setToolMcpEnabled/useSetToolMcpEnabled';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useSetToolMcpEnabled } from '@hanzo_network/hanzo-node-state/v2/mutations/setToolMcpEnabled/useSetToolMcpEnabled';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,9 +28,10 @@ import {
   ToggleGroupItem,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { type TFunction } from 'i18next';
 import { BoltIcon, MoveRightIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -71,7 +71,7 @@ export const McpRegistryPage = () => {
       <div className="container max-w-screen-lg">
         <div className="flex flex-col gap-5 pt-10 pb-6">
           <div className="flex justify-between gap-4">
-            <div className="font-sans inline-flex items-center gap-5 text-3xl font-medium">
+            <div className="font-inter inline-flex items-center gap-5 text-3xl font-medium">
               <h1>{t('mcpServers.title')}</h1>
               <TabsList className="flex h-10 w-fit items-center gap-2 rounded-full bg-transparent px-1 py-1">
                 <TabsTrigger
@@ -85,7 +85,7 @@ export const McpRegistryPage = () => {
                 >
                   {t('mcpServers.label')}
                   <span className="text-text-secondary inline-flex items-center gap-1 text-xs">
-                    MCP <MoveRightIcon className="size-2.5" /> {getBrand().name}
+                    MCP <MoveRightIcon className="size-2.5" /> Hanzo
                   </span>
                 </TabsTrigger>
                 <TabsTrigger
@@ -251,7 +251,7 @@ const ExposeToolsAsMcp = () => {
         <div className="flex items-center justify-start gap-2">
           <ToggleGroup
             className="border-divider flex justify-start rounded-full border bg-transparent px-0.5 py-0.5"
-            onValueChange={(value: string) => {
+            onValueChange={(value) => {
               if (!value) return;
               setSelectedMCCategory(value as GetMCPCategory);
             }}
@@ -259,10 +259,7 @@ const ExposeToolsAsMcp = () => {
             value={selectedMCCategory}
           >
             <ToggleGroupItem
-              bg="transparent"
-              borderWidth={0}
-              className="text-text-secondary text-xs font-medium"
-              rounded={9999}
+              className="data-[state=on]:bg-bg-secondary text-text-secondary rounded-full bg-transparent px-5 py-1.5 text-xs font-medium data-[state=on]:text-white"
               key="all"
               size="sm"
               value="all"
@@ -280,10 +277,7 @@ const ExposeToolsAsMcp = () => {
               },
             ].map((tool) => (
               <ToggleGroupItem
-                bg="transparent"
-                borderWidth={0}
-                className="text-text-secondary text-xs font-medium"
-                rounded={9999}
+                className="data-[state=on]:bg-bg-secondary text-text-secondary rounded-full bg-transparent px-5 py-1.5 text-xs font-medium data-[state=on]:text-white"
                 key={tool.value}
                 size="sm"
                 value={tool.value}
@@ -292,13 +286,13 @@ const ExposeToolsAsMcp = () => {
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-          <DropdownMenu placement="bottom">
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button size="md" variant="outline">
                 {t('mcpClients.connectExternalClient')}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent>
+            <DropdownMenuContent align="center" className="p-1 px-2">
               <DropdownMenuItem
                 onClick={() =>
                   handleConfigureClick(
@@ -391,7 +385,7 @@ const ExposeToolsAsMcp = () => {
                 <code>{dialogHelpText}</code>
               </pre>
             </div>
-            <AlertDialogFooter gap={16} justify="space-between">
+            <AlertDialogFooter className="flex justify-between gap-4">
               <AlertDialogCancel>{t('oauth.close')}</AlertDialogCancel>
               <AlertDialogAction
                 disabled={!jsonConfigToCopy}
@@ -442,7 +436,7 @@ const ExposeToolsAsMcp = () => {
                 />
               </pre>
             </div>
-            <AlertDialogFooter className="mt-4" gap={16}>
+            <AlertDialogFooter className="mt-4 flex justify-end gap-4">
               <AlertDialogCancel>{t('oauth.close')}</AlertDialogCancel>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -528,7 +522,7 @@ const McpCard = ({
           </Link>
         )}
         {!requiredConfig && (
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <div>
                 <Switch
@@ -550,15 +544,17 @@ const McpCard = ({
                 />
               </div>
             </TooltipTrigger>
-            <TooltipContent>
-              {toolEnabled !== true
-                ? t('mcpServers.tooltipEnableFirst')
-                : `${t('mcpServers.label')} ${
-                    toolMcpEnabled === true
-                      ? t('common.enabled')
-                      : t('common.disabled', 'Disabled')
-                  }`}
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent align="center" side="top">
+                {toolEnabled !== true
+                  ? t('mcpServers.tooltipEnableFirst')
+                  : `${t('mcpServers.label')} ${
+                      toolMcpEnabled === true
+                        ? t('common.enabled')
+                        : t('common.disabled', 'Disabled')
+                    }`}
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         )}
       </div>

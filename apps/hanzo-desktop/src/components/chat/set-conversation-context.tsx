@@ -1,19 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { retrieveVectorResource } from '@hanzo/desktop-message-ts/api/vector-fs/index';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { retrieveVectorResource } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   type SearchVectorFormSchema,
   searchVectorFormSchema,
-} from '@hanzo/desktop-node-state/forms/vector-fs/vector-search';
-import { transformDataToTreeNodes } from '@hanzo/desktop-node-state/lib/utils/files';
-import { useUpdateJobScope } from '@hanzo/desktop-node-state/v2/mutations/updateJobScope/useUpdateJobScope';
-import { useUploadVRFiles } from '@hanzo/desktop-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
-import { FunctionKeyV2 } from '@hanzo/desktop-node-state/v2/constants';
-import { useGetListDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
-import { useGetJobFolderName } from '@hanzo/desktop-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
-import { useGetVRSeachSimplified } from '@hanzo/desktop-node-state/v2/queries/getVRSearchSimplified/useGetSearchVRItems';
+} from '@hanzo_network/hanzo-node-state/forms/vector-fs/vector-search';
+import { transformDataToTreeNodes } from '@hanzo_network/hanzo-node-state/lib/utils/files';
+import { useUpdateJobScope } from '@hanzo_network/hanzo-node-state/v2/mutations/updateJobScope/useUpdateJobScope';
+import { useUploadVRFiles } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
+import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useGetListDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
+import { useGetJobFolderName } from '@hanzo_network/hanzo-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
+import { useGetVRSeachSimplified } from '@hanzo_network/hanzo-node-state/v2/queries/getVRSearchSimplified/useGetSearchVRItems';
 import {
   Badge,
   Button,
@@ -26,8 +26,8 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@hanzo/desktop-ui';
-import { FileTypeIcon } from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui';
+import { FileTypeIcon } from '@hanzo_network/hanzo-ui/assets';
 import { SearchIcon, UploadIcon } from 'lucide-react';
 import { Checkbox } from 'primereact/checkbox';
 import { Tree, type TreeCheckboxSelectionKeys } from 'primereact/tree';

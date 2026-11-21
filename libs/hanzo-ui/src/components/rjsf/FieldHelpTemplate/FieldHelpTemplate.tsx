@@ -19,7 +19,7 @@ export default function FieldHelpTemplate<
   if (!help) {
     return null;
   }
-  const id = helpId(idSchema);
+  const id = helpId<T>(idSchema);
   return (
     <span
       className={hasErrors ? 'text-red-500' : 'text-text-secondary'}

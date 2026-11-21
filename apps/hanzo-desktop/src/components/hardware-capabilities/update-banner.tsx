@@ -1,9 +1,10 @@
-import { Alert, Button, Progress } from '@hanzo/desktop-ui';
-import { PartyIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { Alert, Button, Progress } from '@hanzo_network/hanzo-ui';
+import { PartyIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
+import { listen } from '@tauri-apps/api/event';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, XIcon } from 'lucide-react';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import config from '../../config';
 import {
@@ -50,10 +51,7 @@ const UpdateStateUI: React.FC<{
             </span>
           </div>
           <Progress
-            height={8}
-            minW={0}
-            rounded="$3"
-            width="100%"
+            className="h-2 w-full rounded-lg bg-cyan-900 [&>div]:bg-cyan-400"
             max={100}
             value={downloadProgressPercent}
           />
@@ -79,13 +77,39 @@ const UpdateBanner: React.FC<{
   const { mutateAsync: downloadUpdate } = useDownloadUpdateMutation();
   const [updateDismissed, setUpdateDismissed] = useState(false);
 
-  useCheckUpdateQuery({
+  const { refetch: checkForUpdates } = useCheckUpdateQuery({
     refetchInterval: CHECK_UPDATE_INTERVAL_MS,
   });
 
+  // The tray "Check for Updates" item emits this event. The banner is always
+  // mounted on the main window, so wiring the listener here makes the tray
+  // action work regardless of the current route. A re-check also clears any
+  // dismissal so a freshly-found update can re-appear.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    let cancelled = false;
+    void listen('tray://check-for-updates', () => {
+      setUpdateDismissed(false);
+      void checkForUpdates();
+    }).then((fn) => {
+      if (cancelled) {
+        fn();
+      } else {
+        unlisten = fn;
+      }
+    });
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
+  }, [checkForUpdates]);
+
   const downloadAndInstall = useCallback(async (): Promise<void> => {
     if (updateState?.state === 'available') {
-      await downloadUpdate();
+      // The mutation already records failures into the shared update state
+      // (notice + rolled-back status); swallow the rejection here so a failed
+      // install from the banner click doesn't surface as an unhandled rejection.
+      await downloadUpdate().catch(() => undefined);
     }
   }, [updateState?.state, downloadUpdate]);
 

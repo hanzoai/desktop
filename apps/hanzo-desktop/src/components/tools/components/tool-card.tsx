@@ -1,18 +1,22 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type HanzoToolHeader } from '@hanzo/desktop-message-ts/api/tools/types';
-import { FunctionKeyV2 } from '@hanzo/desktop-node-state/v2/constants';
-import { useToggleEnableTool } from '@hanzo/desktop-node-state/v2/mutations/toggleEnableTool/useToggleEnableTool';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type HanzoToolHeader } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useToggleEnableTool } from '@hanzo_network/hanzo-node-state/v2/mutations/toggleEnableTool/useToggleEnableTool';
 import {
   Badge,
   buttonVariants,
   Switch,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 
-import { formatText, getVersionFromTool } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+import {
+  formatText,
+  getVersionFromTool,
+} from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { BoltIcon, PlayCircle } from 'lucide-react';
 import { useMemo } from 'react';
@@ -94,7 +98,7 @@ export default function ToolCard({ tool }: { tool: HanzoToolHeader }) {
         )}
       </div>
 
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild>
           <Link
             className={cn(
@@ -109,7 +113,9 @@ export default function ToolCard({ tool }: { tool: HanzoToolHeader }) {
             <PlayCircle className="h-4 w-4" />
           </Link>
         </TooltipTrigger>
-        <TooltipContent>{t('common.tryItOut', 'Try it out')}</TooltipContent>
+        <TooltipContent align="center" side="top">
+          {t('common.tryItOut', 'Try it out')}
+        </TooltipContent>
       </Tooltip>
 
       <div className="flex justify-center">
@@ -130,7 +136,7 @@ export default function ToolCard({ tool }: { tool: HanzoToolHeader }) {
         {t('common.configure')}
       </Link>
 
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild className="flex items-center gap-1">
           <div>
             <Switch
@@ -171,7 +177,11 @@ export default function ToolCard({ tool }: { tool: HanzoToolHeader }) {
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent>{t('common.enabled')}</TooltipContent>
+        <TooltipPortal>
+          <TooltipContent align="center" side="top">
+            {t('common.enabled')}
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
     </div>
   );

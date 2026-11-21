@@ -1,18 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getBrand } from '@hanzo/desktop-brand-config';
 import {
   type LocaleMode,
   localeOptions,
   useTranslation,
-} from '@hanzo/desktop-i18n';
-import { isHanzoIdentityLocalhost } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+} from '@hanzo_network/hanzo-i18n';
+import { isHanzoIdentityLocalhost } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 
-import { useSetMaxChatIterations } from '@hanzo/desktop-node-state/v2/mutations/setMaxChatIterations/useSetMaxChatIterations';
+import { useSetMaxChatIterations } from '@hanzo_network/hanzo-node-state/v2/mutations/setMaxChatIterations/useSetMaxChatIterations';
 
-import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetPreferences } from '@hanzo/desktop-node-state/v2/queries/getPreferences/useGetPreferences';
-import { useGetHanzoFreeModelQuota } from '@hanzo/desktop-node-state/v2/queries/getHanzoFreeModelQuota/useGetHanzoFreeModelQuota';
+import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetPreferences } from '@hanzo_network/hanzo-node-state/v2/queries/getPreferences/useGetPreferences';
+import { useGetHanzoFreeModelQuota } from '@hanzo_network/hanzo-node-state/v2/queries/getHanzoFreeModelQuota/useGetHanzoFreeModelQuota';
 
 import {
   Badge,
@@ -37,10 +36,11 @@ import {
   TextField,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { useDebounce } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { useDebounce } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { getVersion } from '@tauri-apps/api/app';
 import { formatDuration, intervalToDuration } from 'date-fns';
 import {
@@ -59,11 +59,16 @@ import { OnboardingStep } from '../components/onboarding/constants';
 import EmbeddingModelSelectionDialog from '../components/settings/embedding-model-selection-dialog';
 import HanzoIdentityDialog from '../components/settings/hanzo-identity-dialog';
 import {
+  useInstallSystemServiceMutation,
+  useSystemServiceStatusQuery,
+  useUninstallSystemServiceMutation,
+} from '../lib/system-service/system-service-client';
+import {
   useCheckUpdateQuery,
   useDownloadUpdateMutation,
+  useUpdaterEnvironmentQuery,
   useUpdateStateQuery,
 } from '../lib/updater/updater-client';
-import { useGpuConnect } from '../hooks/useGpuConnect';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 import { SimpleLayout } from './layout/simple-layout';
@@ -101,7 +106,6 @@ const SettingsSection = ({
 const SettingsPage = () => {
   const { t } = useTranslation();
   const auth = useAuth((authStore) => authStore.auth);
-  const gpu = useGpuConnect();
 
   const userLanguage = useSettings((state) => state.userLanguage);
   const setUserLanguage = useSettings((state) => state.setUserLanguage);
@@ -112,8 +116,6 @@ const SettingsPage = () => {
   const setOptInExperimental = useSettings(
     (state) => state.setOptInExperimental,
   );
-  const smartRouting = useSettings((state) => state.smartRouting);
-  const setSmartRouting = useSettings((state) => state.setSmartRouting);
   const setEmbeddingModelMismatchPromptDismissed = useSettings(
     (state) => state.setEmbeddingModelMismatchPromptDismissed,
   );
@@ -232,6 +234,7 @@ const SettingsPage = () => {
   });
 
   const { data: updateState } = useUpdateStateQuery();
+  const { data: updaterEnv } = useUpdaterEnvironmentQuery();
   const { refetch: checkForUpdates, isFetching: isCheckingUpdates } =
     useCheckUpdateQuery({
       enabled: false,
@@ -250,11 +253,40 @@ const SettingsPage = () => {
       },
     });
 
-  const { data: hanzoFreeModelQuota, isPending: isHanzoFreeModelQuotaPending } =
-    useGetHanzoFreeModelQuota(
-      { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
-      { enabled: !!auth },
-    );
+  // "Run on startup" — installs/uninstalls a systemd USER service that runs the
+  // app headless (Linux). The status query is the source of truth for the
+  // toggle; the mutations re-read it on success.
+  const { data: serviceStatus } = useSystemServiceStatusQuery();
+  const { mutateAsync: installService, isPending: isInstallingService } =
+    useInstallSystemServiceMutation({
+      onSuccess: () => {
+        toast.success('Hanzo will now run on startup.');
+      },
+      onError: (error) => {
+        toast.error('Failed to enable run on startup', {
+          description: error?.message,
+        });
+      },
+    });
+  const { mutateAsync: uninstallService, isPending: isUninstallingService } =
+    useUninstallSystemServiceMutation({
+      onSuccess: () => {
+        toast.success('Hanzo will no longer run on startup.');
+      },
+      onError: (error) => {
+        toast.error('Failed to disable run on startup', {
+          description: error?.message,
+        });
+      },
+    });
+
+  const {
+    data: hanzoFreeModelQuota,
+    isPending: isHanzoFreeModelQuotaPending,
+  } = useGetHanzoFreeModelQuota(
+    { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },
+    { enabled: !!auth },
+  );
 
   useEffect(() => {
     setDefaultAgentId(currentDefaultAgentId);
@@ -277,7 +309,7 @@ const SettingsPage = () => {
                 <CardContent className="space-y-2 px-4 py-3">
                   <div className="flex justify-between text-sm">
                     <h3 className="text-base font-semibold">
-                      Free {getBrand().name} Usage
+                      Free Hanzo AI Usage
                     </h3>
 
                     <div className="flex items-center gap-1">
@@ -288,7 +320,7 @@ const SettingsPage = () => {
                           / {hanzoFreeModelQuota.tokensQuota.toLocaleString()}
                         </span>
                       </span>
-                      <Tooltip placement="top">
+                      <Tooltip>
                         <TooltipTrigger>
                           <InfoIcon className="size-3 text-current" />
                         </TooltipTrigger>
@@ -311,9 +343,7 @@ const SettingsPage = () => {
                     </div>
                   </div>
                   <Progress
-                    height={8}
-                    minW={0}
-                    rounded="$10"
+                    className="h-2 rounded-full bg-cyan-900 [&>div]:bg-cyan-400"
                     max={100}
                     value={
                       hanzoFreeModelQuota?.tokensQuota
@@ -367,7 +397,7 @@ const SettingsPage = () => {
                           onValueChange={field.onChange}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="!h-9 border-gray-500 py-2 pr-10 [&>svg]:!top-2.5">
                               <SelectValue
                                 placeholder={t(
                                   'settings.language.selectLanguage',
@@ -419,7 +449,7 @@ const SettingsPage = () => {
                       }
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="!h-9 border-gray-500 py-2 pr-10 [&>svg]:!top-2.5">
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
@@ -444,47 +474,17 @@ const SettingsPage = () => {
               </form>
             </Form>
           </SettingsSection>
-          <SettingsSection title="Smart routing">
-            <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
-              <div className="flex items-center justify-between gap-1 px-4 py-3">
-                <div className="flex flex-col gap-1 pr-4">
-                  <span className="text-text-default text-sm">
-                    Smart routing
-                  </span>
-                  <span className="text-text-secondary text-xs">
-                    Route each request to the best available model (local zen
-                    models first, frontier only when needed). Billed as the
-                    model that serves you. Applies to new chats on a Hanzo Cloud
-                    connection (api.hanzo.ai); local-only setups are unaffected.{' '}
-                    <a
-                      className="text-cyan-400 underline"
-                      href="https://docs.hanzo.ai/docs/usage/routing"
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      Learn more
-                    </a>
-                  </span>
-                </div>
-                <Switch
-                  checked={smartRouting}
-                  onCheckedChange={setSmartRouting}
-                  className="data-[state=unchecked]:bg-gray-400"
-                />
-              </div>
-            </div>
-          </SettingsSection>
-          <SettingsSection title={`${getBrand().name} Node Configuration`}>
+          <SettingsSection title="Node Configuration">
             <div className="divide-divider flex flex-col divide-y">
               {[
                 {
                   label: t('hanzoNode.nodeAddress'),
-                  description: `The URL of your ${getBrand().name} node connection`,
+                  description: 'The URL of your Node connection',
                   value: auth?.node_address,
                 },
                 {
                   label: t('hanzoNode.nodeVersion'),
-                  description: `Current version of your ${getBrand().name} node.`,
+                  description: 'Current version of your Node.',
                   value: nodeInfo?.version,
                 },
               ].map((item) => (
@@ -510,18 +510,18 @@ const SettingsPage = () => {
                 <div className="flex flex-1 flex-col gap-1">
                   <div className="flex flex-col gap-1">
                     <h3 className="text-text-default text-sm">
-                      {getBrand().name} Identity
+                      Hanzo Identity
                     </h3>
                     <p className="text-text-secondary text-xs">
-                      Connects your app to the {getBrand().name} Network with
-                      peer-to-peer access.
+                      Connects your app to the Hanzo Network with peer-to-peer
+                      access.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <HanzoIdentityDialog />
                   {!isIdentityLocalhost && (
-                    <Tooltip placement="top">
+                    <Tooltip>
                       <TooltipTrigger>
                         <a
                           className={cn(
@@ -543,13 +543,15 @@ const SettingsPage = () => {
                           </span>
                         </a>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {t(
-                            'settings.hanzoIdentity.checkIdentityInSyncDescription',
-                          )}
-                        </p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent>
+                          <p>
+                            {t(
+                              'settings.hanzoIdentity.checkIdentityInSyncDescription',
+                            )}
+                          </p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   )}
                 </div>
@@ -644,36 +646,43 @@ const SettingsPage = () => {
               </form>
             </Form>
           </SettingsSection>
-          <SettingsSection title="Cloud GPU">
-            <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
+          {serviceStatus?.supported && (
+            <SettingsSection title="Startup">
               <div className="flex items-center justify-between gap-1 px-4 py-3">
-                <div className="flex flex-col gap-1 pr-4">
+                <div className="flex flex-col gap-1">
                   <span className="text-text-default text-sm">
-                    Connect this device&apos;s GPU to Hanzo Cloud
+                    Run on startup
                   </span>
                   <span className="text-text-secondary text-xs">
-                    {gpu.connected
-                      ? 'Connected — this machine appears in the Hanzo console (Machines & GPUs) and can run cloud jobs.'
-                      : gpu.signedIn
-                        ? 'Share this device’s GPU with your Hanzo org to run cloud jobs.'
-                        : 'Sign in to your Hanzo account to connect this device’s GPU.'}
-                    {gpu.error ? ` ${gpu.error}` : ''}
+                    Install Hanzo as a background service so it starts
+                    automatically and keeps running (headless) after you log in.
+                    <br />
+                    Uses a per-user systemd service — no admin rights required.
                   </span>
                 </div>
                 <Switch
-                  checked={gpu.connected}
-                  disabled={!gpu.signedIn}
-                  onCheckedChange={(checked: any) => void gpu.toggle(checked)}
+                  aria-readonly
+                  checked={!!serviceStatus?.enabled}
                   className="data-[state=unchecked]:bg-gray-400"
+                  disabled={isInstallingService || isUninstallingService}
+                  onCheckedChange={(checked) => {
+                    // onError handles the toast; swallow rejections so they
+                    // don't surface as unhandled promise rejections.
+                    if (checked) {
+                      void installService().catch(() => undefined);
+                    } else {
+                      void uninstallService().catch(() => undefined);
+                    }
+                  }}
                 />
               </div>
-            </div>
-          </SettingsSection>
+            </SettingsSection>
+          )}
           <SettingsSection title="Updates">
             <div className="divide-divider flex flex-col gap-1 divide-y text-sm">
               <div className="flex items-center justify-between gap-1 px-4 py-3">
                 <span className="text-text-default text-sm">
-                  Current {getBrand().name} App Version
+                  Current Hanzo App Version
                 </span>
                 <div className="flex items-center gap-6">
                   <span className="text-text-default font-mono text-sm">
@@ -701,6 +710,36 @@ const SettingsPage = () => {
                 </div>
               </div>
 
+              {/* Friendly notice when self-update can't proceed (managed by a
+                  package manager, read-only AppImage, or signature failure).
+                  Falls back to the backend-detected install note. */}
+              {(updateState?.notice || updaterEnv?.managedNote) &&
+                !updateState?.update?.available && (
+                  <div className="px-4 py-3">
+                    <div className="bg-bg-tertiary text-text-secondary flex flex-col gap-1 rounded-lg p-3 text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <InfoIcon className="size-3.5 shrink-0" />
+                        {updateState?.notice?.message ??
+                          updaterEnv?.managedNote}
+                      </span>
+                      {(updateState?.notice?.manualDownloadUrl ||
+                        updaterEnv?.manualDownloadUrl) && (
+                        <a
+                          className="text-cyan-400 underline underline-offset-2"
+                          href={
+                            updateState?.notice?.manualDownloadUrl ??
+                            updaterEnv?.manualDownloadUrl
+                          }
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Download the latest version
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
               <div className="space-y-5 px-4 py-3">
                 {updateState?.update?.available && (
                   <div className="flex items-center justify-between gap-2">
@@ -715,7 +754,11 @@ const SettingsPage = () => {
                         isDownloadingUpdate ||
                         updateState.state === 'downloading'
                       }
-                      onClick={() => downloadUpdate()}
+                      onClick={() => {
+                        // onError handles the toast; swallow the rejection so
+                        // it isn't an unhandled promise rejection.
+                        void downloadUpdate().catch(() => undefined);
+                      }}
                       size="sm"
                       variant="outline"
                       className="w-full sm:w-auto"
@@ -744,10 +787,7 @@ const SettingsPage = () => {
                         </span>
                       </div>
                       <Progress
-                        height={8}
-                        minW={0}
-                        rounded="$3"
-                        width="100%"
+                        className="h-2 w-full rounded-lg bg-cyan-900 [&>div]:bg-cyan-400"
                         value={
                           updateState.downloadState.data
                             ?.downloadProgressPercent || 0

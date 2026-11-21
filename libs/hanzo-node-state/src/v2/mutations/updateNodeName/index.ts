@@ -1,4 +1,4 @@
-import { updateNodeName as updateNodeNameApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { updateNodeName as updateNodeNameApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type UpdateNodeNameInput, type UpdateNodeNameOutput } from './types';
 

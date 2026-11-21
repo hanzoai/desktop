@@ -415,6 +415,9 @@
     "label": "Exportar Conexión",
     "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo"
   },
+  "extension": {
+    "welcome": "Transforma tu experiencia de navegación web utilizando IA con Hanzo Visor ✨"
+  },
   "feedback": {
     "button": "Comentarios",
     "description": "¡Valoramos tus comentarios! Por favor, háznos saber tus pensamientos sobre Hanzo y cómo podemos mejorar tu experiencia.",

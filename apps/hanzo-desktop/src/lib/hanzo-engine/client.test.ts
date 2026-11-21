@@ -158,7 +158,7 @@ describe('Model Format Detection', () => {
   describe('MLX format', () => {
     it('should detect mlx-community prefix', () => {
       expect(detectModelFormat('mlx-community/Llama-3.2-3B-4bit')).toBe(ModelFormat.MlxQuantized);
-      expect(detectModelFormat('mlx-community/Qwen3-8B-4bit')).toBe(ModelFormat.MlxQuantized);
+      expect(detectModelFormat('mlx-community/Qwen2.5-7B-4bit')).toBe(ModelFormat.MlxQuantized);
     });
 
     it('should detect -mlx suffix', () => {
@@ -184,7 +184,7 @@ describe('Model Format Detection', () => {
     it('should default to safetensors for HuggingFace repos', () => {
       expect(detectModelFormat('meta-llama/Llama-3.2-3B-Instruct')).toBe(ModelFormat.Safetensors);
       expect(detectModelFormat('microsoft/Phi-3.5-mini-instruct')).toBe(ModelFormat.Safetensors);
-      expect(detectModelFormat('Qwen/Qwen3-8B-Instruct')).toBe(ModelFormat.Safetensors);
+      expect(detectModelFormat('Qwen/Qwen2.5-7B-Instruct')).toBe(ModelFormat.Safetensors);
     });
   });
 

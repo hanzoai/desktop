@@ -1,6 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipTrigger,
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Paperclip } from 'lucide-react';
 import * as React from 'react';
 
@@ -24,7 +29,7 @@ function FileSelectionActionBarBase({
   if (!showLabel) {
     return (
       <>
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <button
               className={cn(actionButtonClassnames, 'p-2')}
@@ -35,10 +40,12 @@ function FileSelectionActionBarBase({
               <Paperclip className="h-full w-full" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>
-            {t('common.uploadFile')} <br />
-            {t('common.uploadAFileDescription')}
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent align="center" side="top">
+              {t('common.uploadFile')} <br />
+              {t('common.uploadAFileDescription')}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
         <input {...inputProps} disabled={disabled} />
       </>

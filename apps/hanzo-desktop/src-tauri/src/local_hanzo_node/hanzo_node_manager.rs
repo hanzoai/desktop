@@ -7,10 +7,10 @@ use std::path::PathBuf;
 // ollama lifecycle code can run during startup/shutdown/restart.
 use super::process_handlers::hanzo_node_process_handler::HanzoNodeProcessHandler;
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
-use crate::local_hanzo_node::session;
+use crate::models::embedding_model;
 use anyhow::Result;
-use hanzo_node_env::SpawnedKey;
 use futures_util::StreamExt;
+use log::error;
 use serde::{Deserialize, Serialize};
 use tauri::path::BaseDirectory;
 use tauri::AppHandle;
@@ -24,9 +24,9 @@ pub enum HanzoNodeManagerEvent {
     HanzoNodeStarted,
     HanzoNodeStartError { error: String },
 
-    StartingEngine,
-    EngineStarted,
-    EngineStartError { error: String },
+    StartingOllama,
+    OllamaStarted,
+    OllamaStartError { error: String },
 
     PullingModelStart { model: String },
     PullingModelProgress { model: String, progress: u32 },
@@ -42,28 +42,13 @@ pub enum HanzoNodeManagerEvent {
     HanzoNodeStopped,
     HanzoNodeStopError { error: String },
 
-    StoppingEngine,
-    EngineStopped,
-    EngineStopError { error: String },
-}
-
-/// What starting the chat engine on :36900 came to.
-enum EngineLaunch {
-    /// We started it; the child is ours to stop.
-    Spawned(std::process::Child),
-    /// Something was already listening; it is not ours to stop.
-    Reused,
-    /// No engine binary is installed (release bundles ship none), so nothing runs.
-    NotInstalled,
+    StoppingOllama,
+    OllamaStopped,
+    OllamaStopError { error: String },
 }
 
 pub struct HanzoNodeManager {
-    app: AppHandle,
     hanzo_node_process: HanzoNodeProcessHandler,
-    /// The Hanzo key the running node was spawned with (a digest, never the
-    /// key), or `None` while no node of ours runs. A new sign-in restarts the
-    /// node when it would get a different one (`session_changed`).
-    node_key: Option<SpawnedKey>,
     event_broadcaster: broadcast::Sender<HanzoNodeManagerEvent>,
     app_resource_dir: PathBuf,
     llm_models_path: PathBuf,
@@ -86,8 +71,6 @@ impl HanzoNodeManager {
         // No OllamaProcessHandler is constructed: ollama is retired and the
         // desktop never starts or kills it.
         HanzoNodeManager {
-            app: app.clone(),
-            node_key: None,
             hanzo_node_process: HanzoNodeProcessHandler::new(
                 app,
                 hanzo_node_sender,
@@ -122,68 +105,20 @@ impl HanzoNodeManager {
             .unwrap_or(false)
     }
 
-    /// The `hanzo-server` binary to run, or `None` when none is installed.
-    /// Release bundles do not ship it (cloud#760), so `None` is the normal case
-    /// there and both engine ports are skipped without an error.
-    fn engine_bin() -> Option<String> {
-        let exe_dir = std::env::current_exe()
-            .ok()
-            .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf));
-        hanzo_engine_bin::resolve(
-            std::env::var_os(hanzo_engine_bin::OVERRIDE_VAR).as_deref(),
-            exe_dir.as_deref(),
-            std::env::var_os("PATH").as_deref(),
-        )
-        .map(|p| p.to_string_lossy().into_owned())
-    }
-
-    /// Fallback when hanzo-server is missing or will not start: reuse, or
-    /// start, a local inference runtime on :11434 if the system has one, so
-    /// local models still work. `None` when there is none.
-    async fn local_runtime_fallback() -> Option<EngineLaunch> {
-        if Self::engine_up("http://127.0.0.1:11434/api/tags").await {
-            log::info!("local inference runtime already listening on :11434, reusing it");
-            return Some(EngineLaunch::Reused);
-        }
-        for candidate in ["ollama", "/opt/homebrew/bin/ollama", "/usr/local/bin/ollama"] {
-            if let Ok(child) = std::process::Command::new(candidate)
-                .arg("serve")
-                .stdout(std::process::Stdio::null())
-                .stderr(std::process::Stdio::null())
-                .spawn()
-            {
-                log::info!("spawned local inference runtime `{}` on :11434", candidate);
-                return Some(EngineLaunch::Spawned(child));
-            }
-        }
-        None
-    }
-
     /// Spawn (or reuse) the daemon-managed inference engine — hanzo-engine
-    /// (mistral.rs, CUDA on GPU). An engine already listening on the port is
-    /// reused; with no engine installed the local engine is skipped.
-    async fn spawn_engine(&self) -> Result<EngineLaunch, String> {
+    /// (mistral.rs, CUDA on GPU). Returns the child if we started it, or `None`
+    /// if an engine was already listening on the port (detect-and-reuse).
+    async fn spawn_engine(&self) -> Result<Option<std::process::Child>, String> {
         let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
         let models_url = format!("http://127.0.0.1:{}/health", port);
 
         if Self::engine_up(&models_url).await {
             log::info!("hanzo-engine already listening on :{}, reusing it", port);
-            return Ok(EngineLaunch::Reused);
+            return Ok(None);
         }
 
-        let Some(bin) = Self::engine_bin() else {
-            if let Some(launch) = Self::local_runtime_fallback().await {
-                return Ok(launch);
-            }
-            log::info!(
-                "no local inference engine: `{}` is not in the app bundle or on PATH and {} is unset; \
-                 skipping the local engine on :{} (cloud models are unaffected)",
-                hanzo_engine_bin::file_name(),
-                hanzo_engine_bin::OVERRIDE_VAR,
-                port
-            );
-            return Ok(EngineLaunch::NotInstalled);
-        };
+        let bin = std::env::var("HANZO_ENGINE_BIN")
+            .unwrap_or_else(|_| "/home/z/src/hanzo/engine/target/release/mistralrs-server".to_string());
         let model =
             std::env::var("HANZO_ENGINE_MODEL").unwrap_or_else(|_| "Qwen/Qwen3-0.6B".to_string());
         // Chat model. Default to the real zen chat model `zen-eco-3b-agent` (a GGUF;
@@ -214,59 +149,66 @@ impl HanzoNodeManager {
             cmd.arg("run").arg("-m").arg(&model);
         }
 
-        match cmd.spawn() {
-            Ok(child) => {
-                log::info!(
-                    "hanzo-engine spawned on :{} (loading model in background)",
-                    port
-                );
-                Ok(EngineLaunch::Spawned(child))
-            }
-            Err(e) => match Self::local_runtime_fallback().await {
-                Some(launch) => Ok(launch),
-                None => Err(format!("failed to spawn hanzo-engine ({}): {}", bin, e)),
-            },
-        }
+        let child = cmd
+            .spawn()
+            .map_err(|e| format!("failed to spawn hanzo-engine ({}): {}", bin, e))?;
+
+        // Non-blocking: don't stall node startup on model load. The engine loads
+        // in the background and the agent starts answering once it's ready.
+        log::info!(
+            "hanzo-engine spawned on :{} (loading model in background)",
+            port
+        );
+        Ok(Some(child))
     }
 
     pub async fn spawn(&mut self) -> Result<(), String> {
+        // When the EMBEDDED (in-process) engine is enabled, the desktop runs
+        // inference itself (chat :36900, embeddings :36901) and we must NOT
+        // spawn external `mistralrs-server` children — they'd collide on those
+        // ports. Skip both external spawns; the embedded engine owns them.
+        let embedded = crate::embedded_engine::is_enabled();
+        if embedded {
+            log::info!(
+                "embedded engine enabled ({}); skipping external engine + embedding spawns",
+                crate::embedded_engine::EMBEDDED_ENGINE_FLAG
+            );
+            // Keep the legacy startup state machine progressing: the frontend
+            // gates on these (Ollama-named) events. The embedded engine is
+            // started separately in `main.rs` setup.
+            self.emit_event(HanzoNodeManagerEvent::StartingOllama);
+            self.emit_event(HanzoNodeManagerEvent::OllamaStarted);
+        }
+
         // Daemon-managed inference engine (hanzo-engine / mistral.rs on the GPU)
         // replaces Ollama. The node daemon owns the engine lifecycle; if one is
         // already listening on the engine port we detect and reuse it.
-        self.emit_event(HanzoNodeManagerEvent::StartingEngine);
-        match self.spawn_engine().await {
-            Ok(EngineLaunch::Spawned(child)) => {
-                self.engine_child = Some(child);
-                self.emit_event(HanzoNodeManagerEvent::EngineStarted);
-            }
-            Ok(EngineLaunch::Reused) => {
-                self.engine_child = None;
-                self.emit_event(HanzoNodeManagerEvent::EngineStarted);
-            }
-            Ok(EngineLaunch::NotInstalled) => {
-                // Not a failure: the bundle does not ship an engine. Logged at
-                // INFO in spawn_engine; the event says the engine is not running.
-                self.engine_child = None;
-                self.emit_event(HanzoNodeManagerEvent::EngineStartError {
-                    error: format!("{} is not installed", hanzo_engine_bin::file_name()),
-                });
-            }
-            Err(e) => {
-                log::error!("failed to start hanzo-engine: {}", e);
-                self.emit_event(HanzoNodeManagerEvent::EngineStartError { error: e.clone() });
-                // Continue starting the node; chat is unavailable until the engine
-                // is reachable, but the node and its API should still come up.
+        if !embedded {
+            self.emit_event(HanzoNodeManagerEvent::StartingOllama);
+            match self.spawn_engine().await {
+                Ok(child) => {
+                    self.engine_child = child;
+                    self.emit_event(HanzoNodeManagerEvent::OllamaStarted);
+                }
+                Err(e) => {
+                    log::error!("failed to start hanzo-engine: {}", e);
+                    self.emit_event(HanzoNodeManagerEvent::OllamaStartError { error: e.clone() });
+                    // Continue starting the node; chat is unavailable until the engine
+                    // is reachable, but the node and its API should still come up.
+                }
             }
         }
 
         // Daemon-managed embedding engine — its own instance, latest Zen
         // (Qwen-style, 1024-dim). Detect-and-reuse if one's already listening.
-        {
+        if !embedded {
             let eport = std::env::var("HANZO_EMBED_PORT").unwrap_or_else(|_| "36901".to_string());
             let emodels = format!("http://127.0.0.1:{}/health", eport);
             if Self::engine_up(&emodels).await {
                 log::info!("embedding engine already on :{}, reusing it", eport);
-            } else if let Some(ebin) = Self::engine_bin() {
+            } else {
+                let ebin = std::env::var("HANZO_ENGINE_BIN")
+                    .unwrap_or_else(|_| "mistralrs-server".to_string());
                 let emodel = std::env::var("HANZO_EMBED_MODEL")
                     .unwrap_or_else(|_| "zenlm/zen-embedding-0.6B".to_string());
                 let earch = std::env::var("HANZO_EMBED_ARCH")
@@ -285,75 +227,30 @@ impl HanzoNodeManager {
                     Ok(c) => self.embed_child = Some(c),
                     Err(e) => log::error!("failed to spawn embedding engine ({}): {}", ebin, e),
                 }
-            } else {
-                log::info!(
-                    "no local embedding engine: `{}` is not installed; skipping :{}",
-                    hanzo_engine_bin::file_name(),
-                    eport
-                );
             }
         }
 
-        let session_key = session::current_key(&self.app);
-        if let Err(e) = self.spawn_node(session_key.as_deref()).await {
-            self.kill().await;
-            self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError {
-                error: e.clone(),
-            });
-            return Err(e);
+        self.emit_event(HanzoNodeManagerEvent::StartingHanzoNode);
+        match self.hanzo_node_process.spawn().await {
+            Ok(_) => {
+                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStarted);
+            }
+            Err(e) => {
+                self.kill().await;
+                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError {
+                    error: e.clone(),
+                });
+                return Err(e);
+            }
         }
         Ok(())
-    }
-
-    /// Starts (or restarts) the node alone, with the signed-in `session_key`,
-    /// and remembers which key it holds. The engines are left as they are.
-    /// The caller reports a failure (`HanzoNodeStartError`).
-    async fn spawn_node(&mut self, session_key: Option<&str>) -> Result<(), String> {
-        let env = self.hanzo_node_process.spawn_env(session_key);
-        let key = SpawnedKey::of(&env);
-        self.node_key = None;
-        self.emit_event(HanzoNodeManagerEvent::StartingHanzoNode);
-        match self.hanzo_node_process.spawn(env).await {
-            Ok(_) => {
-                log::info!(
-                    "hanzo-node started {} a Hanzo key for embeddings",
-                    if key.is_signed_in() { "with" } else { "without" }
-                );
-                self.node_key = Some(key);
-                self.emit_event(HanzoNodeManagerEvent::HanzoNodeStarted);
-                Ok(())
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// The app's sign-in changed (signed in, signed out, or a refreshed
-    /// token): `session_key` is the key now. Restarts the node, and only the
-    /// node, when the one it runs with differs from the one it would get. A
-    /// node that is not running is left alone; its next start reads the
-    /// session itself.
-    pub async fn session_changed(&mut self, session_key: Option<String>) {
-        if !self.hanzo_node_process.is_running().await {
-            self.node_key = None;
-            return;
-        }
-        let next = self.hanzo_node_process.spawn_env(session_key.as_deref());
-        if !hanzo_node_env::needs_restart(self.node_key.as_ref(), &next) {
-            return;
-        }
-        log::info!("Hanzo sign-in changed; restarting hanzo-node so its embeddings use it");
-        if let Err(e) = self.spawn_node(session_key.as_deref()).await {
-            log::error!("[hanzo-node] restart after sign-in change failed: {}", e);
-            self.emit_event(HanzoNodeManagerEvent::HanzoNodeStartError { error: e });
-        }
     }
 
     pub async fn kill(&mut self) {
         self.emit_event(HanzoNodeManagerEvent::StoppingHanzoNode);
         self.hanzo_node_process.kill().await;
-        self.node_key = None;
         self.emit_event(HanzoNodeManagerEvent::HanzoNodeStopped);
-        self.emit_event(HanzoNodeManagerEvent::StoppingEngine);
+        self.emit_event(HanzoNodeManagerEvent::StoppingOllama);
         // Stop the daemon-managed engine (only if we started it).
         if let Some(mut child) = self.engine_child.take() {
             let _ = child.kill();
@@ -367,7 +264,7 @@ impl HanzoNodeManager {
         // `ollama_llama_server` nor sweep port 11435 — that machinery is what
         // produced the startup churn ("[ollama] no process is running to kill",
         // "failed to terminate process 'ollama_llama_se'").
-        self.emit_event(HanzoNodeManagerEvent::EngineStopped);
+        self.emit_event(HanzoNodeManagerEvent::OllamaStopped);
     }
 
     pub async fn remove_storage(&self, preserve_keys: bool) -> Result<(), String> {
@@ -415,5 +312,18 @@ impl HanzoNodeManager {
         self.event_broadcaster.subscribe()
     }
 
+    /// Retained for the legacy `hanzo_node_get_ollama_api_url` Tauri command.
+    /// Ollama is retired; we report the native engine's OpenAI-compatible URL so
+    /// any remaining frontend caller talks to hanzo-engine, never to ollama.
+    pub fn get_ollama_api_url(&self) -> String {
+        let port = std::env::var("HANZO_ENGINE_PORT").unwrap_or_else(|_| "36900".to_string());
+        format!("http://127.0.0.1:{}", port)
+    }
 
+    /// Retained for the legacy `hanzo_node_get_ollama_version` Tauri command.
+    /// Ollama is retired; never spawn the ollama sidecar. Return empty so the
+    /// frontend treats it as "not present" without triggering any process.
+    pub async fn get_ollama_version(_app: AppHandle) -> Result<String> {
+        Ok(String::new())
+    }
 }

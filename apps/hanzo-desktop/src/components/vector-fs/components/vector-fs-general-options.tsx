@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type CreateFolderFormSchema,
   createFolderFormSchema,
@@ -9,10 +9,10 @@ import {
   saveWebpageToVectorFsFormSchema,
   type UploadVRFilesFormSchema,
   uploadVRFilesFormSchema,
-} from '@hanzo/desktop-node-state/forms/vector-fs/folder';
-import { useCreateFolder } from '@hanzo/desktop-node-state/v2/mutations/createFolder/useCreateFolder';
-import { useRemoveFsItem } from '@hanzo/desktop-node-state/v2/mutations/removeFsItem/useRemoveFsItem';
-import { useUploadVRFiles } from '@hanzo/desktop-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
+} from '@hanzo_network/hanzo-node-state/forms/vector-fs/folder';
+import { useCreateFolder } from '@hanzo_network/hanzo-node-state/v2/mutations/createFolder/useCreateFolder';
+import { useRemoveFsItem } from '@hanzo_network/hanzo-node-state/v2/mutations/removeFsItem/useRemoveFsItem';
+import { useUploadVRFiles } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
 import {
   Button,
   DialogHeader,
@@ -26,8 +26,11 @@ import {
   FormLabel,
   FormMessage,
   TextField,
-} from '@hanzo/desktop-ui';
-import { DirectoryTypeIcon, FileTypeIcon } from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui';
+import {
+  DirectoryTypeIcon,
+  FileTypeIcon,
+} from '@hanzo_network/hanzo-ui/assets';
 import { FileType2Icon } from 'lucide-react';
 import { type PrismEditor } from 'prism-react-editor';
 import { useEffect, useRef } from 'react';

@@ -1,12 +1,13 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type JobConfig } from '@hanzo/desktop-message-ts/api/jobs/types';
-import { useRemoveRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/removeRecurringTask/useRemoveRecurringTask';
-import { useRunTaskNow } from '@hanzo/desktop-node-state/v2/mutations/runTaskNow/useRunTaskNow';
-import { useUpdateRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/updateRecurringTask/useUpdateRecurringTask';
-import { useGetRecurringTaskNextExecutionTime } from '@hanzo/desktop-node-state/v2/queries/getRecurringTaskNextExecutionTime/useGetRecurringTaskNextExecutionTime';
-import { useGetRecurringTasks } from '@hanzo/desktop-node-state/v2/queries/getRecurringTasks/useGetRecurringTasks';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type JobConfig } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
+import { useRemoveRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/removeRecurringTask/useRemoveRecurringTask';
+import { useRunTaskNow } from '@hanzo_network/hanzo-node-state/v2/mutations/runTaskNow/useRunTaskNow';
+import { useUpdateRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/updateRecurringTask/useUpdateRecurringTask';
+import { useGetRecurringTaskNextExecutionTime } from '@hanzo_network/hanzo-node-state/v2/queries/getRecurringTaskNextExecutionTime/useGetRecurringTaskNextExecutionTime';
+import { useGetRecurringTasks } from '@hanzo_network/hanzo-node-state/v2/queries/getRecurringTasks/useGetRecurringTasks';
 import {
-  DialogClose,
   Button,
   buttonVariants,
   Dialog,
@@ -24,17 +25,16 @@ import {
   PopoverTrigger,
   Skeleton,
   Switch,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   ScheduledTasksComingSoonIcon,
   ScheduledTasksIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import cronstrue from 'cronstrue';
 import { formatDistance } from 'date-fns';
 import {
   Edit,
-  EllipsisVerticalIcon,
   PlayIcon,
   PlusIcon,
   RefreshCwIcon,
@@ -84,7 +84,7 @@ export const Tasks = () => {
         <div className="flex items-center gap-3">
           {isCronTasksNextExecutionTimeSuccess &&
             cronTasksNextExecutionTime.length > 0 && (
-              <Popover placement="bottom-end">
+              <Popover>
                 <PopoverTrigger
                   className={cn(
                     buttonVariants({
@@ -99,11 +99,10 @@ export const Tasks = () => {
                   <span className="text-xs">Upcoming</span>
                 </PopoverTrigger>
                 <PopoverContent
-                  className="text-xs"
-                  gap="$2"
-                  px={14}
-                  py={16}
-                  width={400}
+                  align="end"
+                  alignOffset={-4}
+                  className="flex w-[400px] flex-col gap-2 px-3.5 py-4 text-xs"
+                  onOpenAutoFocus={(e) => e.preventDefault()}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <h1 className="text-sm">Upcoming Tasks </h1>
@@ -342,7 +341,7 @@ const TaskCard = ({
         </svg>
         View Logs
       </Link>
-      <DropdownMenu modal={false} placement="bottom-end">
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div
             className={cn(
@@ -359,10 +358,13 @@ const TaskCard = ({
             tabIndex={0}
           >
             <span className="sr-only">{t('common.moreOptions')}</span>
-            <EllipsisVerticalIcon className="text-text-secondary size-4" />
+            <DotsVerticalIcon className="text-text-secondary" />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent minW={160} width={160}>
+        <DropdownMenuContent
+          align="end"
+          className="w-[160px] border px-2.5 py-2"
+        >
           {[
             {
               name: t('common.edit'),
@@ -394,7 +396,7 @@ const TaskCard = ({
               {option.name === 'Delete' && <DropdownMenuSeparator />}
               <DropdownMenuItem
                 key={option.name}
-                onClick={(event: React.MouseEvent) => {
+                onClick={(event) => {
                   event.stopPropagation();
                   option.onClick();
                 }}
@@ -443,7 +445,7 @@ const RemoveTaskDrawer = ({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
           Delete Task <span className="font-mono text-base"> {taskName}</span> ?
         </DialogTitle>

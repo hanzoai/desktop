@@ -43,45 +43,47 @@ case "$ARCH" in
         ;;
 esac
 
-# TARGET names the machine the bundle runs on, which is this one unless a
-# cross build says otherwise: the release lane cuts the Windows installer on
-# Linux and a universal macOS image from two slices, one call per slice.
-TARGET="${TARGET:-${ARCH_NAME}-${PLATFORM}}"
-EXT=""
-case "$TARGET" in *-pc-windows-msvc) EXT=".exe" ;; esac
-echo "Target: $TARGET"
+TARGET="${ARCH_NAME}-${PLATFORM}"
+echo "Detected platform: $TARGET"
 
-NODE_DIR="$BINARIES_DIR/hanzo-node"
-mkdir -p "$NODE_DIR/hanzo-tools-runner-resources"
+# Create directories
+mkdir -p "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources"
+mkdir -p "$BINARIES_DIR/ollama"
 mkdir -p "$LLM_MODELS_DIR"
 
-# Which release to fetch. One home, read here and named nowhere else.
-. "$SCRIPT_DIR/pins"
+# Hanzo Node version
+HANZO_NODE_VERSION="v1.13.0"
 
-# Download and extract Hanzo Node
+# Download and extract Hanzo Node from R2
 echo "Downloading Hanzo Node ${HANZO_NODE_VERSION} for ${TARGET}..."
 HANZO_NODE_URL="https://download.hanzo.ai/hanzo-node/binaries/production/${TARGET}/${HANZO_NODE_VERSION}.zip"
 
-# Tauri resolves a sidecar by the name in tauri.conf.json plus the target
-# triple, so each binary the archive carries is renamed once, here. The archive
-# names them with the platform's own extension — hanzo-node.exe on Windows —
-# and the suffix goes BEFORE it: hanzo-node-x86_64-pc-windows-msvc.exe.
-SIDECARS="hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv"
-
-if [ ! -f "$NODE_DIR/hanzo-node-${TARGET}${EXT}" ]; then
+if [ ! -f "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}" ]; then
     echo "Downloading from: $HANZO_NODE_URL"
-    if curl -L -f --retry 5 --retry-all-errors -o "$NODE_DIR/hanzo-node.zip" "$HANZO_NODE_URL"; then
-        unzip -o "$NODE_DIR/hanzo-node.zip" -d "$NODE_DIR/"
+    if curl -L -f -o "$BINARIES_DIR/hanzo-node/hanzo-node.zip" "$HANZO_NODE_URL"; then
+        unzip -o "$BINARIES_DIR/hanzo-node/hanzo-node.zip" -d "$BINARIES_DIR/hanzo-node/"
 
-        for s in $SIDECARS; do
-            src="$NODE_DIR/${s}${EXT}"
-            dst="$NODE_DIR/${s}-${TARGET}${EXT}"
-            [ -f "$src" ] || { echo "Archive is missing ${s}${EXT}"; exit 1; }
-            mv "$src" "$dst"
-            chmod +x "$dst"
-        done
+        # Rename hanzo-node to hanzo-node-<target>
+        if [ -f "$BINARIES_DIR/hanzo-node/hanzo-node" ]; then
+            mv "$BINARIES_DIR/hanzo-node/hanzo-node" \
+                "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-node-${TARGET}"
+        fi
 
-        rm "$NODE_DIR/hanzo-node.zip"
+        # Rename the tools to include target suffix
+        if [ -f "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno" ]; then
+            mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno" \
+                "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/deno-${TARGET}"
+        fi
+
+        if [ -f "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv" ]; then
+            mv "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv" \
+                "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${TARGET}"
+            chmod +x "$BINARIES_DIR/hanzo-node/hanzo-tools-runner-resources/uv-${TARGET}"
+        fi
+
+        rm "$BINARIES_DIR/hanzo-node/hanzo-node.zip"
         echo "Downloaded Hanzo Node successfully with bundled tools"
     else
         echo "Failed to download Hanzo Node binary"
@@ -91,22 +93,57 @@ else
     echo "Hanzo Node already downloaded"
 fi
 
-# Ollama dropped per zoo/universe architecture: AI inference + embeddings
-# go through the brand inference endpoint (cloud or hanzo-engine), not a
-# bundled local LLM runner. Chain mining checkpoints go through native RPC.
+# Download Ollama
+OLLAMA_VERSION="v0.12.9"
+if [[ "$PLATFORM" == "apple-darwin" ]]; then
+    OLLAMA_ARCHIVE="ollama-darwin.tgz"
+elif [[ "$PLATFORM" == "unknown-linux-gnu" ]]; then
+    OLLAMA_ARCHIVE="ollama-linux-${ARCH_NAME}.tgz"
+else
+    OLLAMA_ARCHIVE="ollama-windows-${ARCH_NAME}.zip"
+fi
 
-# The hanzo-ml `soup` CLI is not fetched. Nothing has ever been published under
-# hanzo-ml/ — the whole prefix answers 404 — so the fetch could only ever print
-# a warning. src/model_tools/soup.rs finds the binary via HANZO_SOUP_BIN, or
-# beside the app executable, or on PATH, and the Model Tools panel stays
-# unavailable until one of those resolves.
+if [ ! -f "$BINARIES_DIR/ollama/ollama-${TARGET}" ]; then
+    echo "Downloading Ollama ${OLLAMA_VERSION}..."
 
-# Download embedding model
+    url="https://github.com/ollama/ollama/releases/download/${OLLAMA_VERSION}/${OLLAMA_ARCHIVE}"
+    if curl -L -f -o "$BINARIES_DIR/ollama/${OLLAMA_ARCHIVE}" "$url"; then
+        cd "$BINARIES_DIR/ollama"
+
+        if [[ "$OLLAMA_ARCHIVE" == *.tgz ]]; then
+            tar -xzf "$OLLAMA_ARCHIVE"
+            if [ -f "ollama" ]; then
+                mv ollama "ollama-${TARGET}"
+            elif [ -f "bin/ollama" ]; then
+                mv bin/ollama "ollama-${TARGET}"
+                rm -rf bin
+            fi
+        elif [[ "$OLLAMA_ARCHIVE" == *.zip ]]; then
+            unzip -o "$OLLAMA_ARCHIVE"
+            if [ -f "ollama.exe" ]; then
+                mv ollama.exe "ollama-${TARGET}"
+            fi
+        fi
+
+        rm "$OLLAMA_ARCHIVE"
+        chmod +x "ollama-${TARGET}"
+        cd "$SCRIPT_DIR"
+
+        echo "Downloaded Ollama ${OLLAMA_VERSION} successfully"
+    else
+        echo "Failed to download Ollama ${OLLAMA_VERSION}"
+        exit 1
+    fi
+else
+    echo "Ollama already downloaded"
+fi
+
+# Download embedding model from R2
 EMBEDDING_MODEL="embeddinggemma-300M-BF16.gguf"
 if [ ! -f "$LLM_MODELS_DIR/$EMBEDDING_MODEL" ]; then
     echo "Downloading embedding model..."
     EMBEDDING_URL="https://download.hanzo.ai/llm-models/${EMBEDDING_MODEL}"
-    if curl -L -f --retry 5 --retry-all-errors -o "$LLM_MODELS_DIR/$EMBEDDING_MODEL" "$EMBEDDING_URL"; then
+    if curl -L -f -o "$LLM_MODELS_DIR/$EMBEDDING_MODEL" "$EMBEDDING_URL"; then
         echo "Downloaded embedding model successfully"
     else
         echo "Failed to download embedding model"

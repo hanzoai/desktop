@@ -1,4 +1,4 @@
-import { type WidgetToolState } from '@hanzo/desktop-message-ts/api/general/types';
+import { type WidgetToolState } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import React, { createContext, useContext, useState } from 'react';
 import { createStore, useStore } from 'zustand';
 

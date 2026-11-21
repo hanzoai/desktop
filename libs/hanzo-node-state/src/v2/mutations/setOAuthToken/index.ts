@@ -1,4 +1,4 @@
-import { setOAuthToken } from '@hanzo/desktop-message-ts/api/tools/index';
+import { setOAuthToken } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 
 import { type APIError } from '../../types';

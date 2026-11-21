@@ -1,8 +1,8 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import {
   type AddLLMProviderResponse,
   type SerializedLLMProvider,
-} from '@hanzo/desktop-message-ts/api/jobs/types';
+} from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 
 export type AddLLMProviderInput = Token & {
   nodeAddress: string;

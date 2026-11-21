@@ -1,5 +1,4 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Accordion,
   AccordionContent,
@@ -11,12 +10,12 @@ import {
   PopoverContent,
   PopoverTrigger,
   Progress,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   ToolsIcon,
   // FilesIcon
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown, PlusIcon, Sparkles, XIcon } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
@@ -64,8 +63,7 @@ export default function OnboardingStepper() {
           body: (
             <div className="flex flex-col items-start gap-2">
               <span>
-                Download a local AI model to start using {getBrand().name}. We
-                recommend qwen3-vl:8b for vision + text capabilities.
+                Download a local AI model to start using Hanzo Desktop. We recommend qwen3-vl:8b for vision + text capabilities.
               </span>
               <Button
                 className="h-auto gap-1 px-3 py-2"
@@ -227,11 +225,7 @@ export const Stepper = ({ steps }: StepperProps) => {
     (step) => step.status === GetStartedStatus.Done,
   );
   return (
-    <Popover
-      placement="right-start"
-      onOpenChange={setIsPopoverOpen}
-      open={isPopoverOpen}
-    >
+    <Popover onOpenChange={setIsPopoverOpen} open={isPopoverOpen}>
       <AnimatePresence mode="popLayout">
         {sidebarExpanded && (
           <motion.div
@@ -246,10 +240,7 @@ export const Stepper = ({ steps }: StepperProps) => {
               <ChevronDown className="h-4 w-4" />
             </PopoverTrigger>
             <Progress
-              height={8}
-              minW={0}
-              rounded="$3"
-              width="100%"
+              className="h-2 w-full rounded-lg bg-cyan-900 [&>div]:bg-cyan-400"
               value={currentPercents}
             />
             {hasCompletedAllSteps ? (
@@ -287,10 +278,7 @@ export const Stepper = ({ steps }: StepperProps) => {
           <span className="sr-only">
             {t('onboardingChecklist.getStartedText')}
           </span>
-          <Badge
-            className="bg-bg-secondary border-divider absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border p-0 text-cyan-400"
-            style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-          >
+          <Badge className="bg-bg-secondary border-divider absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border p-0 text-cyan-400">
             {steps.length -
               steps.filter((step) => step.status === GetStartedStatus.Done)
                 .length}
@@ -298,8 +286,10 @@ export const Stepper = ({ steps }: StepperProps) => {
         </PopoverTrigger>
       )}
       <PopoverContent
-        className="text-xs"
-        p={0}
+        align="start"
+        alignOffset={sidebarExpanded ? -13 : -4}
+        className="p-0 text-xs"
+        side="right"
         sideOffset={sidebarExpanded ? 20 : 12}
       >
         <div className="bg-bg-default space-y-2 p-3.5">
@@ -313,10 +303,7 @@ export const Stepper = ({ steps }: StepperProps) => {
             </button>
           </div>
           <Progress
-            height={8}
-            minW={0}
-            rounded="$3"
-            width="100%"
+            className="h-2 w-full rounded-lg bg-cyan-900 [&>div]:bg-cyan-400"
             value={currentPercents}
           />
         </div>

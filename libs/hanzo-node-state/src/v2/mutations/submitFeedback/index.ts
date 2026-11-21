@@ -1,4 +1,4 @@
-import { submitFeedback as submitFeedbackApi } from '@hanzo/desktop-message-ts/api/external-services/index';
+import { submitFeedback as submitFeedbackApi } from '@hanzo_network/hanzo-message-ts/api/external-services/index';
 
 import { type SubmitFeedbackInput } from './types';
 

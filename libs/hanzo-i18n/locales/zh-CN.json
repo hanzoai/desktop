@@ -415,6 +415,9 @@
     "label": "导出连接",
     "restoreText": "使用您的密码短语来恢复与 节点的连接"
   },
+  "extension": {
+    "welcome": "使用 Hanzo Visor ✨ 变革您的网页浏览体验"
+  },
   "feedback": {
     "button": "反馈",
     "description": "我们重视您的反馈！请告诉我们您对新海的看法，以及我们如何改善您的体验。",

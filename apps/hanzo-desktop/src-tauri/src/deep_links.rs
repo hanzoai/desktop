@@ -1,11 +1,7 @@
-use tauri::{Emitter, Listener};
+use tauri::{Emitter, Listener, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 
 use crate::windows::{get_window, recreate_window, Window};
-
-/// Brands whose IAM issues a `<scheme>://oauth/<brand>` redirect. Mirrors the
-/// `Brand` union and the `iam.redirectUri` column in libs/brand-config.
-const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct OAuthDeepLinkPayload {
@@ -106,30 +102,23 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                         .map(|(_, value)| value.to_string())
                         .unwrap_or_default();
                     let payload = OAuthDeepLinkPayload { state, code };
-                    // IAM login callback (`<scheme>://oauth/<brand>`) vs provider
-                    // OAuth. The brand is the path segment, and the event is that
-                    // brand's `iam.callbackEvent` from libs/brand-config —
-                    // `<brand>-iam-callback`. Deriving it instead of hardcoding
-                    // "hanzo" is what lets one binary serve all three brands: a
-                    // Zoo build round-trips zoo://oauth/zoo and emits
-                    // zoo-iam-callback, which is the only event its login hook
-                    // listens for. Hardcoding hanzo made Lux and Zoo logins fall
-                    // through to the provider-OAuth branch and hang.
-                    match IAM_BRANDS
-                        .iter()
-                        .find(|brand| url.path().trim_start_matches('/') == **brand)
-                    {
-                        Some(brand) => {
-                            let event = format!("{}-iam-callback", brand);
-                            log::debug!("emitting {} event globally", event);
-                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                            let _ = app_handle.emit(&event, payload);
-                        }
-                        None => {
-                            log::debug!("emitting oauth-deep-link event to all windows");
-                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                            let _ = app_handle.emit("oauth-deep-link", payload);
-                        }
+
+                    // Check if this is an IAM login callback (path starts with /hanzo)
+                    let path = url.path();
+                    if path.starts_with("/hanzo") {
+                        log::debug!("emitting hanzo-iam-callback event globally");
+                        let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                        let _ = app_handle.emit("hanzo-iam-callback", payload);
+                    } else {
+                        log::debug!(
+                            "emitting oauth-deep-link event to {}",
+                            Window::Coordinator.as_str()
+                        );
+                        let _ = app_handle.emit_to(
+                            Window::Coordinator.as_str(),
+                            "oauth-deep-link",
+                            payload,
+                        );
                     }
                 }
 

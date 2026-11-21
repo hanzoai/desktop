@@ -1063,7 +1063,7 @@ export function useLocalAI(): LocalAIContextValue {
 ### `/apps/hanzo-desktop/src/components/local-ai/model-card.tsx`
 
 ```typescript
-import { Badge, Button, Card, CardContent, CardFooter, CardHeader } from '@hanzo/desktop-ui';
+import { Badge, Button, Card, CardContent, CardFooter, CardHeader } from '@hanzo_network/hanzo-ui';
 import { LocalAIModel, LocalAIEngineId } from '../../lib/local-ai/types';
 import { useLocalAI } from '../../lib/local-ai/context';
 import { EngineBadge } from './engine-badge';
@@ -1121,7 +1121,7 @@ export function ModelCard({ model, isInstalled }: ModelCardProps) {
 ### `/apps/hanzo-desktop/src/components/local-ai/engine-badge.tsx`
 
 ```typescript
-import { Badge } from '@hanzo/desktop-ui';
+import { Badge } from '@hanzo_network/hanzo-ui';
 import { Coins, Box, Monitor } from 'lucide-react';
 import { LocalAIEngineId } from '../../lib/local-ai/types';
 
@@ -1159,7 +1159,7 @@ export function EngineBadge({ engineId }: { engineId: LocalAIEngineId }) {
 ### `/apps/hanzo-desktop/src/components/local-ai/engine-selector.tsx`
 
 ```typescript
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hanzo/desktop-ui';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@hanzo_network/hanzo-ui';
 import { useLocalAI } from '../../lib/local-ai/context';
 import { LocalAIEngineId } from '../../lib/local-ai/types';
 import { EngineBadge } from './engine-badge';
@@ -1205,7 +1205,7 @@ export function EngineSelector({ value, onChange }: EngineSelectorProps) {
 ### `/apps/hanzo-desktop/src/components/local-ai/hanzo-node-benefits.tsx`
 
 ```typescript
-import { Card, CardContent, CardHeader, CardTitle } from '@hanzo/desktop-ui';
+import { Card, CardContent, CardHeader, CardTitle } from '@hanzo_network/hanzo-ui';
 import { Coins, ShieldCheck, Network } from 'lucide-react';
 
 const benefits = [

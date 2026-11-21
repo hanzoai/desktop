@@ -3,8 +3,8 @@ import validator from '@rjsf/validator-ajv8';
 import {
   type HanzoTool,
   type ToolConfigBase,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useGetTool } from '@hanzo/desktop-node-state/v2/queries/getTool/useGetTool';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useGetTool } from '@hanzo_network/hanzo-node-state/v2/queries/getTool/useGetTool';
 import {
   Button,
   generateTemplates,
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
   Skeleton,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { Trash } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -133,10 +133,10 @@ export const TooConfigOverrideForm = ({
               }}
               value="default"
             >
-              <SelectTrigger p={16}>
+              <SelectTrigger className="w-full p-4">
                 <SelectValue>Select a configuration to override</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-w-[720px] min-w-[180px] overflow-y-auto">
                 {properties.map((property, index) => (
                   <SelectItem key={index} value={property.key}>
                     <div className="flex flex-col gap-1">

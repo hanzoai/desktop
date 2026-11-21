@@ -1,4 +1,4 @@
-import { updateAgent as updateAgentApi } from '@hanzo/desktop-message-ts/api/agents/index';
+import { updateAgent as updateAgentApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
 
 import { type UpdateAgentInput } from './types';
 

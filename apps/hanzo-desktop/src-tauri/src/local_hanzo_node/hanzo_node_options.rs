@@ -1,15 +1,9 @@
 use std::path::PathBuf;
 
+use crate::hardware::{hardware_get_summary, RequirementsStatus};
 use serde::{Deserialize, Serialize};
 
-use super::PINNED_NODE_VERSION;
-
-/// It matches ENV variables names from HanzoNode.
-///
-/// These options are serialized to the webview and saved there by the Node
-/// Manager, so the signed-in key is not one of them: `EMBEDDINGS_SERVER_API_KEY`
-/// is added to the env at spawn time only, by `HanzoNodeManager` through
-/// hanzo-node-env.
+/// It matches ENV variables names from HanzoNode
 #[derive(Serialize, Deserialize, Clone)]
 pub struct HanzoNodeOptions {
     pub node_api_ip: Option<String>,
@@ -35,15 +29,12 @@ pub struct HanzoNodeOptions {
     pub hanzo_tools_runner_deno_binary_path: Option<String>,
     pub hanzo_tools_runner_uv_binary_path: Option<String>,
     pub hanzo_store_url: Option<String>,
-    /// `SKIP_IMPORT_FROM_DIRECTORY`: "true" stops the node fetching its
-    /// default-tool directory at start. See the default below.
-    pub skip_import_from_directory: Option<String>,
     pub secret_desktop_installation_proof_key: Option<String>,
 }
 
 impl HanzoNodeOptions {
     pub fn with_app_options(
-        _app_resource_dir: PathBuf,
+        app_resource_dir: PathBuf,
         app_data_dir: PathBuf,
     ) -> HanzoNodeOptions {
         let default_node_storage_path = app_data_dir
@@ -184,12 +175,6 @@ impl HanzoNodeOptions {
                     .or(base_options.hanzo_store_url)
                     .unwrap_or_default(),
             ),
-            skip_import_from_directory: Some(
-                options
-                    .skip_import_from_directory
-                    .or(base_options.skip_import_from_directory)
-                    .unwrap_or_else(|| default_options.skip_import_from_directory.unwrap_or_default()),
-            ),
             secret_desktop_installation_proof_key: default_options
                 .secret_desktop_installation_proof_key,
             proxy_identity: default_options.proxy_identity,
@@ -234,77 +219,25 @@ impl Default for HanzoNodeOptions {
             node_https_port: Some("3693".to_string()),
             global_identity_name: None,
             node_storage_path: Some("./".to_string()),
-            // Inference and embedding both go to api.hanzo.ai, the one API
-            // origin. Which base the node needs depends on its release: v1.19.4+
-            // posts to `{base}/embeddings` on `https://api.hanzo.ai/v1` with the
-            // signed-in key (EMBEDDINGS_SERVER_API_KEY, added at spawn from the
-            // session, never stored here); older ones append Ollama's
-            // `/api/embeddings` to `https://api.hanzo.ai`, which answers 404
-            // (cloud#760). hanzo-node-env picks by the pinned release, and
-            // rewrites an api.hanzo.ai URL saved by an older install at spawn.
-            // Chain mining checkpoints go through the native RPC.
-            embeddings_server_url: Some(
-                hanzo_node_env::default_embeddings_url(PINNED_NODE_VERSION).to_string(),
-            ),
+            // Native hanzo-engine embeddings (mistral.rs, CUDA) on :36901 via ollama-compat
+            // /api/embeddings - fully offline, zero wifi, zero ollama. zen-embedding-0.6B (1024-dim).
+            embeddings_server_url: Some("http://localhost:36901".to_string()),
             first_device_needs_registration_code: Some("false".to_string()),
-            initial_agent_urls: Some(
-                "https://api.hanzo.ai,https://api.hanzo.ai".to_string(),
-            ),
-            // Brand-aware agent names: "zoo_free_trial,zoo_code_gen" when
-            // compiled with BRAND=zoo, "hanzo_free_trial,hanzo_code_gen"
-            // otherwise. The agent ID is what surfaces as the display name
-            // (formatText("zoo_free_trial") -> "Zoo Free Trial").
-            // option_env! reads the env at *compile time* and bakes it in.
-            initial_agent_names: Some(
-                if option_env!("BRAND") == Some("zoo") {
-                    "zoo_free_trial,zoo_code_gen".to_string()
-                } else {
-                    "hanzo_free_trial,hanzo_code_gen".to_string()
-                },
-            ),
-            initial_agent_models: Some(
-                "hanzo-backend:FREE_TEXT_INFERENCE,hanzo-backend:CODE_GENERATOR".to_string(),
-            ),
-            initial_agent_api_keys: Some("'',''".to_string()),
+            // Local hanzo-engine (mistral.rs, GPU) — OpenAI-compatible on :36900. No Ollama, no cloud.
+            initial_agent_urls: Some("http://localhost:36900".to_string()),
+            initial_agent_names: Some("zen_engine".to_string()),
+            initial_agent_models: Some("openai:default".to_string()),
+            initial_agent_api_keys: Some("local".to_string()),
             starting_num_qr_devices: Some("0".to_string()),
             log_all: Some("1".to_string()),
             proxy_identity: Some("@@libp2p_relayer.sep-hanzo".to_string()),
             rpc_url: Some("https://sepolia.base.org".to_string()),
-            // The node sizes its vector tables (`vec0 ... float[N]`) from this
-            // model when it creates a new database, and it seeds 130 static
-            // prompts whose embeddings are PRECOMPUTED with embeddinggemma:300m
-            // — 768 floats each (hanzo-db-sqlite files/prompts_data.rs, node
-            // v1.15.0). `all-minilm:l6-v2` made the tables 384 wide and every
-            // seed insert failed: "Dimension mismatch ... Expected 384
-            // dimensions but received 768" (cloud#760). 768 is also the node's
-            // own default. A database already created at 384 keeps its tables
-            // and its stored model; only a new one picks this up.
-            //
-            // api.hanzo.ai serves no embeddinggemma: it serves `zen-embedding`,
-            // which node v1.19.4+ knows and stores 768 wide, and whose start-up
-            // relabels a 768 database and recreates an empty 384 one. So with a
-            // v1.19.4+ pin the default is `zen-embedding`; with an older pin it
-            // stays `embeddinggemma:300m`, which that node can parse.
-            default_embedding_model: Some(
-                hanzo_node_env::default_embedding_model(PINNED_NODE_VERSION).to_string(),
-            ),
-            supported_embedding_models: Some(hanzo_node_env::default_supported_models(
-                PINNED_NODE_VERSION,
-            )),
+            // Zen lineup, smallest first - baked in for offline out-of-box (zen-embedding-0.6B, 1024-dim).
+            default_embedding_model: Some("zenlm/zen-embedding-0.6B".to_string()),
+            supported_embedding_models: Some("hf.co/zenlm/zen-embedding-0.6B-GGUF,snowflake-arctic-embed:xs,embeddinggemma:300m".to_string()),
             hanzo_tools_runner_deno_binary_path: Some(hanzo_tools_runner_deno_binary_path),
             hanzo_tools_runner_uv_binary_path: Some(hanzo_tools_runner_uv_binary_path),
             hanzo_store_url: Some("https://store-api.hanzo.ai".to_string()),
-            // The node fetches its default-tool directory from
-            // HANZO_TOOLS_DIRECTORY_URL, default
-            // https://store-api.hanzo.ai/store/defaults. Nothing serves that:
-            // the host falls through to the *.hanzo.ai ingress and answers
-            // 404 (cloud#760), and hanzoai/store-api, the only code for it,
-            // answers an object with stub entries where the node needs an
-            // array of {name, file, routerKey}. So the fetch can only fail.
-            // The flag skips just that fetch: the local-directory import it
-            // also gates needs INSTALL_FOLDER_PATH, which the desktop never
-            // sets. Set it to "false" once a directory is served.
-            skip_import_from_directory: Some("true".to_string()),
             secret_desktop_installation_proof_key: option_env!(
                 "SECRET_DESKTOP_INSTALLATION_PROOF_KEY"
             )

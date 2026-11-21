@@ -1,4 +1,4 @@
-import { runTaskNowApi } from '@hanzo/desktop-message-ts/api/recurring-tasks/index';
+import { runTaskNowApi } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/index';
 
 import { type RunTaskNowInput } from './types';
 

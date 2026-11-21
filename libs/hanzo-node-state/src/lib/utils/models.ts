@@ -1,12 +1,7 @@
 export enum Models {
-  // Native first-party engine (downloads Zen models from HF, runs locally).
-  // First so it's the default; Ollama / LM Studio are alternative local engines.
-  Hanzo = 'hanzo',
   OpenAI = 'open-ai',
   OpenAILegacy = 'open-ai-legacy',
   TogetherComputer = 'togethercomputer',
-  Ollama = 'ollama',
-  LMStudio = 'lmstudio',
   Gemini = 'gemini',
   Exo = 'exo',
   Groq = 'groq',
@@ -16,47 +11,7 @@ export enum Models {
   Grok = 'grok',
 }
 
-type ModelType = {
-  name: string;
-  value: string;
-  file?: string;
-  format?: string;
-  size?: string;
-  embedding?: boolean;
-  reranker?: boolean;
-};
-
-type ModelConfig = {
-  apiUrl: string;
-  /**
-   * Empty where the catalog is whatever the user has pulled or routed —
-   * `add-ai` appends "Custom Model" to every provider, so an empty list still
-   * offers a way in.
-   */
-  modelTypes: ModelType[];
-};
-
-// Total over Models on purpose: `add-ai` reads modelsConfig[model] for any
-// enum member the form accepts, so a member without an entry is a crash on
-// selection rather than a missing menu row. Record<Models, …> makes that a
-// compile error instead.
-export const modelsConfig: Record<Models, ModelConfig> = {
-  // Native Hanzo engine — first-party Zen models from huggingface.co/zenlm, served
-  // locally over the OpenAI-compatible API. `value` is the HF repo id so the engine
-  // downloads it natively; apps point apiUrl at their own engine port.
-  [Models.Hanzo]: {
-    apiUrl: 'http://localhost:36900',
-    modelTypes: [
-      { name: 'Zen Nano 0.6B', value: 'zenlm/zen-nano-0.6b', file: 'gguf/zen-nano-0.6b-Q8_0.gguf', format: 'gguf', size: '~0.7 GB' },
-      { name: 'Zen Eco 4B', value: 'zenlm/zen-eco-4b-instruct', size: '~8 GB' },
-      { name: 'Zen Eco 4B Thinking', value: 'zenlm/zen-eco-4b-thinking', size: '~8 GB' },
-      { name: 'Zen 3 Nano', value: 'zenlm/zen3-nano', size: '~1.2 GB' },
-      { name: 'Zen Embedding', value: 'zenlm/zen-embedding', embedding: true, size: '~1.2 GB' },
-      { name: 'Zen Embedding 0.6B', value: 'zenlm/zen-embedding-0.6B', embedding: true, size: '~1.2 GB' },
-      { name: 'Zen Embedding 8B (GGUF)', value: 'zenlm/zen-embedding-8B-GGUF', embedding: true, format: 'gguf', size: '~8 GB' },
-      { name: 'Zen Reranker', value: 'zenlm/zen-reranker', reranker: true, size: '~1.2 GB' },
-    ],
-  },
+export const modelsConfig = {
   [Models.OpenAI]: {
     apiUrl: 'https://api.openai.com',
     modelTypes: [
@@ -426,51 +381,6 @@ export const modelsConfig: Record<Models, ModelConfig> = {
       {
         name: 'Grok 2 Vision',
         value: 'grok-2-vision',
-      },
-    ],
-  },
-  [Models.Ollama]: {
-    apiUrl: 'http://localhost:11434',
-    modelTypes: [],
-  },
-  [Models.LMStudio]: {
-    apiUrl: 'http://localhost:1234/v1',
-    modelTypes: [
-      {
-        name: 'Loaded Model',
-        value: 'loaded-model',
-      },
-      {
-        name: 'Custom Model',
-        value: 'custom',
-      },
-      {
-        name: 'Llama 3.2 3B',
-        value: 'llama-3.2-3b',
-      },
-      {
-        name: 'Llama 3.2 1B',
-        value: 'llama-3.2-1b',
-      },
-      {
-        name: 'Mistral 7B',
-        value: 'mistral-7b-instruct-v0.2',
-      },
-      {
-        name: 'Qwen 3 8B',
-        value: 'qwen3-8b',
-      },
-      {
-        name: 'Phi 3 Mini',
-        value: 'phi-3-mini-4k-instruct',
-      },
-      {
-        name: 'DeepSeek Coder 6.7B',
-        value: 'deepseek-coder-6.7b-instruct',
-      },
-      {
-        name: 'Gemma 2B',
-        value: 'gemma-2b-it',
       },
     ],
   },

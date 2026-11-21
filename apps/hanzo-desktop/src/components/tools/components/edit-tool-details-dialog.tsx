@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PopoverClose } from '@radix-ui/react-popover';
 import {
   type HanzoTool,
   type HanzoToolType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useUpdateTool } from '@hanzo/desktop-node-state/v2/mutations/updateTool/useUpdateTool';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useUpdateTool } from '@hanzo_network/hanzo-node-state/v2/mutations/updateTool/useUpdateTool';
 import {
   Button,
   Form,
@@ -16,9 +17,8 @@ import {
   PopoverContent,
   PopoverTrigger,
   Textarea,
-  PopoverClose,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -151,7 +151,7 @@ export default function EditToolDetailsDialog({
                 <Textarea
                   className="resize-none border-none py-2 pt-2 pl-2 text-xs caret-white focus-visible:ring-0 focus-visible:ring-white"
                   id="description"
-                  onChangeText={field.onChange}
+                  onChange={field.onChange}
                   placeholder="Tool Description"
                   value={field.value}
                 />
@@ -255,7 +255,6 @@ export default function EditToolDetailsDialog({
 
   return (
     <Popover
-      placement="bottom-start"
       onOpenChange={(open) => {
         if (open) {
           form.reset({
@@ -287,7 +286,12 @@ export default function EditToolDetailsDialog({
           <span className="sr-only">{fieldName}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent gap="$4" sideOffset={10} width={450}>
+      <PopoverContent
+        align="start"
+        className="flex w-[450px] flex-col gap-4 p-4"
+        side="bottom"
+        sideOffset={10}
+      >
         <h1 className="text-sm leading-none font-semibold tracking-tight">
           Edit {fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}
         </h1>

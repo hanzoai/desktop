@@ -1,21 +1,21 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { type ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils';
-import { usePublishTool } from '@hanzo/desktop-node-state/v2/mutations/publishTool/usePublishTool';
-import { useRestoreToolConversation } from '@hanzo/desktop-node-state/v2/mutations/restoreToolConversation/useRestoreToolConversation';
+import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { usePublishTool } from '@hanzo_network/hanzo-node-state/v2/mutations/publishTool/usePublishTool';
+import { useRestoreToolConversation } from '@hanzo_network/hanzo-node-state/v2/mutations/restoreToolConversation/useRestoreToolConversation';
 import {
   Button,
   Popover,
   PopoverContent,
   PopoverTrigger,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
   Badge,
   Separator,
   Tooltip,
-} from '@hanzo/desktop-ui';
-import { StoreIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { StoreIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { open } from '@tauri-apps/plugin-shell';
 import {
   ArrowLeft,
@@ -198,7 +198,7 @@ function PlaygroundHeaderBase({
         {toolHistory.length > 1 && (
           <div className="flex items-center gap-4">
             {toolCode === toolHistory?.at(-1)?.code ? (
-              <Tooltip placement="bottom">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
                     className="border-cyan-600 bg-cyan-900/20 font-normal text-cyan-400"
@@ -207,12 +207,14 @@ function PlaygroundHeaderBase({
                     Latest
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>This is your latest version</p>
-                </TooltipContent>
+                <TooltipPortal>
+                  <TooltipContent side="bottom">
+                    <p>This is your latest version</p>
+                  </TooltipContent>
+                </TooltipPortal>
               </Tooltip>
             ) : (
-              <Tooltip placement="bottom">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge
                     className="bg-gray-350 cursor-pointer border-0 px-2.5 py-2 hover:bg-gray-400"
@@ -225,16 +227,18 @@ function PlaygroundHeaderBase({
                     <span>Restore</span>
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent className="max-w-sm">
-                  <p>
-                    Restore to this version. This action will undo all changes
-                    made since the selected version
-                  </p>
-                </TooltipContent>
+                <TooltipPortal>
+                  <TooltipContent className="max-w-sm" side="bottom">
+                    <p>
+                      Restore to this version. This action will undo all changes
+                      made since the selected version
+                    </p>
+                  </TooltipContent>
+                </TooltipPortal>
               </Tooltip>
             )}
             <div className="flex items-center gap-2">
-              <Tooltip placement="bottom">
+              <Tooltip>
                 <TooltipTrigger
                   asChild
                   disabled={toolCode === toolHistory?.at(0)?.code}
@@ -248,11 +252,13 @@ function PlaygroundHeaderBase({
                     <Undo2Icon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>View previous version</p>
-                </TooltipContent>
+                <TooltipPortal>
+                  <TooltipContent side="bottom">
+                    <p>View previous version</p>
+                  </TooltipContent>
+                </TooltipPortal>
               </Tooltip>
-              <Tooltip placement="bottom">
+              <Tooltip>
                 <TooltipTrigger
                   asChild
                   disabled={toolCode === toolHistory?.at(-1)?.code}
@@ -266,16 +272,18 @@ function PlaygroundHeaderBase({
                     <Redo2Icon className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>View next version</p>
-                </TooltipContent>
+                <TooltipPortal>
+                  <TooltipContent side="bottom">
+                    <p>View next version</p>
+                  </TooltipContent>
+                </TooltipPortal>
               </Tooltip>
             </div>
-            <Separator className="my-1 bg-gray-300" vertical />
+            <Separator className="my-1 bg-gray-300" orientation="vertical" />
           </div>
         )}
         <ManageSourcesButton />
-        <Tooltip placement="bottom">
+        <Tooltip>
           <TooltipTrigger asChild>
             <Button
               className="flex h-[34px] w-[42px] p-0"
@@ -289,11 +297,13 @@ function PlaygroundHeaderBase({
               {!isSavingTool && <SaveIcon className="h-4 w-4" />}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>Save Changes</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="bottom">
+              <p>Save Changes</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
-        <Popover placement="bottom-end">
+        <Popover>
           <PopoverTrigger asChild>
             <Button
               className="min-w-[100px]"
@@ -307,7 +317,7 @@ function PlaygroundHeaderBase({
               Publish
             </Button>
           </PopoverTrigger>
-          <PopoverContent sideOffset={10} width={450}>
+          <PopoverContent align="end" className="w-[450px]" sideOffset={10}>
             <div className="space-y-4">
               <div className="space-y-3">
                 <h4 className="flex items-center gap-2 leading-none font-medium">
@@ -322,7 +332,7 @@ function PlaygroundHeaderBase({
                     rel="noreferrer"
                     target="_blank"
                   >
-                    {getBrand().name} Store
+                    Hanzo AI Store
                   </a>{' '}
                   . Please ensure it works as expected.
                 </p>

@@ -1,4 +1,4 @@
-import { getLLMProviders as getLLMProvidersAPI } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { getLLMProviders as getLLMProvidersAPI } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import  { type GetLLMProvidersInput } from './types';
 

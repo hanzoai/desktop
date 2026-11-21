@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import * as React from 'react';
 
 import { useCombinedRefs } from '../../hooks/use-combined-refs';

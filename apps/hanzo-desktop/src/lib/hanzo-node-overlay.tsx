@@ -1,8 +1,8 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
-import { Button } from '@hanzo/desktop-ui';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
+import { Button } from '@hanzo_network/hanzo-ui';
 import { openPath } from '@tauri-apps/plugin-opener';
-import { DownloadIcon, Loader2, RotateCwIcon } from 'lucide-react';
+import { DownloadIcon, Loader2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -19,7 +19,6 @@ export const HanzoNodeRunningOverlay = ({
   children: React.ReactNode;
 }) => {
   const auth = useAuth((store) => store.auth);
-  const isCloudMode = !!auth?.hanzo_token;
   const { data: isHanzoNodeRunning, isPending: isHanzoNodeRunningPending } =
     useHanzoNodeIsRunningQuery();
   const isInUse = useHanzoNodeManager((store) => store.isInUse);
@@ -32,13 +31,8 @@ export const HanzoNodeRunningOverlay = ({
     isError: isHealthError,
   } = useGetHealth(
     { nodeAddress: auth?.node_address ?? '' },
-    { enabled: !isCloudMode, refetchInterval: isCloudMode ? false : 35000 },
+    { refetchInterval: 35000 },
   );
-
-  // Cloud mode: skip all local node health checks
-  if (isCloudMode) {
-    return <>{children}</>;
-  }
 
   const { mutate: downloadTauriLogs } = useDownloadTauriLogsMutation({
     onSuccess: (result) => {
@@ -69,7 +63,7 @@ export const HanzoNodeRunningOverlay = ({
       <div className="flex size-full flex-col items-center justify-center gap-3 py-8">
         <Loader2 className="h-8 w-8 animate-spin text-white" />
         <span className="text-text-secondary text-sm">
-          Checking {getBrand().name} Node Status ...
+          Checking Node Status ...
         </span>
       </div>
     );
@@ -83,7 +77,7 @@ export const HanzoNodeRunningOverlay = ({
           role="alert"
         >
           <div className="space-y-2 text-center text-red-400">
-            <p>Unable to connect to {getBrand().name} Node.</p>
+            <p>Unable to connect to Node.</p>
             <pre className="px-4 whitespace-break-spaces">
               {healthError.message}
             </pre>
@@ -107,7 +101,7 @@ export const HanzoNodeRunningOverlay = ({
               size="sm"
               type="button"
             >
-              <RotateCwIcon className="size-3.5" />
+              <ReloadIcon className="size-3.5" />
               Reset App
             </Button>
             <ResetConnectionDialog
@@ -129,7 +123,9 @@ export const HanzoNodeRunningOverlay = ({
     <div className="flex h-screen flex-col items-center justify-center gap-10">
       <div className="mx-auto flex max-w-lg flex-col items-center gap-4">
         <span className="text-4xl">⚠️</span>
-        <h1 className="text-3xl font-bold">Unable to Connect to Node</h1>
+        <h1 className="text-3xl font-bold">
+          Unable to Connect to Node
+        </h1>
         <p className="text-text-secondary text-base">
           Please make sure the Node is running and try again.
         </p>

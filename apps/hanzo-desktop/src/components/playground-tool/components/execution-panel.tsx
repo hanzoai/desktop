@@ -1,8 +1,8 @@
 import { type FormProps } from '@rjsf/core';
 import { type FieldProps } from '@rjsf/utils';
 import validator from '@rjsf/validator-ajv8';
-import { useUploadPlaygroundToolFiles } from '@hanzo/desktop-node-state/v2/mutations/uploadPlaygroundToolFiles/useUploadPlaygroundToolFiles';
-import { useGetHanzoFileProtocol } from '@hanzo/desktop-node-state/v2/queries/getHanzoFileProtocol/useGetHanzoFileProtocol';
+import { useUploadPlaygroundToolFiles } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadPlaygroundToolFiles/useUploadPlaygroundToolFiles';
+import { useGetHanzoFileProtocol } from '@hanzo_network/hanzo-node-state/v2/queries/getHanzoFileProtocol/useGetHanzoFileProtocol';
 import {
   Button,
   CommandShortcut,
@@ -16,8 +16,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import equal from 'fast-deep-equal';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AppWindow, LoaderIcon, TerminalIcon } from 'lucide-react';
@@ -49,9 +49,6 @@ function ExecutionPanelBase({
   handleRunCode: FormProps['onSubmit'];
   regenerateToolMetadata: () => void;
 }) {
-  // gui's TabsContent types its ref as GuiElement (HTMLElement plus react-native's
-  // measure methods). On web the ref IS the host DOM node, which is all these two
-  // are ever used as — scrollTo/scrollHeight below.
   const viewTabRef = useRef<HTMLDivElement>(null);
   const consoleTabRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState(null);
@@ -140,7 +137,7 @@ function ExecutionPanelBase({
         className="mt-0 flex-1 overflow-auto break-words whitespace-pre-line"
         onBlur={() => setFocusedPanel(null)}
         onFocus={() => setFocusedPanel('preview')}
-        ref={viewTabRef as never}
+        ref={viewTabRef}
         value="view"
       >
         <div className="flex size-full flex-col pr-3 pb-4 pl-4">
@@ -176,7 +173,7 @@ function ExecutionPanelBase({
                   size="xs"
                 >
                   Run
-                  <CommandShortcut className="font-sans flex items-center text-xs text-white">
+                  <CommandShortcut className="font-inter flex items-center text-xs text-white">
                     ⌘⏎
                   </CommandShortcut>
                 </Button>
@@ -330,7 +327,7 @@ function ExecutionPanelBase({
         onFocus={() => {
           setFocusedPanel('console');
         }}
-        ref={consoleTabRef as never}
+        ref={consoleTabRef}
         value="console"
       >
         <ToolLogs
@@ -573,7 +570,7 @@ export const FileInputField = ({ value, onChange }: FieldProps) => {
       {value && (
         <div className="inline-flex items-center gap-2">
           <span className="text-text-secondary">File Path:</span>
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <span className="text-white">{value?.split('/')?.at(-1)}</span>
             </TooltipTrigger>

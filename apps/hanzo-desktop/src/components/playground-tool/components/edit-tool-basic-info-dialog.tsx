@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { type ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
+import { PopoverClose } from '@radix-ui/react-popover';
+import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   Badge,
   Button,
@@ -13,9 +14,8 @@ import {
   PopoverTrigger,
   Textarea,
   Form,
-  PopoverClose,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { useEffect, useState } from 'react';
 import { useForm, useFormContext } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -88,7 +88,6 @@ export default function EditToolBasicInfoDialog({
   return (
     <div className="flex items-center gap-2">
       <Popover
-        placement="bottom-start"
         onOpenChange={(open) => {
           if (open) {
             toolBasicInfoForm.reset({
@@ -111,7 +110,12 @@ export default function EditToolBasicInfoDialog({
             Edit
           </Badge>
         </PopoverTrigger>
-        <PopoverContent gap="$4" sideOffset={10} width={450}>
+        <PopoverContent
+          align="start"
+          className="flex w-[450px] flex-col gap-4 p-4"
+          side="bottom"
+          sideOffset={10}
+        >
           <h1 className="text-sm leading-none font-semibold tracking-tight">
             Update Tool
           </h1>
@@ -154,7 +158,7 @@ export default function EditToolBasicInfoDialog({
                     <Textarea
                       className="placeholder-gray-80 bg-bg-tertiary resize-none border-none py-2 pt-2 pl-2 text-xs caret-white focus-visible:ring-0 focus-visible:ring-white"
                       id="description"
-                      onChangeText={field.onChange}
+                      onChange={field.onChange}
                       placeholder="Tool Description"
                       value={field.value}
                     />

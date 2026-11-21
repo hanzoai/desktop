@@ -1,13 +1,15 @@
-import { type ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   Button,
   Skeleton,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
-import { AlertTriangleIcon, RotateCwIcon, SaveIcon } from 'lucide-react';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
+import { AlertTriangleIcon, SaveIcon } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { merge } from 'ts-deepmerge';
@@ -195,139 +197,151 @@ function MetadataPanelBase({
   ]);
 
   return (
-    <div
-      className={cn(
-        'bg-bg-dark flex h-full flex-col pr-3 pb-4 pl-4',
-        validateMetadataEditorValue !== null &&
-          'ring-1 ring-red-600 transition-shadow ring-inset',
-      )}
-    >
-      {isMetadataGenerationSuccess && (
-        <div className={cn('flex items-center justify-end gap-3 px-2 py-1.5')}>
-          <Tooltip placement="bottom">
-            <TooltipTrigger asChild>
-              <Button
-                className="!size-[28px] rounded-lg border-0 bg-transparent p-2"
-                onClick={regenerateToolMetadata}
-                size="xs"
-                type="button"
-                variant="tertiary"
-              >
-                <RotateCwIcon className="size-full" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="text-text-default flex max-w-[300px] flex-col gap-2.5 text-xs">
-              <p>Regenerate metadata</p>
-            </TooltipContent>
-          </Tooltip>
-          {validateMetadataEditorValue !== null && (
-            <Tooltip placement="bottom">
-              <TooltipTrigger asChild>
-                <div className="text-red flex items-center">
-                  <AlertTriangleIcon className="size-4" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent className="text-text-default flex max-w-[300px] flex-col gap-2.5 text-xs">
-                <p className="font-medium">Invalid metadata format</p>
-                <span className="text-text-tertiary">
-                  {validateMetadataEditorValue}
-                </span>
-                <p className="text-text-tertiary text-xs">
-                  This value will not be saved.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          )}
-          {isDirty && !validateMetadataEditorValue && (
-            <Button
-              className="h-7 gap-1.5 rounded-lg px-2 text-xs"
-              disabled={isSaving}
-              onClick={handleSaveMetadata}
-              size="xs"
-              type="button"
-              variant="tertiary"
-            >
-              {isSaving ? 'Applying...' : 'Apply changes'}
-            </Button>
-          )}
-        </div>
-      )}
-      {isMetadataGenerationPending && (
-        <div className="text-text-secondary flex flex-col gap-2 py-4 text-xs">
-          <div className="space-y-3 font-mono text-sm">
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-24 bg-zinc-800" />
-              <Skeleton className="h-4 w-32 bg-zinc-800" />
-            </div>
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-28 bg-zinc-800" />
-              <Skeleton className="h-4 w-96 bg-zinc-800" />
-            </div>
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-20 bg-zinc-800" />
-              <Skeleton className="h-4 w-4 bg-zinc-800" />
-            </div>
-            {[...Array(3)].map((_, i) => (
-              <div className="ml-8 flex items-center gap-2" key={i}>
-                <Skeleton className="h-4 w-28 bg-zinc-800" />
-              </div>
-            ))}
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-4 bg-zinc-800" />
-            </div>
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-32 bg-zinc-800" />
-              <Skeleton className="h-4 w-4 bg-zinc-800" />
-            </div>
-            {[...Array(4)].map((_, i) => (
-              <div className="ml-8 flex items-center gap-2" key={i}>
-                <Skeleton className="h-4 w-40 bg-zinc-800" />
-                <Skeleton className="h-4 w-24 bg-zinc-800" />
-              </div>
-            ))}
-            <div className="ml-4 flex items-center gap-2">
-              <Skeleton className="h-4 w-28 bg-zinc-800" />
-              <Skeleton className="h-4 w-4 bg-zinc-800" />
-            </div>
-            {[...Array(5)].map((_, i) => (
-              <div className="ml-8 flex items-center gap-2" key={i}>
-                <Skeleton className="h-4 w-36 bg-zinc-800" />
-                {i % 2 === 0 && <Skeleton className="h-4 w-48 bg-zinc-800" />}
-              </div>
-            ))}
-          </div>
-          <span className="sr-only">Generating Metadata...</span>
-        </div>
-      )}
-      {!isMetadataGenerationPending &&
-        !isToolCodeGenerationPending &&
-        isMetadataGenerationError && (
-          <ToolErrorFallback
-            error={new Error(toolMetadataError ?? '')}
-            resetErrorBoundary={regenerateToolMetadata}
-          />
-        )}
+			<div
+				className={cn(
+					"bg-bg-dark flex h-full flex-col pr-3 pb-4 pl-4",
+					validateMetadataEditorValue !== null &&
+						"ring-1 ring-red-600 transition-shadow ring-inset",
+				)}
+			>
+				{isMetadataGenerationSuccess && (
+					<div
+						className={cn("flex items-center justify-end gap-3 px-2 py-1.5")}
+					>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									className="!size-[28px] rounded-lg border-0 bg-transparent p-2"
+									onClick={regenerateToolMetadata}
+									size="xs"
+									type="button"
+									variant="tertiary"
+								>
+									<ReloadIcon className="size-full" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipPortal>
+								<TooltipContent
+									className="text-text-default flex max-w-[300px] flex-col gap-2.5 text-xs"
+									side="bottom"
+								>
+									<p>Regenerate metadata</p>
+								</TooltipContent>
+							</TooltipPortal>
+						</Tooltip>
+						{validateMetadataEditorValue !== null && (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<div className="text-red flex items-center">
+										<AlertTriangleIcon className="size-4" />
+									</div>
+								</TooltipTrigger>
+								<TooltipPortal>
+									<TooltipContent
+										className="text-text-default flex max-w-[300px] flex-col gap-2.5 text-xs"
+										side="bottom"
+									>
+										<p className="font-medium">Invalid metadata format</p>
+										<span className="text-text-tertiary">
+											{validateMetadataEditorValue}
+										</span>
+										<p className="text-text-tertiary text-xs">
+											This value will not be saved.
+										</p>
+									</TooltipContent>
+								</TooltipPortal>
+							</Tooltip>
+						)}
+						{isDirty && !validateMetadataEditorValue && (
+							<Button
+								className="h-7 gap-1.5 rounded-lg px-2 text-xs"
+								disabled={isSaving}
+								onClick={handleSaveMetadata}
+								size="xs"
+								type="button"
+								variant="tertiary"
+							>
+								{isSaving ? "Applying..." : "Apply changes"}
+							</Button>
+						)}
+					</div>
+				)}
+				{isMetadataGenerationPending && (
+					<div className="text-text-secondary flex flex-col gap-2 py-4 text-xs">
+						<div className="space-y-3 font-mono text-sm">
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-24 bg-zinc-800" />
+								<Skeleton className="h-4 w-32 bg-zinc-800" />
+							</div>
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-28 bg-zinc-800" />
+								<Skeleton className="h-4 w-96 bg-zinc-800" />
+							</div>
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-20 bg-zinc-800" />
+								<Skeleton className="h-4 w-4 bg-zinc-800" />
+							</div>
+							{[...Array(3)].map((_, i) => (
+								<div className="ml-8 flex items-center gap-2" key={i}>
+									<Skeleton className="h-4 w-28 bg-zinc-800" />
+								</div>
+							))}
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-4 bg-zinc-800" />
+							</div>
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-32 bg-zinc-800" />
+								<Skeleton className="h-4 w-4 bg-zinc-800" />
+							</div>
+							{[...Array(4)].map((_, i) => (
+								<div className="ml-8 flex items-center gap-2" key={i}>
+									<Skeleton className="h-4 w-40 bg-zinc-800" />
+									<Skeleton className="h-4 w-24 bg-zinc-800" />
+								</div>
+							))}
+							<div className="ml-4 flex items-center gap-2">
+								<Skeleton className="h-4 w-28 bg-zinc-800" />
+								<Skeleton className="h-4 w-4 bg-zinc-800" />
+							</div>
+							{[...Array(5)].map((_, i) => (
+								<div className="ml-8 flex items-center gap-2" key={i}>
+									<Skeleton className="h-4 w-36 bg-zinc-800" />
+									{i % 2 === 0 && <Skeleton className="h-4 w-48 bg-zinc-800" />}
+								</div>
+							))}
+						</div>
+						<span className="sr-only">Generating Metadata...</span>
+					</div>
+				)}
+				{!isMetadataGenerationPending &&
+					!isToolCodeGenerationPending &&
+					isMetadataGenerationError && (
+						<ToolErrorFallback
+							error={new Error(toolMetadataError ?? "")}
+							resetErrorBoundary={regenerateToolMetadata}
+						/>
+					)}
 
-      {isMetadataGenerationSuccess &&
-        !isMetadataGenerationError &&
-        toolMetadata && (
-          <ToolCodeEditor
-            key={editorResetKey}
-            language="json"
-            onUpdate={handleMetadataUpdate}
-            ref={metadataEditorRef}
-            value={formattedToolMetadata}
-          />
-        )}
-      {isMetadataGenerationIdle && (
-        <div>
-          <p className="text-text-secondary py-4 pt-6 text-center text-xs">
-            No metadata generated yet.
-          </p>
-        </div>
-      )}
-    </div>
-  );
+				{isMetadataGenerationSuccess &&
+					!isMetadataGenerationError &&
+					toolMetadata && (
+						<ToolCodeEditor
+							key={editorResetKey}
+							language="json"
+							onUpdate={handleMetadataUpdate}
+							ref={metadataEditorRef}
+							value={formattedToolMetadata}
+						/>
+					)}
+				{isMetadataGenerationIdle && (
+					<div>
+						<p className="text-text-secondary py-4 pt-6 text-center text-xs">
+							No metadata generated yet.
+						</p>
+					</div>
+				)}
+			</div>
+		);
 }
 
 export const MetadataPanel = MetadataPanelBase;

@@ -1,4 +1,4 @@
-import { createFolder as createFolderApi } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { createFolder as createFolderApi } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import { type CreateFolderInput, type CreateFolderOutput } from './types';
 

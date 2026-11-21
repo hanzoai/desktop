@@ -1,2 +1,1 @@
-apps/hanzo-desktop/src-tauri/bin/* filter=lfs diff=lfs merge=lfs -text
-apps/hanzo-desktop/src-tauri/bin/** filter=lfs diff=lfs merge=lfs -text
+# No LFS tracking needed — tauri binaries are built by CI

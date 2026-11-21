@@ -1,11 +1,11 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type RecurringTask } from '@hanzo/desktop-message-ts/api/recurring-tasks/types';
-import { useExportAgent } from '@hanzo/desktop-node-state/v2/mutations/exportAgent/useExportAgent';
-import { useRemoveAgent } from '@hanzo/desktop-node-state/v2/mutations/removeAgent/useRemoveAgent';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type RecurringTask } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/types';
+import { useExportAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/exportAgent/useExportAgent';
+import { useRemoveAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/removeAgent/useRemoveAgent';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
 import {
-  DialogClose,
   Badge,
   Button,
   buttonVariants,
@@ -22,6 +22,7 @@ import {
   SearchInput,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
   Tabs,
@@ -33,7 +34,7 @@ import {
   CardDescription,
   AvatarFallback,
   Avatar,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AIAgentIcon,
   appIcon,
@@ -41,13 +42,13 @@ import {
   CreateAIIcon,
   DownloadIcon,
   ScheduledTasksIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
 import cronstrue from 'cronstrue';
-import { Edit, EllipsisVerticalIcon, Plus, TrashIcon } from 'lucide-react';
+import { Edit, Plus, TrashIcon } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
@@ -86,7 +87,7 @@ function AgentsPage() {
         <div className="container flex flex-col">
           <div className="flex flex-col gap-3 pt-10 pb-4">
             <div className="flex justify-between gap-4">
-              <div className="font-sans inline-flex items-center gap-5 text-3xl font-medium">
+              <div className="font-inter inline-flex items-center gap-5 text-3xl font-medium">
                 <h1>{t('agents.label')}</h1>
                 <TabsList className="flex h-10 w-fit items-center gap-2 rounded-full bg-transparent px-1 py-1">
                   <TabsTrigger
@@ -288,8 +289,8 @@ const AgentCard = ({
             {hasScheduledTasks && (
               <div className="mt-2 inline-flex gap-2">
                 {scheduledTasks.map((task) => (
-                  <TooltipProvider delay={0} key={task.task_id}>
-                    <Tooltip placement="top">
+                  <TooltipProvider delayDuration={0} key={task.task_id}>
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <Link
                           className="text-text-secondary bg-bg-quaternary hover:text-text-default flex items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors"
@@ -304,7 +305,10 @@ const AgentCard = ({
                           </span>
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent className="flex flex-col items-center gap-1">
+                      <TooltipContent
+                        align="center"
+                        className="flex flex-col items-center gap-1"
+                      >
                         {t('agentsPage.goToTaskDetails')}
                       </TooltipContent>
                     </Tooltip>
@@ -315,8 +319,8 @@ const AgentCard = ({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <TooltipProvider delay={0}>
-            <Tooltip placement="right">
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   onClick={() => {
@@ -330,12 +334,18 @@ const AgentCard = ({
                 </Button>
               </TooltipTrigger>
 
-              <TooltipContent className="flex flex-col items-center gap-1">
-                Create New Chat
-              </TooltipContent>
+              <TooltipPortal>
+                <TooltipContent
+                  align="center"
+                  className="flex flex-col items-center gap-1"
+                  side="right"
+                >
+                  Create New Chat
+                </TooltipContent>
+              </TooltipPortal>
             </Tooltip>
           </TooltipProvider>
-          <DropdownMenu modal={false} placement="bottom-end">
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <div
                 className={cn(
@@ -351,10 +361,13 @@ const AgentCard = ({
                 tabIndex={0}
               >
                 <span className="sr-only">{t('common.moreOptions')}</span>
-                <EllipsisVerticalIcon className="text-text-secondary size-4" />
+                <DotsVerticalIcon className="text-text-secondary" />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent minW={160} width={160}>
+            <DropdownMenuContent
+              align="end"
+              className="w-[160px] border px-2.5 py-2"
+            >
               {[
                 {
                   name: t('common.edit'),
@@ -386,7 +399,7 @@ const AgentCard = ({
                   {option.name === 'Delete' && <DropdownMenuSeparator />}
                   <DropdownMenuItem
                     key={option.name}
-                    onClick={(event: React.MouseEvent) => {
+                    onClick={(event) => {
                       event.stopPropagation();
                       option.onClick();
                     }}
@@ -434,7 +447,7 @@ const RemoveAgentDrawer = ({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
           Delete Agent{' '}
           <span className="font-mono text-base break-all">{agentId}</span> ?
@@ -491,11 +504,11 @@ export function AuthorAvatarLink({ author }: { author: string }) {
       target="_blank"
       rel="noopener noreferrer"
     >
-      <Avatar size={20}>
+      <Avatar className={cn('h-5 w-5')}>
         {author === '@@official.hanzo' ? (
-          <img alt={getBrand().name} src={appIcon} />
+          <img alt="Hanzo" src={appIcon} />
         ) : (
-          <AvatarFallback bg="$color3">
+          <AvatarFallback className="bg-bg-tertiary text-text-tertiary">
             {formattedAuthor.charAt(0)}
           </AvatarFallback>
         )}

@@ -1,7 +1,7 @@
 import {
   generateEncryptionKeys,
   generateSignatureKeys,
-} from '@hanzo/desktop-message-ts/utils';
+} from '@hanzo_network/hanzo-message-ts/utils';
 
 import { type Encryptionkeys } from './types';
 

@@ -1,13 +1,12 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { t } from '@hanzo/desktop-i18n';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { t } from '@hanzo_network/hanzo-i18n';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import React from 'react';
 import { type ExternalToast, toast } from 'sonner';
 
 import { openHanzoNodeManagerWindow } from './hanzo-node-manager-windows-utils';
 
 export const modelNameMap: Record<string, string> = {
-  'embeddinggemma:300m': 'Embedding Gemma 300M',
+  'embeddinggemma:300m': "Embedding Gemma 300M",
   'llama3.1:8b-instruct-q4_1': 'Llama 3.1 8B',
   'gemma2:2b-instruct-q4_1': 'Gemma 2 2B',
   'command-r7b:7b-12-2024-q4_K_M': 'Command R 7B',
@@ -50,8 +49,8 @@ export const hanzoNodeStartedToast = () => {
 export const hanzoNodeStartErrorToast = () => {
   toast.error(
     <div>
-      Error starting your local Node, see <HanzoNodeLogsLabel /> for more
-      information
+      Error starting your local Node, see <HanzoNodeLogsLabel /> for
+      more information
     </div>,
     {
       ...defaultToastOptions,
@@ -67,8 +66,8 @@ export const stoppingHanzoNodeToast = () => {
 export const hanzoNodeStopErrorToast = () => {
   toast.error(
     <div>
-      Error stopping your local Node, see <HanzoNodeLogsLabel /> for more
-      information
+      Error stopping your local Node, see <HanzoNodeLogsLabel /> for
+      more information
     </div>,
     {
       ...defaultToastOptions,
@@ -90,7 +89,7 @@ export const successRemovingHanzoNodeStorageToast = () => {
 export const errorRemovingHanzoNodeStorageToast = () => {
   return toast.error(
     <div>
-      Error removing your local {getBrand().name} Node storage, see{' '}
+      Error removing your local Node storage, see{' '}
       <HanzoNodeLogsLabel /> for more information
     </div>,
     { ...defaultToastOptions },

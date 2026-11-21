@@ -89,7 +89,6 @@ export type HanzoNodeOptions = {
    hanzo_tools_runner_deno_binary_path?: string,
    hanzo_tools_runner_uv_binary_path?: string,
    hanzo_store_url?: string,
-   skip_import_from_directory?: string,
    secret_desktop_installation_proof_key?: string,
 };
 

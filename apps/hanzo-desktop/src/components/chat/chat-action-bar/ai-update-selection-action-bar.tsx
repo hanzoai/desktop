@@ -1,13 +1,12 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { ModelPrefix } from '@hanzo/desktop-message-ts/api/jobs/index';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateAgentInJob } from '@hanzo/desktop-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { ModelPrefix } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateAgentInJob } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import {
   Badge,
   buttonVariants,
@@ -25,11 +24,12 @@ import {
   DialogTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { AIAgentIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { AIAgentIcon } from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { BoltIcon, BotIcon, ChevronDownIcon, PlusIcon } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
@@ -52,11 +52,11 @@ const localModelDescriptionMap = MODEL_CATALOG.reduce(
   {} as Record<string, string>,
 );
 
-// Hosted/remote model descriptions, keyed by `<provider>:<model>`. The local
-// engine's models are described by localModelDescriptionMap above.
-const remoteProviderModelDescriptions: Record<string, string> = {
-  'hanzo-backend:free_text_inference': `${getBrand().name} AI model for text generation.`,
-  'hanzo-backend:code_generator': `${getBrand().name} AI model for generating tool code.`,
+const remoteProviderModelDescriptions = {
+  'hanzo-backend:free_text_inference':
+    'Hanzo AI model for text generation.',
+  'hanzo-backend:code_generator':
+    'Hanzo AI model for generating tool code.',
   'openai:gpt-4o':
     'Powerful OpenAI model known for its ability to generate human-like text and handle complex tasks.',
   'openai:gpt-4o-mini':
@@ -114,8 +114,7 @@ export function AIModelSelectorBase({
               description =
                 'Safe and thoughtful Anthropic AI model with advanced coding capabilities';
             } else {
-              description =
-                remoteProviderModelDescriptions[provider.model] || '';
+              description = remoteProviderModelDescriptions[provider.model] || '';
             }
 
             return {
@@ -149,7 +148,6 @@ export function AIModelSelectorBase({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          model={selectedProvider.model}
           provider={selectedProvider.model.split(':')[0]}
         />
       );
@@ -183,11 +181,13 @@ export function AIModelSelectorBase({
     return '';
   }, [agents, llmProviders, value]);
 
-  const isLocalHanzoNodeIsUse = useHanzoNodeManager((state) => state.isInUse);
+  const isLocalHanzoNodeIsUse = useHanzoNodeManager(
+    (state) => state.isInUse,
+  );
 
   return (
     <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
             <button
@@ -225,37 +225,39 @@ export function AIModelSelectorBase({
             </button>
           </DialogTrigger>
         </TooltipTrigger>
-        <TooltipContent className="flex flex-col gap-1">
-          <span className="text-center text-sm">
-            {t('llmProviders.switch')}
-          </span>
-          {isRegularChatPage && (
-            <div className="flex items-center gap-4 text-left">
-              <div className="text-text-secondary flex items-center justify-center gap-2 text-xs">
-                <CommandShortcut>⌘ [</CommandShortcut> or
-                <CommandShortcut>⌘ ]</CommandShortcut>
+        <TooltipPortal>
+          <TooltipContent
+            align="center"
+            className="flex flex-col gap-1"
+            side="top"
+          >
+            <span className="text-center text-sm">
+              {t('llmProviders.switch')}
+            </span>
+            {isRegularChatPage && (
+              <div className="flex items-center gap-4 text-left">
+                <div className="text-text-secondary flex items-center justify-center gap-2 text-xs">
+                  <CommandShortcut>⌘ [</CommandShortcut> or
+                  <CommandShortcut>⌘ ]</CommandShortcut>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-text-secondary text-xs">
+                    Prev / Next AI
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-text-secondary text-xs">
-                  Prev / Next AI
-                </span>
-              </div>
-            </div>
-          )}
-        </TooltipContent>
+            )}
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
-      <DialogContent
-        className="size-full max-h-[60vh] w-full max-w-3xl border p-1 py-2"
-        showCloseButton={false}
-        maxW={768}
-      >
+      <DialogContent className="size-full max-h-[60vh] w-full max-w-3xl border p-1 py-2">
         <DialogTitle className="sr-only">
           {t('llmProviders.switch')}
         </DialogTitle>
         <Command
           className="[&_[cmdk-input-wrapper]]:border-divider h-full [&_[cmdk-input-wrapper]]:pb-1"
           disablePointerSelection
-          onKeyDown={(e: React.KeyboardEvent) => {
+          onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setIsDialogOpen(false);
             }
@@ -267,13 +269,13 @@ export function AIModelSelectorBase({
           <CommandEmpty className="text-text-secondary py-5 text-center text-sm">
             {t('common.noResultsFound')}
           </CommandEmpty>
-          <CommandList maxH="100%">
+          <CommandList className="flex max-h-full flex-col">
             <CommandGroup
               className="py-4"
               heading={
                 <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="space-y-0.5">
-                    <h3 className="font-sans text-text-default text-base font-medium">
+                    <h3 className="font-inter text-text-default text-base font-medium">
                       {t('agents.label')}
                     </h3>
                     <p className="text-text-secondary text-sm font-normal">
@@ -315,7 +317,7 @@ export function AIModelSelectorBase({
                         </span>
                       </div>
                     </div>
-                    <Tooltip placement="top">
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <Link
                           className="text-text-secondary hover:text-text-default size-8 shrink-0 rounded-lg p-2"
@@ -324,11 +326,16 @@ export function AIModelSelectorBase({
                           <BoltIcon className="size-full" />
                         </Link>
                       </TooltipTrigger>
-                      <TooltipContent
-                        className="z-[2000000001] max-w-md"
-                      >
-                        <p>{t('agents.configureAgent')}</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent
+                          align="center"
+                          alignOffset={-10}
+                          className="z-[2000000001] max-w-md"
+                          side="top"
+                        >
+                          <p>{t('agents.configureAgent')}</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   </CommandItem>
                 ))}
@@ -339,7 +346,7 @@ export function AIModelSelectorBase({
               heading={
                 <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="space-y-0.5">
-                    <h3 className="font-sans text-text-default text-base font-medium">
+                    <h3 className="font-inter text-text-default text-base font-medium">
                       {t('aisPage.label')}
                     </h3>
                     <p className="text-text-secondary text-sm font-normal">
@@ -376,7 +383,6 @@ export function AIModelSelectorBase({
                     <div className="bg-bg-secondary border-border flex size-8 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                       <ProviderIcon
                         className="mt-0.5 size-5 shrink-0"
-                        model={llmProvider.model}
                         provider={llmProvider.model.split(':')[0]}
                       />
                     </div>

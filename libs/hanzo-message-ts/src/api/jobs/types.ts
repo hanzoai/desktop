@@ -132,8 +132,8 @@ export type LLMProviderInterface = {
   OpenAI?: OpenAI;
   OpenAILegacy?: OpenAILegacy;
   TogetherAI?: TogetherAI;
+  /** Wire-protocol serde key for the local-engine provider variant. */
   LocalEngine?: LocalEngine;
-  LMStudio?: LMStudio;
   Gemini?: Gemini;
   Exo?: Exo;
   Groq?: Groq;
@@ -151,10 +151,6 @@ export interface ModelType {
 
 /** Wire-protocol payload for the local-engine provider variant. */
 export interface LocalEngine {
-  model_type: string;
-}
-
-export interface LMStudio {
   model_type: string;
 }
 export interface Gemini {

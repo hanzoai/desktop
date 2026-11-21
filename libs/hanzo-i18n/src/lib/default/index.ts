@@ -1,4 +1,8 @@
 export default {
+  extension: {
+    welcome:
+      'Transform your web browsing experience using AI with Hanzo Visor ✨',
+  },
   homepage: {
     welcomeTitle: 'How can I help you today?',
     agentConfigurationRequired:
@@ -583,9 +587,7 @@ export default {
     moreOptions: 'More Options',
     comingSoon: 'Coming soon - Late August',
     iAgree: 'I Agree',
-    getStarted: 'Login',
-    login: 'Login',
-    skip: 'Skip',
+    getStarted: 'Get Started Free',
     passphrase: 'Passphrase',
     repeatPassphrase: 'Confirm passphrase',
     optIn: 'Opt In',
