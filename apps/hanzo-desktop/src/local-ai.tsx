@@ -171,6 +171,12 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
  * the router aliases, what is installed, then every model this app can download
  * (local-sources.json), so the composer's picker offers nothing it cannot fetch.
  */
+/** What the picker may say a model can do: only what local-sources.json says, and no model here sees images. */
+function abilities(tag: string) {
+  const src = sourceForTag(tag);
+  return { supports_vision: false, supports_tools: src?.tools ?? false, supports_reasoning: src?.reasons ?? false };
+}
+
 export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list'; data: Array<Record<string, unknown>> }> {
   const installed = await probeInstalledLocalModels();
   const data: Array<Record<string, unknown>> = [];
@@ -218,17 +224,15 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
       object: 'model',
       created: 1793775303,
       context_window: 131072,
-      supports_vision: true,
-      supports_tools: true,
-      supports_reasoning: true,
+      // The alias answers with the model chosen on this computer (handleLocalChatCompletion).
+      ...abilities(kept().model),
     });
   }
 
   // Second: any currently installed local models right at the top
   for (const inst of installed) {
     if (inst.id === 'default' || inst.id.includes('embed') || inst.id.includes('minilm')) continue;
-    const isZen = inst.id.toLowerCase().startsWith('zen') || inst.id.toLowerCase().startsWith('qwen3');
-    const isVision = inst.id.toLowerCase().includes('vl') || inst.id.toLowerCase().includes('vision') || inst.id.toLowerCase().includes('llava');
+    const isZen = inst.id.toLowerCase().startsWith('zen');
     pushModel({
       id: inst.id,
       name: `${sourceForTag(inst.id)?.title ?? inst.id} (Local · Installed)`,
@@ -239,9 +243,8 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
       ...(isZen ? { family: 'zen' } : {}),
       class: 'free',
       context_window: 131072,
-      supports_vision: isVision,
-      supports_tools: true,
-      supports_reasoning: true,
+      // A custom endpoint's model is not in the list, so nothing is claimed for it.
+      ...abilities(inst.id),
     });
   }
 
@@ -257,9 +260,7 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
       ...(src.tag.startsWith('zen') ? { family: 'zen' } : {}),
       class: 'free',
       context_window: 131072,
-      supports_vision: false,
-      supports_tools: true,
-      supports_reasoning: true,
+      ...abilities(src.tag),
     });
   }
 

@@ -25,6 +25,10 @@ export interface LocalSource {
   title: string;
   /** One honest sentence: what it is good for. */
   blurb: string;
+  /** It thinks before answering (its model card says so). */
+  reasons: boolean;
+  /** It calls tools (its model card says so). */
+  tools: boolean;
 }
 
 // Only models whose weights the engine can fetch and load (safetensors, not
