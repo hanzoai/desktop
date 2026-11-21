@@ -1,9 +1,11 @@
 @import '../../../libs/hanzo-ui/src/styles/styles.css';
+@import 'primereact/resources/themes/lara-light-blue/theme.css';
+@import 'primereact/resources/primereact.min.css';
 
 html,
 body,
 #root {
-  @apply font-sans bg-bg-dark text-text-default h-full rounded-lg border-0;
+  @apply font-inter bg-bg-dark text-text-default h-full rounded-lg border-0;
 }
 
 html {

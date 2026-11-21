@@ -1,4 +1,4 @@
-import { updateLLMProvider as updateLLMProviderApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { updateLLMProvider as updateLLMProviderApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type UpdateLLMProviderInput } from './types';
 

@@ -1,4 +1,4 @@
-import { updateQuestsStatus as updateQuestsStatusApi } from '@hanzo/desktop-message-ts/api/quests/index';
+import { updateQuestsStatus as updateQuestsStatusApi } from '@hanzo_network/hanzo-message-ts/api/quests/index';
 
 import { type UpdateQuestsStatusInput } from './types';
 

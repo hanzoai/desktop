@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type QuickConnectFormSchema,
   quickConnectFormSchema,
-} from '@hanzo/desktop-node-state/forms/auth/quick-connection';
-import { useInitialRegistration } from '@hanzo/desktop-node-state/v2/mutations/initialRegistration/useInitialRegistration';
-import { useGetEncryptionKeys } from '@hanzo/desktop-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
-import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
+} from '@hanzo_network/hanzo-node-state/forms/auth/quick-connection';
+import { useInitialRegistration } from '@hanzo_network/hanzo-node-state/v2/mutations/initialRegistration/useInitialRegistration';
+import { useGetEncryptionKeys } from '@hanzo_network/hanzo-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
+import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
 import {
   Button,
   type ButtonProps,
@@ -15,12 +15,12 @@ import {
   Form,
   FormField,
   TextField,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   submitRegistrationNoCodeError,
   submitRegistrationNoCodeNonPristineError,
-} from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { ArrowLeft } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
@@ -209,19 +209,6 @@ const QuickConnectionPage = () => {
             void navigate('/restore');
           }}
           title={t('restoreConnection.restore')}
-        />
-
-        <ConnectionOptionButton
-          description={'Create a wallet and sign in with it'}
-          icon={
-            <span aria-hidden className="text-base">
-              👛
-            </span>
-          }
-          onClick={() => {
-            void navigate('/wallet');
-          }}
-          title={'Sign in with Wallet'}
         />
       </div>
     </div>

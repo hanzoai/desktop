@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import { useState } from 'react';
 
 export const StdoutRender = ({ stdout }: { stdout: string[] }) => {

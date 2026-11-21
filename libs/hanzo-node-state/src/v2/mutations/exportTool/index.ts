@@ -1,4 +1,4 @@
-import { exportTool as exportToolApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { exportTool as exportToolApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type ExportToolInput } from './types';
 

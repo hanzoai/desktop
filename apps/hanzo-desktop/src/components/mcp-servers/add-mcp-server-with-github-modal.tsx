@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type ImportMCPServerFromGithubURLOutput } from '@hanzo/desktop-node-state/v2/mutations/importMCPServerFromGithubURL/types';
-import { useImportMCPServerFromGithubURL } from '@hanzo/desktop-node-state/v2/mutations/importMCPServerFromGithubURL/useImportMCPServerFromGithubURL';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type ImportMCPServerFromGithubURLOutput } from '@hanzo_network/hanzo-node-state/v2/mutations/importMCPServerFromGithubURL/types';
+import { useImportMCPServerFromGithubURL } from '@hanzo_network/hanzo-node-state/v2/mutations/importMCPServerFromGithubURL/useImportMCPServerFromGithubURL';
 import {
   Button,
   Dialog,
@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
   Input,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -93,7 +93,7 @@ export const AddMcpServerWithGithubModal = ({
 
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open={isOpen}>
-      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add MCP Server from GitHub</DialogTitle>
           <DialogDescription>

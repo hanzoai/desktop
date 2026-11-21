@@ -1,6 +1,6 @@
-import { Alert, Button, Progress } from '@hanzo/desktop-ui';
-import { PartyIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { Alert, Button, Progress } from '@hanzo_network/hanzo-ui';
+import { PartyIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Loader2, XIcon } from 'lucide-react';
 import React, { useCallback, useState } from 'react';
@@ -50,10 +50,7 @@ const UpdateStateUI: React.FC<{
             </span>
           </div>
           <Progress
-            height={8}
-            minW={0}
-            rounded="$3"
-            width="100%"
+            className="h-2 w-full rounded-lg bg-cyan-900 [&>div]:bg-cyan-400"
             max={100}
             value={downloadProgressPercent}
           />

@@ -1,8 +1,8 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { FunctionKeyV2 } from '@hanzo/desktop-node-state/v2/constants';
-import { useRemoveTool } from '@hanzo/desktop-node-state/v2/mutations/removeTool/useRemoveTool';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useRemoveTool } from '@hanzo_network/hanzo-node-state/v2/mutations/removeTool/useRemoveTool';
 import {
-  DialogClose,
   Button,
   buttonVariants,
   Dialog,
@@ -14,8 +14,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -61,7 +61,7 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
 
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
             <button
@@ -77,9 +77,11 @@ export default function RemoveToolButton({ toolKey }: { toolKey: string }) {
             </button>
           </DialogTrigger>
         </TooltipTrigger>
-        <TooltipContent>{t('common.deleteTool', 'Delete Tool')}</TooltipContent>
+        <TooltipContent align="center" side="top">
+          {t('common.deleteTool', 'Delete Tool')}
+        </TooltipContent>
       </Tooltip>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">Delete Tool</DialogTitle>
         <DialogDescription>
           Are you sure you want to delete this tool? This action cannot be

@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { t, useTranslation } from '@hanzo/desktop-i18n';
+import { t, useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type UpdateInboxNameFormSchema,
   updateInboxNameFormSchema,
-} from '@hanzo/desktop-node-state/forms/chat/inbox';
-import { useUpdateInboxName } from '@hanzo/desktop-node-state/v2/mutations/updateInboxName/useUpdateInboxName';
+} from '@hanzo_network/hanzo-node-state/forms/chat/inbox';
+import { useUpdateInboxName } from '@hanzo_network/hanzo-node-state/v2/mutations/updateInboxName/useUpdateInboxName';
 import {
   Button,
   Form,
@@ -13,7 +13,7 @@ import {
   FormItem,
   FormLabel,
   Input,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { Edit3 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
@@ -67,7 +67,7 @@ export const InboxNameInput = ({
             control={updateInboxNameForm.control}
             name="name"
             render={({ field }) => (
-              <div className="bg-bg-secondary flex h-[46px] items-center rounded-lg">
+              <div className="flex h-[46px] items-center rounded-lg bg-bg-secondary">
                 <Edit3 className="absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 transform text-white" />
 
                 <FormItem className="space-y-0 pl-7 text-xs">

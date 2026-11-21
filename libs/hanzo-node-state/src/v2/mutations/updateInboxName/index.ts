@@ -1,4 +1,4 @@
-import { updateInboxName as updateInboxNameApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { updateInboxName as updateInboxNameApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type UpdateInboxNameInput } from './types';
 

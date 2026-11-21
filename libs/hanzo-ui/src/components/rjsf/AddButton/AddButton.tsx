@@ -1,4 +1,4 @@
-import { CirclePlusIcon } from 'lucide-react';
+import { PlusCircledIcon } from '@radix-ui/react-icons';
 import {
   type FormContextType,
   type IconButtonProps,
@@ -24,7 +24,7 @@ export default function AddButton<
       size="sm"
       variant="outline"
     >
-      <CirclePlusIcon className="size-4" /> New Item
+      <PlusCircledIcon /> New Item
     </Button>
   );
 }

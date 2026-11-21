@@ -1,15 +1,19 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
 import {
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { ToolsDisabledIcon, ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import {
+  ToolsDisabledIcon,
+  ToolsIcon,
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { memo } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -30,8 +34,8 @@ function ToolsSwitchActionBarBase({
 }: ToolsSwitchActionBarProps) {
   const { t } = useTranslation();
   return (
-    <TooltipProvider delay={0}>
-      <Tooltip placement="top">
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <button
             className={cn(
@@ -52,9 +56,11 @@ function ToolsSwitchActionBarBase({
             <span>{t('tools.label')}</span>
           </button>
         </TooltipTrigger>
-        <TooltipContent>
-          {checked ? 'Disable' : 'Enable'} AI Actions (Tools)
-        </TooltipContent>
+        <TooltipPortal>
+          <TooltipContent>
+            {checked ? 'Disable' : 'Enable'} AI Actions (Tools)
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
     </TooltipProvider>
   );

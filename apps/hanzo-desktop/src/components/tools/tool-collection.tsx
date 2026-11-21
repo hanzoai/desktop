@@ -1,10 +1,10 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type GetToolsCategory } from '@hanzo/desktop-message-ts/api/tools/types';
-import { useDisableAllTools } from '@hanzo/desktop-node-state/v2/mutations/disableAllTools/useDisableAllTools';
-import { useEnableAllTools } from '@hanzo/desktop-node-state/v2/mutations/enableAllTools/useEnableAllTools';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type GetToolsCategory } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useDisableAllTools } from '@hanzo_network/hanzo-node-state/v2/mutations/disableAllTools/useDisableAllTools';
+import { useEnableAllTools } from '@hanzo_network/hanzo-node-state/v2/mutations/enableAllTools/useEnableAllTools';
 
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
-import { useGetSearchTools } from '@hanzo/desktop-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useGetSearchTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
 import {
   Button,
   buttonVariants,
@@ -16,9 +16,9 @@ import {
   Skeleton,
   ToggleGroup,
   ToggleGroupItem,
-} from '@hanzo/desktop-ui';
-import { StoreIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { StoreIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Eye, EyeOff, MoreVerticalIcon, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
@@ -109,7 +109,7 @@ export const ToolCollection = () => {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1 pt-10 pb-6">
         <div className="flex justify-between gap-4">
-          <h1 className="font-sans text-3xl font-medium">
+          <h1 className="font-inter text-3xl font-medium">
             {t('tools.label')}
           </h1>
           <div className="flex gap-2">
@@ -174,20 +174,14 @@ export const ToolCollection = () => {
           <div className="flex w-full items-center justify-between gap-3">
             <ToggleGroup
               className="border-divider rounded-full border bg-transparent px-0.5 py-1"
-              onValueChange={(value: string) => {
+              onValueChange={(value) => {
                 setSelectedToolCategory(value as GetToolsCategory);
               }}
               type="single"
               value={selectedToolCategory}
             >
               <ToggleGroupItem
-                bg="transparent"
-                // The row already carries the pill and its rule; gui bakes
-                // rounded:$3 + borderWidth:1 as style props, so the caller's
-                // `rounded-full` / borderless intent lost the tie.
-                borderWidth={0}
-                className="text-text-secondary text-xs font-medium"
-                rounded={9999}
+                className="data-[state=on]:bg-bg-secondary text-text-secondary data-[state=on]:text-text-default rounded-full bg-transparent px-3 py-2.5 text-xs font-medium"
                 key="all"
                 size="sm"
                 value="all"
@@ -196,13 +190,7 @@ export const ToolCollection = () => {
               </ToggleGroupItem>
               {toolsGroup.map((tool) => (
                 <ToggleGroupItem
-                  bg="transparent"
-                  // The row already carries the pill and its rule; gui bakes
-                  // rounded:$3 + borderWidth:1 as style props, so the caller's
-                  // `rounded-full` / borderless intent lost the tie.
-                  borderWidth={0}
-                  className="text-text-secondary text-xs font-medium"
-                  rounded={9999}
+                  className="data-[state=on]:bg-bg-secondary text-text-secondary data-[state=on]:text-text-default rounded-full bg-transparent px-3 py-2.5 text-xs font-medium"
                   key={tool.value}
                   size="sm"
                   value={tool.value}
@@ -214,7 +202,7 @@ export const ToolCollection = () => {
 
             <div className="flex items-center gap-3">
               <DockerStatus />
-              <DropdownMenu placement="bottom-end">
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     className="text-text-secondary"
@@ -225,7 +213,7 @@ export const ToolCollection = () => {
                     <MoreVerticalIcon className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end" className="p-2.5">
                   <DropdownMenuItem
                     className="text-xs"
                     onClick={async () => {

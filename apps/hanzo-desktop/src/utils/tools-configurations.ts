@@ -1,4 +1,4 @@
-import { type ToolConfigBase } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type ToolConfigBase } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 export const getToolRequiresConfigurations = (configs: ToolConfigBase[]) => {
   return !configs

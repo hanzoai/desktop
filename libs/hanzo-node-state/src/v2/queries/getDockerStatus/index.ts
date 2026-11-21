@@ -1,4 +1,4 @@
-import { getDockerStatus as getDockerStatusApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { getDockerStatus as getDockerStatusApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type GetDockerStatusInput } from './types';
 

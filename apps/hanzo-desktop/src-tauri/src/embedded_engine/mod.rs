@@ -1,16 +1,16 @@
 //! Embedded Hanzo Engine - in-process AI inference.
 //!
 //! The desktop's embedded engine IS the canonical `hanzo-server-core` server.
-//! Loading a model builds the same `SharedState` that `hanzo serve` builds
-//! (via `ServerBuilder`) and serves the same axum `Router` (via
-//! `RouterBuilder`) on `127.0.0.1:36900`. The node therefore speaks
+//! Loading a model builds the same `SharedHanzoState` that `hanzo serve` builds
+//! (via `HanzoForServerBuilder`) and serves the same axum `Router` (via
+//! `HanzoServerRouterBuilder`) on `127.0.0.1:36900`. The node therefore speaks
 //! every protocol at once -- OpenAI `/v1/chat/completions`, codex/hanzo-dev
 //! `/v1/responses`, and Anthropic/Claude-Code `/v1/messages` -- with zero
 //! duplicated route logic. A thin `/v1/engine/*` management surface (status /
 //! models / load / unload) is merged on top for the desktop frontend.
 //!
 //! Compiled only under the `native-engine` Cargo feature; pair it with a
-//! backend feature (`metal`, `cuda`, `vulkan`, `accelerate`).
+//! backend feature (`metal`, `cuda`, `accelerate`).
 //!
 //! ## Architecture
 //!
@@ -27,7 +27,6 @@
 //! ```bash
 //! cargo build --features "native-engine metal"   # Apple Silicon
 //! cargo build --features "native-engine cuda"     # NVIDIA
-//! cargo build --features "native-engine vulkan"   # AMD/Linux
 //! cargo build --features native-engine            # CPU only
 //! ```
 

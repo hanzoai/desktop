@@ -1,6 +1,6 @@
-import { I18nProvider } from '@hanzo/desktop-i18n';
-import { QueryProvider } from '@hanzo/desktop-node-state';
-import { Toaster, TooltipProvider } from '@hanzo/desktop-ui';
+import { I18nProvider } from '@hanzo_network/hanzo-i18n';
+import { QueryProvider } from '@hanzo_network/hanzo-node-state';
+import { Toaster, TooltipProvider } from '@hanzo_network/hanzo-ui';
 import { info } from '@tauri-apps/plugin-log';
 import { useEffect } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -17,7 +17,7 @@ import { useSyncStorageSecondary } from './store/sync-utils';
 // Component that wraps router content and calls hooks that need router context
 function RouterContent() {
   useEmbeddingStartupCheck(); // This needs router context for useNavigate()
-
+  
   return <AppRoutes />;
 }
 
@@ -42,7 +42,7 @@ function App() {
   }, []);
   useSyncStorageSecondary();
   return (
-    <TooltipProvider delay={0}>
+    <TooltipProvider delayDuration={0}>
       <I18nProvider>
         <ErrorBoundary FallbackComponent={FullPageErrorFallback}>
           <AnalyticsProvider>

@@ -55,14 +55,14 @@ export default function BaseInputTemplate<
         className={inputClass}
         disabled={disabled}
         id={id}
-        list={schema.examples ? examplesId(id) : undefined}
+        list={schema.examples ? examplesId<T>(id) : undefined}
         name={id}
         placeholder={placeholder}
         readOnly={readonly}
         required={required}
         type={type}
         {...inputProps}
-        aria-describedby={ariaDescribedByIds(id, !!schema.examples)}
+        aria-describedby={ariaDescribedByIds<T>(id, !!schema.examples)}
         onBlur={_onBlur}
         onChange={onChangeOverride || _onChange}
         onFocus={_onFocus}
@@ -71,7 +71,7 @@ export default function BaseInputTemplate<
       />
       {children}
       {Array.isArray(schema.examples) ? (
-        <datalist id={examplesId(id)}>
+        <datalist id={examplesId<T>(id)}>
           {(schema.examples as string[])
             .concat(
               schema.default && !schema.examples.includes(schema.default)

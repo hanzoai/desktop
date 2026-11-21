@@ -1,4 +1,4 @@
-import { getPreferences as getPreferencesApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { getPreferences as getPreferencesApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type GetPreferencesInput } from './types';
 

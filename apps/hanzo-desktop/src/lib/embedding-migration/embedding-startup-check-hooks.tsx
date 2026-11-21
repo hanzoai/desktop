@@ -1,5 +1,5 @@
-import { useStartEmbeddingMigration } from '@hanzo/desktop-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
-import { useGetEmbeddingMigrationStatus } from '@hanzo/desktop-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
+import { useStartEmbeddingMigration } from '@hanzo_network/hanzo-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
+import { useGetEmbeddingMigrationStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { toast } from 'sonner';

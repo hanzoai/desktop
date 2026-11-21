@@ -1,4 +1,4 @@
-import { getListDirectoryContents as getListDirectoryContentsApi } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { getListDirectoryContents as getListDirectoryContentsApi } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import { type GetVRPathSimplifiedInput } from './types';
 

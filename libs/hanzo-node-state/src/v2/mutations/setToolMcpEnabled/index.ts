@@ -1,4 +1,4 @@
-import { setToolMcpEnabled as setToolMcpEnabledApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { setToolMcpEnabled as setToolMcpEnabledApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type SetToolMcpEnabledInput } from './types';
 

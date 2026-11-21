@@ -1,14 +1,14 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type PaymentRequest,
   type WidgetToolData,
   type WidgetToolType,
-} from '@hanzo/desktop-message-ts/api/general/types';
-import { usePayInvoice } from '@hanzo/desktop-node-state/v2/mutations/payInvoice/usePayInvoice';
-import { useRejectInvoice } from '@hanzo/desktop-node-state/v2/mutations/rejectInvoice/useRejectInvoice';
-import { useGetWalletList } from '@hanzo/desktop-node-state/v2/queries/getWalletList/useGetWalletList';
-import { Button, Dialog, DialogContent } from '@hanzo/desktop-ui';
-import { CryptoWalletIcon } from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { usePayInvoice } from '@hanzo_network/hanzo-node-state/v2/mutations/payInvoice/usePayInvoice';
+import { useRejectInvoice } from '@hanzo_network/hanzo-node-state/v2/mutations/rejectInvoice/useRejectInvoice';
+import { useGetWalletList } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletList/useGetWalletList';
+import { Button, Dialog, DialogContent } from '@hanzo_network/hanzo-ui';
+import { CryptoWalletIcon } from '@hanzo_network/hanzo-ui/assets';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, ExternalLinkIcon, Loader2, XCircle } from 'lucide-react';
 import React from 'react';
@@ -97,10 +97,9 @@ function Payment({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className="w-full max-w-lg"
-        onInteractOutside={(e: Event) => {
+        onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        showCloseButton={false}
       >
         <motion.div
           animate={{ opacity: 1, y: 0 }}
@@ -133,7 +132,7 @@ function Payment({
                     <p className="font-medium">
                       {t('networkAgentsPage.costPerUse')}
                     </p>
-                    <p className="font-sans text-xl font-semibold">
+                    <p className="font-inter text-xl font-semibold">
                       {data.usage_type.PerUse === 'Free'
                         ? 'Free'
                         : 'Payment' in data.usage_type.PerUse
@@ -227,7 +226,7 @@ function Payment({
                         className="hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-brand [&:has([data-state=checked])]:border-brand flex w-full flex-col items-center justify-between rounded-md border-2 border-gray-400 bg-gray-500 p-4"
                         htmlFor="one-time"
                       >
-                        <span className="font-sans text-2xl font-semibold">
+                        <span className="font-inter text-2xl font-semibold">
                           {data.usage_type.PerUse === 'Free'
                             ? 'Free'
                             : 'Payment' in data.usage_type.PerUse
@@ -256,7 +255,7 @@ function Payment({
                         className="hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-brand [&:has([data-state=checked])]:border-brand flex w-full flex-col items-center justify-between rounded-md border-2 border-gray-400 bg-gray-500 p-4"
                         htmlFor="download"
                       >
-                        <span className="font-sans text-xl font-semibold">
+                        <span className="font-inter text-xl font-semibold">
                           {data.usage_type.Downloadable === 'Free'
                             ? 'Free'
                             : 'Payment' in data.usage_type.Downloadable

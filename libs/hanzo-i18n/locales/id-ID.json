@@ -415,6 +415,9 @@
     "label": "Ekspor Koneksi",
     "restoreText": "Gunakan dengan frasa sandi Anda untuk memulihkan koneksi ke Node Anda"
   },
+  "extension": {
+    "welcome": "Transformasikan pengalaman menjelajah web Anda menggunakan kecerdasan buatan dengan Hanzo Visor ✨"
+  },
   "feedback": {
     "button": "Umpan Balik",
     "description": "Kami menghargai umpan balik Anda! Silakan beri tahu kami pendapat Anda tentang Hanzo dan bagaimana kami dapat meningkatkan pengalaman Anda.",

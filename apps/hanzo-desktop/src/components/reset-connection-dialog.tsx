@@ -1,6 +1,6 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useInitialRegistration } from '@hanzo/desktop-node-state/v2/mutations/initialRegistration/useInitialRegistration';
-import { useGetEncryptionKeys } from '@hanzo/desktop-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useInitialRegistration } from '@hanzo_network/hanzo-node-state/v2/mutations/initialRegistration/useInitialRegistration';
+import { useGetEncryptionKeys } from '@hanzo_network/hanzo-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -10,8 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   Button,
-} from '@hanzo/desktop-ui';
-import { submitRegistrationNoCodeError } from '@hanzo/desktop-ui/helpers';
+} from '@hanzo_network/hanzo-ui';
+import { submitRegistrationNoCodeError } from '@hanzo_network/hanzo-ui/helpers';
 import { XIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -35,17 +35,19 @@ export const ResetConnectionDialog = ({
   const { t } = useTranslation();
   const { mutateAsync: hanzoNodeKill, isPending: isHanzoNodeKillPending } =
     useHanzoNodeKillMutation();
-  const { mutateAsync: hanzoNodeSpawn, isPending: isHanzoNodeSpawnPending } =
-    useHanzoNodeSpawnMutation({
-      onSuccess: async () => {
-        if (!encryptionKeys) return;
-        await submitRegistrationNoCode({
-          nodeAddress: 'http://127.0.0.1:3690',
-          profileEncryptionPk: encryptionKeys.profile_encryption_pk,
-          profileIdentityPk: encryptionKeys.profile_identity_pk,
-        });
-      },
-    });
+  const {
+    mutateAsync: hanzoNodeSpawn,
+    isPending: isHanzoNodeSpawnPending,
+  } = useHanzoNodeSpawnMutation({
+    onSuccess: async () => {
+      if (!encryptionKeys) return;
+      await submitRegistrationNoCode({
+        nodeAddress: 'http://127.0.0.1:3690',
+        profileEncryptionPk: encryptionKeys.profile_encryption_pk,
+        profileIdentityPk: encryptionKeys.profile_identity_pk,
+      });
+    },
+  });
   const {
     mutateAsync: hanzoNodeRemoveStorage,
     isPending: isHanzoNodeRemoveStoragePending,
@@ -93,11 +95,10 @@ export const ResetConnectionDialog = ({
 
   return (
     <AlertDialog onOpenChange={onOpenChange} open={isOpen}>
-      <AlertDialogContent width="75%">
+      <AlertDialogContent className="w-[75%]">
         {allowClose && (
           <AlertDialogCancel
-            borderWidth={0}
-            className="absolute top-3 right-3"
+            className="absolute top-3 right-3 border-0"
             disabled={isResetLoading}
           >
             <XIcon className="h-4 w-4" />
@@ -111,7 +112,7 @@ export const ResetConnectionDialog = ({
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="mt-4" gap={10}>
+        <AlertDialogFooter className="mt-4 flex items-center justify-end gap-2.5">
           <Button
             className="min-w-32 text-sm"
             disabled={isResetLoading}

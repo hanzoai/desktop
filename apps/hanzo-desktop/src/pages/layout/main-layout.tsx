@@ -1,11 +1,10 @@
-import { NetworkSwitcher } from '@hanzo/desktop-ui/network';
-import { WalletMenu } from '@hanzo/desktop-ui/wallet';
-import { luxWalletAdapter } from '../../lib/lux-wallet';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useImportAgentFromUrl } from '@hanzo/desktop-node-state/v2/mutations/importAgentFromUrl/useImportAgentFromUrl';
-import { useImportTool } from '@hanzo/desktop-node-state/v2/mutations/importTool/useImportTool';
-import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
-import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+import { ExitIcon, GearIcon } from '@radix-ui/react-icons';
+import { PopoverClose } from '@radix-ui/react-popover';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useImportAgentFromUrl } from '@hanzo_network/hanzo-node-state/v2/mutations/importAgentFromUrl/useImportAgentFromUrl';
+import { useImportTool } from '@hanzo_network/hanzo-node-state/v2/mutations/importTool/useImportTool';
+import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
+import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,10 +21,10 @@ import {
   PopoverTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-  PopoverClose,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AIAgentIcon,
   AISearchContentIcon,
@@ -38,24 +37,19 @@ import {
   NetworkAgentIcon,
   ScheduledTasksIcon,
   ToolsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { listen } from '@tauri-apps/api/event';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
+  ArrowLeftToLine,
+  ArrowRightToLine,
   Bot,
-  Box,
-  Boxes,
-  Coins,
   Ellipsis,
   Gauge,
   HelpCircleIcon,
-  LogOutIcon,
-  PanelLeft,
-  PanelLeftClose,
   Server,
-  SettingsIcon,
 } from 'lucide-react';
 import React, { Fragment, useEffect, useState } from 'react';
 import { Link, Outlet, useLocation, useMatch, useNavigate } from 'react-router';
@@ -254,11 +248,6 @@ export function MainNav() {
 
   const secondaryNavigationLinks = [
     {
-      title: 'Usage',
-      href: '/usage',
-      icon: <Gauge className="size-[18px]" />,
-    },
-    {
       title: 'Bot',
       href: '/bot',
       icon: <Bot className="size-[18px]" />,
@@ -325,12 +314,12 @@ export function MainNav() {
     {
       title: t('layout.menuItems.settings'),
       href: '/settings',
-      icon: <SettingsIcon className="size-[18px]" />,
+      icon: <GearIcon className="size-[18px]" />,
     },
     config.isDev && {
       title: t('layout.menuItems.disconnect'),
       href: '#',
-      icon: <LogOutIcon className="size-[18px]" />,
+      icon: <ExitIcon className="size-[18px]" />,
       onClick: () => confirmDisconnect(),
     },
   ].filter(Boolean) as NavigationLink[];
@@ -356,7 +345,7 @@ export function MainNav() {
           <BrandCombinationMarkIcon className="text-text-secondary h-auto w-[50px]" />
         )}
 
-        <Tooltip placement="right">
+        <Tooltip>
           <TooltipTrigger asChild>
             <Button
               className={cn('border-divider h-6 w-6 shrink-0 rounded-lg p-0')}
@@ -366,13 +355,17 @@ export function MainNav() {
               variant="outline"
             >
               {sidebarExpanded ? (
-                <PanelLeftClose className="h-3 w-3" />
+                <ArrowLeftToLine className="h-3 w-3" />
               ) : (
-                <PanelLeft className="h-3 w-3" />
+                <ArrowRightToLine className="h-3 w-3" />
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{t('layout.sidebar.toggle')}</TooltipContent>
+          <TooltipPortal>
+            <TooltipContent align="center" side="right">
+              {t('layout.sidebar.toggle')}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </div>
 
@@ -383,10 +376,12 @@ export function MainNav() {
             return (
               <Fragment key={item.title}>
                 <TooltipProvider
-                  delay={item.disabled ? 0 : !sidebarExpanded ? 0 : 10000}
+                  delayDuration={
+                    item.disabled ? 0 : !sidebarExpanded ? 0 : 10000
+                  }
                   key={item.title}
                 >
-                  <Tooltip placement="right">
+                  <Tooltip>
                     <TooltipTrigger className="flex items-center gap-1">
                       <NavLink
                         disabled={item.disabled}
@@ -397,34 +392,40 @@ export function MainNav() {
                         title={item.title}
                       />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {item.disabled ? (
-                        <>
-                          {item.title} <br />
-                          <span className="text-text-secondary text-xs">
-                            {t('common.comingSoon')}
-                          </span>
-                        </>
-                      ) : (
-                        <div className="flex flex-col gap-1">
-                          {item.title}
-                          {item.href === '/home' ? (
-                            <div className="text-text-secondary flex items-center justify-center gap-2 text-center">
-                              <span>⌘</span>
-                              <span>N</span>
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </TooltipContent>
+                    <TooltipPortal>
+                      <TooltipContent
+                        align="center"
+                        arrowPadding={2}
+                        side="right"
+                      >
+                        {item.disabled ? (
+                          <>
+                            {item.title} <br />
+                            <span className="text-text-secondary text-xs">
+                              {t('common.comingSoon')}
+                            </span>
+                          </>
+                        ) : (
+                          <div className="flex flex-col gap-1">
+                            {item.title}
+                            {item.href === '/home' ? (
+                              <div className="text-text-secondary flex items-center justify-center gap-2 text-center">
+                                <span>⌘</span>
+                                <span>N</span>
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+                      </TooltipContent>
+                    </TooltipPortal>
                   </Tooltip>
                 </TooltipProvider>
               </Fragment>
             );
           })}
-          <Popover placement="bottom-start">
-            <TooltipProvider delay={!sidebarExpanded ? 0 : 10000}>
-              <Tooltip placement="right">
+          <Popover>
+            <TooltipProvider delayDuration={!sidebarExpanded ? 0 : 10000}>
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <PopoverTrigger asChild>
                     <Button
@@ -452,13 +453,23 @@ export function MainNav() {
                   </PopoverTrigger>
                 </TooltipTrigger>
                 {!sidebarExpanded && (
-                  <TooltipContent>
-                    <p>{t('common.more')}</p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent
+                      align="center"
+                      arrowPadding={2}
+                      side="right"
+                    >
+                      <p>{t('common.more')}</p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 )}
               </Tooltip>
             </TooltipProvider>
-            <PopoverContent p="$2" sideOffset={8} width={240}>
+            <PopoverContent
+              align="start"
+              className="w-[240px] p-2"
+              sideOffset={8}
+            >
               <div className="flex flex-col gap-1">
                 {secondaryNavigationLinks.map((item) => {
                   return (
@@ -483,10 +494,10 @@ export function MainNav() {
             return (
               <React.Fragment key={item.title}>
                 <TooltipProvider
-                  delay={!sidebarExpanded ? 0 : 10000}
+                  delayDuration={!sidebarExpanded ? 0 : 10000}
                   key={item.title}
                 >
-                  <Tooltip placement="right">
+                  <Tooltip>
                     <TooltipTrigger className="flex items-center gap-1">
                       <NavLink
                         external={item.external}
@@ -496,24 +507,20 @@ export function MainNav() {
                         title={item.title}
                       />
                     </TooltipTrigger>
-                    <TooltipContent>
-                      <p>{item.title}</p>
-                    </TooltipContent>
+                    <TooltipPortal>
+                      <TooltipContent
+                        align="center"
+                        arrowPadding={2}
+                        side="right"
+                      >
+                        <p>{item.title}</p>
+                      </TooltipContent>
+                    </TooltipPortal>
                   </Tooltip>
                 </TooltipProvider>
               </React.Fragment>
             );
           })}
-          {sidebarExpanded && (
-            <div className="flex flex-col items-start gap-1 px-1 py-1">
-              <NetworkSwitcher menuSide="top" />
-              <WalletMenu
-                adapter={luxWalletAdapter}
-                autoConnect
-                menuSide="top"
-              />
-            </div>
-          )}
           <MiningStatus sidebarExpanded={sidebarExpanded} />
         </div>
       </div>
@@ -526,7 +533,7 @@ export function MainNav() {
         onOpenChange={setIsConfirmLogoutDialogOpened}
         open={isConfirmLogoutDialogOpened}
       >
-        <AlertDialogContent width="75%">
+        <AlertDialogContent className="w-[75%]">
           <AlertDialogHeader>
             <AlertDialogTitle>{t('disconnect.modalTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
@@ -555,7 +562,7 @@ export function MainNav() {
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4" gap={8}>
+          <AlertDialogFooter className="mt-4 flex justify-end gap-2">
             <AlertDialogCancel
               className="mt-0 min-w-[120px]"
               onClick={() => {

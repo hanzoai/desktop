@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { decryptMessageWithPassphrase } from '@hanzo/desktop-message-ts/cryptography';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { decryptMessageWithPassphrase } from '@hanzo_network/hanzo-message-ts/cryptography';
 import {
   type RestoreConnectionFormSchema,
   restoreConnectionFormSchema,
-} from '@hanzo/desktop-node-state/forms/settings/restore-connection';
+} from '@hanzo_network/hanzo-node-state/forms/settings/restore-connection';
 import {
   Button,
   buttonVariants,
@@ -17,17 +17,14 @@ import {
   FormLabel,
   FormMessage,
   TextField,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, type To, useNavigate } from 'react-router';
 
-import {
-  COMPLETION_DESTINATION,
-  OnboardingStep,
-} from '../components/onboarding/constants';
+import { COMPLETION_DESTINATION, OnboardingStep } from '../components/onboarding/constants';
 import { useAuth } from '../store/auth';
 import { useSettings } from '../store/settings';
 
@@ -57,10 +54,10 @@ const RestoreConnectionPage = () => {
       if (decryptedValue) {
         const decryptedSetupData = JSON.parse(decryptedValue);
         setAuth(decryptedSetupData);
-
+        
         // Automatically accept terms and conditions since user is restoring an existing connection
         completeStep(OnboardingStep.TERMS_CONDITIONS, true);
-
+        
         // Navigate to next required step or completion
         const nextStep = getNextStep();
         if (nextStep) {
@@ -68,7 +65,7 @@ const RestoreConnectionPage = () => {
         } else {
           void navigate(COMPLETION_DESTINATION);
         }
-
+        
         // TODO: Add logic to test if setup data is valid to create an authenticated connection with Hanzo Node
       }
     } catch {

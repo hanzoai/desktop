@@ -1,10 +1,10 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type CodeLanguage } from '@hanzo/desktop-message-ts/api/tools/types';
-import { useOpenToolInCodeEditor } from '@hanzo/desktop-node-state/v2/mutations/openToolnCodeEditor/useOpenToolInCodeEditor';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetToolProtocols } from '@hanzo/desktop-node-state/v2/queries/getToolProtocols/useGetToolProtocols';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type CodeLanguage } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useOpenToolInCodeEditor } from '@hanzo_network/hanzo-node-state/v2/mutations/openToolnCodeEditor/useOpenToolInCodeEditor';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetToolProtocols } from '@hanzo_network/hanzo-node-state/v2/queries/getToolProtocols/useGetToolProtocols';
 import {
-  DialogClose,
   Button,
   buttonVariants,
   Card,
@@ -29,10 +29,10 @@ import {
   PopoverContent,
   PopoverTrigger,
   Skeleton,
-} from '@hanzo/desktop-ui';
-import { SendIcon, ToolsIcon } from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui';
+import { SendIcon, ToolsIcon } from '@hanzo_network/hanzo-ui/assets';
 
-import { cn } from '@hanzo/desktop-ui/utils';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   ArrowLeft,
   ArrowRight,
@@ -267,7 +267,8 @@ function AIModelSelectorBase({
 
     const freeTrialModel = llmProviders?.find(
       (provider) =>
-        provider.model.toLowerCase() === HANZO_NODE_MODEL_ID.toLowerCase(),
+        provider.model.toLowerCase() ===
+        HANZO_NODE_MODEL_ID.toLowerCase(),
     );
 
     if (!codeGeneratorModel || !freeTrialModel) {
@@ -304,7 +305,8 @@ function AIModelSelectorBase({
         (provider) =>
           provider.model.toLowerCase() !==
             CODE_GENERATOR_MODEL_ID.toLowerCase() &&
-          provider.model.toLowerCase() !== HANZO_NODE_MODEL_ID.toLowerCase(),
+          provider.model.toLowerCase() !==
+            HANZO_NODE_MODEL_ID.toLowerCase(),
       ),
     [llmProviders],
   );
@@ -366,7 +368,6 @@ function AIModelSelectorBase({
                 >
                   <ProviderIcon
                     className="mx-1 size-4"
-                    model={model?.model}
                     provider={model?.model?.split(':')[0] ?? ''}
                   />
                 </div>
@@ -389,11 +390,7 @@ function AIModelSelectorBase({
                 <SupportedProtocols />
               )}
               {model.placeholderId === 'custom-model' && (
-                <Popover
-                  placement="bottom-start"
-                  open={open}
-                  onOpenChange={setOpen}
-                >
+                <Popover open={open} onOpenChange={setOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -408,7 +405,6 @@ function AIModelSelectorBase({
                       <div className="line-clamp-1 flex items-center gap-2">
                         <ProviderIcon
                           className="size-4"
-                          model={selectedModel?.model}
                           provider={selectedModel?.model?.split(':')[0] ?? ''}
                         />
                         {selectedModel
@@ -418,7 +414,7 @@ function AIModelSelectorBase({
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent p={0} width={300}>
+                  <PopoverContent className="w-[300px] p-0" align="start">
                     <Command>
                       <CommandInput placeholder="Search models..." />
                       <CommandList>
@@ -445,7 +441,6 @@ function AIModelSelectorBase({
                               />
                               <ProviderIcon
                                 className="size-4"
-                                model={option.model}
                                 provider={option.model?.split(':')[0] ?? ''}
                               />
                               {option.name ?? option.id}
@@ -547,7 +542,7 @@ function ToolsHome({
       <div className="flex w-full flex-col items-center justify-between gap-6 pt-2">
         <div className="flex flex-col gap-2">
           <div className="flex flex-col items-center">
-            <h1 className="font-sans text-text-default text-center text-4xl font-medium">
+            <h1 className="font-inter text-text-default text-center text-4xl font-medium">
               {t('tools.create.title')}
             </h1>
             <p className="text-text-secondary text-center text-sm">
@@ -772,7 +767,7 @@ function SupportedProtocols() {
         <ArrowRight className="ml-0.5 h-3 w-3" />
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl" showCloseButton={false} maxW={576}>
+      <DialogContent className="max-w-xl">
         <DialogClose asChild>
           <Button
             className="absolute top-4 right-4"

@@ -1,4 +1,4 @@
-import { type GetToolsCategory } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type GetToolsCategory } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import { createContext, createRef, useContext, useState } from 'react';
 import { createStore, useStore } from 'zustand';
 

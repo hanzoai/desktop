@@ -1,4 +1,4 @@
-import { type ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import { type PrismEditor } from 'prism-react-editor';
 import { createContext, createRef, useContext, useState } from 'react';
 import { createStore, useStore } from 'zustand';

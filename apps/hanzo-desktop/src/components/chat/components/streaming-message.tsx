@@ -1,8 +1,8 @@
-import { OPTIMISTIC_ASSISTANT_MESSAGE_ID } from '@hanzo/desktop-node-state/v2/constants';
+import { OPTIMISTIC_ASSISTANT_MESSAGE_ID } from '@hanzo_network/hanzo-node-state/v2/constants';
 import {
   type AssistantMessage,
   type FormattedMessage,
-} from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
+} from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
 import { memo, useMemo } from 'react';
 import { useParams } from 'react-router';
 
@@ -119,6 +119,7 @@ export const StreamingMessage = memo(function StreamingMessage({
       handleForkMessage={handleForkMessage}
       handleRetryMessage={handleRetryMessage}
       hidePythonExecution={hidePythonExecution}
+      isLastMessage={isLastMessage}
       key={`${messageId}::streaming`}
       message={mergedMessage}
       messageId={messageId}

@@ -1,4 +1,4 @@
-import { importAgentFromUrl as importAgentFromUrlApi } from '@hanzo/desktop-message-ts/api/agents/index';
+import { importAgentFromUrl as importAgentFromUrlApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
 
 import { type ImportAgentFromUrlInput } from './types';
 

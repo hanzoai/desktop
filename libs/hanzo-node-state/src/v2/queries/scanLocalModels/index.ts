@@ -1,4 +1,4 @@
-import { scanLocalModels as scanLocalModelsApi } from '@hanzo/desktop-message-ts/api/local-models';
+import { scanLocalModels as scanLocalModelsApi } from '@hanzo_network/hanzo-message-ts/api/local-models';
 
 import { type ScanLocalModelsInput } from './types';
 

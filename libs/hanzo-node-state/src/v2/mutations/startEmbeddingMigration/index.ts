@@ -1,4 +1,4 @@
-import { startEmbeddingMigration as startEmbeddingMigrationApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { startEmbeddingMigration as startEmbeddingMigrationApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type StartEmbeddingMigrationInput } from './types';
 

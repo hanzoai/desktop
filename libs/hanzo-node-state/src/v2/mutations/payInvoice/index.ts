@@ -1,4 +1,4 @@
-import { payInvoice as payInvoiceApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { payInvoice as payInvoiceApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type PayInvoiceInput } from './types';
 

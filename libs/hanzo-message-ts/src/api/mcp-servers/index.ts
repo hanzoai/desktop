@@ -16,7 +16,7 @@ export const getMcpServers = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/list_mcp_servers'),
+    urlJoin(nodeAddress, '/v1/node/list_mcp_servers'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -31,7 +31,7 @@ export const getMcpServerTools = async (
   payload: GetMcpServerToolsRequest,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, `/v2/mcp_server_tools?mcp_server_id=${payload.id}`),
+    urlJoin(nodeAddress, `/v1/node/mcp_server_tools?mcp_server_id=${payload.id}`),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -46,7 +46,7 @@ export const addMcpServer = async (
   payload: AddMcpServerRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/add_mcp_server'),
+    urlJoin(nodeAddress, '/v1/node/add_mcp_server'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -62,7 +62,7 @@ export const updateMcpServer = async (
   payload: UpdateMcpServerRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/update_mcp_server'),
+    urlJoin(nodeAddress, '/v1/node/update_mcp_server'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -78,7 +78,7 @@ export const deleteMcpServer = async (
   payload: DeleteMcpServerRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/delete_mcp_server'),
+    urlJoin(nodeAddress, '/v1/node/delete_mcp_server'),
     {
       mcp_server_id: payload.id,
     },
@@ -100,7 +100,7 @@ export const importMcpServerFromGithubUrl = async (
   payload: ImportMcpServerFromGithubUrlRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/import_mcp_server_from_github_url'),
+    urlJoin(nodeAddress, '/v1/node/import_mcp_server_from_github_url'),
     {
       github_url: payload.url,
     },
@@ -119,7 +119,7 @@ export const setEnableMcpServer = async (
   isEnabled: boolean,
 ): Promise<{ success: boolean }> => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/set_enable_mcp_server'),
+    urlJoin(nodeAddress, '/v1/node/set_enable_mcp_server'),
     {
       mcp_server_id: mcpServerId,
       is_enabled: isEnabled,

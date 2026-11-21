@@ -1,4 +1,4 @@
-import  { type DirectoryContent } from '@hanzo/desktop-message-ts/api/vector-fs/types';
+import  { type DirectoryContent } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
 
 import  { type AddFileToInboxResponse, type AddFileToJobRequest } from './__mocks__/hanzo-message-ts';
 import { type FileSystemEntry, type IFileSystemService } from './file-system-service';

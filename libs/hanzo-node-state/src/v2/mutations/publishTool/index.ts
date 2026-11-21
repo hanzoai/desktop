@@ -1,4 +1,4 @@
-import { publishTool as publishToolApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { publishTool as publishToolApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type PublishToolInput } from './types';
 

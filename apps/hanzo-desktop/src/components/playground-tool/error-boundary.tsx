@@ -1,6 +1,6 @@
-import { RotateCwIcon } from 'lucide-react';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Button } from '@hanzo/desktop-ui';
+import { ReloadIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { Button } from '@hanzo_network/hanzo-ui';
 
 export function ToolErrorFallback({
   error,
@@ -17,9 +17,7 @@ export function ToolErrorFallback({
     >
       <div className="space-y-2 text-center">
         <p>{t('playgroundTool.metadataError')}</p>
-        <pre className="px-4 break-words whitespace-break-spaces">
-          {error.message}
-        </pre>
+        <pre className="whitespace-break-spaces break-words px-4">{error.message}</pre>
       </div>
       <Button
         className="bg-gray-400 text-white"
@@ -28,7 +26,7 @@ export function ToolErrorFallback({
         type="button"
         variant="outline"
       >
-        <RotateCwIcon className="size-3.5" />
+        <ReloadIcon className="size-3.5" />
         {t('common.tryAgain')}
       </Button>
     </div>

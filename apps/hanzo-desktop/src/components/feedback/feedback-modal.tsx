@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useSubmitFeedback } from '@hanzo/desktop-node-state/v2/mutations/submitFeedback/useSubmitFeedback';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useSubmitFeedback } from '@hanzo_network/hanzo-node-state/v2/mutations/submitFeedback/useSubmitFeedback';
 import {
-  DialogClose,
   Button,
   type ButtonProps,
   DialogTrigger,
@@ -17,7 +17,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { MessageSquare, XIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -79,7 +79,7 @@ export const FeedbackModal = ({
           {buttonLabel || t('feedback.button')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl" showCloseButton={false} maxW={576}>
+      <DialogContent className="sm:max-w-xl">
         <DialogClose asChild>
           <Button
             className="absolute top-4 right-4"

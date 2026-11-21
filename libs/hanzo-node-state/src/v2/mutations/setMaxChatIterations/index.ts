@@ -1,4 +1,4 @@
-import { setPreferences } from '@hanzo/desktop-message-ts/api/general/index';
+import { setPreferences } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type SetMaxChatIterationsInput } from './types';
 

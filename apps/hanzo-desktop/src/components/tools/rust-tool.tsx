@@ -1,4 +1,4 @@
-import { type RustHanzoTool } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type RustHanzoTool } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 import ToolDetailsCard from './components/tool-details-card';
 

@@ -1,16 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type LLMProviderInterface } from '@hanzo/desktop-message-ts/api/jobs/types';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type LLMProviderInterface } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 import {
   addAiModelFormDefault,
   type AddAiModelFormSchema,
   addAiModelSchema,
-} from '@hanzo/desktop-node-state/forms/agents/add-ai';
+} from '@hanzo_network/hanzo-node-state/forms/agents/add-ai';
 import {
   Models,
   modelsConfig,
-} from '@hanzo/desktop-node-state/lib/utils/models';
-import { useAddLLMProvider } from '@hanzo/desktop-node-state/v2/mutations/addLLMProvider/useAddLLMProvider';
+} from '@hanzo_network/hanzo-node-state/lib/utils/models';
+import { useAddLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/addLLMProvider/useAddLLMProvider';
 import {
   Button,
   buttonVariants,
@@ -27,8 +27,8 @@ import {
   SelectValue,
   Switch,
   TextField,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { HelpCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -87,9 +87,7 @@ const getGuideUrl = (model: Models) => {
     return 'https://docs.hanzo.ai/advanced/models';
   }
 
-  // Partial: only the providers with a dedicated guide page are listed, and the
-  // return below falls back to the index for the rest.
-  const urlMap: Partial<Record<Models, string>> = {
+  const urlMap = {
     [Models.OpenAI]: 'https://docs.hanzo.ai/advanced/models/gpt',
     [Models.OpenAILegacy]: 'https://docs.hanzo.ai/advanced/models/gpt',
     [Models.TogetherComputer]:
@@ -312,7 +310,7 @@ const AddAIPage = () => {
                           <SelectValue placeholder={' '} />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[800px]">
                         {modelOptions.map((model) => (
                           <SelectItem
                             key={model.value}
@@ -345,7 +343,7 @@ const AddAIPage = () => {
                           <SelectValue />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="max-h-[150px] overflow-y-auto text-xs">
                         {modelTypeOptions.map((modelType) => (
                           <SelectItem
                             key={modelType.value}

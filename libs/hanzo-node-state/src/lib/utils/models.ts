@@ -16,31 +16,7 @@ export enum Models {
   Grok = 'grok',
 }
 
-type ModelType = {
-  name: string;
-  value: string;
-  file?: string;
-  format?: string;
-  size?: string;
-  embedding?: boolean;
-  reranker?: boolean;
-};
-
-type ModelConfig = {
-  apiUrl: string;
-  /**
-   * Empty where the catalog is whatever the user has pulled or routed —
-   * `add-ai` appends "Custom Model" to every provider, so an empty list still
-   * offers a way in.
-   */
-  modelTypes: ModelType[];
-};
-
-// Total over Models on purpose: `add-ai` reads modelsConfig[model] for any
-// enum member the form accepts, so a member without an entry is a crash on
-// selection rather than a missing menu row. Record<Models, …> makes that a
-// compile error instead.
-export const modelsConfig: Record<Models, ModelConfig> = {
+export const modelsConfig = {
   // Native Hanzo engine — first-party Zen models from huggingface.co/zenlm, served
   // locally over the OpenAI-compatible API. `value` is the HF repo id so the engine
   // downloads it natively; apps point apiUrl at their own engine port.
@@ -429,10 +405,6 @@ export const modelsConfig: Record<Models, ModelConfig> = {
       },
     ],
   },
-  [Models.Ollama]: {
-    apiUrl: 'http://localhost:11434',
-    modelTypes: [],
-  },
   [Models.LMStudio]: {
     apiUrl: 'http://localhost:1234/v1',
     modelTypes: [
@@ -457,8 +429,8 @@ export const modelsConfig: Record<Models, ModelConfig> = {
         value: 'mistral-7b-instruct-v0.2',
       },
       {
-        name: 'Qwen 3 8B',
-        value: 'qwen3-8b',
+        name: 'Qwen 2.5 7B',
+        value: 'qwen2.5-7b-instruct',
       },
       {
         name: 'Phi 3 Mini',

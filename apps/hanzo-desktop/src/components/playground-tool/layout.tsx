@@ -2,7 +2,7 @@ import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { type ReactNode } from 'react';
 
 import { useSettings } from '../../store/settings';
@@ -53,9 +53,7 @@ export default function PlaygroundToolLayout({
           >
             {leftElement}
           </ResizablePanel>
-          {/* gui bakes the handle's thickness as a style prop, so `w-2` would
-              lose the tie at runtime — the width rides as a gui prop. */}
-          <ResizableHandle className="bg-bg-darker" width={8} />
+          <ResizableHandle className="bg-bg-darker w-2" />
           <ResizablePanel
             className="flex h-full flex-col overflow-hidden rounded-xs pb-3"
             minSize={10}
@@ -73,7 +71,7 @@ export default function PlaygroundToolLayout({
                     >
                       {rightTopElement}
                     </ResizablePanel>
-                    <ResizableHandle className="bg-bg-darker" height={8} />
+                    <ResizableHandle className="bg-bg-darker !h-2" />
                     <ResizablePanel minSize={3}>
                       {rightBottomElement}
                     </ResizablePanel>

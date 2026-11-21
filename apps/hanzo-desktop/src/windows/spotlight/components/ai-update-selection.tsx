@@ -1,11 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateAgentInJob } from '@hanzo/desktop-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateAgentInJob } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import {
   Command,
   CommandEmpty,
@@ -17,10 +17,10 @@ import {
   Popover,
   PopoverTrigger,
   PopoverContent,
-} from '@hanzo/desktop-ui';
-import { AIAgentIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { AIAgentIcon } from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { BotIcon, ChevronDownIcon } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -60,7 +60,6 @@ export function AIModelSelectorBase({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          model={selectedProvider.model}
           provider={selectedProvider.model.split(':')[0]}
         />
       );
@@ -92,11 +91,7 @@ export function AIModelSelectorBase({
   }, [agents, llmProviders, value]);
 
   return (
-    <Popover
-      placement="bottom-start"
-      open={isPopoverOpen}
-      onOpenChange={setIsPopoverOpen}
-    >
+    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
       <PopoverTrigger asChild>
         <button
           className={cn(
@@ -114,16 +109,13 @@ export function AIModelSelectorBase({
         </button>
       </PopoverTrigger>
       <PopoverContent
-        height="100%"
-        maxH="60vh"
-        px="$1"
-        py="$2"
-        width="100%"
+        align="start"
+        className="bg-bg-dark border-divider flex size-full max-h-[60vh] w-full flex-col border p-1 py-2"
       >
         <Command
           className="[&_[cmdk-input-wrapper]]:border-divider flex size-full max-w-[400px] min-w-[340px] flex-col [&_[cmdk-input-wrapper]]:pb-1"
           disablePointerSelection
-          onKeyDown={(e: React.KeyboardEvent) => {
+          onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setIsPopoverOpen(false);
             }
@@ -135,11 +127,11 @@ export function AIModelSelectorBase({
           <CommandEmpty className="text-text-secondary py-5 text-center text-sm">
             No results found.
           </CommandEmpty>
-          <CommandList maxH="100%">
+          <CommandList className="flex max-h-full flex-col overflow-y-auto">
             <CommandGroup
               className="py-4"
               heading={
-                <h3 className="font-sans text-sm font-medium text-white">
+                <h3 className="font-inter text-sm font-medium text-white">
                   Agents
                 </h3>
               }
@@ -167,7 +159,7 @@ export function AIModelSelectorBase({
             <CommandGroup
               className="py-4"
               heading={
-                <h3 className="font-sans text-sm font-medium text-white">
+                <h3 className="font-inter text-sm font-medium text-white">
                   AI Models
                 </h3>
               }
@@ -186,7 +178,6 @@ export function AIModelSelectorBase({
                     <div className="bg-bg-secondary border-divider flex size-6 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                       <ProviderIcon
                         className="mt-0.5 size-4 shrink-0"
-                        model={llmProvider.model}
                         provider={llmProvider.model.split(':')[0]}
                       />
                     </div>

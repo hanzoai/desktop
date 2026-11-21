@@ -1,7 +1,6 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { isHanzoIdentityLocalhost } from '@hanzo/desktop-message-ts/utils';
-import { useUpdateNodeName } from '@hanzo/desktop-node-state/v2/mutations/updateNodeName/useUpdateNodeName';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { isHanzoIdentityLocalhost } from '@hanzo_network/hanzo-message-ts/utils';
+import { useUpdateNodeName } from '@hanzo_network/hanzo-node-state/v2/mutations/updateNodeName/useUpdateNodeName';
 import {
   Dialog,
   DialogContent,
@@ -14,11 +13,12 @@ import {
   DialogFooter,
   DialogTrigger,
   buttonVariants,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Edit3Icon, ExternalLinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { BRAND } from '../../config/brand';
 import { useHanzoNodeRespawnMutation } from '../../lib/hanzo-node-manager/hanzo-node-manager-client';
 import { isHostingHanzoNode } from '../../lib/hanzo-node-manager/hanzo-node-manager-windows-utils';
 import { type Auth, useAuth } from '../../store/auth';
@@ -31,7 +31,9 @@ const HanzoIdentityDialog = () => {
   const { t } = useTranslation();
   const auth = useAuth((authStore) => authStore.auth);
   const setAuth = useAuth((authStore) => authStore.setAuth);
-  const isLocalHanzoNodeInUse = useHanzoNodeManager((state) => state.isInUse);
+  const isLocalHanzoNodeInUse = useHanzoNodeManager(
+    (state) => state.isInUse,
+  );
   const { mutateAsync: respawnHanzoNode } = useHanzoNodeRespawnMutation();
 
   const { mutateAsync: updateNodeName, isPending: isUpdateNodeNamePending } =
@@ -100,13 +102,13 @@ const HanzoIdentityDialog = () => {
           <Edit3Icon className="h-4 w-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl" showCloseButton maxW={576}>
+      <DialogContent className="max-w-xl" showCloseButton>
         <DialogHeader>
           <DialogTitle className="font-semibold">
-            Update {getBrand().name} Identity
+            Update {BRAND.name} Identity
           </DialogTitle>
           <DialogDescription className="text-text-secondary text-sm">
-            Connect your identity so you can take part in the {getBrand().name}{' '}
+            Connect your identity so you can take part in the {BRAND.name}{' '}
             Network and use p2p capabilities
           </DialogDescription>
         </DialogHeader>

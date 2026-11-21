@@ -1,4 +1,4 @@
-import { checkHealth as checkHealthApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { checkHealth as checkHealthApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type GetHealthInput, type GetHealthOutput } from './types';
 

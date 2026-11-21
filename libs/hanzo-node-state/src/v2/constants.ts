@@ -1,4 +1,4 @@
-import { type ProviderDetails } from '@hanzo/desktop-message-ts/api/jobs/types';
+import { type ProviderDetails } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 import {
   type AssistantMessage,
   type Attachment,

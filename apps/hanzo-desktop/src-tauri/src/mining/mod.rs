@@ -5,7 +5,6 @@
 //! On-chain submission is Phase 2 and intentionally out of scope here.
 
 pub mod backend;
-pub mod claim;
 pub mod error;
 pub mod precompile;
 pub mod proof;
@@ -95,30 +94,6 @@ impl MiningManager {
 
     pub async fn set_privacy(&self, privacy: PrivacyLevel) {
         self.state.write().await.privacy = privacy;
-    }
-
-    /// Phase-1 dev mining wallet: a stable, per-install EVM-style address
-    /// persisted under the mining storage dir so accrued rewards survive
-    /// restarts. The frontend re-homes rewards to the user's connected wallet
-    /// once it resolves (the boot auto-start needs an address before then).
-    pub fn ensure_dev_wallet(&self) -> String {
-        let path = self.storage_dir.join("wallet.addr");
-        if let Ok(addr) = std::fs::read_to_string(&path) {
-            let addr = addr.trim().to_string();
-            if !addr.is_empty() {
-                return addr;
-            }
-        }
-        use rand::RngCore;
-        let mut bytes = [0u8; 20];
-        rand::thread_rng().fill_bytes(&mut bytes);
-        let addr = format!(
-            "0x{}",
-            bytes.iter().map(|b| format!("{b:02x}")).collect::<String>()
-        );
-        let _ = std::fs::create_dir_all(&self.storage_dir);
-        let _ = std::fs::write(&path, &addr);
-        addr
     }
 
     pub async fn start_mining(&self, app: AppHandle, wallet_address: String, chain_id: u64) {
@@ -262,7 +237,7 @@ async fn tick_once(
     Ok(record)
 }
 
-pub(crate) fn sum_pending(history: &[ProofRecord]) -> u128 {
+fn sum_pending(history: &[ProofRecord]) -> u128 {
     history
         .iter()
         .filter(|r| r.status == "locally_verified")
@@ -274,7 +249,7 @@ fn history_path(dir: &PathBuf, wallet: &str) -> PathBuf {
     dir.join(wallet).join("history.json")
 }
 
-pub(crate) fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecord>, MiningError> {
+fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecord>, MiningError> {
     let path = history_path(dir, wallet);
     if !path.exists() {
         return Ok(vec![]);
@@ -284,7 +259,7 @@ pub(crate) fn read_history(dir: &PathBuf, wallet: &str) -> Result<Vec<ProofRecor
     Ok(history)
 }
 
-pub(crate) fn write_history(
+fn write_history(
     dir: &PathBuf,
     wallet: &str,
     history: &[ProofRecord],

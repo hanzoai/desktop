@@ -1,4 +1,4 @@
-import { getEmbeddingMigrationStatus as getEmbeddingMigrationStatusApi } from '@hanzo/desktop-message-ts/api/general/index';
+import { getEmbeddingMigrationStatus as getEmbeddingMigrationStatusApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
 
 import { type GetEmbeddingMigrationStatusInput } from './types';
 

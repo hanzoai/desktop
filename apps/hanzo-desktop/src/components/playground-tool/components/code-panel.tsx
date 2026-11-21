@@ -1,12 +1,12 @@
-// import { ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { Button, Skeleton } from '@hanzo/desktop-ui';
-import { debounce } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+// import { ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { Button, Skeleton } from '@hanzo_network/hanzo-ui';
+import { debounce } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useCallback } from 'react';
 
 // import { useFormContext } from 'react-hook-form';
+import { BRAND } from '../../../config/brand';
 import { usePlaygroundStore } from '../context/playground-context';
 // import { useAutoSaveTool } from '../hooks/use-create-tool-and-save';
 // import { CreateToolCodeFormSchema } from '../hooks/use-tool-code';
@@ -102,7 +102,7 @@ function CodePanelBase({
       return (
         <p className="text-text-secondary pt-6 text-center text-xs">
           No code generated yet. <br />
-          Ask {getBrand().name} to generate your tool code.
+          Ask {BRAND.company} to generate your tool code.
         </p>
       );
     }
@@ -187,7 +187,7 @@ function CodePanelBase({
     <div className="flex size-full min-h-[220px] flex-col">
       <div className="flex h-full flex-col">
         {/*{toolCode && (*/}
-        {/*  <Tooltip placement="top">*/}
+        {/*  <Tooltip>*/}
         {/*    <TooltipTrigger asChild>*/}
         {/*      <div>*/}
         {/*        <CopyToClipboardIcon*/}

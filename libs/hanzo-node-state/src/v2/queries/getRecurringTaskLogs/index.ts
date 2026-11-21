@@ -1,4 +1,4 @@
-import { getRecurringTaskLogs as getRecurringTaskLogsApi } from '@hanzo/desktop-message-ts/api/recurring-tasks/index';
+import { getRecurringTaskLogs as getRecurringTaskLogsApi } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/index';
 
 import  { type GetRecurringTaskLogsInput } from './types';
 

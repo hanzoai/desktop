@@ -1,4 +1,4 @@
-import { removeFolder as removeFolderApi } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { removeFolder as removeFolderApi } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import { type RemoveFolderInput } from './types';
 

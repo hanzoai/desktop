@@ -1,4 +1,4 @@
-import { Token } from '@hanzo/desktop-message-ts/api/general/types';
+import { Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
 
 export type SetEnableMcpServerOutput = {
   success: boolean;

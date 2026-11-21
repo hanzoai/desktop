@@ -96,7 +96,7 @@ export const restoreCoinbaseMPCWallet = async (
   payload: RestoreCoinbaseMPCWalletRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/restore_coinbase_mpc_wallet'),
+    urlJoin(nodeAddress, '/v1/node/restore_coinbase_mpc_wallet'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -112,7 +112,7 @@ export const restoreLocalWallet = async (
   payload: RestoreLocalWalletRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/restore_local_wallet'),
+    urlJoin(nodeAddress, '/v1/node/restore_local_wallet'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -128,7 +128,7 @@ export const createLocalWallet = async (
   payload: CreateLocalWalletRequest,
 ) => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/create_local_wallet'),
+    urlJoin(nodeAddress, '/v1/node/create_local_wallet'),
     payload,
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -143,7 +143,7 @@ export const getWalletList = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/list_wallets'),
+    urlJoin(nodeAddress, '/v1/node/list_wallets'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -173,7 +173,7 @@ export const getWalletBalance = async (
   bearerToken: string,
 ) => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/get_wallet_balance'),
+    urlJoin(nodeAddress, '/v1/node/get_wallet_balance'),
 
     {
       headers: { Authorization: `Bearer ${bearerToken}` },

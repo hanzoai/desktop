@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   type ContainerSummary,
   listContainers,
@@ -60,14 +60,14 @@ const ContainersPage = () => {
     <div className="container flex flex-col py-10">
       <header className="flex items-center justify-between pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-3xl font-medium">Containers</h1>
+          <h1 className="font-inter text-3xl font-medium">Containers</h1>
           <p className="text-text-secondary text-sm">
             Docker containers running inside the active machine.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Select onValueChange={setActive} value={active ?? ''}>
-            <SelectTrigger width={200}>
+            <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="select machine" />
             </SelectTrigger>
             <SelectContent>
