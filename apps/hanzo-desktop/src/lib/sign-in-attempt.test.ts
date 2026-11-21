@@ -113,26 +113,50 @@ describe('finishing a sign-in attempt', () => {
     const ctrl = new AbortController();
     const exchange = vi.fn(async () => undefined);
     const go = vi.fn();
+    const forget = vi.fn();
     ctrl.abort();
-    await expect(finishAttempt(ctrl.signal, [exchange, go])).rejects.toBeInstanceOf(SignInCancelled);
+    await expect(finishAttempt(ctrl.signal, { exchange, forget, then: [go] })).rejects.toBeInstanceOf(SignInCancelled);
     expect(exchange).not.toHaveBeenCalled();
+    expect(forget).not.toHaveBeenCalled();
     expect(go).not.toHaveBeenCalled();
   });
 
-  it('Cancel during the exchange stops what comes after it', async () => {
+  it('Cancel during the exchange takes back every key it stored, so nothing is half signed in', async () => {
+    // The window's storage as the exchange leaves it: access, refresh, id token and expiry.
+    const store = new Map<string, string>();
     const ctrl = new AbortController();
+    const exchange = vi.fn(async () => {
+      for (const k of ['access_token', 'refresh_token', 'id_token', 'expires_at']) store.set(`hanzo_iam_${k}`, 'x');
+      ctrl.abort();
+    });
+    const forget = vi.fn(() => store.clear());
     const share = vi.fn(async () => undefined);
     const go = vi.fn();
-    const exchange = vi.fn(async () => ctrl.abort());
-    await expect(finishAttempt(ctrl.signal, [exchange, share, go])).rejects.toBeInstanceOf(SignInCancelled);
+    await expect(finishAttempt(ctrl.signal, { exchange, forget, then: [share, go] })).rejects.toBeInstanceOf(SignInCancelled);
     expect(exchange).toHaveBeenCalledTimes(1);
+    expect(forget).toHaveBeenCalledTimes(1);
+    expect([...store.keys()]).toEqual([]);
     expect(share).not.toHaveBeenCalled();
     expect(go).not.toHaveBeenCalled();
   });
 
+  it('once the exchange has stood, the hand-over and the navigation finish', async () => {
+    const ctrl = new AbortController();
+    const forget = vi.fn();
+    const go = vi.fn();
+    const share = vi.fn(async () => ctrl.abort());
+    await finishAttempt(ctrl.signal, { exchange: async () => undefined, forget, then: [share, go] });
+    expect(forget).not.toHaveBeenCalled();
+    expect(go).toHaveBeenCalledTimes(1);
+  });
+
   it('an attempt nobody cancelled runs every step in order', async () => {
     const order: string[] = [];
-    await finishAttempt(new AbortController().signal, [() => order.push('exchange'), () => order.push('go')]);
+    await finishAttempt(new AbortController().signal, {
+      exchange: () => order.push('exchange'),
+      forget: () => order.push('forget'),
+      then: [() => order.push('go')],
+    });
     expect(order).toEqual(['exchange', 'go']);
   });
 });

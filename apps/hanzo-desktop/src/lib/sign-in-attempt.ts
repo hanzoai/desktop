@@ -74,14 +74,24 @@ export function awaitCallback({
 }
 
 /**
- * What happens once the browser came back: the code exchange, then handing the
- * session over, then leaving the Welcome screen. Cancel can land during any of
- * them (the exchange is a network call), so each runs only while the attempt is
- * still wanted. A session the exchange already stored stays in IAM's storage.
+ * What happens once the browser came back: the code exchange, then the rest
+ * (handing the session over, leaving the Welcome screen). The exchange is a
+ * network call and STORES the tokens, so Cancel can land while it runs; then
+ * `forget` takes back every key it stored before Cancel is honoured, or the
+ * window would hold a refresh token and a session under the Welcome screen.
+ * Once the exchange has stood, the rest runs to the end: it is local and
+ * quick, and the hand-over files the session where a later start adopts it,
+ * so stopping part-way would be the same half sign-in again.
  */
-export async function finishAttempt(signal: AbortSignal | undefined, steps: Array<() => unknown>): Promise<void> {
-  for (const step of steps) {
-    if (signal?.aborted) throw new SignInCancelled();
-    await step();
+export async function finishAttempt(
+  signal: AbortSignal | undefined,
+  { exchange, forget, then }: { exchange: () => unknown; forget: () => unknown; then: Array<() => unknown> },
+): Promise<void> {
+  if (signal?.aborted) throw new SignInCancelled();
+  await exchange();
+  if (signal?.aborted) {
+    await forget();
+    throw new SignInCancelled();
   }
+  for (const step of then) await step();
 }

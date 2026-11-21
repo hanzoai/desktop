@@ -308,11 +308,11 @@ async function signIn(
   const callback = new URL(redirect);
   callback.searchParams.set('code', back.code);
   callback.searchParams.set('state', back.state);
-  await finishAttempt(signal, [
-    () => sdk.handleCallback(callback.href),
-    share,
-    () => window.location.replace(onward()),
-  ]);
+  await finishAttempt(signal, {
+    exchange: () => sdk.handleCallback(callback.href),
+    forget: () => sdk.clearTokens(),
+    then: [share, () => window.location.replace(onward())],
+  });
 }
 
 function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
