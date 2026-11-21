@@ -172,6 +172,12 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(localModelsStatus(null, null).label).toBe('Checking…');
     expect(localModelsStatus(0, true)).toMatchObject({ label: 'Not set up' });
     expect(localModelsStatus(0, false)).toMatchObject({ label: 'Not set up' });
+    // Downloaded models answer nothing without an engine, so that is said first.
+    expect(localModelsStatus(2, false, false)).toEqual({
+      label: 'Not set up',
+      detail: 'Hanzo’s engine, which runs models on this computer, is not installed.',
+    });
+    expect(localModelsStatus(2, false, true)).toMatchObject({ label: 'Ready' });
     expect(localModelsStatus(2, true)).toEqual({ label: 'Running', detail: 'The Hanzo engine is running with 2 models.' });
     expect(localModelsStatus(1, false)).toEqual({ label: 'Ready', detail: '1 model on this computer can answer your chats.' });
   });
