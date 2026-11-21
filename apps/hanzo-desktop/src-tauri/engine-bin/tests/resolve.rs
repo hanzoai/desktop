@@ -1,4 +1,4 @@
-use hanzo_engine_bin::{file_name, resolve};
+use hanzo_engine_bin::{file_name, resolve, NAMES};
 use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,7 +34,11 @@ impl Drop for Scratch {
 }
 
 fn put_engine(dir: &Path, executable: bool) -> PathBuf {
-    let bin = dir.join(file_name());
+    put_named(dir, file_name(), executable)
+}
+
+fn put_named(dir: &Path, name: &str, executable: bool) -> PathBuf {
+    let bin = dir.join(name);
     fs::write(&bin, b"#!/bin/sh\n").unwrap();
     #[cfg(unix)]
     {
@@ -129,4 +133,19 @@ fn a_file_without_an_execute_bit_is_skipped() {
     let want = put_engine(&bin, true);
     let path = path_of(&[&bin]);
     assert_eq!(resolve(None, Some(&exe), Some(&path)), Some(want));
+}
+
+#[test]
+fn the_released_name_is_hanzo_engine_and_the_old_name_still_counts() {
+    // The engine's release tarball ships `hanzo-engine`; `hanzo-server` is
+    // what older builds were called, so an install of either is found.
+    assert!(file_name().starts_with("hanzo-engine"));
+    let s = Scratch::new();
+    let exe = s.dir("app");
+    let bin = s.dir("bin");
+    let old = put_named(&bin, NAMES[1], true);
+    let path = path_of(&[&bin]);
+    assert_eq!(resolve(None, Some(&exe), Some(&path)), Some(old));
+    let new = put_named(&bin, NAMES[0], true);
+    assert_eq!(resolve(None, Some(&exe), Some(&path)), Some(new), "the released name wins in one directory");
 }
