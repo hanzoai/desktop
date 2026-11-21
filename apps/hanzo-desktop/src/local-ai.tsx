@@ -28,6 +28,7 @@ import {
   stopModel,
   waitForEngine,
 } from './lib/local-models';
+import { keychain } from './keychain';
 import { isTauriAvailable as isTauri } from './utils/tauri-check';
 
 const MIND_STORAGE_KEY = 'hanzo.mind';
@@ -866,6 +867,14 @@ export function LocalAiManager() {
               </Text>
             ) : null}
             {header.action ? <XStack>{header.action}</XStack> : null}
+            {/* host.tsx sends a chat to the local engine only when no session is held; a
+                signed-in window's chats go to the cloud whatever is downloaded here. */}
+            {keychain.getItem('hanzo_iam_access_token') ? (
+              <Text data-testid="local-ai-signed-in-note" fontSize="$2" color="$color11">
+                You are signed in, so chat uses Hanzo’s cloud models. A local model answers when you use Hanzo
+                without signing in.
+              </Text>
+            ) : null}
           </YStack>
 
           <YStack gap="$2">

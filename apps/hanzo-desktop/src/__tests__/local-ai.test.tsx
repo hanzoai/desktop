@@ -34,6 +34,8 @@ import {
   type EngineStatus,
 } from '../lib/local-models';
 
+import { keychain } from '../keychain';
+
 const NANO = 'zenlm/zen-nano-0.6b';
 const base: EngineStatus = {
   engine: '/Users/x/.local/bin/hanzo-engine',
@@ -121,6 +123,25 @@ describe('the Local AI screen', () => {
     expect(screen.getByTestId('local-ai-status').textContent).toMatch(/engine, which runs models on this computer, is not installed/);
     fireEvent.click(screen.getByText('Get Hanzo’s engine'));
     expect(openUrl).toHaveBeenCalledWith(ENGINE_RELEASES_URL);
+  });
+
+  it('tells a signed-in reader that chat still uses the cloud, and says nothing of it to a guest', async () => {
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1_208_031_405 }] }));
+    keychain.setItem('hanzo_iam_access_token', 'held');
+    try {
+      await openScreen();
+      expect(screen.getByTestId('local-ai-signed-in-note').textContent).toMatch(
+        /chat uses Hanzo’s cloud models.*without\s+signing in/s,
+      );
+    } finally {
+      keychain.removeItem('hanzo_iam_access_token');
+    }
+  });
+
+  it('says nothing about signing in to a guest', async () => {
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1_208_031_405 }] }));
+    await openScreen();
+    expect(screen.queryByTestId('local-ai-signed-in-note')).toBeNull();
   });
 
   it('downloads with real progress on the card, then shows the model as downloaded', async () => {
