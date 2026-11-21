@@ -33,6 +33,9 @@ pub const PORT: u16 = 36900;
 pub const PROGRESS_EVENT: &str = "local-models-progress";
 /// What a cancelled download fails with; the window shows it as cancelled, not as an error.
 pub const CANCELLED: &str = "Download cancelled.";
+/// Free disk a download must leave behind, so the computer keeps room for its
+/// own work (swap, updates, the person's files) after a multi-gigabyte model.
+pub const MIN_FREE_BYTES: u64 = 2_000_000_000;
 
 #[derive(Serialize, Clone, Debug, PartialEq)]
 pub struct Cached {
@@ -128,6 +131,57 @@ pub fn valid_repo(repo: &str) -> bool {
     };
     let mut parts = repo.split('/');
     ok(parts.next()) && ok(parts.next()) && parts.next().is_none()
+}
+
+/// The models this app offers. The same file is the window's `LOCAL_SOURCES`
+/// (src/lib/local-models.ts), so the two are one list. The commands are
+/// reachable from any page the main window may load, so a repository the app
+/// does not offer is refused here, not only left off the screen.
+pub fn offered(repo: &str) -> bool {
+    #[derive(Deserialize)]
+    struct Source {
+        repo: String,
+    }
+    static LIST: OnceLock<Vec<String>> = OnceLock::new();
+    LIST.get_or_init(|| {
+        serde_json::from_str::<Vec<Source>>(include_str!("../../src/lib/local-sources.json"))
+            .expect("src/lib/local-sources.json is the offered model list")
+            .into_iter()
+            .map(|s| s.repo)
+            .collect()
+    })
+    .iter()
+    .any(|r| r == repo)
+}
+
+fn not_offered(repo: &str) -> String {
+    format!("{repo} is not one of the models this app offers.")
+}
+
+/// Free bytes on the disk that holds `path`, or `None` when it cannot be read.
+fn free_bytes(path: &Path) -> Option<u64> {
+    let disks = sysinfo::Disks::new_with_refreshed_list();
+    disks
+        .list()
+        .iter()
+        .filter(|d| path.starts_with(d.mount_point()))
+        .max_by_key(|d| d.mount_point().as_os_str().len())
+        .map(|d| d.available_space())
+}
+
+/// Whether `needed` more bytes fit and still leave [`MIN_FREE_BYTES`]. An
+/// unreadable disk is not a reason to refuse.
+pub fn room_for(needed: u64, free: Option<u64>) -> Result<(), String> {
+    let gb = |b: u64| format!("{:.1} GB", b as f64 / 1e9);
+    match free {
+        Some(free) if free < needed.saturating_add(MIN_FREE_BYTES) => Err(format!(
+            "This model needs {} and this computer has {} free. Downloading it would leave less than {}, so it was not started. Free some space and try again.",
+            gb(needed),
+            gb(free),
+            gb(MIN_FREE_BYTES)
+        )),
+        _ => Ok(()),
+    }
 }
 
 fn repo_folder(repo: &str) -> String {
@@ -245,6 +299,12 @@ pub async fn pull_into(
     let total: u64 = files.iter().map(|(_, s)| s).sum();
     let root = cache.join(repo_folder(repo));
     let snap = root.join("snapshots").join(&meta.sha);
+    let still_needed: u64 = files
+        .iter()
+        .filter(|(f, size)| std::fs::metadata(snap.join(f)).map(|m| m.len()).ok() != Some(*size))
+        .map(|(_, size)| size)
+        .sum();
+    room_for(still_needed, free_bytes(cache))?;
     std::fs::create_dir_all(&snap).map_err(|e| format!("Could not make the model folder: {e}"))?;
 
     let mut done = 0u64;
@@ -385,6 +445,9 @@ pub async fn local_models_pull(app: tauri::AppHandle, repo: String) -> Result<()
     if !valid_repo(&repo) {
         return Err(format!("{repo} is not a model name."));
     }
+    if !offered(&repo) {
+        return Err(not_offered(&repo));
+    }
     let cancel = Arc::new(AtomicBool::new(false));
     {
         let mut p = pulling().lock().map_err(|e| e.to_string())?;
@@ -422,6 +485,9 @@ pub fn local_models_remove(repo: String) -> Result<(), String> {
     if !valid_repo(&repo) {
         return Err(format!("{repo} is not a model name."));
     }
+    if !offered(&repo) {
+        return Err(not_offered(&repo));
+    }
     if alive().as_deref() == Some(repo.as_str()) {
         stop_serving();
     }
@@ -437,6 +503,9 @@ pub fn local_models_remove(repo: String) -> Result<(), String> {
 pub fn local_models_serve(repo: String) -> Result<(), String> {
     if !valid_repo(&repo) {
         return Err(format!("{repo} is not a model name."));
+    }
+    if !offered(&repo) {
+        return Err(not_offered(&repo));
     }
     let cache = this_cache_dir();
     if !list_cached(&cache).iter().any(|c| c.repo == repo) {
@@ -531,6 +600,48 @@ mod tests {
         }
         // Without safetensors, PyTorch weights are the weights.
         assert_eq!(wanted(&["pytorch_model.bin".to_string()]), vec!["pytorch_model.bin".to_string()]);
+    }
+
+    #[test]
+    fn only_the_models_the_window_offers_can_be_fetched() {
+        assert!(offered("zenlm/zen-nano-0.6b"));
+        assert!(offered("Qwen/Qwen3-4B"));
+        for other in ["meta-llama/Llama-3.1-405B", "sentence-transformers/all-MiniLM-L6-v2", "zenlm/zen-nano"] {
+            assert!(!offered(other), "{other}");
+        }
+    }
+
+    /// The ACL the app is built with (Tauri resolves the same files at run time):
+    /// the window's own pages reach the model commands, a hanzo.ai page in the
+    /// same window does not, while it still reaches what main.json grants.
+    #[test]
+    fn only_the_windows_own_pages_reach_the_model_commands() {
+        use std::collections::BTreeMap;
+        use tauri::utils::acl::{capability::Capability, manifest::Manifest, resolved::Resolved, ExecutionContext};
+        let acl: BTreeMap<String, Manifest> =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/acl-manifests.json"))).unwrap();
+        let caps: BTreeMap<String, Capability> =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/capabilities.json"))).unwrap();
+        let resolved = Resolved::resolve(&acl, caps, tauri::utils::platform::Target::current()).unwrap();
+        let main = |c: &tauri::utils::acl::resolved::ResolvedCommand| c.windows.iter().any(|w| w.matches("main"));
+        for cmd in ["local_models_status", "local_models_pull", "local_models_cancel", "local_models_remove", "local_models_serve", "local_models_stop"] {
+            let grants = &resolved.allowed_commands[cmd];
+            assert!(grants.iter().any(|c| main(c) && c.context == ExecutionContext::Local), "{cmd}: the window's own page");
+            assert!(grants.iter().all(|c| c.context == ExecutionContext::Local), "{cmd}: a remote page");
+        }
+        let other = &resolved.allowed_commands["hardware_get_summary"];
+        assert!(other.iter().any(|c| main(c) && matches!(c.context, ExecutionContext::Remote { .. })));
+    }
+
+    #[test]
+    fn a_download_must_leave_room_on_the_disk() {
+        assert!(room_for(1_000_000_000, Some(10_000_000_000)).is_ok());
+        assert!(room_for(1_000_000_000, None).is_ok(), "unreadable free space does not block");
+        let err = room_for(8_000_000_000, Some(9_000_000_000)).unwrap_err();
+        assert!(err.contains("needs 8.0 GB and this computer has 9.0 GB free"), "{err}");
+        assert!(err.contains("less than 2.0 GB"), "{err}");
+        // This computer's own disk is readable.
+        assert!(free_bytes(&std::env::temp_dir()).is_some());
     }
 
     #[test]

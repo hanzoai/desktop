@@ -901,7 +901,9 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   call, measured from the build's module graph. A new command reaches only the
   main window until a capability names it. Capabilities never share a window:
   Tauri merges overlapping ones, which is how spotlight once held all of main's
-  permissions. The old `commands.allow` key was inert (not in the v2 schema) and
+  permissions. The one deliberate overlap is `main-local.json` on the main window: Tauri
+  keeps each capability's origins with its own grants (tauri-utils `resolve_command`), so it
+  narrows what remote pages reach rather than widening anything. The old `commands.allow` key was inert (not in the v2 schema) and
   is gone.
 - `pnpm build:ci`'s `tsc` step is a **no-op**: `tsconfig.json` has
   `files: []` + `include: []` and only `references`, so plain `tsc` checks
@@ -1230,7 +1232,12 @@ root.
 
 `src/local-ai.tsx` is the screen (the bar's Local AI button); `src/lib/local-models.ts` is its one
 seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` granted in
-`capabilities/main.json`:
+`capabilities/main-local.json`: the main window's own pages only, not the remote origins `main.json`
+lists, so a hanzo.ai page cannot pull models or fill the disk (`build.rs` counts `main` and
+`main-local` together; the test `only_the_windows_own_pages_reach_the_model_commands` resolves the
+built ACL). The commands also refuse a repository not in `src/lib/local-sources.json`, the one list
+the window's `LOCAL_SOURCES` and the Rust side (`include_str!`) both read, and a download that would
+leave less than 2 GB free (`MIN_FREE_BYTES`):
 
 - `local_models_pull(repo)` downloads into the engine's own Hugging Face cache (`HF_HUB_CACHE`, else
   `HF_HOME/hub`, else `~/.cache/huggingface/hub`), the layout `hanzo-engine serve -m org/name` loads and
@@ -1242,7 +1249,7 @@ seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` g
 - `local_models_serve(repo)` runs `hanzo-engine serve -m <repo> -p 36900 --host 127.0.0.1` with
   `HF_HUB_OFFLINE=1`, only when the person presses Use (or chats with a downloaded model chosen). One
   at a time; `local_models_stop`, Remove, and app exit (`local_models::stop_all`) stop it.
-- Which catalogue tags can be downloaded is `LOCAL_SOURCES` in `local-models.ts` (repo and measured
+- Which catalogue tags can be downloaded is `src/lib/local-sources.json` (repo and measured
   download size). Every other catalogue entry is an Ollama tag and says "Not available yet".
 - Test: `cargo test --bin hanzo-desktop local_models` (a stand-in model library on a local port),
   `src/__tests__/local-ai.test.tsx` (mocked `invoke`).
