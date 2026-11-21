@@ -1,21 +1,7 @@
 {
   "identifier": "main",
-  "description": "The main window: every plugin permission it uses and every command the app registers (build.rs refuses a command it does not grant).",
+  "description": "The main window, its own pages only: every plugin permission it uses and every command the app registers (build.rs refuses a command it does not grant). No remote origin is listed, so a page from another origin, a hanzo.ai frame included, reaches nothing; the window never shows one itself (main.rs `away` sends every other origin to the system browser).",
   "local": true,
-  "remote": {
-    "urls": [
-      "http://localhost:3000/*",
-      "http://127.0.0.1:3000/*",
-      "http://localhost:1420/*",
-      "http://127.0.0.1:1420/*",
-      "https://hanzo.ai/*",
-      "https://*.hanzo.ai/*",
-      "https://hanzo.team/*",
-      "https://*.hanzo.team/*",
-      "https://hanzo.id/*",
-      "https://*.hanzo.id/*"
-    ]
-  },
   "windows": [
     "main"
   ],
@@ -185,6 +171,16 @@
     "allow-dev-local-pairing",
     "allow-dev-local-runtime",
     "allow-engines-discover",
-    "allow-hardware-get-summary"
+    "allow-hardware-get-summary",
+    "allow-iam-loopback",
+    "allow-report-redact",
+    "allow-local-models-status",
+    "allow-local-models-pull",
+    "allow-local-models-cancel",
+    "allow-local-models-remove",
+    "allow-local-models-serve",
+    "allow-local-models-stop",
+    "allow-mining-get-enabled",
+    "allow-mining-set-enabled"
   ]
 }
