@@ -104,7 +104,7 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@hanzo/build@0.2.144'
-  - '@hanzo/dev-core@0.1.12'
+  - '@hanzo/dev-core@0.1.12 || 0.1.13'
   - '@hanzo/app@0.2.20 || 0.2.21 || 0.2.63 || 0.3.107 || 0.3.109 || 0.3.115 || 0.3.117 || 0.3.124 || 0.3.133 || 0.3.137'
   - '@hanzo/dev-core@0.1.1 || 0.1.2'
   - '@hanzo/personas@1.3.3'

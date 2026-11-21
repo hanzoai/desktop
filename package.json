@@ -25,7 +25,7 @@
     "@hanzo/composer": "catalog:",
     "@hanzo/data": "catalog:",
     "@hanzo/design": "catalog:",
-    "@hanzo/dev-core": "^0.1.12",
+    "@hanzo/dev-core": "^0.1.13",
     "@hanzo/event": "catalog:",
     "@hanzo/font": "catalog:",
     "@hanzo/gui": "catalog:",
