@@ -80,6 +80,7 @@ mod globals;
 mod hardware;
 mod local_dev;
 mod local_hanzo_node;
+mod local_models;
 mod identity;
 mod loopback;
 #[cfg(feature = "machine")]
@@ -241,6 +242,12 @@ fn main() {
             node_remove_storage,
             show_node_manager_window,
             hardware_get_summary,
+            local_models::local_models_status,
+            local_models::local_models_pull,
+            local_models::local_models_cancel,
+            local_models::local_models_remove,
+            local_models::local_models_serve,
+            local_models::local_models_stop,
             knowledge_graph_read_local,
             knowledge_graph_sync_apple,
             knowledge_graph_query_entity,
@@ -487,6 +494,8 @@ fn main() {
             }
             RunEvent::Exit { .. } => {
                 commands::local_site::stop_all();
+                // A model the person chose to run stops with the app.
+                local_models::stop_all();
                 tauri::async_runtime::spawn(async {
                     log::debug!("killing hanzo-node before exit");
 
