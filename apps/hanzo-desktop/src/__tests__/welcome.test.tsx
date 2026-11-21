@@ -25,7 +25,7 @@ describe('Welcome', () => {
     const on = mount();
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Sign in to');
     expect(screen.getByTestId('welcome-explainer')).toHaveTextContent(
-      /cloud models.*Without signing in, chat uses your own models and your chats stay on this computer\./,
+      /cloud models.*Without signing in, chat uses your own models and your chat history is saved only on this computer\./,
     );
     expect(screen.queryByText(/Benchmark/i)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Continue without signing in' }));
