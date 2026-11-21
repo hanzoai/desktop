@@ -77,9 +77,11 @@ export function Welcome({
             color="$color11"
             style={{ textAlign: 'center', textWrap: 'pretty' }}
           >
+            {/* "your own models", not "installed on this computer": signed out, chat
+                also goes to a custom or network model server set on the Local AI screen. */}
             {busy
               ? `We opened the ${name} sign-in page in your browser. When you finish there, this window carries on by itself.`
-              : `Signing in gives you ${name}'s cloud models and keeps your chats on every device. Without signing in, chat uses only models installed on this computer, and your chats stay on it.`}
+              : `Signing in gives you ${name}'s cloud models and keeps your chats on every device. Without signing in, chat uses your own models and your chats stay on this computer.`}
           </Text>
         </YStack>
 
