@@ -103,8 +103,13 @@ function LocalAi() {
 // Local AI, in place of the minimise, maximise and close a frameless window
 // would draw, which the native title bar already has, and, when there is a newer
 // version, the one quiet line that installs it (update.tsx).
+const MAC = /Mac/.test(navigator.userAgent);
+// The focused pages (Gate's sheets: organization, plan) carry their own header,
+// whose wordmark starts at the page's gutter, under the traffic lights (app.css).
+if (MAC) document.documentElement.dataset.mac = '';
+
 const BAR: Titlebar = {
-  inset: /Mac/.test(navigator.userAgent) ? 78 : 0,
+  inset: MAC ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
   controls: (
     <XStack items="center" gap="$2">

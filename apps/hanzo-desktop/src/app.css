@@ -53,3 +53,11 @@ html:root:not(.t_light):not(.light) {
   font-size: 12px !important;
   white-space: nowrap !important;
 }
+
+/* macOS paints its traffic lights over the page's top-left corner (titleBarStyle
+   Overlay). A focused page's header starts its wordmark at 78px, clear of them,
+   as the window's own bar does (host.tsx BAR). The wordmark's pill takes 12px
+   of padding back with a negative margin, so the margin is 78px less 12px. */
+:root[data-mac] [role='region'] [data-slot='home'] {
+  margin-inline-start: 66px !important;
+}

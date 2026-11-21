@@ -79,6 +79,7 @@ mod global_shortcuts;
 mod globals;
 mod hardware;
 mod local_hanzo_node;
+mod loopback;
 #[cfg(feature = "machine")]
 mod machine;
 mod mining;
@@ -382,6 +383,7 @@ fn main() {
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
+            loopback::serve(app.handle());
 
             // Native Hanzo Engine: manage the one shared orchestrator for both
             // the Tauri IPC commands and the `/v1/engine/*` HTTP management

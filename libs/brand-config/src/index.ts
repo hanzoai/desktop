@@ -13,8 +13,9 @@
  *
  * `iam.clientId` is the desktop OAuth client declaratively provisioned in each
  * brand's IAM as `<brand>-app` — a PUBLIC client (PKCE S256, ships no secret).
- * `iam.redirectUri` must match the brand's `deep-link.desktop.schemes` entry in
- * `tauri.conf.<brand>.json`, and `iam.callbackEvent` the event that
+ * `iam.redirectUri` is Hanzo's loopback listener (`src-tauri/src/loopback.rs`:
+ * `hanzo://` is shared with Hanzo Dev) and, for Zoo and Lux, must match the
+ * brand's `deep-link.desktop.schemes` entry in `tauri.conf.<brand>.json`, and `iam.callbackEvent` the event that
  * `src-tauri/src/deep_links.rs` emits for that scheme's `/oauth/<brand>` path.
  */
 export type Brand = 'hanzo' | 'zoo' | 'lux';
@@ -94,9 +95,9 @@ const HANZO: BrandConfig = {
   cloudApi: 'https://api.hanzo.ai',
   docs: 'https://docs.hanzo.ai',
   iam: {
-    baseUrl: 'https://hanzo.id',
+    baseUrl: 'https://hanzo.ai',
     clientId: 'hanzo-app',
-    redirectUri: 'hanzo://oauth/hanzo',
+    redirectUri: 'http://127.0.0.1:1455/auth/callback',
     callbackEvent: 'hanzo-iam-callback',
     page: 'https://hanzo.ai/login',
   },
