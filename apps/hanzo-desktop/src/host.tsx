@@ -265,15 +265,14 @@ function outward(e: globalThis.MouseEvent): void {
 // draw the desktop's sign-in rather than a page of the app.
 const DOORS = new Set(['/login', '/signup']);
 
-// A visitor who chose "Not now" opens the app signed out from then on, as the
-// web does for a guest; signing in is one click away in the app itself.
+// A visitor who chose "Not now" on Welcome opens the app signed out from then on,
+// as the web does for a guest; signing in is one click away in the app itself.
+// That button is the only way to become a guest: no key, address or Back does it.
 const GUEST = 'hanzo:guest';
 
 function guest(): boolean {
   try {
-    const isGuest =
-      new URLSearchParams(window.location.search).get('guest') === '1' ||
-      window.localStorage.getItem(GUEST) === '1';
+    const isGuest = window.localStorage.getItem(GUEST) === '1';
     if (isGuest) {
       window.sessionStorage.setItem('hanzo.anon.try', '1');
       (window as any).__hanzoAnonChat = true;
@@ -620,20 +619,6 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Signed out, opening Chat from outside Welcome is the same as "Not now" (a
-  // guest). Signed in it changes nothing: a guest flag set then would make the
-  // person a guest after a later sign-out without their choosing it.
-  // While sign-in is still being read, nobody is known to be signed out yet.
-  const signedIn = useRef(isAuthenticated);
-  signedIn.current = isAuthenticated;
-  const reading = useRef(iamLoading);
-  reading.current = iamLoading;
-  const visit = () => {
-    if (signedIn.current || reading.current) return;
-    stayGuest();
-    setVisiting(true);
-  };
-
   useEffect(() => {
     if (!isAuthenticated) return;
     forgetGuest();
@@ -642,7 +627,6 @@ function Gate() {
 
   // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
   const startChat = () => {
-    visit();
     empty();
     window.history.pushState(null, '', '/chat');
     requestAnimationFrame(() => {
@@ -720,10 +704,7 @@ function Gate() {
           window.history.pushState(null, '', '/login?next=/settings');
           startSignIn();
         }}
-        onBack={() => {
-          visit();
-          window.history.pushState(null, '', '/chat');
-        }}
+        onBack={() => window.history.pushState(null, '', '/chat')}
       />
     );
   }

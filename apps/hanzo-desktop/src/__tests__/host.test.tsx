@@ -38,7 +38,13 @@ vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('../../gui.config', () => ({ default: {} }));
 vi.mock('../identity', () => ({ adopt: vi.fn(async () => false), share: vi.fn() }));
 vi.mock('../update', () => ({ Update: () => null }));
-vi.mock('../Welcome', () => ({ Welcome: () => <div>welcome</div> }));
+vi.mock('../Welcome', () => ({
+  Welcome: ({ onSkip }: { onSkip: () => void }) => (
+    <button type="button" onClick={onSkip}>
+      welcome: not now
+    </button>
+  ),
+}));
 vi.mock('../local-ai', () => ({
   buildLocalModelsCatalogResponse: vi.fn(async () => ({ data: [] })),
   handleLocalChatCompletion: vi.fn(),
@@ -46,7 +52,7 @@ vi.mock('../local-ai', () => ({
   openLocalAiManager: vi.fn(),
 }));
 vi.mock('../desktop-shortcuts', () => ({
-  windowKey: () => null,
+  windowKey: (e: KeyboardEvent) => (e.metaKey && e.key === 'n' ? 'new-chat' : null),
   DesktopSettings: ({ onBack }: { onBack: () => void }) => (
     <button type="button" onClick={onBack}>
       Settings back
@@ -102,10 +108,32 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
-  it('brings a signed-out person back from Settings into Chat as a guest', async () => {
+  it('brings a signed-out person back from Settings to Welcome, not into Chat as a guest', async () => {
     await open('/settings');
     fireEvent.click(screen.getByText('Settings back'));
     expect(window.location.pathname).toBe('/chat');
+    expect(screen.getByText('welcome: not now')).toBeTruthy();
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
+  it('⌘N on Welcome does not skip sign-in', async () => {
+    await open('/chat');
+    fireEvent.keyDown(window, { key: 'n', metaKey: true });
+    expect(screen.getByText('welcome: not now')).toBeTruthy();
+    expect(screen.queryByText('the app')).toBeNull();
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
+  it('an address does not make a guest: ?guest=1 still opens on Welcome', async () => {
+    await open('/chat?guest=1');
+    expect(screen.getByText('welcome: not now')).toBeTruthy();
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
+  it('Welcome’s Not now is the one way in as a guest, and it is remembered', async () => {
+    await open('/chat');
+    fireEvent.click(screen.getByText('welcome: not now'));
+    expect(screen.getByText('the app')).toBeTruthy();
     expect(window.localStorage.getItem(GUEST)).toBe('1');
   });
 
