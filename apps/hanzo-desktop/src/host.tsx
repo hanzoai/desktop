@@ -598,8 +598,12 @@ function Gate() {
     setVisiting(false);
   }, [isAuthenticated]);
 
+  // Whether Welcome is the whole window (set below, read when a key arrives).
+  const welcoming = useRef(false);
   // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
+  // On Welcome there is no chat to start, so nothing moves and the address (its `next`) stays.
   const startChat = () => {
+    if (welcoming.current) return;
     empty();
     window.history.pushState(null, '', '/chat');
     requestAnimationFrame(() => {
@@ -658,6 +662,7 @@ function Gate() {
   const raw = here.split('?')[0] || '/';
   const path = raw === '/' || raw === '/index.html' ? '/chat' : raw;
   const isSettings = path === '/settings' || path.startsWith('/settings/');
+  welcoming.current = !isAuthenticated && !isSettings && (DOORS.has(path) || !visiting);
 
   if (isLoading && !isSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
   if (!isAuthenticated && !isSettings && (DOORS.has(path) || !visiting)) {
