@@ -286,7 +286,8 @@ async function signIn(
   sdk: ReturnType<typeof useIam>['sdk'],
   { signal, ready }: { signal: AbortSignal; ready?: (reopen: () => void) => void },
 ): Promise<void> {
-  const port = await invoke<number>('iam_loopback');
+  // The browser's hand-back is emitted as the event this brand's window listens on.
+  const port = await invoke<number>('iam_loopback', { event: brand.iam.callbackEvent });
   if (signal.aborted) throw new SignInCancelled();
   const redirect = `http://127.0.0.1:${port}/callback`;
   // The SDK sends the redirect its configuration names at the code exchange, so

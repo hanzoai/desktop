@@ -5,7 +5,7 @@ use crate::windows::{recreate_window, Window};
 
 /// Brands whose IAM issues a `<scheme>://oauth/<brand>` redirect. Mirrors the
 /// `Brand` union and the `iam.redirectUri` column in libs/brand-config.
-const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
+pub(crate) const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct OAuthDeepLinkPayload {
