@@ -146,14 +146,14 @@ owns:
   --components=secrets` and scratch `XDG_*_HOME` dirs. Sign in for real: press
   "Sign in with Hanzo", build hanzo.ai/login's address from the request the
   app made (`hanzo_iam_state` and `hanzo_iam_code_verifier` in the webview's
-  localStorage, S256), sign a throwaway in there in a browser, and hand the
-  code from the `hanzo://oauth/hanzo` redirect to the app as its callback
-  event (`plugin:event|emit`, `hanzo-iam-callback`). The OS opener cannot be
+  localStorage, S256), sign a throwaway in there in a browser, and let it return
+  to the loopback port the app opened (`http://127.0.0.1:<port>/callback`), which
+  hands the code to the window as `hanzo-iam-callback`. The OS opener cannot be
   caught: it goes through the desktop portal, not `xdg-open` on PATH.
-- **Sign-in**: `sdk.getSigninUrl()` opens in the system browser; the brand's
-  deep link (`<scheme>://oauth/<brand>`, `deep_links.rs`) brings the code back
-  as `iam.callbackEvent`, `sdk.handleCallback` exchanges it, and the window
-  reloads at `/`. Signed out, `src/Welcome.tsx` is the whole window.
+- **Sign-in**: the one way is described under "Brand + sign-in": the brand's
+  page opens in the system browser, the browser comes back to a loopback port
+  the app opened for that attempt, `sdk.handleCallback` exchanges the code, and
+  the window reloads at `/`. Signed out, `src/Welcome.tsx` is the whole window.
 - **Router**: the window's `history`. `go` (rooms `lib/host`) pushes; `Host`
   re-renders on push, replace and popstate.
 - **Other origins**: a link to one opens in the system browser (`outward`), and
@@ -474,19 +474,26 @@ latter's only live fields were `name`, `productName` and `company`: three
 spellings of one value, all now `getBrand().name`. Its `appId` was a THIRD
 bundle identifier nothing read.
 
-| brand | IdP | client | redirect | callback event | keychain service |
-|---|---|---|---|---|---|
-| hanzo | https://hanzo.id | `hanzo-app` | `hanzo://oauth/hanzo` | `hanzo-iam-callback` | `com.hanzo.desktop` |
-| lux | https://lux.id | `lux-app` | `lux://oauth/lux` | `lux-iam-callback` | `com.lux.desktop` |
-| zoo | https://zoolabs.id | `zoo-app` | `zoo://oauth/zoo` | `zoo-iam-callback` | `com.zoo.desktop` |
+| brand | IdP | client | callback event | identifier |
+|---|---|---|---|---|
+| hanzo | https://hanzo.id | `hanzo-app` | `hanzo-iam-callback` | `com.hanzo.desktop` |
+| lux | https://lux.id | `lux-app` | `lux-iam-callback` | `com.lux.desktop` |
+| zoo | https://zoolabs.id | `zoo-app` | `zoo-iam-callback` | `com.zoo.desktop` |
+
+Every brand's redirect is the loopback port of the attempt: `host.tsx` sets it
+on the SDK before the authorize request is built, whatever `iam.redirectUri`
+the table holds (Lux's and Zoo's still name their deep links there).
 
 - **Login**: `host.tsx` `signIn` — OAuth 2.0 code + PKCE (S256) through the
   `@hanzo/iam` SDK, public client, no secret. The redirect is a loopback port the
   system picks for the attempt (RFC 8252 §7.3, `loopback.rs`); the wait, the
   deadline and Cancel are `src/lib/sign-in-attempt.ts`.
-- **Callback**: `src-tauri/src/deep_links.rs` derives the event from the URL's
-  path segment (`<scheme>://oauth/<brand>` → `<brand>-iam-callback`). Never
-  hardcode a brand there.
+- **Callback**: `src-tauri/src/loopback.rs` answers the first request to
+  `/callback` that names a state, emits it as the event the window named (one
+  of `<brand>-iam-callback`, never an arbitrary name), and closes the port. The
+  browser's page says to return to the app to finish; the exchange happens
+  there. `deep_links.rs` still turns a `<scheme>://oauth/<brand>` link into the
+  same event, but nothing sends one now: it is a leftover, not a second way in.
 - **Mark**: `libs/hanzo-logo` `<BrandMark brand/>` is the only brand glyph. Do
   NOT use `@hanzo/ui`'s `BrandMark` — it white-labels the wordmark text only and
   always paints the Hanzo block-H.
@@ -497,9 +504,9 @@ bundle identifier nothing read.
   `deep_links.rs`'s brand list is tested against this table.
 - **Identifier**: `com.<brand>.desktop`, and it must be the SAME string in
   `tauri.conf.json`, `tauri.conf.<brand>.json`, `Info.plist` and the brand
-  table. Because the keychain service, the log file name and the `.app` name
-  all derive from the running bundle's identity, a disagreement silently
-  strands a user's saved secrets when they move between build variants — which
+  table. Because the data folder, the log file name and the `.app` name all
+  derive from the running bundle's identity, a disagreement silently strands
+  what a person kept when they move between build variants — which
   is what `ai.hanzo.desktop` in the base config did. `src/lib/brand-identity.test.ts`
   asserts all four agree; the `.dev` / `.local` variants deliberately keep
   their own suffixed identifier so side-by-side installs don't collide.

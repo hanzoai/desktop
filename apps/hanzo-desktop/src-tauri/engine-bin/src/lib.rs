@@ -2,8 +2,8 @@
 //!
 //! The desktop serves a downloaded model with hanzoai/engine on :36900 when
 //! the person picks one. Release bundles do not ship the engine: the `.app`
-//! carries `hanzo-desktop`, `hanzo-node`, `deno` and `uv` and nothing else
-//! (`bundle.externalBin` in tauri.conf.json).
+//! carries `hanzo-desktop` and nothing else (tauri.conf.json declares no
+//! `externalBin` and no `resources`).
 //!
 //! The engine's own release (`hanzo-engine-<os>-<arch>.tar.gz`) holds one
 //! binary, `hanzo-engine` (package `hanzo-cli`), and the `hanzo` CLI's
