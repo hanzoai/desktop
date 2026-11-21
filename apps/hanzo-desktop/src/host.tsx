@@ -665,27 +665,13 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I and 'navigate-to-path' from Spotlight)
+  // The system-wide ⇧⌘I (src-tauri global_shortcuts) arrives as 'create-chat'.
   useEffect(() => {
-    let unlistenCreate: (() => void) | undefined;
-    let unlistenNavigate: (() => void) | undefined;
-
+    let unlisten: (() => void) | undefined;
     void safeListen('create-chat', () => started.current()).then((fn) => {
-      unlistenCreate = fn ?? undefined;
+      unlisten = fn ?? undefined;
     });
-
-    void safeListen<string>('navigate-to-path', (event) => {
-      const target = typeof event.payload === 'string' && event.payload.startsWith('/') ? event.payload : '/chat';
-      visit();
-      window.history.pushState(null, '', target);
-    }).then((fn) => {
-      unlistenNavigate = fn ?? undefined;
-    });
-
-    return () => {
-      unlistenCreate?.();
-      unlistenNavigate?.();
-    };
+    return () => unlisten?.();
   }, []);
 
   const isLoading = iamLoading && !loadingTimedOut;

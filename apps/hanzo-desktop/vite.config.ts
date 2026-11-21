@@ -186,14 +186,6 @@ export default defineConfig(() => ({
     rollupOptions: {
       input: {
         index: pathResolve(import.meta.dirname, 'index.html'),
-        hanzo_node_manager: pathResolve(
-          import.meta.dirname,
-          'src/windows/hanzo-node-manager/index.html',
-        ),
-        spotlight: pathResolve(
-          import.meta.dirname,
-          'src/windows/spotlight/index.html',
-        ),
       },
     },
   },
@@ -218,7 +210,7 @@ export default defineConfig(() => ({
       },
     },
     coverage: {
-      reportsDirectory: '../../coverage/libs/hanzo-message-ts',
+      reportsDirectory: '../../coverage/apps/hanzo-desktop',
       provider: 'v8',
     },
   },

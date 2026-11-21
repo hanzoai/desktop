@@ -71,40 +71,6 @@
         "shadow": true,
         "center": true,
         "create": false
-      },
-      {
-        "fullscreen": false,
-        "label": "spotlight",
-        "transparent": true,
-        "title": "Spotlight",
-        "width": 800,
-        "height": 490,
-        "resizable": true,
-        "dragDropEnabled": false,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
-        "url": "src/windows/spotlight/index.html",
-        "center": true,
-        "skipTaskbar": true,
-        "shadow": true,
-        "decorations": false,
-        "visible": false,
-        "closable": false,
-        "parent": null,
-        "create": false
-      },
-      {
-        "label": "hanzo-node-manager",
-        "url": "src/windows/hanzo-node-manager/index.html",
-        "transparent": true,
-        "title": "Hanzo Node Manager",
-        "width": 1280,
-        "height": 840,
-        "resizable": true,
-        "dragDropEnabled": false,
-        "titleBarStyle": "Overlay",
-        "hiddenTitle": true,
-        "create": false
       }
     ],
     "macOSPrivateApi": true
