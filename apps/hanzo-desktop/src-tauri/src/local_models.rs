@@ -30,7 +30,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
 use tauri::Emitter;
 
-/// Where local chat finds the served model (`LOCAL_ENGINE_PORT_URL` in local-ai.tsx).
+/// Where local chat finds the served model (`LOCAL_ENGINE_URL` in src/lib/local-models.ts).
 pub const PORT: u16 = 36900;
 /// The event a download reports on: `{ repo, done, total }` in bytes.
 pub const PROGRESS_EVENT: &str = "local-models-progress";
