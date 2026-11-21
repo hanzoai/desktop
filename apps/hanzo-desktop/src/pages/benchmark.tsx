@@ -286,9 +286,11 @@ const btnAccent: React.CSSProperties = {
 export interface BenchmarkPageProps {
   embedded?: boolean;
   initialTab?: 'benchmark' | 'sweep' | 'settings';
+  /** The page's own way out, drawn above its title (the full-window page has no bar). */
+  onBack?: () => void;
 }
 
-const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: BenchmarkPageProps) => {
+const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark', onBack }: BenchmarkPageProps) => {
   const [activeTab, setActiveTab] = useState<'benchmark' | 'sweep' | 'settings'>(initialTab);
   const [prompt, setPrompt] = useState(DEFAULT_PROMPT);
   const [maxTokens, setMaxTokens] = useState(32);
@@ -306,8 +308,9 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: Benchmark
   const [loadingModel, setLoadingModel] = useState(false);
   const [copiedIaC, setCopiedIaC] = useState<string | null>(null);
 
-  // Latent Sparse Attention (D-LSA / N-LSA) UI controls — enabled by default
-  const [lsaEnabled, setLsaEnabled] = useState(true);
+  // Latent Sparse Attention (D-LSA / N-LSA) UI controls. What the engine says, never
+  // assumed: the engine's settings change only when a button on this page is pressed.
+  const [lsaEnabled, setLsaEnabled] = useState(false);
   const [lsaMode, setLsaMode] = useState<'flat' | 'tree'>('tree');
   const [lsaMinSeqLen, setLsaMinSeqLen] = useState(1024);
   const [lsaTopK, setLsaTopK] = useState(512);
@@ -358,7 +361,7 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: Benchmark
     void refreshEngineStatus();
     fetch(LSA_URL)
       .then((r) => (r.ok ? r.json() : null))
-      .then(async (status: LsaStatusResponse | null) => {
+      .then((status: LsaStatusResponse | null) => {
         if (status && status.enabled && status.config) {
           setLsaEnabled(true);
           setLsaMode((status.config.top_level ?? 0) > 0 ? 'tree' : 'flat');
@@ -367,13 +370,6 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: Benchmark
           if (status.config.top_p) setLsaTopP(status.config.top_p);
           if (status.config.window_size) setLsaWindowSize(status.config.window_size);
           if (status.config.sink_size) setLsaSinkSize(status.config.sink_size);
-        } else {
-          const r = await fetch(LSA_URL, {
-            body: JSON.stringify(currentLsaConfig()),
-            headers: { 'content-type': 'application/json' },
-            method: 'POST',
-          });
-          if (r.ok) setLsaEnabled(true);
         }
       })
       .catch(() => {});
@@ -494,6 +490,7 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: Benchmark
     setError(null);
     setChat(null);
     setLsaChat(null);
+    const wasEnabled = lsaEnabled;
     try {
       // 1. Run with LSA (warm up & measure D-LSA)
       await fetch(LSA_URL, {
@@ -510,13 +507,15 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark' }: Benchmark
       const baseline = await runChatOnce('FULL-B', false);
       setChat(baseline);
 
-      // Restore LSA enabled by default after comparison
-      await fetch(LSA_URL, {
-        body: JSON.stringify(currentLsaConfig()),
-        headers: { 'content-type': 'application/json' },
-        method: 'POST',
-      });
-      setLsaEnabled(true);
+      // Leave the engine as it was before the comparison: on only if it was on.
+      if (wasEnabled) {
+        await fetch(LSA_URL, {
+          body: JSON.stringify(currentLsaConfig()),
+          headers: { 'content-type': 'application/json' },
+          method: 'POST',
+        });
+      }
+      setLsaEnabled(wasEnabled);
       window.dispatchEvent(new Event('hanzo:lsa-changed'));
       await refreshEngineStatus();
     } catch (e) {
@@ -605,6 +604,16 @@ start_nodes = 1024`;
           gap: 18,
         }}
       >
+        {onBack && (
+          <button
+            data-testid="benchmark-back"
+            onClick={onBack}
+            style={{ alignSelf: 'flex-start', background: 'transparent', border: 'none', color: '#d4d4d8', cursor: 'pointer', fontSize: 13, padding: 0 }}
+            type="button"
+          >
+            ← Back
+          </button>
+        )}
         {/* Header & Embedded Engine Status Bar */}
         <div
           style={{
@@ -720,7 +729,7 @@ start_nodes = 1024`;
                       }}
                     >
                       {lsaEnabled
-                        ? `ENABLED BY DEFAULT (${lsaMode.toUpperCase()} LSA)`
+                        ? `ON (${lsaMode.toUpperCase()} LSA) · CHANGES APPLY ON RUN`
                         : 'STANDARD FULL ATTENTION'}
                     </span>
                   </div>
@@ -754,7 +763,6 @@ start_nodes = 1024`;
                     onChange={(e) => {
                       const next = e.target.value as 'flat' | 'tree';
                       setLsaMode(next);
-                      void applyConfigIfEnabled(next, lsaMinSeqLen, lsaTopK, lsaTopP);
                     }}
                     style={inputStyle}
                     value={lsaMode}
@@ -772,7 +780,6 @@ start_nodes = 1024`;
                     onChange={(e) => {
                       const v = Number(e.target.value) || 1024;
                       setLsaMinSeqLen(v);
-                      void applyConfigIfEnabled(lsaMode, v, lsaTopK, lsaTopP);
                     }}
                     step={256}
                     style={inputStyle}
@@ -789,7 +796,6 @@ start_nodes = 1024`;
                     onChange={(e) => {
                       const v = Number(e.target.value) || 512;
                       setLsaTopK(v);
-                      void applyConfigIfEnabled(lsaMode, lsaMinSeqLen, v, lsaTopP);
                     }}
                     step={128}
                     style={inputStyle}
@@ -806,7 +812,6 @@ start_nodes = 1024`;
                     onChange={(e) => {
                       const v = Number(e.target.value) || 128;
                       setLsaTopP(v);
-                      void applyConfigIfEnabled(lsaMode, lsaMinSeqLen, lsaTopK, v);
                     }}
                     step={32}
                     style={inputStyle}

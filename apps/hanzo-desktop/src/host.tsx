@@ -23,7 +23,7 @@ import {
   LocalAiManager,
   openLocalAiManager,
 } from './local-ai';
-import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
+import BenchmarkPage from './pages/benchmark';
 import { Update } from './update';
 import { Welcome } from './Welcome';
 import { awaitCallback, type Callback, finishAttempt, SignInCancelled } from './lib/sign-in-attempt';
@@ -661,22 +661,6 @@ function Gate() {
     };
   }, []);
 
-  // Ensure LSA is armed by default on the embedded engine
-  useEffect(() => {
-    fetch(LSA_URL)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(async (s) => {
-        if (s && !s.enabled) {
-          await fetch(LSA_URL, {
-            body: JSON.stringify({ ...ZEN_27B_TREE_PRESET, min_seq_len: 1024, top_k: 512, top_p: 128 }),
-            headers: { 'content-type': 'application/json' },
-            method: 'POST',
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   const isLoading = iamLoading && !loadingTimedOut;
   // A bundled window starts on its own index (windows/mod.rs `main_url`); that
   // is the app's front door, not an address of its own.
@@ -708,7 +692,8 @@ function Gate() {
     return null;
   }
   if (path === '/benchmark' || path === '/lsa') {
-    return <BenchmarkPage />;
+    // Benchmarks open from Settings > Advanced, so Back returns there.
+    return <BenchmarkPage onBack={() => window.history.pushState(null, '', '/settings/advanced')} />;
   }
   if (isSettings) {
     return (
