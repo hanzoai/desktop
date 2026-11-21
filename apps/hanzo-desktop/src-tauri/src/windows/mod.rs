@@ -25,7 +25,7 @@ impl Window {
 ///
 /// The window hosts hanzo.ai's app ITSELF (`src/host.tsx` mounts @hanzo/app),
 /// so it loads this repository's frontend and never hanzo.ai's dev server on
-/// :3000. A debug build loads the Vite server `tauri.conf.json`'s `devUrl`
+/// :3000. `tauri dev` loads the Vite server `tauri.conf.json`'s `devUrl`
 /// names; a bundled build loads the `frontendDist` the config ships. `path`
 /// is the address the app opens on, which is the app's own (`/chat`), not a
 /// page of the marketing site.
@@ -42,9 +42,14 @@ fn main_url(path: &str) -> tauri::WebviewUrl {
     tauri::WebviewUrl::App("index.html".into())
 }
 
-/// The Vite server a debug build is served from, or None in a bundled build.
+/// The Vite server `tauri dev` is served from, or None in a bundled build.
+///
+/// `dev`, not `debug_assertions`: a debug BUNDLE (`tauri build --debug`, which
+/// is also `pnpm e2e:build`) ships its frontend and has no Vite server to load,
+/// so its main window was a blank page; and its pages are only the app's own
+/// (the capabilities' `local`) when they come from the bundle.
 fn dev_base() -> Option<&'static str> {
-    if cfg!(debug_assertions) {
+    if cfg!(dev) {
         Some(option_env!("DEV_SERVER_URL").unwrap_or("http://localhost:1420"))
     } else {
         None
