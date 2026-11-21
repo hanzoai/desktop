@@ -602,13 +602,20 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
-  // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and
-  // focused. Signed out, it is the same as "Not now" (a guest, in Chat).
+  // Signed out, opening Chat from outside Welcome is the same as "Not now" (a
+  // guest). Signed in it changes nothing: a guest flag set then would make the
+  // person a guest after a later sign-out without their choosing it.
+  const signedIn = useRef(isAuthenticated);
+  signedIn.current = isAuthenticated;
+  const visit = () => {
+    if (signedIn.current) return;
+    stayGuest();
+    setVisiting(true);
+  };
+
+  // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
   const startChat = () => {
-    if (!isAuthenticated) {
-      stayGuest();
-      setVisiting(true);
-    }
+    visit();
     empty();
     window.history.pushState(null, '', '/chat');
     requestAnimationFrame(() => {
@@ -648,8 +655,7 @@ function Gate() {
 
     void safeListen<string>('navigate-to-path', (event) => {
       const target = typeof event.payload === 'string' && event.payload.startsWith('/') ? event.payload : '/chat';
-      stayGuest();
-      setVisiting(true);
+      visit();
       window.history.pushState(null, '', target);
     }).then((fn) => {
       unlistenNavigate = fn ?? undefined;
@@ -708,8 +714,7 @@ function Gate() {
           startSignIn();
         }}
         onBack={() => {
-          stayGuest();
-          setVisiting(true);
+          visit();
           window.history.pushState(null, '', '/chat');
         }}
       />
