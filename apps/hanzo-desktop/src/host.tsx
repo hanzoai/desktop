@@ -163,10 +163,10 @@ const IAM = {
 // in the browser instead.
 //
 // The app's own addresses this window has no page for (organization, billing,
-// usage, keys) are hanzo.ai's: they open there, in the system browser, and the
+// usage, keys, pricing) are hanzo.ai's: they open there, in the system browser, and the
 // window stays where it was. One rule here, where every move passes: the router
 // below and the rooms' own `go` alike.
-const WEB = /^\/(billing|usage|keys)(\/|$)|^\/settings\/organization(\/|$)/;
+const WEB = /^\/(billing|usage|keys|pricing)(\/|$)|^\/settings\/organization(\/|$)/;
 
 /** The hanzo.ai page an address of this window's names, or null for one the window draws. */
 export function onTheWeb(href: string): string | null {
@@ -190,6 +190,17 @@ for (const name of ['pushState', 'replaceState'] as const) {
     original(...args);
     window.dispatchEvent(new Event(MOVED));
   };
+}
+
+// A page load onto one of them (the guest Rail's "See plans and pricing" is
+// `location.assign('/pricing')`, not a push) takes the same rule: it opens there,
+// and the window shows Chat rather than an address it has no page for.
+{
+  const out = onTheWeb(window.location.href);
+  if (out) {
+    void openUrl(out);
+    window.history.replaceState(null, '', '/chat');
+  }
 }
 
 function subscribe(changed: () => void): () => void {

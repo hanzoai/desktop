@@ -4,6 +4,8 @@ import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const iam = vi.hoisted(() => ({ state: { isLoading: false, isAuthenticated: false, sdk: {} } }));
+// The window loads onto /pricing, as the guest Rail's Upgrade does (`location.assign`).
+vi.hoisted(() => window.history.replaceState(null, '', '/pricing'));
 // The network the host's fetch bridge wraps: offline. Set before host.tsx is imported, which is when it wraps.
 vi.hoisted(() => {
   window.fetch = (async () => {
@@ -56,6 +58,9 @@ vi.mock('../desktop-shortcuts', () => ({
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
 import { keychain } from '../keychain';
+
+// What host.tsx did with that page load, before any test clears the mock.
+const atLoad = { opened: vi.mocked(openUrl).mock.calls.map(([url]) => url), at: window.location.pathname };
 
 const GUEST = 'hanzo:guest';
 
@@ -130,7 +135,11 @@ describe('Host', () => {
     });
   });
 
-  it.each(['/settings/organization', '/settings/organization/members', '/billing', '/usage', '/keys'])(
+  it('a page load onto /pricing opens hanzo.ai’s pricing in the browser and shows Chat', () => {
+    expect(atLoad).toEqual({ opened: ['https://hanzo.ai/pricing'], at: '/chat' });
+  });
+
+  it.each(['/settings/organization', '/settings/organization/members', '/billing', '/usage', '/keys', '/pricing'])(
     '%s opens on hanzo.ai in the browser, and the window stays where it was',
     (address) => {
       window.history.replaceState(null, '', '/chat');
