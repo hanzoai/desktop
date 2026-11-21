@@ -94,7 +94,7 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
-  it('opens the window’s Settings on Local models from any signed-out Settings door, and lets the app close its own pane', async () => {
+  it('opens the window’s Settings on Local AI & Engine from any signed-out Settings door, and lets the app close its own pane', async () => {
     await open('/chat');
     fireEvent.click(screen.getByText('welcome: not now'));
     expect(screen.getByText('the app')).toBeTruthy();
@@ -106,13 +106,13 @@ describe('Host', () => {
     act(() => {
       window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: true } }));
     });
-    expect(window.location.pathname).toBe('/settings/local-models');
+    expect(window.location.pathname).toBe('/settings/engine');
     expect(screen.getByText('Settings back')).toBeTruthy();
     window.history.replaceState(null, '', '/chat');
     act(() => {
       window.dispatchEvent(new CustomEvent('hanzo:anon-settings'));
     });
-    expect(window.location.pathname).toBe('/settings/local-models');
+    expect(window.location.pathname).toBe('/settings/engine');
   });
 
   it('clears an old guest flag once signed in, so a later sign-out opens on Welcome', async () => {

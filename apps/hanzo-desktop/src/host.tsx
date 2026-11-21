@@ -121,7 +121,7 @@ if (window.location.pathname === '/' || window.location.pathname === '/index.htm
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
 // page and need none. The bar drags the window; its controls are TopRightControls.
-// Local models are reached from Settings > Local models and from a signed-out
+// Local models are reached from Settings > Local AI & Engine and from a signed-out
 // answer that needs one (the Local AI screen, local-ai.tsx), not from the bar.
 const MAC = /Mac/.test(navigator.userAgent);
 // The focused pages (Gate's sheets: organization, plan) carry their own header,
