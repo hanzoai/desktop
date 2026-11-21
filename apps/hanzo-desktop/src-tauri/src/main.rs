@@ -42,9 +42,7 @@ use crate::commands::gpu::{
 use crate::commands::studio::{studio_get_state, studio_start, studio_stop, StudioManager};
 use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::mining::{
-    mining_get_balance, mining_get_enabled, mining_get_history, mining_get_local_pending,
-    mining_get_state, mining_get_wallet_address, mining_set_enabled, mining_set_privacy,
-    mining_start, mining_stop,
+    mining_get_enabled, mining_set_enabled,
 };
 use crate::commands::secure_storage::{
     init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
@@ -275,16 +273,8 @@ fn main() {
             register_sse_server_in_cursor,
             get_cursor_command_config_help,
             get_cursor_sse_config_help,
-            mining_get_state,
             mining_get_enabled,
             mining_set_enabled,
-            mining_start,
-            mining_stop,
-            mining_get_balance,
-            mining_get_wallet_address,
-            mining_get_history,
-            mining_get_local_pending,
-            mining_set_privacy,
             gpu_connect_get_state,
             gpu_connect_start,
             gpu_connect_stop,
@@ -459,9 +449,8 @@ fn main() {
                     // Mining uses this computer's power and electricity, so it
                     // runs only if the person turned it on (Settings > Advanced,
                     // `mining_set_enabled`); a new install is off. Then it resumes
-                    // at boot with the per-install dev wallet, which the frontend
-                    // re-homes to the user's wallet when it resolves. chain_id
-                    // 96369 is the precompile's brand-agnostic default.
+                    // at boot with the per-install dev wallet. chain_id 96369 is
+                    // the precompile's brand-agnostic default.
                     let mining_manager = app_handle.state::<std::sync::Arc<MiningManager>>();
                     if mining_manager.is_enabled() {
                         let wallet = mining_manager.ensure_dev_wallet();

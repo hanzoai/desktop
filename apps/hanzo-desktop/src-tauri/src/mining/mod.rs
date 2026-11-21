@@ -111,18 +111,9 @@ impl MiningManager {
         }
     }
 
-    pub async fn get_state(&self) -> MiningState {
-        self.state.read().await.clone()
-    }
-
-    pub async fn set_privacy(&self, privacy: PrivacyLevel) {
-        self.state.write().await.privacy = privacy;
-    }
-
     /// Phase-1 dev mining wallet: a stable, per-install EVM-style address
     /// persisted under the mining storage dir so accrued rewards survive
-    /// restarts. The frontend re-homes rewards to the user's connected wallet
-    /// once it resolves (the boot auto-start needs an address before then).
+    /// restarts. Phase 1 has no claim to a wallet the person holds yet.
     pub fn ensure_dev_wallet(&self) -> String {
         let path = self.storage_dir.join("wallet.addr");
         if let Ok(addr) = std::fs::read_to_string(&path) {
@@ -209,22 +200,6 @@ impl MiningManager {
 
     pub async fn stop_mining(&self) {
         self.state.write().await.is_mining = false;
-    }
-
-    pub async fn get_history(&self) -> Vec<ProofRecord> {
-        let wallet = self.state.read().await.wallet_address.clone();
-        if wallet.is_empty() {
-            return vec![];
-        }
-        read_history(&self.storage_dir, &wallet).unwrap_or_default()
-    }
-
-    pub async fn get_local_pending_wei(&self) -> String {
-        self.state.read().await.local_pending_wei.clone()
-    }
-
-    pub async fn get_wallet_address(&self) -> String {
-        self.state.read().await.wallet_address.clone()
     }
 }
 
