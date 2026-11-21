@@ -140,13 +140,16 @@ fn main() {
         // replacing the app with a web page.
         .plugin(
             tauri::plugin::Builder::<tauri::Wry>::new("away")
-                .on_navigation(|_, url| {
-                    let local = matches!(url.scheme(), "tauri" | "asset" | "ipc" | "data" | "blob" | "about")
-                        || matches!(url.host_str(), Some("tauri.localhost" | "ipc.localhost" | "localhost" | "127.0.0.1"));
-                    if !local {
+                .on_navigation(|_, url| match windows::navigate(url) {
+                    windows::Navigation::Stay => true,
+                    windows::Navigation::Browser => {
                         let _ = tauri_plugin_opener::open_url(url.as_str(), None::<&str>);
+                        false
                     }
-                    local
+                    windows::Navigation::Refuse => {
+                        log::warn!("refused a navigation of the window to {}", url.scheme());
+                        false
+                    }
                 })
                 .build(),
         )

@@ -50,6 +50,41 @@ fn dev_base() -> Option<&'static str> {
     }
 }
 
+/// What a top-level navigation of the window does: stay, go to the system
+/// browser, or nothing at all.
+#[derive(Debug, PartialEq)]
+pub enum Navigation {
+    Stay,
+    Browser,
+    Refuse,
+}
+
+/// Only the app's own origin stays in the window: `tauri://localhost` (macOS,
+/// Linux), `http(s)://tauri.localhost` (Windows), and in a dev build the dev
+/// server's origin. A registered scheme such as `hanzo-studio://localhost` is the
+/// app's own to Tauri, so it would load with every grant the window holds; any
+/// address that is not the app's is never a page here. A web address opens in the
+/// system browser; anything else is refused.
+pub fn navigation(url: &tauri::Url, dev: Option<&str>) -> Navigation {
+    let own = match (url.scheme(), url.host_str()) {
+        ("tauri", Some("localhost")) => url.port().is_none(),
+        ("http" | "https", Some("tauri.localhost")) => url.port().is_none(),
+        _ => dev.and_then(|d| tauri::Url::parse(d).ok()).is_some_and(|d| d.origin() == url.origin()),
+    };
+    if own {
+        Navigation::Stay
+    } else if matches!(url.scheme(), "http" | "https") {
+        Navigation::Browser
+    } else {
+        Navigation::Refuse
+    }
+}
+
+/// `navigation` for this build: the dev server is the app's own only under `tauri dev`.
+pub fn navigate(url: &tauri::Url) -> Navigation {
+    navigation(url, dev_base())
+}
+
 pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) -> tauri::Result<WebviewWindow> {
     let label = window_name.as_str();
     if let Some(window) = app_handle.get_webview_window(label) {
@@ -108,5 +143,33 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
                 Err(e)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{navigation, Navigation};
+
+    fn at(s: &str, dev: Option<&str>) -> Navigation {
+        navigation(&s.parse().unwrap(), dev)
+    }
+
+    #[test]
+    fn only_the_apps_own_origin_is_a_page_in_the_window() {
+        for own in ["tauri://localhost/chat", "http://tauri.localhost/settings", "https://tauri.localhost/"] {
+            assert_eq!(at(own, None), Navigation::Stay, "{own}");
+        }
+        assert_eq!(at("http://localhost:1420/chat", Some("http://localhost:1420")), Navigation::Stay);
+    }
+
+    #[test]
+    fn a_registered_scheme_or_another_local_address_never_loads_as_the_window() {
+        for scheme in ["hanzo-studio://localhost/v1/documents", "asset://localhost/x.html", "ipc://localhost/x", "data:text/html,x", "blob:tauri://localhost/x", "about:blank"] {
+            assert_eq!(at(scheme, Some("http://localhost:1420")), Navigation::Refuse, "{scheme}");
+        }
+        for web in ["http://localhost:1420/chat", "http://localhost:3000/", "http://127.0.0.1:8080/", "https://hanzo.ai/pricing", "http://tauri.localhost:9/x"] {
+            assert_eq!(at(web, None), Navigation::Browser, "{web}: not a dev build");
+        }
+        assert_eq!(at("http://localhost:3000/", Some("http://localhost:1420")), Navigation::Browser, "another port is not the dev server");
     }
 }
