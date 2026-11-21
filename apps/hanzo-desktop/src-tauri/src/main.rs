@@ -159,6 +159,7 @@ fn main() {
             report::report_redact,
             identity::identity_adopt,
             identity::identity_file,
+            identity::identity_forget,
             local_dev::dev_local_runtime,
             local_dev::dev_local_pairing,
             hardware_get_summary,

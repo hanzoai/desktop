@@ -36,7 +36,7 @@ vi.mock('@hanzo/iam/react', () => ({
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn(async () => null) }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: vi.fn() }));
 vi.mock('../../gui.config', () => ({ default: {} }));
-vi.mock('../identity', () => ({ adopt: vi.fn(async () => false), share: vi.fn() }));
+vi.mock('../identity', () => ({ adopt: vi.fn(async () => false), share: vi.fn(), forget: vi.fn(async () => undefined) }));
 vi.mock('../update', () => ({ Update: () => null }));
 vi.mock('../Welcome', () => ({
   Welcome: ({ onSkip }: { onSkip: () => void }) => (
@@ -60,9 +60,11 @@ vi.mock('../desktop-shortcuts', () => ({
   ),
 }));
 
+import { configure } from '@hanzo/app';
 import { empty } from '@hanzo/app/open';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
+import { forget } from '../identity';
 import { keychain } from '../keychain';
 
 // What host.tsx did with that page load, before any test clears the mock.
@@ -113,6 +115,12 @@ describe('Host', () => {
       window.dispatchEvent(new CustomEvent('hanzo:anon-settings'));
     });
     expect(window.location.pathname).toBe('/settings/local-models');
+  });
+
+  it('owns sign-out through the app’s one seam: configure({ signOut }) is forget, and nothing else is stated', () => {
+    const stated = vi.mocked(configure).mock.calls.map(([given]) => given);
+    expect(stated.filter((g) => 'signOut' in g).map((g) => g.signOut)).toEqual([forget]);
+    expect(stated.some((g) => 'track' in g)).toBe(false);
   });
 
   it('clears an old guest flag once signed in, so a later sign-out opens on Welcome', async () => {

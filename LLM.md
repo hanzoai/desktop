@@ -140,6 +140,22 @@ owns:
   there (`identity_file`), so a sign-in here is a sign-in there and the reverse. No
   token in localStorage, so the rooms are told where it is
   (`configure({ session: keychain })`).
+- **Log out is the host's**: `configure({ signOut })` is identity.ts `forget`. The
+  app awaits it on every sign-out the person chooses (the account menu's Log out,
+  Sign out of all accounts, the palette's Log out, Sign out <name> on the account
+  in use), before it ends IAM's session or moves the page, and never when a token
+  expires. `identity_forget` first removes the identity from the shared files on
+  this computer at once, never waiting on the network, then revokes its refresh
+  token at the issuer within 3 seconds (inside the app's 5-second `PATIENCE`); it
+  resolves when the server confirmed and otherwise rejects with a plain reason, so
+  the app's note says the server could not confirm it. Either way a relaunch
+  adopts nobody. `signout.test.tsx` drives the app's own hooks: both paths, a
+  failing and a hanging forget (still signed out, with the note), and the app's
+  expiry handling (no forget).
+- **The browser's own hanzo.ai session is left alone.** It is the person's
+  browser, separate from this app. The window never opens hanzo.ai's end-session
+  page: on a `localhost` / `*.localhost` origin the app's `endsAt()` names no
+  issuer, so a sign-out lands on the window's own `/`, which reloads onto Welcome.
 - **Proving the packaged app on Linux**: unpack the `.deb` and drive
   `usr/bin/hanzo-desktop` through `tauri-driver` + `WebKitWebDriver` under
   `xvfb-run`, inside `dbus-run-session` with `gnome-keyring-daemon --unlock
@@ -775,7 +791,7 @@ root.
 ## Desktop Architecture, Build & Keybindings (2026-11-19)
 - **Tauri Workspace Isolation (`apps/hanzo-desktop/src-tauri/Cargo.toml`)**: Includes `[workspace]` at the manifest root so Cargo never walks up to parent workspace manifests (`~/work/hanzo/Cargo.toml`) during `tauri build` or `tauri dev`.
 - **Dock Reopen (`apps/hanzo-desktop/src-tauri/src/main.rs`)**: `RunEvent::Reopen` delegates to `recreate_window(app_handle.clone(), Window::Main, true)` so reopening from the macOS Dock after closing (`⌘W`) mounts `index.html` (`main_url("/chat")`) with microphone permissions enabled rather than raw `localhost:3000`.
-- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.157.patch`)**:
+- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.160.patch`)**:
   - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).

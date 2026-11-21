@@ -173,6 +173,7 @@
     "allow-engines-discover",
     "allow-hardware-get-summary",
     "allow-iam-loopback",
+    "allow-identity-forget",
     "allow-report-redact",
     "allow-local-models-status",
     "allow-local-models-pull",

@@ -14,7 +14,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import config from '../gui.config';
 import { Crash } from './crash';
 import { DesktopSettings, windowKey } from './desktop-shortcuts';
-import { adopt, share } from './identity';
+import { adopt, forget, share } from './identity';
 import { keychain } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
@@ -57,6 +57,11 @@ configure({
   // The session is in the keychain, never the webview's localStorage: the rooms
   // read the token, its expiry and its claims there.
   session: keychain,
+  // The host's own leaving, which the app awaits on every sign-out the person
+  // chooses, before it ends the session and moves the page, and never on a token
+  // that expired: this window's identity is revoked and forgotten in the shared
+  // store, or the next launch would sign the person straight back in.
+  signOut: forget,
   // Dev's runtime is the Dev server on this computer (src-tauri local_dev.rs): the address it
   // published, and a one-time pairing credential its CLI issues for each session.
   runtime: async () => {

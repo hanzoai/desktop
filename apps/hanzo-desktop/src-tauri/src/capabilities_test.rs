@@ -25,6 +25,7 @@ fn no_remote_origin_reaches_anything_and_the_window_reaches_its_own() {
     for cmd in [
         "identity_adopt",
         "identity_file",
+        "identity_forget",
         "iam_loopback",
         "report_redact",
         "mining_get_enabled",

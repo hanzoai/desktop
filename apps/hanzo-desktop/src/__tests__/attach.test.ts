@@ -1,5 +1,5 @@
 /**
- * Attaching a file through the PATCHED @hanzo/app pane (patches/@hanzo__app@0.3.157.patch):
+ * Attaching a file through the PATCHED @hanzo/app pane (patches/@hanzo__app@0.3.160.patch):
  * signed out, the file is read in the window; signed in, it goes to the workspace upload.
  * Before the patch's local-read hunk was restored, hold() passed an undefined `org` to
  * transfer(), so every attachment threw `ReferenceError: org is not defined`.
