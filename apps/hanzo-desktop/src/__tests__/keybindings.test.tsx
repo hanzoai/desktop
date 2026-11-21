@@ -1,5 +1,6 @@
 import { KEYS, asked } from '@hanzo/app/help';
-import { summons } from '@hanzo/app/seek';
+import { handle } from '@hanzo/app/keys';
+import * as keymap from '@hanzo/dev-core/keymap';
 import { chord } from '@hanzo/app/chord';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { GuiProvider } from '@hanzo/gui';
@@ -35,6 +36,7 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
@@ -62,20 +64,31 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   });
 
   it('recognizes palette (⌘K), shortcuts dialog (⌘/), and conversation chords (⌃⌥R / ⌃⌥P)', () => {
+    // ⌘K is @hanzo/app's one key handler (keys.js `handle`, over Dev's keymap); seek.js's
+    // `summons` is gone from 0.3.149. The keymap reads "mod" from the platform: a Mac here.
+    vi.spyOn(navigator, 'platform', 'get').mockReturnValue('MacIntel');
+    const find = vi.fn();
     expect(
-      summons({
-        defaultPrevented: false,
-        metaKey: true,
-        ctrlKey: false,
-        altKey: false,
-        shiftKey: false,
-        repeat: false,
-        isComposing: false,
-        key: 'k',
-        code: 'KeyK',
-        target: null,
-      } as unknown as Parameters<typeof summons>[0]),
+      handle(
+        {
+          defaultPrevented: false,
+          metaKey: true,
+          ctrlKey: false,
+          altKey: false,
+          shiftKey: false,
+          repeat: false,
+          isComposing: false,
+          key: 'k',
+          code: 'KeyK',
+          target: document.body,
+          preventDefault: vi.fn(),
+        } as unknown as Parameters<typeof handle>[0],
+        { find, newChat: vi.fn(), sidebar: vi.fn(), settings: vi.fn(), desktop: true },
+        (s) => s,
+        keymap,
+      ),
     ).toBe(true);
+    expect(find).toHaveBeenCalledTimes(1);
 
     expect(
       asked({
