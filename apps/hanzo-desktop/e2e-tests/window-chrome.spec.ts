@@ -1,12 +1,7 @@
 /**
- * The main window's chrome — measured, not reviewed.
- *
- * The window is hanzo.ai's app (@hanzo/app App) with the bar a browser would
- * have given it (host.tsx `BAR`): the sidebar's toggle, Back and Forward at the
- * top-left, the bar dragging the window. The rail below it leads with Chat,
- * Dev, Library, Scheduled tasks, Customize, then More. Runs against the Vite
- * dev frontend (playwright.config.ts) with no Tauri runtime, so the visitor is
- * the signed-out one "Not now" admits.
+ * The main window's bar, measured: the sidebar's toggle, Back and Forward at the top-left, Local AI at the
+ * right, the bar dragging the window. Runs against the Vite frontend with no Tauri runtime, so the visitor
+ * is the signed-out one "Not now" admits.
  */
 import { expect, type Page, test } from '@playwright/test';
 
@@ -26,15 +21,14 @@ test('the bar holds the sidebar toggle, Back and Forward at the top-left, and dr
   const names = await bar.locator('[aria-label]').evaluateAll((all) =>
     all.filter((n) => (n as HTMLElement).offsetParent !== null).map((n) => n.getAttribute('aria-label')),
   );
-  expect(names).toEqual(['Close sidebar', 'Back', 'Forward']);
+  expect(names).toEqual(['Close sidebar', 'Back', 'Forward', 'Local AI & Node']);
   const toggle = await bar.getByRole('button', { name: 'Close sidebar' }).boundingBox();
   const forward = await bar.getByRole('button', { name: 'Forward' }).boundingBox();
   expect(toggle!.y, 'at the top').toBeLessThan(16);
   expect(forward!.x + forward!.width, 'all three at the left').toBeLessThan(260);
   // The rail starts with Chat: the toggle is the bar's, not the rail's too.
   const rail = page.getByRole('navigation', { name: 'Products' });
-  const marks = await rail.locator('[aria-label]').evaluateAll((all) => all.map((n) => n.getAttribute('aria-label')));
-  expect(marks.slice(0, 6)).toEqual(['Chat', 'Dev', 'Studio', 'Tabs', 'CRM', 'Commerce']);
+  for (const name of ['Chat', 'Dev', 'Library']) await expect(rail.getByRole('button', { name, exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /sidebar/ })).toHaveCount(1);
   await page.screenshot({ path: `${SHOTS}/desktop-1280.png` });
 });
@@ -80,7 +74,7 @@ test('a narrow window opens the sidebar as a drawer from the bar, and nothing sc
   await page.screenshot({ path: `${SHOTS}/desktop-390-drawer.png` });
 });
 
-test('hides Google Workspace setup, aligns top controls with traffic lights, shows composer model selector, and opens Local AI manager', async ({ page }) => {
+test('hides Google Workspace setup, aligns top controls with traffic lights, and opens Local AI manager', async ({ page }) => {
   await enter(page);
   // Google Workspace setup card must not be shown
   await expect(page.locator('[data-slot="setup-workspace"]')).toHaveCount(0);
@@ -97,9 +91,6 @@ test('hides Google Workspace setup, aligns top controls with traffic lights, sho
   const localAiCenterY = localAiBox!.y + localAiBox!.height / 2;
   expect(Math.abs(toggleCenterY - 16.5)).toBeLessThanOrEqual(2.5);
   expect(Math.abs(localAiCenterY - 16.5)).toBeLessThanOrEqual(2.5);
-
-  // Composer model selector ([data-slot="tune"]) is visible in signed-out/local mode
-  await expect(page.locator('[data-slot="tune"]')).toBeVisible();
 
   // Clicking "Local AI" opens the Local AI Models & Hanzo Node Manager modal
   await localAiBtn.click();

@@ -1,10 +1,4 @@
-/**
- * The bar's update mark, exercised through the plugin calls it makes.
- *
- * Nothing shows until the feed names a newer version; then one quiet line;
- * one press installs it and opens Hanzo again, and a failure is said and can be
- * pressed again. The Tauri plugins are the boundary and are replaced here.
- */
+/** The bar's update mark through the plugin calls it makes; the Tauri plugins are replaced. */
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -43,10 +37,10 @@ const mount = () =>
     </GuiProvider>,
   );
 
-/** Let the first check (15 s in) answer. */
+/** Let the first check answer. */
 async function opened() {
   await act(async () => {
-    await vi.advanceTimersByTimeAsync(15_000);
+    await vi.advanceTimersByTimeAsync(0);
   });
 }
 

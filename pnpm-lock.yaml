@@ -10,8 +10,8 @@ catalogs:
       specifier: 0.7.0
       version: 0.7.0
     '@hanzo/app':
-      specifier: 0.3.117
-      version: 0.3.117
+      specifier: 0.3.124
+      version: 0.3.124
     '@hanzo/brand':
       specifier: 1.4.8
       version: 1.4.8
@@ -556,7 +556,7 @@ overrides:
   yaml@2: '>=2.8.3'
 
 patchedDependencies:
-  '@hanzo/app@0.3.117': ce940d00ebbb521fcfb545f902082343da8205f9730acfe42a8fed50ea2761ef
+  '@hanzo/app@0.3.124': 40506f8fe3a51dcba8aca3f1f3bd80ecb917b76bff5596f902498d961c57ab71
   '@hanzo/studio@0.1.15': 817ae0169a4e5838aae68d3566da0daf75627679b5bad66049bb0fe88af97f0a
   '@hanzo/ui@8.33.6': 27de2b4513cb844e2ce60f1dd0977b32f388e070e726fd44f68985bc6cb9f293
   '@hanzogui/shell@8.4.3': bc6bb68834f778be4185df3076fce2a9ebe0ca820c582d4ef7226023abc8941d
@@ -570,7 +570,7 @@ importers:
         version: 0.7.0(react@19.2.8)
       '@hanzo/app':
         specifier: 'catalog:'
-        version: 0.3.117(patch_hash=ce940d00ebbb521fcfb545f902082343da8205f9730acfe42a8fed50ea2761ef)(1faf68140b4c5c5936a1efe4d7f6e2a9)
+        version: 0.3.124(patch_hash=40506f8fe3a51dcba8aca3f1f3bd80ecb917b76bff5596f902498d961c57ab71)(1faf68140b4c5c5936a1efe4d7f6e2a9)
       '@hanzo/appearance':
         specifier: 0.2.15
         version: 0.2.15(react@19.2.8)
@@ -1786,8 +1786,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/app@0.3.117':
-    resolution: {integrity: sha512-Tl1HP0js2rucaGEy+cFwf9tGzzv+Fk7VaBs5KcF5rlyadth94nveeNwEUOcdDMfDGoT7lHMdSmesmztFR4wbAg==}
+  '@hanzo/app@0.3.124':
+    resolution: {integrity: sha512-gdbIHtugadowftrWNTxjALGkNEv5i/XPwNmXKV1q1yuhqrMnTdT9BXSK2C547MtUkvJqmUUpgZZ5bLapScs9Dw==}
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/ai': '>=0.7.0'
@@ -12617,7 +12617,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/app@0.3.117(patch_hash=ce940d00ebbb521fcfb545f902082343da8205f9730acfe42a8fed50ea2761ef)(1faf68140b4c5c5936a1efe4d7f6e2a9)':
+  '@hanzo/app@0.3.124(patch_hash=40506f8fe3a51dcba8aca3f1f3bd80ecb917b76bff5596f902498d961c57ab71)(1faf68140b4c5c5936a1efe4d7f6e2a9)':
     dependencies:
       '@hanzo/ai': 0.7.0(react@19.2.8)
       '@hanzo/appearance': 0.2.15(react@19.2.8)
