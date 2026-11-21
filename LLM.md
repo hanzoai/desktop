@@ -326,6 +326,24 @@ owns:
   into the same, so sign-out or checkout never replaces the app with a page.
 - **Look**: `gui.config.ts` is `@hanzo/ui/gui-config`'s `monochrome`, hanzo.ai's
   config, for every window; `main.tsx` loads hanzo.ai's stylesheets in its order.
+- **Both schemes**: `src/app.css` cuts the window's own skin (obsidian floor, one
+  sidebar surface) for the DARK scheme only, scoped `html:root:not(.t_light):not(.light)`;
+  light takes the app's own floor and card and a small block of `--desk-*` aliases.
+  Unscoped, the dark values dressed a system set to light too: the sidebar stayed
+  black under dark ink and every title in it but the lit one disappeared.
+  `e2e-tests/appearance.spec.ts` measures each sidebar title against what is painted
+  behind it (4.5:1) in both schemes. `src/desktop.css` is not imported by this window.
+- **Updates**: `src/update.tsx`, in the bar beside Local AI. Once the window is up
+  (15 s) and every 30 minutes it asks the feed (`plugins.updater`); with a newer
+  version the bar says "Update available" and nothing else moves. One press
+  downloads, installs, stops the node and relaunches (Windows' installer restarts
+  itself). A failed install says so and can be pressed again. The old banner lives
+  in the retired layout and is not mounted here.
+- **Developer mode**: the window's own `/settings` page (`DesktopSettings`) holds
+  the same switch as the account card, the palette (⌘K), ⌘⇧D and a run's menu:
+  `@hanzo/build/dev-mode`'s `hanzo.dev_mode`, off for a new person. The app's own
+  Settings pages are not reachable from this window, so a switch only drawn there
+  would not be found.
 
 The stack is pinned in `pnpm-workspace.yaml`'s catalog to the versions
 hanzo-inc/app pins. Move them together.
