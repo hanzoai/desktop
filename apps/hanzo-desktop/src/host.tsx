@@ -25,7 +25,7 @@ import {
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Update } from './update';
 import { Welcome } from './Welcome';
-import { awaitCallback, type Callback, SignInCancelled } from './lib/sign-in-attempt';
+import { awaitCallback, type Callback, finishAttempt, SignInCancelled } from './lib/sign-in-attempt';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -308,9 +308,11 @@ async function signIn(
   const callback = new URL(redirect);
   callback.searchParams.set('code', back.code);
   callback.searchParams.set('state', back.state);
-  await sdk.handleCallback(callback.href);
-  await share();
-  window.location.replace(onward());
+  await finishAttempt(signal, [
+    () => sdk.handleCallback(callback.href),
+    share,
+    () => window.location.replace(onward()),
+  ]);
 }
 
 function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {

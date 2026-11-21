@@ -72,3 +72,16 @@ export function awaitCallback({
       .then(undefined, (err: unknown) => finish(() => reject(err)));
   });
 }
+
+/**
+ * What happens once the browser came back: the code exchange, then handing the
+ * session over, then leaving the Welcome screen. Cancel can land during any of
+ * them (the exchange is a network call), so each runs only while the attempt is
+ * still wanted. A session the exchange already stored stays in IAM's storage.
+ */
+export async function finishAttempt(signal: AbortSignal | undefined, steps: Array<() => unknown>): Promise<void> {
+  for (const step of steps) {
+    if (signal?.aborted) throw new SignInCancelled();
+    await step();
+  }
+}
