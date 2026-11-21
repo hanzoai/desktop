@@ -683,12 +683,13 @@ repository, nothing sent to the platform. The window supplies four commands
 (`src-tauri/src/commands/local_workspace.rs`), each its own `allow-` entry in `capabilities/main.json`:
 
 - `local_workspace_open_dialog` — the OS folder dialog.
-- `local_workspace_discover` — the project folders found where people keep them (`~/Documents`, `Projects`,
-  `work`, `code`, ...: at most two folders down, never inside another project, never hidden or generated;
-  names and times only, no file is read), newest first, at most 50. The logic is the `hanzo-projects` crate
+- `local_workspace_discover` — the project folders found where people keep them (`~/code`, `~/dev`, `~/src`,
+  `~/Projects`, `~/work`, `~/git`, whichever exist: at most two folders down, never inside another project,
+  never hidden or generated; names and times only, no file is read), newest first, at most 50. Documents and
+  Desktop are deliberately not read (macOS asks permission the first time an app looks in them); a project
+  kept elsewhere is found once it has been opened in Hanzo. The logic is the `hanzo-projects` crate
   (`src-tauri/projects`); `desktopLocal()` asks once when Dev opens and merges the answer after the
-  folders Hanzo opened, so Auto has folders to pick from on a first run. On macOS the first look into
-  Documents and Desktop shows the system's own permission prompt.
+  folders Hanzo opened, so Auto has folders to pick from on a first run.
 - `local_workspace_run_dev` — runs the agent with `--color never --skip-git-repo-check -s workspace-write
   -C <folder> -o <file> -- <prompt>` and answers `{session_id, output, process, success}`: `output` is the
   agent's final message (`-o`, else stdout), `process` its log (stderr). `-s workspace-write` is passed
@@ -704,6 +705,16 @@ repository, nothing sent to the platform. The window supplies four commands
   downloads and says "Setting up Hanzo Dev on this computer…". One download at a time; a failure is a
   plain sentence the window shows as it is (no connection, a download that did not check out). Move the
   pin by changing `VERSION` and running `cargo test --manifest-path src-tauri/dev-agent/Cargo.toml`.
+- `local_dev_setup_cancel` — calls the first-run download off. It answers whether one was in flight (false: none,
+  or it had already arrived, since checking and unpacking are local and quick). A cancel stops the request or
+  the stream at once (every wait on the network also waits on the cancel), removes the partial file, and sends
+  no more `local-dev-setup`; the run that was waiting fails with exactly `Setup was cancelled.`
+  (`SETUP_CANCELLED`), which the window shows as "cancelled", not as an error to retry.
+- **Windows** is `dev-x86_64-pc-windows-msvc.exe.zip` (one file, a 370 MB `.exe`), unpacked to `dev.exe`; there
+  is no windows-arm64 asset in hanzoai/dev's release. The agent is started with `CREATE_NO_WINDOW`. Nothing
+  here is run on a Windows host: CI type-checks the pure crates (and their tests) for
+  `x86_64-pc-windows-msvc` (`hanzo.yml` `windows-cross-check`, `cargo check --tests`, no linker needed), and
+  the release lane's cross-build (cargo-xwin) compiles the app itself.
 
 Auto (the Folder pill) is `@hanzo/build` `route(folders, ask)`: the folder whose name the ask says, then the
 folders it sits in, else the folder used last; same words, same folder, a tie goes to the more recent. The
@@ -722,11 +733,15 @@ contract and the prompt the agent is given):
 - `local_site_capture(url, dir)` opens the site from this computer's connection (`fetch.rs`) and saves
   `<dir>/.hanzo/reference/` (`page.rs`): `page.html`, `text.md` (address, description, words in reading order,
   pictures), up to six `style-N.css`, and `screenshot.*` when a paired browser can take one. Each capture replaces
-  the last. **What it will open:** http and https only, no login in the address; any public address, and an
-  address on this computer only when the person typed `localhost` or a loopback address themselves. A private
-  network (10/8, 172.16/12, 192.168/16, link-local, carrier-grade NAT, IPv6 unique-local) is never opened, and a
-  redirect cannot reach anywhere the typed address could not: a name is resolved here, every address judged, and
-  the request pinned to the one that passed (so a name that answers a private address is refused too).
+  the last. **What it will open:** http and https only, no login in the address. Any public address; and an address on this
+  computer or a private network (`localhost`, a loopback address, 10/8, 172.16/12, 192.168/16, 100.64/10, IPv6
+  unique-local) **only when the person typed it themselves**, as a redesign of a local dev server needs: a bare
+  `192.168.1.5:3000` gets `http://`. A redirect from a public site never reaches a private address (each hop
+  is judged again, and what the page that was reached may ask for is judged by what the person typed), and a
+  public name that answers a private address (DNS rebinding) is refused; only `localhost` and `*.localhost` may
+  answer loopback, so a LAN host is typed as its number. Link-local (169.254/16, the cloud metadata address,
+  fe80::/10), unspecified, multicast, broadcast and reserved addresses are never opened, typed or not. A name is
+  resolved here, every address judged, and the request pinned to the one that passed.
   15 seconds, 5 MB a page, 600 KB a stylesheet, six redirects, HTML only. The picture is best effort over ZAP
   (`commands/browser.rs`: open the page in a tab, wait for `document.readyState`, `hanzo.screenshot`, close the
   tab); no browser paired, or Windows (no ZAP bridge), means no picture and no failure.
@@ -742,8 +757,8 @@ contract and the prompt the agent is given):
 
 The agent is the ordinary `local_workspace_run_dev`: it reads `.hanzo/reference`, answers with a critique and writes
 static files into `redesign/`; the preview follows each file it saves, and later runs in that folder (Auto picks it
-next) show live in the same tab. Verify the Rust side with `cargo test --bin hanzo-desktop --no-default-features
-local_site` (the `machine` feature's own tests need an import the tree does not have yet).
+next) show live in the same tab. Verify the Rust side with `cargo test --bin hanzo-desktop local_site` (the whole
+default-feature suite compiles: `cargo test --bin hanzo-desktop`).
 
 ## Machines (Docker Desktop replacement)
 

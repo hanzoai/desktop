@@ -73,11 +73,22 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-env/Cargo.toml
-  # The project folders Auto can pick from (Documents, work, code, ...). Pure Rust.
+  # The project folders Auto can pick from (~/code, ~/dev, ~/src, ~/Projects, ~/work, ~/git). Pure Rust.
   - name: projects
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/projects/Cargo.toml
+  # Windows ships, and nothing in CI runs on a Windows host (the release lane cross-builds on Linux), so a
+  # cfg(windows) mistake in these crates (the `dev.exe` name, a `.zip` unpack, a path rule) would only show at
+  # release. `cargo check --tests` needs no linker and no C compiler, so it type-checks the crates and their
+  # tests for the Windows target here. node-secret is left out: its TLS dependency builds C and needs clang-cl.
+  - name: windows-cross-check
+    run: |
+      set -e
+      rustup target add x86_64-pc-windows-msvc
+      for crate in log-redact engine-bin dev-agent projects; do
+        cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
+      done
   # No secret-bearing value may be printed or logged from the Tauri crate:
   # whole-call (multiline) scan plus Debug-format of credential-like values.
   # The self-test proves the scanner still catches the shapes it must.
