@@ -1,18 +1,31 @@
 import { KEYS, asked } from '@hanzo/app/help';
 import { summons } from '@hanzo/app/seek';
 import { chord } from '@hanzo/app/chord';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { GuiProvider } from '@hanzo/gui';
 import { readFileSync } from 'fs';
+import type { ReactNode } from 'react';
 import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  createFnVoiceController,
-  createMicLeaseArbitrator,
   DESKTOP_GLOBAL_KEYS,
   DesktopSettings,
+  localModelsStatus,
+  platformOf,
+  shortcutGroups,
   windowKey,
 } from '../desktop-shortcuts';
+import config from '../../gui.config';
+
+/** A section's entry in the side nav (the phone-width chips repeat it). */
+const entry = (name: string) => within(screen.getAllByRole('navigation', { name: 'Settings' })[0]).getByText(name);
+
+const gui = (ui: ReactNode) => (
+  <GuiProvider config={config} defaultTheme="dark">
+    {ui}
+  </GuiProvider>
+);
 
 describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   beforeEach(() => {
@@ -21,6 +34,7 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
@@ -39,7 +53,11 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(macChords).toContain('⌘]');
 
     const globalChords = DESKTOP_GLOBAL_KEYS.map((k) => k.mac);
-    expect(globalChords).toEqual(['⇧⌘I', '⇧⌘J', 'Hold Fn', 'Double-tap Fn']);
+    // main.rs registers these two system-wide; Fn never reaches a window on
+    // Windows or Linux and is the Globe key on a Mac, so it is not listed.
+    expect(globalChords).toEqual(['⇧⌘I', '⇧⌘J']);
+    const all = shortcutGroups('mac').flatMap((g) => g.rows.flatMap((r) => r.keys));
+    expect(all.join(' ')).not.toMatch(/Fn/);
   });
 
   it('recognizes palette (⌘K), shortcuts dialog (⌘/), and conversation chords (⌃⌥R / ⌃⌥P)', () => {
@@ -97,84 +115,84 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     ).toBe('pin');
   });
 
-  it('arbitrates Hold Fn push-to-talk and Double-tap Fn continuous voice', () => {
-    let listening = false;
-    const start = vi.fn(() => {
-      listening = true;
-    });
-    const stop = vi.fn(() => {
-      listening = false;
-    });
-    const toggle = vi.fn(() => {
-      listening = !listening;
-    });
-
-    const fn = createFnVoiceController({
-      isListening: () => listening,
-      start,
-      stop,
-      toggle,
-      holdMs: 250,
-      doubleTapMs: 320,
-    });
-
-    // Single short tap does not trigger anything
-    fn.onKeyDown({ key: 'Fn', code: 'Fn', repeat: false });
-    vi.advanceTimersByTime(80);
-    fn.onKeyUp({ key: 'Fn', code: 'Fn' });
-    expect(start).not.toHaveBeenCalled();
-    expect(toggle).not.toHaveBeenCalled();
-
-    // Second tap within 320ms toggles hands-free continuous voice
-    vi.advanceTimersByTime(100);
-    fn.onKeyDown({ key: 'Fn', code: 'Fn', repeat: false });
-    vi.advanceTimersByTime(60);
-    fn.onKeyUp({ key: 'Fn', code: 'Fn' });
-    expect(toggle).toHaveBeenCalledTimes(1);
-    expect(listening).toBe(true);
-
-    // Reset to idle and test Hold Fn (>= 250ms) push-to-talk
-    listening = false;
-    vi.advanceTimersByTime(500);
-    fn.onKeyDown({ key: 'Fn', code: 'Fn', repeat: false });
-    vi.advanceTimersByTime(260);
-    expect(start).toHaveBeenCalledTimes(1);
-    expect(listening).toBe(true);
-
-    fn.onKeyUp({ key: 'Fn', code: 'Fn' });
-    expect(stop).toHaveBeenCalledTimes(1);
-    expect(listening).toBe(false);
-
-    fn.dispose();
-  });
-
-  it('renders DesktopSettings with Keyboard Shortcuts and returns on Escape or ⌘[', () => {
+  it('renders DesktopSettings: shortcuts, theme, and Back on Escape or ⌘[', () => {
     const onBack = vi.fn();
-    render(
-      <DesktopSettings
-        isAuthenticated={false}
-        onBack={onBack}
-        onSignIn={vi.fn()}
-      />,
-    );
+    window.history.replaceState(null, '', '/settings/shortcuts');
+    render(gui(<DesktopSettings isAuthenticated={false} onBack={onBack} onSignIn={vi.fn()} />));
 
     expect(screen.getByTestId('desktop-settings-page')).toBeTruthy();
-    expect(screen.getByText('Keyboard Shortcuts')).toBeTruthy();
-    expect(screen.getByText('Global Spotlight (system-wide)')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Keyboard shortcuts' })).toBeTruthy();
+    expect(screen.getByText('Hanzo Spotlight')).toBeTruthy();
+    expect(screen.getByText('Anywhere on this computer')).toBeTruthy();
 
-    // Toggle theme to light and back to dark
+    // Theme is Appearance's: one press there, and the document follows.
+    fireEvent.click(entry('Appearance'));
     fireEvent.click(screen.getByTestId('desktop-theme-light'));
     expect(document.documentElement.classList.contains('light')).toBe(true);
+    expect(screen.getByTestId('desktop-theme-light')).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(screen.getByTestId('desktop-theme-dark'));
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.documentElement.classList.contains('light')).toBe(false);
+    expect(window.localStorage.getItem('hanzo.appearance')).toContain('"dark"');
 
     // Escape triggers onBack
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
 
-    // ⌘[ also triggers onBack
+  it('spells every shortcut for the platform it runs on', () => {
+    expect(platformOf('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)')).toBe('mac');
+    expect(platformOf('Mozilla/5.0 (Windows NT 10.0; Win64; x64)')).toBe('other');
+    expect(platformOf('Mozilla/5.0 (X11; Linux x86_64)')).toBe('other');
+
+    const mac = shortcutGroups('mac');
+    const pc = shortcutGroups('other');
+    const keysOf = (groups: typeof mac, does: string) =>
+      groups.flatMap((g) => g.rows).find((r) => r.does === does)?.keys;
+    expect(keysOf(mac, 'New chat')).toEqual(['⌘N', '⌘⇧O']);
+    expect(keysOf(pc, 'New chat')).toEqual(['Ctrl+N', 'Ctrl+Shift+O']);
+    expect(keysOf(mac, 'Hanzo Spotlight')).toEqual(['⇧⌘J']);
+    expect(keysOf(pc, 'Hanzo Spotlight')).toEqual(['Ctrl+Shift+J']);
+    // No ⌘ anywhere a PC reader looks, and every app key is listed once.
+    expect(pc.flatMap((g) => g.rows.flatMap((r) => r.keys)).join(' ')).not.toMatch(/[⌘⌥⇧⌃]/);
+    expect(mac.flatMap((g) => g.rows).length).toBe(KEYS.length + DESKTOP_GLOBAL_KEYS.length);
+    expect(mac.at(-1)?.title).toBe('Anywhere on this computer');
+  });
+
+  it('shows the Back shortcut that works on this platform', () => {
+    const onBack = vi.fn();
+    render(gui(<DesktopSettings isAuthenticated onBack={onBack} onSignIn={vi.fn()} />));
+    // jsdom reads as Linux: Alt+← is Back there, ⌘[ is a Mac's.
     fireEvent.keyDown(window, { key: '[', metaKey: true });
-    expect(onBack).toHaveBeenCalledTimes(2);
+    expect(onBack).not.toHaveBeenCalled();
+    fireEvent.keyDown(window, { key: 'ArrowLeft', altKey: true });
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the local models status in one plain line', () => {
+    expect(localModelsStatus(null, null).label).toBe('Checking…');
+    expect(localModelsStatus(0, true)).toMatchObject({ label: 'Not set up' });
+    expect(localModelsStatus(0, false)).toMatchObject({ label: 'Not set up' });
+    expect(localModelsStatus(2, true)).toEqual({ label: 'Running', detail: 'The Hanzo engine is running with 2 models.' });
+    expect(localModelsStatus(1, false)).toEqual({ label: 'Ready', detail: '1 model on this computer can answer your chats.' });
+  });
+
+  it('keeps ports out of the Local models card and puts them under Advanced', async () => {
+    // Nothing local answers here, whatever this machine happens to be running.
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    window.history.replaceState(null, '', '/settings/local-models');
+    render(gui(<DesktopSettings isAuthenticated onBack={vi.fn()} onSignIn={vi.fn()} />));
+    const card = screen.getByTestId('desktop-local-models');
+    expect(card.textContent).not.toMatch(/36900|9630|127\.0\.0\.1|hanzod/);
+    expect(screen.getByRole('button', { name: 'Manage local models' })).toBeTruthy();
+    expect(await screen.findByText('Not set up')).toBeTruthy();
+
+    fireEvent.click(entry('Advanced'));
+    const advanced = screen.getByTestId('desktop-advanced');
+    expect(advanced.textContent).toMatch(/127\.0\.0\.1:9630/);
+    expect(advanced.textContent).toMatch(/localhost:36900/);
+    expect(screen.getByTestId('desktop-benchmarks')).toBeTruthy();
   });
 
   it('answers the window keys @hanzo/app leaves to it: ⌘N and ⌘⇧M', () => {
@@ -218,33 +236,5 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(pane).toContain('localText');
     expect(pane).not.toContain('Sign in to attach files');
     expect(setup).toContain('const workspace = false;');
-  });
-
-  it('arbitrates cross-window microphone lease so concurrent Hanzo apps never fight over the mic', () => {
-    const preemptA = vi.fn();
-    const preemptB = vi.fn();
-
-    const appA = createMicLeaseArbitrator({
-      instanceId: 'hanzo-app-a',
-      onPreempted: preemptA,
-      channelName: 'hanzo:voice:test-lease',
-    });
-    const appB = createMicLeaseArbitrator({
-      instanceId: 'hanzo-team-b',
-      onPreempted: preemptB,
-      channelName: 'hanzo:voice:test-lease',
-    });
-
-    appA.claim();
-    expect(appA.isHolding()).toBe(true);
-
-    // Simulate appB claiming the microphone — appA must release immediately
-    appA.handleIncoming({ type: 'claim', owner: 'hanzo-team-b' });
-    expect(preemptA).toHaveBeenCalledTimes(1);
-    expect(appA.isHolding()).toBe(false);
-    expect(preemptB).not.toHaveBeenCalled();
-
-    appA.dispose();
-    appB.dispose();
   });
 });

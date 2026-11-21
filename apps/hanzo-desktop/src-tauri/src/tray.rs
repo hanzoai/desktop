@@ -1,5 +1,5 @@
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+    menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
     Manager,
 };
@@ -17,17 +17,14 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .accelerator("CmdOrCtrl+Shift+J")
         .build(app)?;
 
-    let open_hanzo_node_manager_window_menu_item =
-        MenuItemBuilder::with_id("open_hanzo_node_manager_window", "Open").build(app)?;
-    let hanzo_node_manager_menu_item = SubmenuBuilder::new(app, "Hanzo Node Manager")
-        .item(&open_hanzo_node_manager_window_menu_item)
-        .build()?;
+    // No "Hanzo Node Manager" entry: hanzo-node no longer ships in this app
+    // (hanzo_node_manager.rs), so that window starts and stops nothing. Local
+    // models are managed from the main window's Local AI manager.
 
     let menu = MenuBuilder::new(app)
         .items(&[
             &show_menu_item,
             &team_menu_item,
-            &hanzo_node_manager_menu_item,
             &hanzo_spotlight_menu_item,
             &quit_menu_item,
         ])
@@ -58,9 +55,6 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
             }
             "team" => {
                 let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
-            }
-            "open_hanzo_node_manager_window" => {
-                let _ = recreate_window(tray.app_handle().clone(), Window::HanzoNodeManager, true);
             }
             "hanzo_spotlight" => {
                 let _ = recreate_window(tray.app_handle().clone(), Window::Spotlight, true);

@@ -1,160 +1,79 @@
 import { KEYS } from '@hanzo/app/help';
+import { apply, read, write, type Preference } from '@hanzo/appearance';
 import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
+import { Button, Kbd, Switch, Text, ToggleGroup, ToggleGroupItem, XStack, YStack } from '@hanzo/ui';
+import { Card, Group, Heading, Row, Settings } from '@hanzo/ui/settings';
+import { ArrowLeft } from '@hanzogui/lucide-icons-2';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
-import { openLocalAiManager } from './local-ai';
+import { LOCAL_MODELS_UPDATED_EVENT, openLocalAiManager, probeInstalledLocalModels } from './local-ai';
 
-export interface FnVoiceHooks {
-  isListening: () => boolean;
-  start: () => void;
-  stop: () => void;
-  toggle: () => void;
-  holdMs?: number;
-  doubleTapMs?: number;
-}
+export type Platform = 'mac' | 'other';
 
-export interface MicLeaseOptions {
-  instanceId: string;
-  onPreempted: () => void;
-  channelName?: string;
-}
+export const platformOf = (ua: string): Platform => (/Mac|iPhone|iPad/.test(ua) ? 'mac' : 'other');
 
 /**
- * Arbitrates microphone ownership across multiple open Hanzo Desktop / Web windows
- * via BroadcastChannel + storage events so concurrent apps never fight over the mic.
- * When one window claims the mic, any other window currently holding it receives
- * `onPreempted()` and releases its recorder immediately.
+ * The two system-wide keys main.rs registers (`super+shift+i|j` and
+ * `control+shift+i|j`, both on every platform). Hold / double-tap Fn is not
+ * here: Windows and Linux keyboards resolve Fn in firmware, so no key event ever
+ * reaches the window, and macOS gives a Fn (Globe) press to Dictation or the
+ * emoji picker by default. ⌘⇧M is the voice key.
  */
-export function createMicLeaseArbitrator(options: MicLeaseOptions) {
-  const channelName = options.channelName ?? 'hanzo:voice:lease';
-  let holding = false;
-  const bc =
-    typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(channelName) : null;
-
-  const handleIncoming = (msg: unknown) => {
-    if (!msg || typeof msg !== 'object') return;
-    const data = msg as { type?: string; owner?: string };
-    if (data.type === 'claim' && data.owner && data.owner !== options.instanceId && holding) {
-      holding = false;
-      options.onPreempted();
-    }
-  };
-
-  if (bc) {
-    bc.onmessage = (ev) => handleIncoming(ev.data);
-  }
-
-  const onStorage = (ev: StorageEvent) => {
-    if (ev.key !== channelName || !ev.newValue) return;
-    try {
-      handleIncoming(JSON.parse(ev.newValue));
-    } catch {}
-  };
-
-  if (typeof window !== 'undefined') {
-    window.addEventListener('storage', onStorage);
-  }
-
-  const claim = () => {
-    holding = true;
-    const payload = { type: 'claim', owner: options.instanceId, at: Date.now() };
-    bc?.postMessage(payload);
-    try {
-      window.localStorage.setItem(channelName, JSON.stringify(payload));
-    } catch {}
-  };
-
-  const release = () => {
-    holding = false;
-    const payload = { type: 'release', owner: options.instanceId, at: Date.now() };
-    bc?.postMessage(payload);
-  };
-
-  const isHolding = () => holding;
-
-  const dispose = () => {
-    holding = false;
-    bc?.close();
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('storage', onStorage);
-    }
-  };
-
-  return { claim, release, isHolding, handleIncoming, dispose };
-}
-
-/**
- * Arbitrates `Fn` key gestures for desktop voice input:
- * - Hold `Fn` (>= holdMs, default 250ms): starts push-to-talk on hold, stops on keyup.
- * - Double-tap `Fn` (two taps within doubleTapMs, default 320ms): toggles hands-free listening.
- */
-export function createFnVoiceController(hooks: FnVoiceHooks) {
-  const holdMs = hooks.holdMs ?? 250;
-  const doubleTapMs = hooks.doubleTapMs ?? 320;
-  let downAt = 0;
-  let holdTimer: ReturnType<typeof setTimeout> | null = null;
-  let heldActive = false;
-  let lastTapAt = 0;
-
-  const isFnKey = (e: Pick<KeyboardEvent, 'key' | 'code'>) =>
-    e.key === 'Fn' || e.code === 'Fn';
-
-  const onKeyDown = (e: Pick<KeyboardEvent, 'key' | 'code' | 'repeat'>) => {
-    if (!isFnKey(e) || e.repeat || downAt > 0) return;
-    downAt = Date.now();
-    heldActive = false;
-    holdTimer = setTimeout(() => {
-      holdTimer = null;
-      if (downAt > 0 && !hooks.isListening()) {
-        heldActive = true;
-        hooks.start();
-      }
-    }, holdMs);
-  };
-
-  const onKeyUp = (e: Pick<KeyboardEvent, 'key' | 'code'>) => {
-    if (!isFnKey(e) || downAt === 0) return;
-    const now = Date.now();
-    const elapsed = now - downAt;
-    downAt = 0;
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      holdTimer = null;
-    }
-    if (heldActive) {
-      heldActive = false;
-      if (hooks.isListening()) hooks.stop();
-      return;
-    }
-    if (elapsed < holdMs) {
-      if (now - lastTapAt <= doubleTapMs) {
-        lastTapAt = 0;
-        hooks.toggle();
-      } else {
-        lastTapAt = now;
-      }
-    }
-  };
-
-  const dispose = () => {
-    if (holdTimer) {
-      clearTimeout(holdTimer);
-      holdTimer = null;
-    }
-    downAt = 0;
-    heldActive = false;
-  };
-
-  return { onKeyDown, onKeyUp, dispose };
-}
-
 export const DESKTOP_GLOBAL_KEYS = [
-  { does: 'Global New Chat (system-wide)', mac: '⇧⌘I', pc: 'Ctrl+Shift+I' },
-  { does: 'Global Spotlight (system-wide)', mac: '⇧⌘J', pc: 'Ctrl+Shift+J' },
-  { does: 'Push-to-talk voice', mac: 'Hold Fn', pc: 'Hold Fn' },
-  { does: 'Hands-free voice toggle', mac: 'Double-tap Fn', pc: 'Double-tap Fn' },
+  { does: 'New chat', mac: '⇧⌘I', pc: 'Ctrl+Shift+I' },
+  { does: 'Hanzo Spotlight', mac: '⇧⌘J', pc: 'Ctrl+Shift+J' },
 ] as const;
+
+export interface ShortcutGroup {
+  title: string;
+  rows: { does: string; keys: string[] }[];
+}
+
+/**
+ * Every shortcut, grouped, spelled for one platform: @hanzo/app's KEYS (each
+ * answered where its comment in help.js says) and then the system-wide two.
+ * A row with alternatives ("⌘N / ⌘⇧O") becomes one keycap per alternative.
+ */
+export function shortcutGroups(platform: Platform): ShortcutGroup[] {
+  const spell = (k: { mac: string; pc: string }) => (platform === 'mac' ? k.mac : k.pc).split(' / ');
+  const groups: ShortcutGroup[] = [];
+  for (const k of KEYS) {
+    const title = String(k.group ?? 'General');
+    let g = groups.find((x) => x.title === title);
+    if (!g) groups.push((g = { title, rows: [] }));
+    g.rows.push({ does: String(k.does), keys: spell(k) });
+  }
+  groups.push({
+    title: 'Anywhere on this computer',
+    rows: DESKTOP_GLOBAL_KEYS.map((k) => ({ does: k.does, keys: spell(k) })),
+  });
+  return groups;
+}
+
+export interface LocalModelsStatus {
+  label: 'Checking…' | 'Not set up' | 'Ready' | 'Running';
+  detail: string;
+}
+
+const models = (n: number) => (n === 1 ? '1 model' : `${n} models`);
+
+/**
+ * The Local models card's one line, from what this computer answered: how many
+ * local models a local server lists (null while still asking), and whether the
+ * embedded Hanzo Engine itself is up. Running means the engine is serving them;
+ * Ready means another local server (Ollama, a custom engine) has them.
+ */
+export function localModelsStatus(count: number | null, engineUp: boolean | null): LocalModelsStatus {
+  if (count === null) return { label: 'Checking…', detail: 'Looking for models on this computer.' };
+  if (count === 0)
+    return {
+      label: 'Not set up',
+      detail: 'No model is installed on this computer yet. Add one to chat without signing in.',
+    };
+  if (engineUp) return { label: 'Running', detail: `The Hanzo engine is running with ${models(count)}.` };
+  return { label: 'Ready', detail: `${models(count)} on this computer can answer your chats.` };
+}
 
 /** What a key press asks of the window itself (`windowKey`). */
 export type WindowAct = 'new-chat' | 'voice';
@@ -181,6 +100,49 @@ export function windowKey(
   return null;
 }
 
+const SECTIONS = [
+  { id: 'appearance', label: 'Appearance', group: 'Hanzo Desktop' },
+  { id: 'shortcuts', label: 'Keyboard shortcuts', group: 'Hanzo Desktop' },
+  { id: 'local-models', label: 'Local models', group: 'Hanzo Desktop' },
+  { id: 'account', label: 'Account', group: 'Hanzo Desktop' },
+  { id: 'advanced', label: 'Advanced', group: 'Hanzo Desktop' },
+] as const;
+type Section = (typeof SECTIONS)[number]['id'];
+
+/** The section an address names (`/settings/advanced`), Appearance otherwise. */
+const sectionOf = (path: string): Section =>
+  SECTIONS.find((s) => path === `/settings/${s.id}`)?.id ?? 'appearance';
+
+const HANZOD_URL = 'http://127.0.0.1:9630';
+
+/** Is something answering? null while asking. */
+function useUp(ask: (signal: AbortSignal) => Promise<Response>): boolean | null {
+  const [up, setUp] = useState<boolean | null>(null);
+  useEffect(() => {
+    let live = true;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 1200);
+    ask(ctrl.signal)
+      .then((r) => live && setUp(r.ok))
+      .catch(() => live && setUp(false));
+    return () => {
+      live = false;
+      clearTimeout(timer);
+      ctrl.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return up;
+}
+
+const say = (up: boolean | null) => (up === null ? 'checking…' : up ? 'responding' : 'not responding');
+
+/**
+ * The window's own Settings: what is this computer's to decide. The account's
+ * own settings (billing, members, keys) are hanzo.ai's; this page links there.
+ * Drawn from @hanzo/ui's settings kit, so it reads as the app's other settings
+ * in either theme; addresses and ports are Advanced's alone.
+ */
 export function DesktopSettings({
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',
@@ -196,370 +158,268 @@ export function DesktopSettings({
   onSignIn: () => void;
   onBack: () => void;
 }) {
-  const apple = /Mac|iPhone|iPad/.test(navigator.userAgent);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() =>
-    document.documentElement.classList.contains('light') ? 'light' : 'dark',
-  );
-  const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
-  const [engineUp, setEngineUp] = useState<boolean | null>(null);
+  const platform = platformOf(navigator.userAgent);
+  const [section, setSection] = useState<Section>(() => sectionOf(window.location.pathname));
+  const [theme, setTheme] = useState<Preference['theme']>(() => read().theme ?? 'system');
   const [devMode, setDevMode] = useDevMode();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || (e.metaKey && e.key === '[')) {
-        e.preventDefault();
-        onBack();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onBack]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 1200);
-
-    fetch('http://127.0.0.1:9630/v1/chain/hanzo/rpc', {
+  const [count, setCount] = useState<number | null>(null);
+  const engineUp = useUp((signal) => fetch(`${localEngineUrl}/health`, { signal }));
+  const hanzodUp = useUp((signal) =>
+    fetch(`${HANZOD_URL}/v1/chain/hanzo/rpc`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }),
-      signal: ctrl.signal,
-    })
-      .then((r) => {
-        if (!cancelled) setHanzodUp(r.ok);
-      })
-      .catch(() => {
-        if (!cancelled) setHanzodUp(false);
-      });
+      signal,
+    }),
+  );
 
-    fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
-      .then((r) => {
-        if (!cancelled) setEngineUp(r.ok);
-      })
-      .catch(() => {
-        if (!cancelled) setEngineUp(false);
-      });
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-      ctrl.abort();
+  // Back is Escape, or the window's own Back (⌘[ on a Mac, Alt+← elsewhere).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const back =
+        e.key === 'Escape' ||
+        (platform === 'mac' ? e.metaKey && e.key === '[' : e.altKey && e.key === 'ArrowLeft');
+      if (!back) return;
+      e.preventDefault();
+      onBack();
     };
-  }, [localEngineUrl]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onBack, platform]);
 
-  const applyTheme = (next: 'dark' | 'light') => {
-    setTheme(next);
-    try {
-      window.localStorage.setItem('hanzo.appearance', JSON.stringify({ theme: next }));
-    } catch {}
-    document.documentElement.classList.remove('dark', 'light', 't_dark', 't_light');
-    document.documentElement.classList.add(next, `t_${next}`);
+  // The status line follows the Local AI manager: a model added there shows here.
+  useEffect(() => {
+    let live = true;
+    const probe = () =>
+      void probeInstalledLocalModels(true)
+        .then((found) => live && setCount(found.length))
+        .catch(() => live && setCount(0));
+    probe();
+    window.addEventListener(LOCAL_MODELS_UPDATED_EVENT, probe);
+    return () => {
+      live = false;
+      window.removeEventListener(LOCAL_MODELS_UPDATED_EVENT, probe);
+    };
+  }, []);
+
+  const pick = (id: Section) => {
+    setSection(id);
+    window.history.replaceState(null, '', `/settings/${id}`);
   };
 
+  const applyTheme = (next: string | string[]) => {
+    if (next !== 'system' && next !== 'light' && next !== 'dark') return;
+    const pref = { ...read(), theme: next } as Preference;
+    write(pref);
+    apply(pref);
+    setTheme(next);
+  };
+
+  const status = localModelsStatus(count, engineUp);
+
   return (
-    <div
-      data-testid="desktop-settings-page"
-      style={{
-        height: '100vh',
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        background: theme === 'light' ? '#fafafa' : '#09090b',
-        color: theme === 'light' ? '#09090b' : '#f4f4f5',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
-    >
-      <div
-        data-tauri-drag-region
-        style={{
-          height: 44,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingLeft: barInset + 12,
-          paddingRight: 16,
-          borderBottom: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-          flexShrink: 0,
-        }}
+    <YStack data-testid="desktop-settings-page" height="100vh" width="100vw" bg="$background">
+      <XStack
+        data-tauri-drag-region=""
+        height={44}
+        shrink={0}
+        items="center"
+        gap="$3"
+        pl={barInset + 12}
+        pr="$4"
+        borderBottomWidth={1}
+        borderColor="$borderColor"
       >
-        <button
-          type="button"
+        <Button
           data-testid="desktop-settings-back"
-          onClick={onBack}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
-            color: 'inherit',
-            borderRadius: 8,
-            padding: '4px 12px',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
+          size="sm"
+          variant="ghost"
+          startIcon={<ArrowLeft size={14} />}
+          onPress={onBack}
         >
-          ← Back to Hanzo
-        </button>
-        <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.8 }}>Hanzo Desktop Settings</div>
-        <div style={{ width: 96 }} />
-      </div>
+          Back
+        </Button>
+      </XStack>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 24px 48px' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <section
-            data-testid="desktop-dev-mode"
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-            }}
-          >
-            <div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Developer mode</h2>
-              <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>{DEV_MODE_NOTE}</p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={devMode}
-              aria-label="Developer mode"
-              data-testid="desktop-dev-mode-switch"
-              onClick={() => setDevMode(!devMode)}
-              style={{
-                flexShrink: 0,
-                width: 44,
-                height: 26,
-                borderRadius: 999,
-                border: 'none',
-                padding: 3,
-                display: 'flex',
-                justifyContent: devMode ? 'flex-end' : 'flex-start',
-                background: devMode ? (theme === 'light' ? '#18181b' : '#fafafa') : theme === 'light' ? '#d4d4d8' : '#3f3f46',
-                cursor: 'pointer',
-              }}
-            >
-              <span
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 999,
-                  background: devMode ? (theme === 'light' ? '#fafafa' : '#09090b') : theme === 'light' ? '#ffffff' : '#a1a1aa',
-                }}
-              />
-            </button>
-          </section>
-
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Appearance</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              Choose the workspace appearance for Hanzo Desktop.
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {(['dark', 'light'] as const).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  data-testid={`desktop-theme-${opt}`}
-                  onClick={() => applyTheme(opt)}
-                  style={{
-                    padding: '7px 16px',
-                    borderRadius: 999,
-                    border: `1px solid ${theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : '#3f3f46'}`,
-                    background: theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : 'transparent',
-                    color: theme === opt ? (theme === 'light' ? '#fafafa' : '#09090b') : 'inherit',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Local AI, Node & Engine</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              Manage local Zen / Qwen3+ weights, your embedded Hanzo Engine (:36900), and local hanzod validator (:9630).
-            </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
-              <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                hanzod (127.0.0.1:9630):{' '}
-                <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'not running'}</strong>
-              </span>
-              <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                Hanzo Engine (127.0.0.1:36900):{' '}
-                <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'not running'}</strong>
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('models')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Local Models
-              </button>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('node')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Local Node
-              </button>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('engine')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Embedded Engine
-              </button>
-            </div>
-          </section>
-
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Account & Cloud Organization</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              {isAuthenticated
-                ? 'Signed in to Hanzo Cloud. Manage billing, members, and API keys in your organization settings.'
-                : 'Running in Local AI guest mode. Sign in anytime to sync cloud projects, sandboxes, and frontier models.'}
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {isAuthenticated ? (
-                <button
-                  type="button"
-                  onClick={() => void openUrl(`${siteUrl}/settings`)}
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: 8,
-                    border: '1px solid #3f3f46',
-                    background: 'transparent',
-                    color: 'inherit',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Open Cloud Settings ↗
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onSignIn}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 999,
-                    border: 'none',
-                    background: theme === 'light' ? '#18181b' : '#fafafa',
-                    color: theme === 'light' ? '#fafafa' : '#09090b',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Sign in to Hanzo Cloud
-                </button>
-              )}
-            </div>
-          </section>
-
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600 }}>Keyboard Shortcuts</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[...KEYS.map((k) => ({ does: String(k.does), mac: k.mac, pc: k.pc })), ...DESKTOP_GLOBAL_KEYS].map(
-                (item) => (
-                  <div
-                    key={item.does}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 0',
-                      borderBottom: `1px solid ${theme === 'light' ? '#f4f4f5' : '#18181b'}`,
-                      fontSize: 13,
-                    }}
+      <Settings entries={SECTIONS} active={section} onPick={pick} title="Settings">
+        {section === 'appearance' ? (
+          <YStack gap="$5" data-testid="desktop-appearance">
+            <Heading title="Appearance" detail="How Hanzo looks on this computer." />
+            <Card>
+              <Row
+                first
+                title="Theme"
+                detail="System follows your computer's light or dark setting."
+                trailing={
+                  <ToggleGroup
+                    type="single"
+                    size="sm"
+                    variant="outline"
+                    disableDeactivation
+                    aria-label="Theme"
+                    value={theme}
+                    onValueChange={applyTheme}
                   >
-                    <span>{item.does}</span>
-                    <kbd
-                      style={{
-                        padding: '2px 8px',
-                        borderRadius: 6,
-                        border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
-                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                        fontSize: 12,
-                      }}
-                    >
-                      {apple ? item.mac : item.pc}
-                    </kbd>
-                  </div>
-                ),
+                    {(['system', 'light', 'dark'] as const).map((opt) => (
+                      <ToggleGroupItem key={opt} value={opt} data-testid={`desktop-theme-${opt}`}>
+                        <Text fontSize="$2">{opt === 'system' ? 'System' : opt === 'light' ? 'Light' : 'Dark'}</Text>
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                }
+              />
+            </Card>
+          </YStack>
+        ) : null}
+
+        {section === 'shortcuts' ? (
+          <YStack gap="$5" data-testid="desktop-shortcuts">
+            <Heading
+              title="Keyboard shortcuts"
+              detail={platform === 'mac' ? 'As they work on this Mac.' : 'As they work on Windows and Linux.'}
+            />
+            {shortcutGroups(platform).map((g) => (
+              <Group key={g.title} title={g.title}>
+                <Card>
+                  {g.rows.map((r, i) => (
+                    <Row
+                      key={r.does}
+                      first={i === 0}
+                      title={r.does}
+                      trailing={
+                        <XStack gap="$1.5" items="center" shrink={0}>
+                          {r.keys.map((k) => (
+                            <Kbd key={k}>{k}</Kbd>
+                          ))}
+                        </XStack>
+                      }
+                    />
+                  ))}
+                </Card>
+              </Group>
+            ))}
+          </YStack>
+        ) : null}
+
+        {section === 'local-models' ? (
+          <YStack gap="$5" data-testid="desktop-local-models">
+            <Heading
+              title="Local models"
+              detail="Models that run on this computer. Chats they answer do not leave it."
+            />
+            <Card>
+              <Row
+                first
+                title={status.label}
+                detail={status.detail}
+                trailing={
+                  <Button size="sm" variant="outline" onPress={() => openLocalAiManager('models')}>
+                    Manage local models
+                  </Button>
+                }
+              />
+            </Card>
+          </YStack>
+        ) : null}
+
+        {section === 'account' ? (
+          <YStack gap="$5" data-testid="desktop-account">
+            <Heading title="Account" />
+            <Card>
+              {isAuthenticated ? (
+                <Row
+                  first
+                  title="Signed in"
+                  detail="Billing, members and API keys are managed on the web."
+                  trailing={
+                    <Button size="sm" variant="outline" onPress={() => void openUrl(`${siteUrl}/settings`)}>
+                      Open account settings
+                    </Button>
+                  }
+                />
+              ) : (
+                <Row
+                  first
+                  title="Not signed in"
+                  detail="Sign in for cloud models and to keep your chats on every device."
+                  trailing={
+                    <Button size="sm" variant="primary" onPress={onSignIn}>
+                      Sign in
+                    </Button>
+                  }
+                />
               )}
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
+            </Card>
+          </YStack>
+        ) : null}
+
+        {section === 'advanced' ? (
+          <YStack gap="$5" data-testid="desktop-advanced">
+            <Heading title="Advanced" detail="For developers and for diagnosing problems." />
+            <YStack data-testid="desktop-dev-mode">
+              <Card>
+                <Row
+                  first
+                  title="Developer mode"
+                  detail={DEV_MODE_NOTE}
+                  trailing={
+                    <Switch
+                      aria-label="Developer mode"
+                      data-testid="desktop-dev-mode-switch"
+                      checked={devMode}
+                      onCheckedChange={(on: boolean) => setDevMode(on)}
+                    />
+                  }
+                />
+              </Card>
+            </YStack>
+            <Group title="Local services">
+              <Card>
+                <Row
+                  first
+                  mono
+                  title={`Hanzo Engine  ${localEngineUrl}`}
+                  detail={`OpenAI-compatible inference server: ${say(engineUp)} on /health.`}
+                  trailing={
+                    <Button size="sm" variant="outline" onPress={() => openLocalAiManager('engine')}>
+                      Engine settings
+                    </Button>
+                  }
+                />
+                <Row
+                  mono
+                  title={`hanzod  ${HANZOD_URL}`}
+                  detail={`Per-machine daemon (HIP-1330), JSON-RPC eth_blockNumber: ${say(hanzodUp)}.`}
+                  trailing={
+                    <Button size="sm" variant="outline" onPress={() => openLocalAiManager('node')}>
+                      Node settings
+                    </Button>
+                  }
+                />
+              </Card>
+            </Group>
+            <Group title="Diagnostics">
+              <Card>
+                <Row
+                  first
+                  title="Local engine benchmarks"
+                  detail="Throughput and D-LSA sparse-attention runs against the local engine."
+                  trailing={
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      data-testid="desktop-benchmarks"
+                      onPress={() => window.history.pushState(null, '', '/benchmark')}
+                    >
+                      Open benchmarks
+                    </Button>
+                  }
+                />
+              </Card>
+            </Group>
+          </YStack>
+        ) : null}
+      </Settings>
+    </YStack>
   );
 }
