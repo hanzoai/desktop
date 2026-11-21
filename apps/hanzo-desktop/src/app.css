@@ -73,6 +73,13 @@ html:root {
   height: 28px !important;
 }
 
+/* Folded, @hanzo/app 0.3 sizes the bar's start to the rail, which leaves no
+   room for the traffic lights' inset and the toggle, Back and Forward after it:
+   the start takes what they need, so they never sit over the page's title. */
+[data-slot='title-bar-start'] {
+  min-width: max-content !important;
+}
+
 [data-slot='title-bar'] > :nth-child(5) {
   margin-inline-end: 136px;
 }

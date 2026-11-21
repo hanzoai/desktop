@@ -11,6 +11,7 @@ import {
   createMicLeaseArbitrator,
   DESKTOP_GLOBAL_KEYS,
   DesktopSettings,
+  windowKey,
 } from '../desktop-shortcuts';
 
 describe('Hanzo Desktop & @hanzo/app keybindings', () => {
@@ -25,9 +26,9 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
     const macChords = KEYS.map((k) => k.mac);
     expect(macChords).toContain('⌘K');
-    expect(macChords).toContain('⌘N / ⇧⌘O');
+    expect(macChords).toContain('⌘N / ⌘⇧O');
     expect(macChords).toContain('⌘B');
-    expect(macChords).toContain('⇧⌘M');
+    expect(macChords).toContain('⌘⇧M');
     expect(macChords).toContain('⌘,');
     expect(macChords).toContain('⌘/');
     expect(macChords).toContain('⌘.');
@@ -176,17 +177,47 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(onBack).toHaveBeenCalledTimes(2);
   });
 
-  it('verifies patched @hanzo/app wires ⌘N, ⇧⌘O, ⌘B, ⇧⌘M, ⌘, and guest ⌘/ shortcuts', () => {
-    const appPath = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist/App.js');
-    const mePath = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist/Me.js');
-    const appJs = readFileSync(appPath, 'utf8');
-    const meJs = readFileSync(mePath, 'utf8');
+  it('answers the window keys @hanzo/app leaves to it: ⌘N and ⌘⇧M', () => {
+    const press = (key: string, more: Partial<KeyboardEvent> = {}) =>
+      windowKey({
+        key,
+        metaKey: false,
+        ctrlKey: false,
+        shiftKey: false,
+        altKey: false,
+        repeat: false,
+        isComposing: false,
+        defaultPrevented: false,
+        ...more,
+      });
+    expect(press('n', { metaKey: true })).toBe('new-chat');
+    expect(press('N', { ctrlKey: true })).toBe('new-chat');
+    expect(press('M', { metaKey: true, shiftKey: true })).toBe('voice');
+    expect(press('m', { ctrlKey: true, shiftKey: true })).toBe('voice');
+    // ⌘⇧O, ⌘B and ⌘, are @hanzo/app's own (keys.js); the window does not answer them twice.
+    expect(press('o', { metaKey: true, shiftKey: true })).toBeNull();
+    expect(press('b', { metaKey: true })).toBeNull();
+    expect(press('n')).toBeNull();
+    expect(press('n', { metaKey: true, altKey: true })).toBeNull();
+    expect(press('n', { metaKey: true, repeat: true })).toBeNull();
+    expect(press('n', { metaKey: true, isComposing: true })).toBeNull();
+    expect(press('n', { metaKey: true, defaultPrevented: true })).toBeNull();
+  });
 
-    expect(appJs).toContain("(bar && !e.shiftKey && lower === 'n')");
-    expect(appJs).toContain("(e.shiftKey && lower === 'o')");
-    expect(appJs).toContain("lower === 'b'");
-    expect(appJs).toContain("lower === 'm'");
-    expect(meJs).toContain('if (!host.person)\n        return _jsx(Shortcuts,');
+  it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
+    const dist = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist');
+    const chat = readFileSync(resolve(dist, 'Chat.js'), 'utf8');
+    const pane = readFileSync(resolve(dist, 'pane.js'), 'utf8');
+    const setup = readFileSync(resolve(dist, 'Setup.js'), 'utf8');
+
+    // The signed-out lane is the signed-in one (history, the picked model, no turn cap).
+    expect(chat).toContain('HANZO DESKTOP ANSWERS ITS SIGNED-OUT READER ITSELF');
+    expect(chat).toContain('const sent = anonymous ? wanted || ENSO : wanted;');
+    expect(chat).toContain('"Select / Download Local Model"');
+    // Files a signed-out reader attaches are read in the window, not refused.
+    expect(pane).toContain('localText');
+    expect(pane).not.toContain('Sign in to attach files');
+    expect(setup).toContain('const workspace = false;');
   });
 
   it('arbitrates cross-window microphone lease so concurrent Hanzo apps never fight over the mic', () => {

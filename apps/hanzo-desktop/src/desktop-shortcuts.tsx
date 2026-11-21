@@ -155,6 +155,31 @@ export const DESKTOP_GLOBAL_KEYS = [
   { does: 'Hands-free voice toggle', mac: 'Double-tap Fn', pc: 'Double-tap Fn' },
 ] as const;
 
+/** What a key press asks of the window itself (`windowKey`). */
+export type WindowAct = 'new-chat' | 'voice';
+
+/**
+ * The window's own keys, past the ones @hanzo/app answers (its keys.js: ⌘K,
+ * ⌘⇧O, ⌘B, ⌘, and the rest): ⌘N opens a new chat, as File ▸ New does in a
+ * desktop app, and ⌘⇧M turns the composer's microphone on and off. Ctrl on
+ * Windows and Linux. A press something already answered, a repeat, or one
+ * still composing a character is not a command. Both keys are in @hanzo/app's
+ * KEYS (patches/@hanzo__app@0.3.107.patch), so its shortcut list names them.
+ */
+export function windowKey(
+  e: Pick<
+    KeyboardEvent,
+    'key' | 'metaKey' | 'ctrlKey' | 'shiftKey' | 'altKey' | 'repeat' | 'isComposing' | 'defaultPrevented'
+  >,
+): WindowAct | null {
+  if (e.defaultPrevented || e.isComposing || e.repeat || e.altKey) return null;
+  if (!(e.metaKey || e.ctrlKey)) return null;
+  const key = (e.key ?? '').toLowerCase();
+  if (!e.shiftKey && key === 'n') return 'new-chat';
+  if (e.shiftKey && key === 'm') return 'voice';
+  return null;
+}
+
 export function DesktopSettings({
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',

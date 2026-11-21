@@ -1,12 +1,13 @@
-import { useEffect, useState, useSyncExternalStore, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
-import { App, type Bar } from '@hanzo/app/App';
+import { App, type Titlebar } from '@hanzo/app/App';
 import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
+import { Button, Text } from '@hanzo/ui';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -15,12 +16,14 @@ import {
   createFnVoiceController,
   createMicLeaseArbitrator,
   DesktopSettings,
+  windowKey,
 } from './desktop-shortcuts';
 import { keychain, open as openKeychain, written } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
+  openLocalAiManager,
 } from './local-ai';
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Welcome } from './Welcome';
@@ -57,23 +60,55 @@ configure({
   // The session is in the keychain, never the webview's localStorage: the rooms
   // read the token, its expiry and its claims there.
   session: keychain,
-  // THE WINDOW IS THE APP, so there is no site behind it to send a guest to:
-  // the rooms draw their one room (Chat's free lane) for a signed-out reader,
-  // and sign-in is one control in the app rather than a wall in front of it.
-  // Patched into @hanzo/app (patches/@hanzo__app@0.2.63.patch, Orgs.js).
-  guest: true,
-} as Parameters<typeof configure>[0]);
+});
+
+// THE WINDOW IS THE APP, so there is no site behind it to send a guest to: a
+// signed-out reader who chose "Not now" gets Chat, answered by the local engine
+// (the fetch bridge below), and sign-in is one control in the app rather than a
+// wall in front of it. @hanzo/app's Gate lets a reader without a session into
+// Chat when `__hanzoAnonChat` is set (`guest()`, `stayGuest()`) and the address
+// is /chat. A bundled window opens on its own index (windows/mod.rs `main_url`),
+// which is the app's front door, so that address is named for what it is.
+if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+  window.history.replaceState(null, '', `/chat${window.location.search}${window.location.hash}`);
+}
+
+/** The bar's own control: the local models and node (local-ai.tsx), from any page. */
+function LocalAi() {
+  return (
+    <Button
+      size="xs"
+      variant="outline"
+      data-slot="header-local-ai"
+      aria-label="Local AI & Node"
+      height={24}
+      px="$2.5"
+      rounded="$3"
+      onPress={() => openLocalAiManager('models')}
+    >
+      <Text fontSize="$1" fontWeight="600" color="$ink">
+        Local AI
+      </Text>
+    </Button>
+  );
+}
 
 // THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
 // the app draws the bar a browser would: the sidebar toggle, Back and Forward
 // through the router below. macOS paints its traffic lights over the page's
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
-// page and need none. The bar drags the window.
-const BAR: Bar = {
+// page and need none. The bar drags the window. Its controls are the window's:
+// Local AI, in place of the minimise, maximise and close a frameless window
+// would draw, which the native title bar already has.
+const BAR: Titlebar = {
   inset: /Mac/.test(navigator.userAgent) ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
+  controls: <LocalAi />,
 };
+
+/** The composer's microphone, on whatever page draws it. */
+const findMic = () => document.querySelector('button[data-state][aria-pressed]') as HTMLButtonElement | null;
 
 const IAM = {
   serverUrl: API,
@@ -470,21 +505,47 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
+  // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and
+  // focused. Signed out, it is the same as "Not now" (a guest, in Chat).
+  const startChat = () => {
+    if (!isAuthenticated) {
+      stayGuest();
+      setVisiting(true);
+    }
+    empty();
+    window.history.pushState(null, '', '/chat');
+    requestAnimationFrame(() => {
+      const field = document.querySelector('[data-slot="composer-field"], textarea') as HTMLElement | null;
+      field?.focus?.();
+    });
+  };
+  const started = useRef(startChat);
+  started.current = startChat;
+
+  // The window's own keys (desktop-shortcuts `windowKey`): ⌘N and ⌘⇧M.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const act = windowKey(e);
+      if (act === 'new-chat') {
+        e.preventDefault();
+        started.current();
+      } else if (act === 'voice') {
+        const mic = findMic();
+        if (!mic || mic.disabled) return;
+        e.preventDefault();
+        mic.click();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I and 'navigate-to-path' from Spotlight)
   useEffect(() => {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
 
-    void safeListen('create-chat', () => {
-      stayGuest();
-      setVisiting(true);
-      empty();
-      window.history.pushState(null, '', '/chat');
-      requestAnimationFrame(() => {
-        const field = document.querySelector('[data-slot="composer-field"], textarea') as HTMLElement | null;
-        field?.focus?.();
-      });
-    }).then((fn) => {
+    void safeListen('create-chat', () => started.current()).then((fn) => {
       unlistenCreate = fn ?? undefined;
     });
 
@@ -506,8 +567,6 @@ function Gate() {
   // Wire Desktop `Fn` key push-to-talk (hold Fn) and hands-free voice (double-tap Fn)
   // with cross-window / cross-app mic lease arbitration so multiple open Hanzo apps never fight over the mic.
   useEffect(() => {
-    const findMic = () =>
-      document.querySelector('button[data-state][aria-pressed]') as HTMLButtonElement | null;
     const instanceId = `${brand.brand}-${Math.random().toString(36).slice(2, 10)}`;
     const lease = createMicLeaseArbitrator({
       instanceId,
