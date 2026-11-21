@@ -24,7 +24,7 @@ const BRAND = (process.env.VITE_BRAND ?? 'hanzo') as Brand;
 // The canonical brand → IdP mapping, re-typed (not imported) so that editing the
 // table without updating the contract fails here.
 const EXPECTED = {
-  hanzo: { name: 'Hanzo', origin: 'https://hanzo.id', clientId: 'hanzo-app', redirectUri: 'http://127.0.0.1:1455/auth/callback' },
+  hanzo: { name: 'Hanzo', origin: 'https://hanzo.id', clientId: 'hanzo-app', redirectUri: 'http://127.0.0.1/callback' },
   lux: { name: 'Lux', origin: 'https://lux.id', clientId: 'lux-app', redirectUri: 'lux://oauth/lux' },
   zoo: { name: 'Zoo', origin: 'https://zoolabs.id', clientId: 'zoo-app', redirectUri: 'zoo://oauth/zoo' },
 } as const;

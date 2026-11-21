@@ -78,11 +78,11 @@ describe('brand identity', () => {
       // omits the scheme inherits the base one.
       const [scheme] = schemesOf(overlay) ?? schemesOf(base) ?? [];
       const { redirectUri } = getBrandFromHostname(host).iam;
-      // Hanzo's callback is the loopback listener (src-tauri/src/loopback.rs):
+      // Hanzo's callback is the loopback listener (src-tauri/src/loopback.rs, a port per sign-in):
       // `hanzo://` is also claimed by Hanzo Dev, so the browser could open it.
       expect(redirectUri).toBe(
         brand === 'hanzo'
-          ? 'http://127.0.0.1:1455/auth/callback'
+          ? 'http://127.0.0.1/callback'
           : `${scheme}://oauth/${brand}`,
       );
     },

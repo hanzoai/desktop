@@ -8,6 +8,7 @@ import { App, type Titlebar } from '@hanzo/app/App';
 import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
 import { Button, Text } from '@hanzo/ui';
+import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
@@ -28,7 +29,7 @@ import {
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Update } from './update';
 import { Welcome } from './Welcome';
-import { safeListen } from './utils/tauri-check';
+import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
 // at `/`, hosted here the way hanzo.ai and hanzo.team host the rooms. What is
@@ -242,22 +243,76 @@ function onward(): string {
   return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 }
 
+/** The IAM tokens the window holds, in the keys @hanzo/iam keeps them under. */
+const SESSION = {
+  access: 'hanzo_iam_access_token',
+  refresh: 'hanzo_iam_refresh_token',
+  id: 'hanzo_iam_id_token',
+  expires: 'hanzo_iam_expires_at',
+};
+
+type Tokens = { access_token: string; refresh_token?: string; id_token?: string };
+
 /**
- * Sign-in in the system browser, on the brand site's own page when it has one
- * (hanzo.ai/login), which finishes this app's authorize request; the code comes
- * back on the brand's deep link.
+ * One local identity (src-tauri/src/identity.rs): a sign-in here is filed where
+ * the Hanzo CLI keeps its own, and one the CLI already holds signs this window in
+ * with no browser. The refresh token has one holder, that file, so the window
+ * keeps the access token alone and asks for a fresh one when it runs out.
+ */
+async function adopt(): Promise<boolean> {
+  const held = await safeInvoke<Tokens | null>('identity_adopt');
+  if (!held) return false;
+  keychain.setItem(SESSION.access, held.access_token);
+  if (held.id_token) keychain.setItem(SESSION.id, held.id_token);
+  try {
+    const claims = JSON.parse(atob(held.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    keychain.setItem(SESSION.expires, String(claims.exp * 1000));
+  } catch {
+    // The SDK reads the expiry from the token itself when this is absent.
+  }
+  await written();
+  return true;
+}
+
+/** Hand what this window's sign-in returned to the shared identity, and keep none of its refresh token. */
+async function share(): Promise<void> {
+  const access = keychain.getItem(SESSION.access);
+  if (!access) return;
+  await invoke('identity_file', {
+    tokens: {
+      access_token: access,
+      refresh_token: keychain.getItem(SESSION.refresh) ?? undefined,
+      id_token: keychain.getItem(SESSION.id) ?? undefined,
+    },
+  });
+  keychain.removeItem(SESSION.refresh);
+  await written();
+}
+
+/**
+ * Sign-in in the system browser, as the Hanzo CLI signs in: a loopback port the
+ * system picks for this attempt is the redirect (RFC 8252 §7.3), and the page
+ * the browser opens is the brand's own (hanzo.ai/login), which finishes this
+ * app's authorize request. PKCE's verifier and the state stay in this window's
+ * storage, where the callback is read.
  */
 async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
+  const port = await invoke<number>('iam_loopback');
+  const redirect = `http://127.0.0.1:${port}/callback`;
+  // The SDK sends the redirect its configuration names at the code exchange, so
+  // it names this attempt's before the authorize request is built.
+  (sdk as unknown as { config: { redirectUri: string } }).config.redirectUri = redirect;
   const issuer = new URL(await sdk.getSigninUrl());
   const url = brand.iam.page ? `${brand.iam.page}${issuer.search}` : issuer.href;
   await new Promise<void>((resolve, reject) => {
     void safeListen<{ state: string; code: string }>(brand.iam.callbackEvent, (event) => {
-      const back = new URL(brand.iam.redirectUri);
+      const back = new URL(redirect);
       back.searchParams.set('code', event.payload.code);
       back.searchParams.set('state', event.payload.state);
       sdk
         .handleCallback(back.href)
         .then(() => written())
+        .then(share)
         .then(() => resolve(), reject);
     }).then(() => openUrl(url), reject);
   });
@@ -643,6 +698,19 @@ function Gate() {
       })
       .catch(() => {});
   }, []);
+
+  // A sign-in the CLI or the node already holds is this window's too. Asked once
+  // a minute at most, so a token the SDK refuses cannot reload the window forever.
+  useEffect(() => {
+    if (isAuthenticated || iamLoading) return;
+    const ASKED = 'hanzo.adopted';
+    const last = Number(window.sessionStorage.getItem(ASKED) ?? 0);
+    if (Date.now() - last < 60_000) return;
+    window.sessionStorage.setItem(ASKED, String(Date.now()));
+    void adopt().then((signedIn) => {
+      if (signedIn) window.location.reload();
+    });
+  }, [isAuthenticated, iamLoading]);
 
   const isLoading = iamLoading && !loadingTimedOut;
   // A bundled window starts on its own index (windows/mod.rs `main_url`); that

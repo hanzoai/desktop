@@ -40,6 +40,7 @@ tiny-keccak = { version = "2.0", features = ["keccak"] }
 opener = "0.7.2"
 hex = "0.4.3"
 base64 = "0.22.1"
+toml_edit = "0.25"
 time = "^0.3.36"
 listeners = "0.2"
 log = "0.4"

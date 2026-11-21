@@ -79,6 +79,7 @@ mod global_shortcuts;
 mod globals;
 mod hardware;
 mod local_hanzo_node;
+mod identity;
 mod loopback;
 #[cfg(feature = "machine")]
 mod machine;
@@ -206,6 +207,9 @@ fn main() {
         )
         .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
+            loopback::iam_loopback,
+            identity::identity_adopt,
+            identity::identity_file,
             hide_spotlight_window_app,
             show_spotlight_window_app,
             open_main_window_with_path_app,
@@ -383,7 +387,6 @@ fn main() {
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
-            loopback::serve(app.handle());
 
             // Native Hanzo Engine: manage the one shared orchestrator for both
             // the Tauri IPC commands and the `/v1/engine/*` HTTP management
