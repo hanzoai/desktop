@@ -449,6 +449,7 @@ impl<T: AsyncWrite + Unpin> Write for TokioIo<T> {
 
 #[cfg(all(test, unix))]
 mod tests {
+    use super::super::types::ExecStream;
     use super::*;
     use std::convert::Infallible;
     use std::sync::Arc;
