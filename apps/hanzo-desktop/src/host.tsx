@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
-import { GuiProvider } from '@hanzo/gui';
+import { GuiProvider, XStack } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Titlebar } from '@hanzo/app/App';
@@ -26,6 +26,7 @@ import {
   openLocalAiManager,
 } from './local-ai';
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
+import { Update } from './update';
 import { Welcome } from './Welcome';
 import { safeListen } from './utils/tauri-check';
 
@@ -100,11 +101,17 @@ function LocalAi() {
 // 78px clear there; Windows and Linux keep their native title bar above the
 // page and need none. The bar drags the window. Its controls are the window's:
 // Local AI, in place of the minimise, maximise and close a frameless window
-// would draw, which the native title bar already has.
+// would draw, which the native title bar already has, and, when there is a newer
+// version, the one quiet line that installs it (update.tsx).
 const BAR: Titlebar = {
   inset: /Mac/.test(navigator.userAgent) ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
-  controls: <LocalAi />,
+  controls: (
+    <XStack items="center" gap="$2">
+      <Update />
+      <LocalAi />
+    </XStack>
+  ),
 };
 
 /** The composer's microphone, on whatever page draws it. */

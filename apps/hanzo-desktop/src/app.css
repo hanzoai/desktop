@@ -14,7 +14,7 @@
  * it appends at runtime, after this sheet, so an equal selector would lose on
  * order alone. One extra type selector wins on specificity instead.
  */
-html:root {
+html:root:not(.t_light):not(.light) {
   /* Unified Hanzo Dev obsidian outer floor & inset rounded stage pane. */
   --pane-floor: #050505;
   --pane-fill: #0f0f12;
@@ -29,6 +29,19 @@ html:root {
 
   /* Surfaces inside the stage pane. */
   --desk-surface: #111114;
+}
+
+/* LIGHT: the same cut in the app's own light ground. The dark values above are
+   scoped to the dark scheme: left on `html:root` they also dressed a window
+   whose reader's system is light, so the sidebar stayed black under dark ink
+   and every title in it but the lit one disappeared. Here the sidebar and the
+   stage take the app's floor and card, and the hairlines go dark. */
+html:root.t_light,
+html:root.light {
+  --desk-panel: var(--pane-floor);
+  --desk-panel-lit: none;
+  --desk-panel-edge: var(--pane-edge, var(--border));
+  --desk-surface: var(--pane-fill, var(--card));
 }
 
 /* THE WINDOW has no lamp: pure obsidian #050505 floor. */
@@ -201,7 +214,7 @@ html:root {
 }
 
 /* THE COMPOSER: a shade of the sidebar's, darker than its ground. */
-html [data-slot='pane'] [data-slot='composer'] {
+html:root:not(.t_light):not(.light) [data-slot='pane'] [data-slot='composer'] {
   background-color: rgb(255 255 255 / 0.06) !important;
 }
 
