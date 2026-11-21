@@ -1,6 +1,6 @@
 //! Every fixture below is synthetic and assembled at run time, so no
 //! secret-shaped literal sits in the repository for scanners to trip on.
-use hanzo_log_redact::{redact, scrub_log_dir, scrub_log_file, StreamRedactor, REDACTED};
+use hanzo_log_redact::{redact, scrub_log_dir, scrub_log_file, REDACTED};
 use std::fs;
 
 /// A realistic PEM body line: 64 chars of mixed-case base64 with digits.
@@ -51,32 +51,6 @@ fn pem_with_escaped_newlines_is_redacted() {
     let msg = format!("PRIVATE_HTTPS_CERTIFICATE={}", fake_pem("PRIVATE KEY").replace('\n', "\\n"));
     let out = redact(&msg);
     assert_clean(&out);
-}
-
-#[test]
-fn pem_split_across_stderr_lines_is_suppressed() {
-    // A sidecar's stderr arrives one line per event: the BEGIN marker, then
-    // the base64 body, then END. No single line holds the whole block.
-    let mut r = StreamRedactor::new();
-    let mut logged = Vec::new();
-    let msg = format!("key_string: {}", fake_pem("PRIVATE KEY"));
-    for line in msg.lines() {
-        if let Some(l) = r.redact_line(line) {
-            logged.push(l);
-        }
-    }
-    let after = r.redact_line("[INFO][hanzo-node] Adding 8 Rust tools");
-    let joined = logged.join("\n");
-    assert_clean(&joined);
-    assert_eq!(after.as_deref(), Some("[INFO][hanzo-node] Adding 8 Rust tools"));
-}
-
-#[test]
-fn certificate_body_split_across_lines_is_not_logged() {
-    let mut r = StreamRedactor::new();
-    let msg = format!("cert_string: {}", fake_pem("CERTIFICATE"));
-    let out: Vec<String> = msg.lines().filter_map(|l| r.redact_line(l)).collect();
-    assert_clean(&out.join("\n"));
 }
 
 #[test]
@@ -259,33 +233,6 @@ fn tool_keys_and_paths_are_not_mistaken_for_secrets() {
     ] {
         assert_eq!(redact(l), l);
     }
-}
-
-#[test]
-fn sidecar_chunk_yields_only_redacted_lines_and_keeps_the_ready_line() {
-    // ProcessHandler logs each line and checks the ready signal on what this
-    // returns, so the ready-path log can never see a raw line.
-    let mut r = StreamRedactor::new();
-    let chunk = format!(
-        "key_string: {}\nlistening on http://127.0.0.1:3690\n",
-        fake_pem("PRIVATE KEY")
-    );
-    let lines = r.redact_chunk(&chunk);
-    assert_clean(&lines.join("\n"));
-    assert!(lines.iter().any(|l| l == "listening on http://127.0.0.1:3690"), "{lines:?}");
-}
-
-#[test]
-fn ready_line_after_split_pem_across_chunks_is_clean() {
-    let mut r = StreamRedactor::new();
-    let pem = format!("key_string: {}", fake_pem("PRIVATE KEY"));
-    let mut seen = Vec::new();
-    for l in pem.lines() {
-        seen.extend(r.redact_chunk(&format!("{l}\n")));
-    }
-    seen.extend(r.redact_chunk("listening on http://127.0.0.1:3690"));
-    assert_clean(&seen.join("\n"));
-    assert_eq!(seen.last().map(String::as_str), Some("listening on http://127.0.0.1:3690"));
 }
 
 #[test]

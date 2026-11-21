@@ -114,26 +114,8 @@ fn follow_package_json(path: &str) {
     );
 }
 
-/// The hanzo-node release the bundle carries: `HANZO_NODE_VERSION` in `pins`,
-/// the file download-binaries.sh fetches it by. The app reads it as
-/// `env!("HANZO_NODE_VERSION")` to give the node the env that release
-/// understands (hanzo-node-env), so moving the pin moves that env with it.
-fn pinned_node_version(path: &str) {
-    println!("cargo:rerun-if-changed={path}");
-    let pins = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"));
-    let version = pins
-        .lines()
-        .map(str::trim)
-        .find_map(|l| l.strip_prefix("HANZO_NODE_VERSION="))
-        .map(|v| v.trim().trim_matches('"'))
-        .filter(|v| !v.is_empty())
-        .unwrap_or_else(|| panic!("{path} sets no HANZO_NODE_VERSION"));
-    println!("cargo:rustc-env=HANZO_NODE_VERSION={version}");
-}
-
 fn main() {
     follow_package_json("../../../package.json");
-    pinned_node_version("pins");
     // fix for crashing bundle dmg/app on MACOS
     println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.13");
     println!("cargo:rerun-if-changed=src/main.rs");

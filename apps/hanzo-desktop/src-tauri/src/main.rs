@@ -34,7 +34,6 @@ mod identity;
 mod loopback;
 mod mining;
 mod report;
-mod models;
 mod studio_proxy;
 mod tray;
 mod windows;

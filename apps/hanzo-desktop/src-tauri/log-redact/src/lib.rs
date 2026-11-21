@@ -15,9 +15,9 @@
 //! * long hex (raw 32-byte+ secret keys) and long base58 (wallet keys);
 //! * runs of 12+ BIP-39 words (wallet mnemonics).
 //!
-//! [`StreamRedactor`] adds the one thing a per-line filter cannot see: a PEM
-//! block split across several stderr events. [`scrub_log_dir`] rewrites log
-//! files already on disk, so an upgrade also cleans what older builds wrote.
+//! [`scrub_log_dir`] rewrites log files already on disk, so an upgrade also
+//! cleans what older builds wrote; [`redact_report`] is the same redaction plus
+//! what is personal, for a report that leaves the computer.
 
 use coins_bip39::{English, Wordlist};
 use once_cell::sync::Lazy;
@@ -275,51 +275,6 @@ fn redact_mnemonics(s: Cow<'_, str>) -> Cow<'_, str> {
     }
     out.push_str(&s[last..]);
     Cow::Owned(out)
-}
-
-/// Line-at-a-time redaction for a sidecar's output stream. Suppresses every
-/// line between a PEM `BEGIN` and its `END` when they arrive as separate
-/// events, and applies [`redact`] to everything else. `None` means "drop the
-/// line".
-#[derive(Default)]
-pub struct StreamRedactor {
-    in_pem: Option<usize>,
-}
-
-impl StreamRedactor {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Redacts one output event (which may hold several lines) and returns
-    /// the lines that may be logged, already redacted. Callers log these and
-    /// run any further matching (e.g. a ready signal) on them, never on the
-    /// raw event.
-    pub fn redact_chunk(&mut self, chunk: &str) -> Vec<String> {
-        chunk.lines().filter_map(|l| self.redact_line(l)).collect()
-    }
-
-    pub fn redact_line(&mut self, line: &str) -> Option<String> {
-        if let Some(n) = self.in_pem {
-            if let Some(e) = line.find("-----END ") {
-                self.in_pem = None;
-                let tail = line[e + 9..].find("-----").map(|i| e + 9 + i + 5).unwrap_or(line.len());
-                let rest = line[tail..].trim();
-                return if rest.is_empty() { None } else { Some(redact(rest).into_owned()) };
-            }
-            self.in_pem = if n + 1 >= PEM_MAX_LINES { None } else { Some(n + 1) };
-            return None;
-        }
-        if let Some(b) = line.find("-----BEGIN ") {
-            if !line[b..].contains("-----END ") {
-                self.in_pem = Some(0);
-                let label = line[b + 11..].split("-----").next().unwrap_or("");
-                let prefix = redact(&line[..b]).into_owned();
-                return Some(format!("{prefix}-----BEGIN {label}----- {REDACTED}"));
-            }
-        }
-        Some(redact(line).into_owned())
-    }
 }
 
 static RECORD_PREFIX: Lazy<Regex> =

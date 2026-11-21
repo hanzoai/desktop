@@ -135,23 +135,6 @@ nvm use
 npm ci
 ```
 
-#### 2. Fetch the side binaries
-
-The app spawns a Hanzo Node beside itself, so the node binary and the embedding
-model have to be on disk before Tauri can bundle them. One command, every
-platform — it reads your OS and architecture, and takes the release from
-`apps/hanzo-desktop/src-tauri/pins`:
-
-```bash
-cd apps/hanzo-desktop && pnpm download-binaries
-```
-
-`pnpm dev` and `pnpm build` run it for you; the command above is for fetching
-ahead of time, or after changing the pin. To move to a different node release,
-edit `pins` — no other file names a version.
-
-### 📦 Essential Commands
-
 #### Development Server
 
 ```bash

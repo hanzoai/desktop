@@ -3,9 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "download-binaries": "cd src-tauri && ./download-binaries.sh",
-    "dev": "pnpm run download-binaries && vite",
-    "build": "pnpm run download-binaries && vite build",
+    "dev": "vite",
+    "build": "vite build",
     "build:ci": "vite build",
     "typecheck": "node ../../node_modules/typescript-7/bin/tsc --noEmit -p tsconfig.app.json",
     "preview": "vite preview",

@@ -69,26 +69,6 @@ jobs:
       - name: Toolchain and workspace
         run: scripts/release/prepare.sh ${{ matrix.rust_targets }}
 
-      - name: Sidecars and model
-        working-directory: apps/hanzo-desktop/src-tauri
-        run: |
-          set -euo pipefail
-          for t in ${{ matrix.rust_targets }}; do TARGET=$t ./download-binaries.sh; done
-
-          # Tauri wants one fat binary per sidecar, named -universal-apple-darwin; it
-          # does not join the slices itself. pins records that the x86_64 archive
-          # carries arm64 deno and uv: lipo refuses two slices of one architecture,
-          # and the arm64 binary stands alone, as it does in the archive.
-          if [ "${{ matrix.tauri_target }}" = "universal-apple-darwin" ]; then
-            for s in hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv; do
-              b=external-binaries/hanzo-node/$s
-              lipo -create "$b-aarch64-apple-darwin" "$b-x86_64-apple-darwin" -output "$b-universal-apple-darwin" 2>/dev/null \
-                || cp "$b-aarch64-apple-darwin" "$b-universal-apple-darwin"
-              chmod +x "$b-universal-apple-darwin"
-              lipo -info "$b-universal-apple-darwin"
-            done
-          fi
-
       - name: Signing key
         run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
 
