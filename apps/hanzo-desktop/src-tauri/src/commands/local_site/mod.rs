@@ -3,7 +3,7 @@
 //! A person pastes a site's address. The agent that rebuilds it works in a
 //! folder with no network, so the window does what the agent cannot:
 //!
-//!   `local_site_folder`   a new folder under Documents/Hanzo for the redesign
+//!   `local_site_folder`   a new folder under ~/Hanzo for the redesign
 //!   `local_site_capture`  open the site, save a copy of it for the agent
 //!                         (`page.rs`), and a picture of it from the person's own
 //!                         browser when one is paired
@@ -75,12 +75,12 @@ fn free_folder(base: &Path, name: &str) -> PathBuf {
         .expect("a name that is free")
 }
 
-/// The folder a redesign goes in: a new one under the person's Documents, in a folder called Hanzo.
+/// The folder a redesign goes in: a new one in a folder called Hanzo in the person's home folder (Documents is not read or written: macOS asks permission for it).
 /// It is named here and made when the site is saved (`local_site_capture`), so a site that will not open leaves nothing behind.
 #[tauri::command]
 pub async fn local_site_folder(name: String) -> Result<SiteFolder, String> {
-    let docs = dirs::document_dir().or_else(dirs::home_dir).ok_or("Hanzo could not find your Documents folder.")?;
-    let at = free_folder(&docs.join("Hanzo"), &name);
+    let home = dirs::home_dir().ok_or("Hanzo could not find your home folder.")?;
+    let at = free_folder(&home.join("Hanzo"), &name);
     Ok(SiteFolder {
         name: at.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
         path: at.to_string_lossy().into_owned(),

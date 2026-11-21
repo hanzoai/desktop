@@ -18,8 +18,22 @@ here=$(cd "$(dirname "$0")" && pwd)
 . "$here/gh.sh"
 
 rid=$1 tag=$2 version=$3
-assets=$(release_assets "$rid")
 out=$(mktemp -d)
+
+# GitHub computes an asset's digest after the upload, so an asset put a moment ago
+# (the other lane's last bundle) has none yet: wait for every one rather than fail
+# the lane that happened to finish second.
+tries=60 pause=10
+withdigest='select(.name != "SHA256SUMS" and .name != "latest.json")'
+for try in $(seq "$tries"); do
+  assets=$(release_assets "$rid")
+  jq -e "all(.[] | $withdigest; (.digest // \"\") | startswith(\"sha256:\"))" <<<"$assets" >/dev/null && break
+  [ "$try" -lt "$tries" ] || {
+    echo "manifest: no sha256 digest after $tries tries for: $(jq -r ".[] | $withdigest | select((.digest // \"\") == \"\") | .name" <<<"$assets" | tr '\n' ' ')" >&2
+    exit 1
+  }
+  sleep "$pause"
+done
 
 # SHA256SUMS from the digest GitHub computed for each asset: the sums describe the
 # bytes the release serves, and 3 GB is not downloaded to learn them.

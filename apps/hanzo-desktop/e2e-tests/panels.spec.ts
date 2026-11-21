@@ -12,7 +12,7 @@ async function enter(page: Page, width: number) {
   await page.setViewportSize({ width, height: 900 });
   await page.goto('/');
   await page.getByRole('button', { name: /Not now|Continue without login/ }).click();
-  await expect(page.locator('[data-slot="app-column"]')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('[data-slot="pane"]').first()).toBeVisible({ timeout: 30_000 });
 }
 
 const box = (page: Page, slot: string) =>
@@ -22,7 +22,7 @@ const box = (page: Page, slot: string) =>
   });
 
 for (const scheme of ['light', 'dark'] as const) {
-  for (const width of [1890, 1440, 768]) {
+  for (const width of [1890, 1440, 768, 390]) {
     test(`at ${width} in ${scheme}: one gap all round and one surface`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await enter(page, width);
@@ -31,6 +31,8 @@ for (const scheme of ['light', 'dark'] as const) {
       const above = chat.top - bar.bottom;
       const below = view.height - chat.bottom;
       expect(Math.abs(above - below), 'under the bar equals at the bottom').toBeLessThanOrEqual(1);
+      // A phone shows one panel, full-bleed: the sidebar is a drawer, so only the gap under the bar and at the foot are the same.
+      if (width < 768) return;
       expect(Math.abs(side.top - chat.top), 'the panels start together').toBeLessThanOrEqual(1);
       expect(Math.abs(side.bottom - chat.bottom), 'the panels end together').toBeLessThanOrEqual(1);
       expect(Math.abs(side.left - above), 'the sidebar stands that far from the window').toBeLessThanOrEqual(1);
