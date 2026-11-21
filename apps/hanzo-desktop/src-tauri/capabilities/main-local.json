@@ -1,0 +1,16 @@
+{
+  "identifier": "main-local",
+  "description": "The main window's own pages only, never the remote origins main.json lists: downloading, serving and removing models on this computer. A hanzo.ai page in the window must not be able to fill the disk or start a model. build.rs counts these as main's.",
+  "local": true,
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "allow-local-models-status",
+    "allow-local-models-pull",
+    "allow-local-models-cancel",
+    "allow-local-models-remove",
+    "allow-local-models-serve",
+    "allow-local-models-stop"
+  ]
+}

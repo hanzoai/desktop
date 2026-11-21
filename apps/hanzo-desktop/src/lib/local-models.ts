@@ -5,6 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
 import { isTauriAvailable } from '../utils/tauri-check';
+import sources from './local-sources.json';
 
 /** Where the served model answers (local_models.rs `PORT`). */
 export const LOCAL_ENGINE_URL = 'http://127.0.0.1:36900';
@@ -29,17 +30,10 @@ export interface LocalSource {
 // Only models whose weights the engine can fetch and load (safetensors, not
 // gated). Every other catalogue entry names an Ollama tag, which this app no
 // longer downloads from, so it is listed but cannot be downloaded yet.
-export const LOCAL_SOURCES: LocalSource[] = [
-  { tag: 'zen-nano:0.6b', repo: 'zenlm/zen-nano-0.6b', bytes: 1_208_033_536, title: 'Zen Nano', blurb: 'Small and quick. Good for short questions and drafts.' },
-  { tag: 'qwen3:0.6b', repo: 'Qwen/Qwen3-0.6B', bytes: 1_519_209_243, title: 'Qwen3 0.6B', blurb: 'Small general model from Alibaba. Quick, but makes more mistakes.' },
-  { tag: 'smollm2:360m', repo: 'HuggingFaceTB/SmolLM2-360M-Instruct', bytes: 727_119_969, title: 'SmolLM2 360M', blurb: 'Tiny and very fast. Fine for simple rewording, weak at facts.' },
-  { tag: 'smollm2:135m', repo: 'HuggingFaceTB/SmolLM2-135M-Instruct', bytes: 272_504_690, title: 'SmolLM2 135M', blurb: 'The smallest here. Mostly useful for testing.' },
-  { tag: 'qwen3:1.7b', repo: 'Qwen/Qwen3-1.7B', bytes: 4_079_450_110, title: 'Qwen3 1.7B', blurb: 'Better answers than the small models, needs more memory.' },
-  { tag: 'deepseek-r1:1.5b', repo: 'deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B', bytes: 3_561_268_789, title: 'DeepSeek R1 1.5B', blurb: 'Thinks step by step before answering. Slower.' },
-  { tag: 'smollm2:1.7b', repo: 'HuggingFaceTB/SmolLM2-1.7B-Instruct', bytes: 3_426_266_838, title: 'SmolLM2 1.7B', blurb: 'Balanced small model for everyday writing.' },
-  { tag: 'zen-agent:4b', repo: 'zenlm/zen-agent-4b', bytes: 8_060_913_184, title: 'Zen Agent', blurb: 'Tuned for multi-step tasks. Needs a computer with lots of memory.' },
-  { tag: 'qwen3:4b', repo: 'Qwen/Qwen3-4B', bytes: 8_060_926_626, title: 'Qwen3 4B', blurb: 'Strong general model. Needs a computer with lots of memory.' },
-];
+// The list is local-sources.json, which local_models.rs also compiles in
+// (`include_str!`): the app downloads, serves and lists only these, so the
+// window and the commands cannot disagree about what is offered.
+export const LOCAL_SOURCES: LocalSource[] = sources;
 
 export const sourceForTag = (tag: string) => LOCAL_SOURCES.find((s) => s.tag === tag);
 export const sourceForRepo = (repo: string) => LOCAL_SOURCES.find((s) => s.repo === repo);

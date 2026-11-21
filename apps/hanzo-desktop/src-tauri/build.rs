@@ -4,8 +4,9 @@
 //! manifest, Tauri v2 lets every window call every registered command.
 //!
 //! The list is read from `generate_handler![...]` in src/main.rs, the one place
-//! it is written. The build refuses a `main` capability that does not grant all
-//! of them, and any capability that names a command no handler serves.
+//! it is written. The build refuses a main window (`main` plus `main-local`)
+//! that is not granted all of them, and any capability that names a command no
+//! handler serves.
 
 use std::collections::BTreeSet;
 
@@ -62,8 +63,14 @@ fn granted(json: &str) -> BTreeSet<String> {
         .collect()
 }
 
+/// The main window's capabilities: `main.json`, and `main-local.json`, which
+/// grants to the window's own pages only (no remote origin) what a remote page
+/// must not reach. Together they must grant every command.
+const MAIN: [&str; 2] = ["main", "main-local"];
+
 fn check(commands: &[String]) {
     let known: BTreeSet<String> = commands.iter().map(|c| c.replace('_', "-")).collect();
+    let mut main_grants = BTreeSet::new();
     for entry in std::fs::read_dir("capabilities").expect("capabilities/") {
         let path = entry.expect("capability entry").path();
         if path.extension().and_then(|e| e.to_str()) != Some("json") {
@@ -77,14 +84,15 @@ fn check(commands: &[String]) {
             "{} grants commands no handler serves: {unknown:?}",
             path.display()
         );
-        if path.file_stem().and_then(|s| s.to_str()) == Some("main") {
-            let missing: Vec<_> = known.iter().filter(|c| !grants.contains(*c)).collect();
-            assert!(
-                missing.is_empty(),
-                "capabilities/main.json must grant every command the app registers; add allow-<name> for {missing:?}"
-            );
+        if path.file_stem().and_then(|s| s.to_str()).is_some_and(|s| MAIN.contains(&s)) {
+            main_grants.extend(grants);
         }
     }
+    let missing: Vec<_> = known.iter().filter(|c| !main_grants.contains(*c)).collect();
+    assert!(
+        missing.is_empty(),
+        "capabilities/main.json (or main-local.json) must grant every command the app registers; add allow-<name> for {missing:?}"
+    );
 }
 
 
