@@ -170,16 +170,25 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
 
   it('says the local models status in one plain line', () => {
     expect(localModelsStatus(null, null).label).toBe('Checking…');
-    expect(localModelsStatus(0, true)).toMatchObject({ label: 'Not set up' });
-    expect(localModelsStatus(0, false)).toMatchObject({ label: 'Not set up' });
+    expect(localModelsStatus(0, 'Zen Nano')).toMatchObject({ label: 'Not set up' });
+    expect(localModelsStatus(0, null)).toMatchObject({ label: 'Not set up' });
     // Downloaded models answer nothing without an engine, so that is said first.
-    expect(localModelsStatus(2, false, false)).toEqual({
+    expect(localModelsStatus(2, null, false)).toEqual({
       label: 'Not set up',
       detail: 'Hanzo’s engine, which runs models on this computer, is not installed.',
     });
-    expect(localModelsStatus(2, false, true)).toMatchObject({ label: 'Ready' });
-    expect(localModelsStatus(2, true)).toEqual({ label: 'Running', detail: 'The Hanzo engine is running with 2 models.' });
-    expect(localModelsStatus(1, false)).toEqual({ label: 'Ready', detail: '1 model on this computer can answer your chats.' });
+    expect(localModelsStatus(2, null, true)).toMatchObject({ label: 'Ready' });
+    // The engine serves one model, so it is named, never counted.
+    expect(localModelsStatus(2, 'Zen Nano')).toEqual({ label: 'Running', detail: 'The Hanzo engine is running Zen Nano.' });
+    expect(localModelsStatus(1, null)).toEqual({ label: 'Ready', detail: '1 model on this computer can answer your chats.' });
+    // Signed in, chat goes to the cloud: the line must not promise local answers.
+    expect(localModelsStatus(1, null, true, true)).toEqual({
+      label: 'Ready',
+      detail: '1 model on this computer. You are signed in, so chat uses Hanzo’s cloud models.',
+    });
+    expect(localModelsStatus(1, 'Zen Nano', true, true).detail).toBe(
+      'The Hanzo engine is running Zen Nano. You are signed in, so chat uses Hanzo’s cloud models.',
+    );
   });
 
   it('keeps ports out of the Local models card and puts them under Advanced', async () => {

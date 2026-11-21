@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GuiProvider } from '@hanzo/gui';
 
@@ -52,8 +52,8 @@ function desktop(status: () => EngineStatus, answers: Record<string, (args: any)
   (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {};
   invoke.mockImplementation(async (cmd: string, args: unknown) => {
     if (cmd === 'local_models_status') return status();
-    if (cmd === 'hardware_get_summary') return { hardware: { memory: 8 } };
     if (answers[cmd]) return answers[cmd](args);
+    if (cmd === 'hardware_get_summary') return { hardware: { memory: 8 } };
     return undefined;
   });
 }
@@ -210,6 +210,20 @@ describe('the Local AI screen', () => {
     expect(invoke).toHaveBeenCalledWith('local_models_serve', { repo: NANO });
     expect(JSON.parse(window.localStorage.getItem('hanzo.mind') ?? '{}').model).toBe('zen-nano:0.6b');
     fireEvent.click(screen.getAllByLabelText('Remove Zen Nano')[0]);
+    // Asked first, with the size and who else loses it; nothing is deleted yet.
+    const ask = await screen.findByTestId('local-ai-remove-confirm');
+    expect(ask.textContent).toMatch(/Remove Zen Nano\?/);
+    expect(ask.textContent).toMatch(/deletes 1\.2 GB from this computer/);
+    expect(ask.textContent).toMatch(/Other programs that use the same model .* lose it too/);
+    expect(invoke).not.toHaveBeenCalledWith('local_models_remove', expect.anything());
+    // eslint-disable-next-line no-console
+    // gui renders a native <dialog> without `open` in jsdom, so its buttons count as hidden there.
+    fireEvent.click(within(ask).getByRole('button', { name: 'Keep it', hidden: true }));
+    await waitFor(() => expect(screen.queryByTestId('local-ai-remove-confirm')).toBeNull());
+    expect(invoke).not.toHaveBeenCalledWith('local_models_remove', expect.anything());
+    fireEvent.click(screen.getAllByLabelText('Remove Zen Nano')[0]);
+    const again = await screen.findByTestId('local-ai-remove-confirm');
+    fireEvent.click(within(again).getByRole('button', { name: 'Remove', hidden: true }));
     await waitFor(() => expect(invoke).toHaveBeenCalledWith('local_models_remove', { repo: NANO }));
     await waitFor(() => expect(screen.getAllByLabelText('Download Zen Nano').length).toBeGreaterThan(0));
   });
@@ -228,6 +242,20 @@ describe('the Local AI screen', () => {
     const alert = await screen.findAllByTestId('local-ai-pull-error');
     expect(alert[0].textContent).toBe(taken);
     expect(screen.getByTestId('local-ai-status').textContent).not.toMatch(/Running/);
+  });
+
+  it('claims a fit only for this computer\'s known memory', async () => {
+    desktop(() => base, { hardware_get_summary: () => ({ hardware: { memory: 16 } }) });
+    await openScreen();
+    expect(nanoCard().textContent).toMatch(/Fits this computer/);
+    expect(document.body.textContent).not.toMatch(/this Mac/);
+  });
+
+  it('makes no fit claim when the memory cannot be read', async () => {
+    desktop(() => base, { hardware_get_summary: () => Promise.reject('no hardware info') });
+    await openScreen();
+    expect(nanoCard().textContent).not.toMatch(/Fits/);
+    expect(nanoCard().textContent).toMatch(/Needs 3 GB memory/);
   });
 
   it('keeps developer details behind Advanced', async () => {

@@ -7,7 +7,8 @@ import { ArrowLeft } from '@hanzogui/lucide-icons-2';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
-import { engineStatus } from './lib/local-models';
+import { keychain } from './keychain';
+import { engineStatus, sourceForRepo } from './lib/local-models';
 import { LOCAL_MODELS_UPDATED_EVENT, openLocalAiManager, probeInstalledLocalModels } from './local-ai';
 
 export type Platform = 'mac' | 'other';
@@ -62,18 +63,22 @@ const models = (n: number) => (n === 1 ? '1 model' : `${n} models`);
 /**
  * The Local models card's one line, and it says what the Local AI manager says
  * (lib/local-models `overall`): how many models are downloaded (null while still
- * asking), whether the engine is answering, and whether an engine is installed
- * at all (null when that cannot be asked, as in a plain browser). Downloaded
- * models answer nothing without an engine, so a missing engine is said first.
- * Ready means downloaded; Running means the engine is serving one.
+ * asking), the model the engine serves (its title, null when none), whether an
+ * engine is installed at all (null when that cannot be asked, as in a plain
+ * browser), and whether the window holds a session. Downloaded models answer
+ * nothing without an engine, so a missing engine is said first. The engine
+ * serves one model, so Running names it; signed in, chat goes to the cloud
+ * (host.tsx), so that is said instead of "can answer your chats".
  */
 export function localModelsStatus(
   count: number | null,
-  engineUp: boolean | null,
+  serving: string | null,
   engineInstalled: boolean | null = null,
+  signedIn = false,
 ): LocalModelsStatus {
+  const cloud = signedIn ? ' You are signed in, so chat uses Hanzo’s cloud models.' : '';
   if (count === null) return { label: 'Checking…', detail: 'Looking for models on this computer.' };
-  if (engineInstalled === false && !engineUp)
+  if (engineInstalled === false && !serving)
     return {
       label: 'Not set up',
       detail: 'Hanzo’s engine, which runs models on this computer, is not installed.',
@@ -83,8 +88,10 @@ export function localModelsStatus(
       label: 'Not set up',
       detail: 'No model is installed on this computer yet. Add one to chat without signing in.',
     };
-  if (engineUp) return { label: 'Running', detail: `The Hanzo engine is running with ${models(count)}.` };
-  return { label: 'Ready', detail: `${models(count)} on this computer can answer your chats.` };
+  if (serving) return { label: 'Running', detail: `The Hanzo engine is running ${serving}.${cloud}` };
+  return signedIn
+    ? { label: 'Ready', detail: `${models(count)} on this computer.${cloud}` }
+    : { label: 'Ready', detail: `${models(count)} on this computer can answer your chats.` };
 }
 
 /** What a key press asks of the window itself (`windowKey`). */
@@ -176,6 +183,7 @@ export function DesktopSettings({
   const [devMode, setDevMode] = useDevMode();
   const [count, setCount] = useState<number | null>(null);
   const [engineInstalled, setEngineInstalled] = useState<boolean | null>(null);
+  const [serving, setServing] = useState<string | null>(null);
   const engineUp = useUp((signal) => fetch(`${localEngineUrl}/health`, { signal }));
   const hanzodUp = useUp((signal) =>
     fetch(`${HANZOD_URL}/v1/chain/hanzo/rpc`, {
@@ -208,7 +216,12 @@ export function DesktopSettings({
         .then((found) => live && setCount(found.length))
         .catch(() => live && setCount(0));
       void engineStatus()
-        .then((status) => live && setEngineInstalled(status ? Boolean(status.engine) : null))
+        .then((status) => {
+          if (!live) return;
+          setEngineInstalled(status ? Boolean(status.engine) : null);
+          // What this app serves, by name: /health would also answer for someone else's server.
+          setServing(status?.serving ? sourceForRepo(status.serving)?.title ?? status.serving : null);
+        })
         .catch(() => live && setEngineInstalled(null));
     };
     probe();
@@ -232,7 +245,7 @@ export function DesktopSettings({
     setTheme(next);
   };
 
-  const status = localModelsStatus(count, engineUp, engineInstalled);
+  const status = localModelsStatus(count, serving, engineInstalled, Boolean(keychain.getItem('hanzo_iam_access_token')));
 
   return (
     <YStack data-testid="desktop-settings-page" height="100vh" width="100vw" bg="$background">

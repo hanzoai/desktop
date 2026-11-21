@@ -2,7 +2,20 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { XStack, YStack } from '@hanzo/gui';
-import { Badge, Button, Input, Progress, Text } from '@hanzo/ui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  Badge,
+  Button,
+  Input,
+  Progress,
+  Text,
+} from '@hanzo/ui';
 
 import rawCatalog from './lib/hanzo-node-manager/model-catalog.json';
 import {
@@ -435,6 +448,8 @@ export function LocalAiManager() {
   const [status, setStatus] = useState<EngineStatus | null>(null);
   const [checked, setChecked] = useState(false);
   const [ram, setRam] = useState<number | null>(null);
+  // The model Remove was pressed on, while the person is asked to confirm.
+  const [removing, setRemoving] = useState<LocalSource | null>(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<Category>('all');
   const [showAll, setShowAll] = useState(false);
@@ -492,11 +507,12 @@ export function LocalAiManager() {
     if (!open) return;
     panel.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      // Escape with the Remove question open closes only the question.
+      if (e.key === 'Escape' && !removing) setOpen(false);
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open]);
+  }, [open, removing]);
 
   const installedRepos = useMemo(() => new Set(status?.installed.map((m) => m.repo) ?? []), [status]);
   const downloading = Object.keys(percent)[0] ?? null;
@@ -623,7 +639,8 @@ export function LocalAiManager() {
     const running = status?.serving === src.repo;
     const pct = percent[src.tag];
     const busy = pct !== undefined;
-    const fits = fitsThisMac(src.bytes, ramGb);
+    // No fit claim when the memory could not be read: 8 GB is only a guess.
+    const fits = ram !== null && fitsThisMac(src.bytes, ram);
     const err = errors[src.tag];
     return (
       <YStack
@@ -643,7 +660,7 @@ export function LocalAiManager() {
                 {src.title}
               </Text>
               <Badge variant={fits ? 'secondary' : 'outline'} size="sm">
-                {fits ? 'Fits this Mac' : `Needs ${memoryNeededGb(src.bytes)} GB memory`}
+                {fits ? 'Fits this computer' : `Needs ${memoryNeededGb(src.bytes)} GB memory`}
               </Badge>
               {installed && (
                 <Badge variant="outline" size="sm">
@@ -682,7 +699,7 @@ export function LocalAiManager() {
                     {starting === src.tag ? 'Starting…' : 'Use'}
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onPress={() => void remove(src)} aria-label={`Remove ${src.title}`}>
+                <Button size="sm" variant="ghost" onPress={() => setRemoving(src)} aria-label={`Remove ${src.title}`}>
                   Remove
                 </Button>
               </>
@@ -882,7 +899,7 @@ export function LocalAiManager() {
 
           <YStack gap="$2">
             <Text tag="h3" fontSize="$4" fontWeight="600" color="$color">
-              {ram ? `Recommended for this Mac (${ram} GB memory)` : 'Recommended'}
+              {ram ? `Recommended for this computer (${ram} GB memory)` : 'Recommended'}
             </Text>
             {recommended.map(card)}
           </YStack>
@@ -1003,6 +1020,30 @@ export function LocalAiManager() {
           </details>
         </YStack>
       </YStack>
+      {/* Remove deletes the copy in the shared Hugging Face folder, which other
+          tools on this computer read too, so it is never done on one press. */}
+      <AlertDialog open={removing !== null} onOpenChange={(next) => !next && setRemoving(null)}>
+        {removing ? (
+          <AlertDialogContent data-testid="local-ai-remove-confirm">
+            <AlertDialogTitle>{`Remove ${removing.title}?`}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`This deletes ${formatSize(status?.installed.find((m) => m.repo === removing.repo)?.bytes ?? removing.bytes)} from this computer. Other programs that use the same model from the shared Hugging Face folder lose it too. You can download it again later.`}
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep it</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const src = removing;
+                  setRemoving(null);
+                  void remove(src);
+                }}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        ) : null}
+      </AlertDialog>
     </div>
   );
 }
