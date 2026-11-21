@@ -1213,7 +1213,7 @@ root.
   - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).
-  - `⇧⌘M` / `Ctrl+Shift+M`: Toggle voice microphone input; `Hold Fn` (>= 250ms) push-to-talk & `Double-tap Fn` (< 320ms) continuous hands-free voice (`createFnVoiceController`).
+  - `⇧⌘M` / `Ctrl+Shift+M`: Toggle voice microphone input. There is no Fn voice key: Windows and Linux keyboards resolve Fn in firmware, so no key event ever reaches the app (`desktop-shortcuts.tsx`).
   - `⌘,` / `Ctrl+,`: Opens `DesktopSettings` (`/settings`, with Appearance, Local AI / Node / Embedded Engine `:36900` / `hanzod` `:9630` status, Cloud Settings link, and Shortcuts table; `Esc` / `⌘[` returns to `/chat`).
   - `⌘/` / `Ctrl+/`: Opens Keyboard Shortcuts dialog in both signed-in and Guest / Local AI modes (`Me.js`).
   - `⌘.` / `Ctrl+.` & `⌘⇧B`: Toggle right side Tabs panel (`@hanzo/build`).
