@@ -48,7 +48,7 @@ pub struct Status {
     /// The engine binary that serves models, or `None` when none is installed.
     pub engine: Option<String>,
     pub cache_dir: String,
-    /// Models whose download finished.
+    /// Models this app offers whose download finished.
     pub installed: Vec<Cached>,
     pub pulling: Option<String>,
     /// The model being served, while its process is alive.
@@ -237,6 +237,14 @@ pub fn list_cached(cache: &Path) -> Vec<Cached> {
         .collect();
     out.sort_by(|a, b| a.repo.cmp(&b.repo));
     out
+}
+
+/// The finished models this app offers. The Hugging Face cache is shared: on a
+/// developer's machine it can hold huge or embedding models other tools
+/// fetched. Only these count, for chat, Settings and the Local AI screen, so
+/// chat never starts a model the person did not choose here.
+pub fn installed(cache: &Path) -> Vec<Cached> {
+    list_cached(cache).into_iter().filter(|c| offered(&c.repo)).collect()
 }
 
 fn walk(dir: &Path) -> Vec<PathBuf> {
@@ -432,7 +440,7 @@ pub fn local_models_status() -> Status {
     let serving = alive();
     Status {
         engine: engine_bin().map(|p| p.to_string_lossy().into_owned()),
-        installed: list_cached(&cache),
+        installed: installed(&cache),
         cache_dir: cache.to_string_lossy().into_owned(),
         pulling: pulling().lock().ok().and_then(|p| p.as_ref().map(|(r, _)| r.clone())),
         serve_error: if serving.is_none() { last_exit().lock().ok().and_then(|e| e.clone()) } else { None },
@@ -670,6 +678,20 @@ mod tests {
         // No refs/main: the download never got to the end.
         std::fs::create_dir_all(tmp.path().join("models--Qwen--Qwen3-0.6B/snapshots/x")).unwrap();
         assert_eq!(list_cached(tmp.path()).len(), 1);
+    }
+
+    #[test]
+    fn another_tools_model_in_the_shared_cache_is_not_ours() {
+        let tmp = tempfile::tempdir().unwrap();
+        for repo in ["zenlm--zen-nano-0.6b", "sentence-transformers--all-MiniLM-L6-v2"] {
+            let root = tmp.path().join(format!("models--{repo}"));
+            std::fs::create_dir_all(root.join("snapshots/abc")).unwrap();
+            std::fs::write(root.join("snapshots/abc/model.safetensors"), b"w").unwrap();
+            std::fs::create_dir_all(root.join("refs")).unwrap();
+            std::fs::write(root.join("refs/main"), "abc").unwrap();
+        }
+        assert_eq!(list_cached(tmp.path()).len(), 2);
+        assert_eq!(installed(tmp.path()), vec![Cached { repo: "zenlm/zen-nano-0.6b".into(), bytes: 1 }]);
     }
 
     #[cfg(unix)]
