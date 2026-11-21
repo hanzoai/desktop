@@ -1,4 +1,4 @@
-import { KEYS, asked } from '@hanzo/app/help';
+import { KEYS, asked, chip } from '@hanzo/app/help';
 import { handle } from '@hanzo/app/keys';
 import * as keymap from '@hanzo/dev-core/keymap';
 import { chord } from '@hanzo/app/chord';
@@ -42,7 +42,8 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
     const macChords = KEYS.map((k) => k.mac);
     expect(macChords).toContain('⌘K');
-    expect(macChords).toContain('⌘N / ⌘⇧O');
+    expect(macChords).toContain('⌘⇧O');
+    expect(macChords).toContain('⌘N');
     expect(macChords).toContain('⌘B');
     expect(macChords).toContain('⌘⇧M');
     expect(macChords).toContain('⌘,');
@@ -162,8 +163,10 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     const pc = shortcutGroups('other');
     const keysOf = (groups: typeof mac, does: string) =>
       groups.flatMap((g) => g.rows).find((r) => r.does === does)?.keys;
-    expect(keysOf(mac, 'New chat')).toEqual(['⌘N', '⌘⇧O']);
-    expect(keysOf(pc, 'New chat')).toEqual(['Ctrl+N', 'Ctrl+Shift+O']);
+    const rowsOf = (groups: typeof mac, does: string) => groups.flatMap((g) => g.rows).filter((r) => r.does === does).map((r) => r.keys);
+    // The app's row, the window's ⌘N, and the desktop's ⇧⌘I anywhere on this computer.
+    expect(rowsOf(mac, 'New chat')).toEqual([['⌘⇧O'], ['⌘N'], ['⇧⌘I']]);
+    expect(rowsOf(pc, 'New chat')).toEqual([['Ctrl+Shift+O'], ['Ctrl+N'], ['Ctrl+Shift+I']]);
     expect(keysOf(mac, 'Hanzo Spotlight')).toBeUndefined();
     // No ⌘ anywhere a PC reader looks, and every app key is listed once.
     expect(pc.flatMap((g) => g.rows.flatMap((r) => r.keys)).join(' ')).not.toMatch(/[⌘⌥⇧⌃]/);
@@ -250,6 +253,17 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(press('n', { metaKey: true, defaultPrevented: true })).toBeNull();
   });
 
+  it('the palette’s New chat row shows the app’s own keys, and every command row splits into keycaps', () => {
+    // The palette draws a command's keys with chip(), which splits the row's pc
+    // spelling on '+'. The desktop's ⌘N is its own row with no command.
+    expect(chip('chat.new')).toEqual(['Mod', 'Shift', 'O']);
+    for (const k of KEYS.filter((k) => k.command)) {
+      expect(k.pc, k.command).not.toMatch(/ \/ /);
+      for (const cap of chip(k.command!)!) expect(cap.trim(), k.command).toBe(cap);
+    }
+    expect(KEYS.filter((k) => k.mac === '⌘N').map((k) => [k.pc, 'command' in k])).toEqual([['Ctrl+N', false]]);
+  });
+
   it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
     const dist = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist');
     const chat = readFileSync(resolve(dist, 'Chat.js'), 'utf8');
@@ -263,6 +277,8 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     // Files a signed-out reader attaches are read in the window, not refused.
     expect(pane).toContain('localText');
     expect(pane).not.toContain('Sign in to attach files');
-    expect(setup).toContain('const workspace = false;');
+    // Google Workspace is hidden in any window that passes `bar` by the app itself
+    // (Setup.js reads Windowed, which App sets from bar); the desktop adds no second way.
+    expect(setup).toContain("const workspace = opens('workspace') && !windowed;");
   });
 });
