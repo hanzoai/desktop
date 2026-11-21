@@ -13,6 +13,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
+import { Crash } from './crash';
 import { DesktopSettings, windowKey } from './desktop-shortcuts';
 import { adopt, share } from './identity';
 import { keychain } from './keychain';
@@ -734,33 +735,6 @@ function Gate() {
     <Rooms router={router} path={path} route={path} Link={Anchor}>
       <App bar={BAR} />
     </Rooms>
-  );
-}
-
-function Crash({ error }: { error: unknown }) {
-  const text = error instanceof Error ? `${error.name}: ${error.message}\n\n${error.stack ?? ''}` : String(error);
-  return (
-    <div
-      role="alert"
-      style={{
-        height: '100vh',
-        width: '100vw',
-        overflow: 'auto',
-        padding: '48px 40px',
-        background: '#0a0a0a',
-        color: '#f5f5f5',
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-        fontSize: 12,
-        lineHeight: 1.6,
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-      }}
-    >
-      <div style={{ color: '#ff6b6b', fontWeight: 600, marginBottom: 12 }}>
-        Hanzo could not start
-      </div>
-      {text}
-    </div>
   );
 }
 
