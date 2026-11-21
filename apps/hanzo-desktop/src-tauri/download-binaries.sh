@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Download external binaries from download.hanzo.ai (Cloudflare R2)
-# This script downloads the required binaries for the Hanzo Desktop app
-# instead of committing large executables to git
+# Downloads the binaries the Hanzo Desktop app bundles instead of committing them
+# to git: the node from its hanzoai/node-v1 release (needs GH_TOKEN, pins), the
+# embedding model from download.hanzo.ai.
 
 set -e
 
@@ -60,7 +60,24 @@ mkdir -p "$LLM_MODELS_DIR"
 
 # Download and extract Hanzo Node
 echo "Downloading Hanzo Node ${HANZO_NODE_VERSION} for ${TARGET}..."
-HANZO_NODE_URL="https://download.hanzo.ai/hanzo-node/binaries/production/${TARGET}/${HANZO_NODE_VERSION}.zip"
+
+# The archive's sha256 is pinned beside the version; an archive with no pin is
+# refused.
+WANT_VAR="HANZO_NODE_SHA256_${TARGET//-/_}"
+WANT_SHA256="${!WANT_VAR:-}"
+[ -n "$WANT_SHA256" ] || { echo "pins has no $WANT_VAR"; exit 1; }
+
+sha256_of() {
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$1" | cut -d' ' -f1
+    else
+        shasum -a 256 "$1" | cut -d' ' -f1
+    fi
+}
+
+github() {
+    curl -fsSL --retry 5 --retry-all-errors -H "Authorization: Bearer $GH_TOKEN" "$@"
+}
 
 # Tauri resolves a sidecar by the name in tauri.conf.json plus the target
 # triple, so each binary the archive carries is renamed once, here. The archive
@@ -69,8 +86,18 @@ HANZO_NODE_URL="https://download.hanzo.ai/hanzo-node/binaries/production/${TARGE
 SIDECARS="hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv"
 
 if [ ! -f "$NODE_DIR/hanzo-node-${TARGET}${EXT}" ]; then
-    echo "Downloading from: $HANZO_NODE_URL"
-    if curl -L -f --retry 5 --retry-all-errors -o "$NODE_DIR/hanzo-node.zip" "$HANZO_NODE_URL"; then
+    [ -n "${GH_TOKEN:-}" ] || { echo "GH_TOKEN must be a token that can read hanzoai/node-v1 (gh auth token)"; exit 1; }
+    RELEASE_API="https://api.github.com/repos/hanzoai/node-v1/releases"
+    ASSET_ID=$(github "$RELEASE_API/tags/$HANZO_NODE_VERSION" \
+        | jq -r --arg n "hanzo-node-${TARGET}.zip" '.assets[] | select(.name == $n) | .id')
+    [ -n "$ASSET_ID" ] || { echo "release $HANZO_NODE_VERSION has no hanzo-node-${TARGET}.zip"; exit 1; }
+    if github -H "Accept: application/octet-stream" -o "$NODE_DIR/hanzo-node.zip" "$RELEASE_API/assets/$ASSET_ID"; then
+        GOT_SHA256=$(sha256_of "$NODE_DIR/hanzo-node.zip")
+        if [ "$GOT_SHA256" != "$WANT_SHA256" ]; then
+            rm -f "$NODE_DIR/hanzo-node.zip"
+            echo "hanzo-node-${TARGET}.zip is sha256 ${GOT_SHA256}, pins says ${WANT_SHA256}"
+            exit 1
+        fi
         unzip -o "$NODE_DIR/hanzo-node.zip" -d "$NODE_DIR/"
 
         for s in $SIDECARS; do

@@ -1,34 +1,16 @@
 # The external releases this app bundles as Tauri sidecars.
 #
 # download-binaries.sh reads this file, and nothing else in the repo names a
-# version. Every value here has to name an artifact download.hanzo.ai actually
-# serves for all five targets — a pin that answers 404 is a clean checkout that
-# builds on the machine it was pinned from and nowhere else.
+# version or a checksum.
 #
-# Check one before changing it:
-#
-#   for a in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu \
-#            aarch64-apple-darwin x86_64-apple-darwin x86_64-pc-windows-msvc; do
-#     curl -o /dev/null -w "$a %{http_code}\n" -r 0-0 \
-#       https://download.hanzo.ai/hanzo-node/binaries/production/$a/$VERSION.zip
-#   done
-
-# hanzo-node — the daemon the app spawns and drives over HTTP. The archive
-# carries the three binaries tauri.conf.json declares: hanzo-node, and deno and
-# uv under hanzo-tools-runner-resources.
-#
-# v1.15.0 is the newest release published for all five targets. It answers the
-# node API under /v2, while libs/hanzo-message-ts calls /v1/node — the prefix
-# node serves from v1.19.2 on. Moving this pin needs a v1.19.2+ archive on
-# download.hanzo.ai first; none exists yet, and the newer tags built an amd64
-# container image and no binary.
-#
-# Two of the five archives carry deno and uv for the machine that BUILT them
-# rather than the machine that runs them: aarch64-unknown-linux-gnu ships
-# x86-64 tool runtimes, and x86_64-apple-darwin ships arm64 ones. Those were
-# the two cross-compiled targets — the Rust binary honours --target, the tool
-# runtimes came from the host. hanzo-node itself is right in all five. `file`
-# on each member is what shows this; the archive listing and the download both
-# look perfect. Whoever publishes the next set should build each target
-# natively, and check all three members, not just the node.
-HANZO_NODE_VERSION=v1.15.0
+# hanzo-node: the daemon the app spawns and drives over HTTP, one archive per
+# target on the hanzoai/node-v1 release for the version. The repository is
+# private, so the script needs GH_TOKEN. Each archive's sha256 is pinned: a
+# download that does not match fails the build. The release's binaries.json
+# lists the same digests.
+HANZO_NODE_VERSION=v1.19.4
+HANZO_NODE_SHA256_x86_64_unknown_linux_gnu=b475c71d6ffe9a62f782cb4821ff28df1f53f715e66eb4330fbd7501daaadbc6
+HANZO_NODE_SHA256_aarch64_unknown_linux_gnu=a682cc09c3eb9c7cf0b1bf055199362b39c9b2600bdfc80446774bb311e976aa
+HANZO_NODE_SHA256_aarch64_apple_darwin=1ce9e4663a88034ecada49549a7241a3f2cf9be38e7b3d5ccbc0f26cbc91a173
+HANZO_NODE_SHA256_x86_64_apple_darwin=d400cc12fb6b4a8c9efa6d6c98a7150e678b792820ce7b73275058bbd1bcb576
+HANZO_NODE_SHA256_x86_64_pc_windows_msvc=2439ddb33c4111b9e51637190d16f1c17472a2b1caa09b99f8249e6a168968af

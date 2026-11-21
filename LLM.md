@@ -388,29 +388,17 @@ the README told you to type. The second downloader is deleted; it was reachable
 only from README prose, still fetched Ollama (retired here), and was the reason
 one number had two homes.
 
-**The host is live and always was.** `download.hanzo.ai` (R2) serves the node
-archives and the embedding model. Its ROOT answers 404 because there is no
-index object, which reads as a dead host if that is all you probe. What 404s is
-a *version*: v1.13.0 was published for three of the five targets, so a clean
-checkout on arm64 Linux or Intel macOS hit `exit 1` and never reached Vite.
-v1.15.0 is published for all five and is what `pins` names.
+**The node is a GitHub release asset of `hanzoai/node-v1`**, one archive per
+target (`hanzo-node-<target>.zip`, built in-cluster by that repo's `hanzo.yml`
+lane with each of `hanzo-node`, `deno` and `uv` built for the target's own CPU).
+The repository is private, so the script reads the release through the GitHub API
+with `GH_TOKEN`; a developer runs `GH_TOKEN=$(gh auth token) pnpm download-binaries`.
+The release lanes read the deploy token from KMS (`deploy/GITHUB_TOKEN`) for that
+one step. Each archive's sha256 is pinned in `pins` and a mismatch fails the
+build; the release's `binaries.json` lists the same digests. The embedding model
+is still fetched from `download.hanzo.ai`.
 
-Two things about that pin are worth knowing before moving it:
-
-- **v1.15.0 answers the node API under `/v2`.** `libs/hanzo-message-ts` calls
-  `/v1/node` — 130 call sites — which node serves from **v1.19.2** on. So the
-  app builds against this pin and its node calls 404 until a v1.19.2+ archive
-  is published. Nothing newer than v1.15.0 has ever been published as a binary;
-  the later tags produced a linux/amd64 container image and nothing else.
-- **Two archives ship the wrong CPU's tool runtimes.** `file` on every member:
-  `aarch64-unknown-linux-gnu` carries **x86-64** deno and uv, and
-  `x86_64-apple-darwin` carries **arm64** ones. Those two were cross-compiled —
-  `cargo build --target` moved the Rust binary, the tool runtimes came from the
-  builder. `hanzo-node` itself is correct in all five. The archive listing, the
-  HTTP status and the unzip all look perfect; only `file` on the extracted
-  members shows it, and on arm64 Linux the app therefore installs and then
-  fails at every tool execution with `exec format error`. Build each target
-  natively, and check all three members.
+v1.19.4 serves the node API under `/v1/node`, which `libs/hanzo-message-ts` calls.
 
 The `soup` CLI is no longer fetched: the whole `hanzo-ml/` prefix answers 404,
 so the fetch could only ever print a warning. `src/model_tools/soup.rs` still
@@ -489,7 +477,7 @@ exception needs `// secret-log-ok: <reason>` on the line. Its self-test,
 ## Local node startup: what the pinned node can and cannot do (cloud#760)
 
 Four startup errors were reported from 1.1.54's log. Their causes, measured
-against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
+against the pinned node (`pins`, source `hanzoai/node-v1`):
 
 - **No engine binary.** Release bundles ship `hanzo-node`, `deno` and `uv`, not
   `hanzo-server`, so spawning it failed twice per start. `src-tauri/engine-bin`
@@ -636,8 +624,7 @@ setup are signed themselves, so there is no second 600 MB `.tar.gz` per platform
   stub manifests beside the checkout so cargo can resolve. Nothing compiles them.
 - `VITE_POSTHOG_API_KEY` and `SECRET_DESKTOP_INSTALLATION_PROOF_KEY` are optional and
   unset in release builds; PostHog is off and the proof key is the compiled default.
-- The two archives `pins` warns about ship the wrong CPU's deno and uv; the universal
-  macOS app therefore carries arm64-only tool runtimes.
+- A node archive whose sha256 differs from `pins` fails `download-binaries.sh`.
 
 ## Model Tools (hanzo-ml integration)
 

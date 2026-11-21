@@ -93,7 +93,11 @@ jobs:
         run: scripts/release/prepare.sh
 
       - name: Sidecars and model
-        run: apps/hanzo-desktop/src-tauri/download-binaries.sh
+        run: |
+          GH_TOKEN=$(. scripts/release/kms.sh; kms_read deploy GITHUB_TOKEN)
+          echo "::add-mask::$GH_TOKEN"
+          export GH_TOKEN
+          apps/hanzo-desktop/src-tauri/download-binaries.sh
 
       - name: Signing key
         run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
@@ -188,7 +192,11 @@ jobs:
       - name: Sidecars and model
         env:
           TARGET: ${{ env.TRIPLE }}
-        run: apps/hanzo-desktop/src-tauri/download-binaries.sh
+        run: |
+          GH_TOKEN=$(. scripts/release/kms.sh; kms_read deploy GITHUB_TOKEN)
+          echo "::add-mask::$GH_TOKEN"
+          export GH_TOKEN
+          apps/hanzo-desktop/src-tauri/download-binaries.sh
 
       - name: Signing key
         run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
