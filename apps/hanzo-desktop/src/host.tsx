@@ -30,7 +30,6 @@ import {
   useWorkspacePanels,
   WorkspaceDetailsPopover,
 } from './SurfacePanel';
-import { Update } from './update';
 import { Welcome } from './Welcome';
 import { awaitCallback, type Callback, finishAttempt, SignInCancelled } from './lib/sign-in-attempt';
 import { safeInvoke, safeListen } from './utils/tauri-check';
@@ -121,10 +120,9 @@ if (window.location.pathname === '/' || window.location.pathname === '/index.htm
 // through the router below. macOS paints its traffic lights over the page's
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
-// page and need none. The bar drags the window. Its controls are the window's:
-// Local AI, in place of the minimise, maximise and close a frameless window
-// would draw, which the native title bar already has, and, when there is a newer
-// version, the one quiet line that installs it (update.tsx).
+// page and need none. The bar drags the window; its controls are TopRightControls.
+// Local models are reached from Settings > Local models and from a signed-out
+// answer that needs one (the Local AI screen, local-ai.tsx), not from the bar.
 const MAC = /Mac/.test(navigator.userAgent);
 // The focused pages (Gate's sheets: organization, plan) carry their own header,
 // whose wordmark starts at the page's gutter, under the traffic lights (app.css).

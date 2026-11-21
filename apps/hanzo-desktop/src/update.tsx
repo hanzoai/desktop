@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { isTauriAvailable } from './utils/tauri-check';
 
-// A newer version is said quietly in the bar, beside Local AI, and installed in one press:
+// A newer version is said quietly in the bar, and installed in one press:
 // download, stop the model and the node, install, relaunch (Windows' installer restarts Hanzo itself).
 
 const EVERY = 30 * 60 * 1000;

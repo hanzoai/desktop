@@ -82,18 +82,12 @@ test('hides Google Workspace setup, aligns top controls with traffic lights, and
 
   // Top-left bar toggle and top-right conversation controls should align near y=16.5px (macOS traffic light center)
   const toggleBox = await page.locator('[data-slot="title-bar"]').getByRole('button', { name: 'Close sidebar' }).boundingBox();
-  const localAiBtn = page.locator('[data-slot="header-local-ai"]');
-  await expect(localAiBtn).toBeVisible();
-  const localAiBox = await localAiBtn.boundingBox();
   expect(toggleBox).not.toBeNull();
-  expect(localAiBox).not.toBeNull();
-  const toggleCenterY = toggleBox!.y + toggleBox!.height / 2;
-  const localAiCenterY = localAiBox!.y + localAiBox!.height / 2;
-  expect(Math.abs(toggleCenterY - 16.5)).toBeLessThanOrEqual(2.5);
-  expect(Math.abs(localAiCenterY - 16.5)).toBeLessThanOrEqual(2.5);
-
-  // Clicking "Local AI" opens the Local AI Models modal
-  await localAiBtn.click();
+  expect(Math.abs(toggleBox!.y + toggleBox!.height / 2 - 16.5)).toBeLessThanOrEqual(2.5);
+  // The bar has no Local AI button; Settings > Local AI & Engine opens the Local AI screen.
+  await expect(page.locator('[data-slot="header-local-ai"]')).toHaveCount(0);
+  await page.evaluate(() => window.history.pushState(null, '', '/settings/engine'));
+  await page.getByRole('button', { name: 'Manage Models' }).click();
   const modal = page.getByTestId('local-ai-manager-modal');
   await expect(modal).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/desktop-1280-local-ai-modal.png` });
