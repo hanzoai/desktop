@@ -172,6 +172,7 @@
     "allow-local-workspace-create-dir",
     "allow-local-workspace-delete",
     "allow-local-workspace-run-dev",
+    "allow-local-workspace-discover",
     "allow-browser",
     "allow-browsers",
     "allow-check-claude-installed",
