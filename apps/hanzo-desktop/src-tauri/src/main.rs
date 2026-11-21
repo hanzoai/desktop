@@ -55,6 +55,9 @@ use crate::commands::local_workspace::{
     local_workspace_write_file, local_workspace_create_file, local_workspace_create_dir,
     local_workspace_delete, local_workspace_discover, local_workspace_run_dev,
 };
+use crate::commands::local_site::{
+    local_preview_open, local_preview_start, local_preview_stop, local_site_capture, local_site_folder,
+};
 use crate::mining::MiningManager;
 use crate::model_tools::{
     model_tools_bitdelta_apply, model_tools_bitdelta_encode, model_tools_grpo_run,
@@ -285,6 +288,11 @@ fn main() {
             local_workspace_delete,
             local_workspace_run_dev,
             local_workspace_discover,
+            local_site_folder,
+            local_site_capture,
+            local_preview_start,
+            local_preview_stop,
+            local_preview_open,
             #[cfg(feature = "machine")]
             machine::commands::machine_health,
             #[cfg(feature = "machine")]
@@ -469,6 +477,7 @@ fn main() {
                 api.prevent_exit();
             }
             RunEvent::Exit { .. } => {
+                commands::local_site::stop_all();
                 tauri::async_runtime::spawn(async {
                     log::debug!("killing hanzo-node before exit");
 
@@ -484,6 +493,10 @@ fn main() {
             #[cfg(target_os = "macos")]
             RunEvent::Reopen { .. } => {
                 let _ = recreate_window(app_handle.clone(), Window::Main, true);
+            }
+            // A preview serves for the window that asked for it: the window closing ends it.
+            RunEvent::WindowEvent { label, event: WindowEvent::Destroyed, .. } if label == Window::Main.as_str() => {
+                commands::local_site::stop_all();
             }
             RunEvent::Ready => {}
             RunEvent::Resumed => {}
