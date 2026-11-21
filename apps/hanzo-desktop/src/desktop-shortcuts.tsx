@@ -10,7 +10,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
 import { keychain } from './keychain';
-import { engineStatus, sourceForRepo } from './lib/local-models';
+import { engineStatus, LOCAL_ENGINE_URL, sourceForRepo } from './lib/local-models';
 import { LOCAL_MODELS_UPDATED_EVENT, openLocalAiManager, probeInstalledLocalModels } from './local-ai';
 import { isTauriAvailable } from './utils/tauri-check';
 
@@ -173,14 +173,12 @@ const say = (up: boolean | null) => (up === null ? 'checking…' : up ? 'respond
 export function DesktopSettings({
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',
-  localEngineUrl = 'http://localhost:36900',
   barInset = 0,
   onSignIn,
   onBack,
 }: {
   isAuthenticated: boolean;
   siteUrl?: string;
-  localEngineUrl?: string;
   barInset?: number;
   onSignIn: () => void;
   onBack: () => void;
@@ -203,7 +201,7 @@ export function DesktopSettings({
   const [count, setCount] = useState<number | null>(null);
   const [engineInstalled, setEngineInstalled] = useState<boolean | null>(null);
   const [serving, setServing] = useState<string | null>(null);
-  const engineUp = useUp((signal) => fetch(`${localEngineUrl}/health`, { signal }));
+  const engineUp = useUp((signal) => fetch(`${LOCAL_ENGINE_URL}/health`, { signal }));
   const hanzodUp = useUp((signal) =>
     fetch(`${HANZOD_URL}/v1/chain/hanzo/rpc`, {
       method: 'POST',
@@ -444,7 +442,7 @@ export function DesktopSettings({
                 <Row
                   first
                   mono
-                  title={`Hanzo Engine  ${localEngineUrl}`}
+                  title={`Hanzo Engine  ${LOCAL_ENGINE_URL}`}
                   detail={`OpenAI-compatible inference server: ${say(engineUp)} on /health.`}
                   trailing={
                     <Button size="sm" variant="outline" onPress={() => openLocalAiManager('engine')}>

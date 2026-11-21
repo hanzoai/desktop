@@ -389,7 +389,6 @@ function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
   );
 }
 
-const LOCAL_ENGINE_URL = 'http://localhost:36900';
 const LOCAL_CONVERSATIONS_KEY = 'hanzo:local:conversations';
 
 type StoredLocalConversation = {
@@ -430,7 +429,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 // Install local-first fetch bridge for unauthenticated / guest desktop sessions
 // so "Continue without login · Local AI" works with zero "Failed to fetch" errors
-// and routes chat completions to the embedded local Hanzo Engine (:36900).
+// and routes chat completions to Hanzo's engine on this computer (local-ai.tsx).
 if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTALLED__) {
   (window as any).__HANZO_LOCAL_FETCH_INSTALLED__ = true;
   const nativeFetch = window.fetch.bind(window);
@@ -736,7 +735,6 @@ function Gate() {
       <DesktopSettings
         isAuthenticated={isAuthenticated}
         siteUrl={SITE}
-        localEngineUrl={LOCAL_ENGINE_URL}
         barInset={BAR.inset ?? 0}
         onSignIn={() => {
           // Signing in is the Welcome screen's job: it shows the attempt and its Cancel.
