@@ -249,57 +249,80 @@ pub async fn pull_into(
 
     let mut done = 0u64;
     let mut last = Instant::now();
+    // Every file this download writes, so a failed or cancelled one can take
+    // them back: none is listed until refs/main exists, so no Remove button
+    // could ever reach them.
+    let mut made: Vec<PathBuf> = Vec::new();
     progress(done, total);
-    for (file, size) in &files {
-        let dest = snap.join(file);
-        // A file already complete from an earlier, interrupted download is kept.
-        if *size > 0 && std::fs::metadata(&dest).map(|m| m.len()).ok() == Some(*size) {
-            done += size;
-            continue;
-        }
-        let part = snap.join(format!("{file}.part"));
-        let res = client
-            .get(format!("{endpoint}/{repo}/resolve/{}/{file}", meta.sha))
-            .send()
-            .await
-            .map_err(network)?
-            .error_for_status()
-            .map_err(|e| format!("The model library refused {file} ({e})."))?;
-        let mut out = std::fs::File::create(&part).map_err(|e| format!("Could not write {file}: {e}"))?;
-        let mut stream = res.bytes_stream();
-        let mut got = 0u64;
-        loop {
-            if cancel.load(Ordering::Relaxed) {
-                drop(out);
-                let _ = std::fs::remove_file(&part);
-                return Err(CANCELLED.into());
+    let fetched: Result<(), String> = async {
+        for (file, size) in &files {
+            let dest = snap.join(file);
+            // A file already complete (a model downloaded before) is kept.
+            if *size > 0 && std::fs::metadata(&dest).map(|m| m.len()).ok() == Some(*size) {
+                done += size;
+                continue;
             }
-            let Some(chunk) = stream.next().await else { break };
-            let chunk = chunk.map_err(network)?;
-            out.write_all(&chunk).map_err(|e| format!("Could not write {file}: {e}"))?;
-            got += chunk.len() as u64;
-            done += chunk.len() as u64;
-            if last.elapsed() >= Duration::from_millis(200) {
-                last = Instant::now();
-                progress(done, total);
+            let part = snap.join(format!("{file}.part"));
+            let res = client
+                .get(format!("{endpoint}/{repo}/resolve/{}/{file}", meta.sha))
+                .send()
+                .await
+                .map_err(network)?
+                .error_for_status()
+                .map_err(|e| format!("The model library refused {file} ({e})."))?;
+            made.push(part.clone());
+            let mut out = std::fs::File::create(&part).map_err(|e| format!("Could not write {file}: {e}"))?;
+            let mut stream = res.bytes_stream();
+            let mut got = 0u64;
+            loop {
+                if cancel.load(Ordering::Relaxed) {
+                    return Err(CANCELLED.into());
+                }
+                let Some(chunk) = stream.next().await else { break };
+                let chunk = chunk.map_err(network)?;
+                out.write_all(&chunk).map_err(|e| format!("Could not write {file}: {e}"))?;
+                got += chunk.len() as u64;
+                done += chunk.len() as u64;
+                if last.elapsed() >= Duration::from_millis(200) {
+                    last = Instant::now();
+                    progress(done, total);
+                }
             }
+            out.flush().map_err(|e| format!("Could not write {file}: {e}"))?;
+            drop(out);
+            // A connection that closes cleanly but early still ends the stream; only
+            // the size the library declared tells a short file from a whole one.
+            if *size > 0 && got != *size {
+                return Err(format!(
+                    "{file} arrived incomplete ({got} of {size} bytes), so the model was not saved. Try the download again."
+                ));
+            }
+            made.push(dest.clone());
+            std::fs::rename(&part, &dest).map_err(|e| format!("Could not finish {file}: {e}"))?;
         }
-        out.flush().map_err(|e| format!("Could not write {file}: {e}"))?;
-        drop(out);
-        // A connection that closes cleanly but early still ends the stream; only
-        // the size the library declared tells a short file from a whole one.
-        if *size > 0 && got != *size {
-            return Err(format!(
-                "{file} arrived incomplete ({got} of {size} bytes), so the model was not saved. Try the download again."
-            ));
-        }
-        std::fs::rename(&part, &dest).map_err(|e| format!("Could not finish {file}: {e}"))?;
+        let refs = root.join("refs");
+        std::fs::create_dir_all(&refs).map_err(|e| e.to_string())?;
+        std::fs::write(refs.join("main"), &meta.sha).map_err(|e| e.to_string())
     }
-    let refs = root.join("refs");
-    std::fs::create_dir_all(&refs).map_err(|e| e.to_string())?;
-    std::fs::write(refs.join("main"), &meta.sha).map_err(|e| e.to_string())?;
+    .await;
+    if fetched.is_err() {
+        take_back(&made, &snap, &root);
+    }
+    fetched?;
     progress(done.max(total), done.max(total));
     Ok(())
+}
+
+/// Undo what a download that did not finish wrote: its files, then the folders
+/// that leaves empty (`remove_dir` refuses one that is not). A model that was
+/// complete before keeps its refs and its own files, so it is untouched.
+fn take_back(made: &[PathBuf], snap: &Path, root: &Path) {
+    for f in made {
+        let _ = std::fs::remove_file(f);
+    }
+    for dir in [Some(snap), snap.parent(), Some(root)].into_iter().flatten() {
+        let _ = std::fs::remove_dir(dir);
+    }
 }
 
 fn engine_bin() -> Option<PathBuf> {
@@ -630,8 +653,56 @@ mod tests {
             .unwrap_err();
         assert_eq!(err, CANCELLED);
         assert!(list_cached(tmp.path()).is_empty());
-        let snap = tmp.path().join("models--zenlm--zen-nano-0.6b/snapshots/0123abcd");
-        assert!(walk(&snap).iter().all(|f| !f.to_string_lossy().ends_with(".part")));
+        assert!(!tmp.path().join("models--zenlm--zen-nano-0.6b").exists(), "nothing is left behind");
+    }
+
+    #[tokio::test]
+    async fn cancel_after_one_file_finished_takes_that_file_back_too() {
+        // config.json arrives at once; model.safetensors waits, so the progress
+        // report that fires on its first bytes is where Cancel is pressed.
+        let endpoint = library_with(300000, 300000, 300).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let cancel = AtomicBool::new(false);
+        let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &cancel, |done, _| {
+            if done > 2 {
+                cancel.store(true, Ordering::Relaxed);
+            }
+        })
+        .await
+        .unwrap_err();
+        assert_eq!(err, CANCELLED);
+        assert!(!tmp.path().join("models--zenlm--zen-nano-0.6b").exists(), "the finished config.json went too");
+    }
+
+    #[tokio::test]
+    async fn a_dropped_connection_leaves_nothing_nobody_can_see() {
+        // The connection closes 1000 bytes into a 300000-byte file.
+        let endpoint = library_with(1000, 300000, 0).await;
+        let tmp = tempfile::tempdir().unwrap();
+        let err = pull_into(&endpoint, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
+            .await
+            .unwrap_err();
+        assert!(err.starts_with("The download stopped"), "{err}");
+        assert!(!tmp.path().join("models--zenlm--zen-nano-0.6b").exists(), "no .part and no finished file left");
+    }
+
+    #[tokio::test]
+    async fn a_failed_download_never_touches_a_model_that_was_already_complete() {
+        let tmp = tempfile::tempdir().unwrap();
+        pull_into(&library().await, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
+            .await
+            .unwrap();
+        let root = tmp.path().join("models--zenlm--zen-nano-0.6b");
+        // Make the weights look unfinished so the second download fetches them again, and fails.
+        std::fs::write(root.join("snapshots/0123abcd/model.safetensors"), b"old").unwrap();
+        let err = pull_into(&library_with(1000, 300000, 0).await, tmp.path(), "zenlm/zen-nano-0.6b", &AtomicBool::new(false), |_, _| {})
+            .await
+            .unwrap_err();
+        assert!(err.starts_with("The download stopped"), "{err}");
+        assert_eq!(std::fs::read_to_string(root.join("refs/main")).unwrap(), "0123abcd");
+        assert_eq!(std::fs::read(root.join("snapshots/0123abcd/config.json")).unwrap(), b"{}");
+        assert_eq!(std::fs::read(root.join("snapshots/0123abcd/model.safetensors")).unwrap(), b"old");
+        assert!(!root.join("snapshots/0123abcd/model.safetensors.part").exists());
     }
 
     #[tokio::test]
