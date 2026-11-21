@@ -208,46 +208,16 @@ Alternative: `cd apps/hanzo-desktop && npm run dev|build|lint`
 - `postinstall` runs `patch-package`
 - Env: copy `.env.example`, never commit secrets
 
-## The sidecars, and why a clean checkout could not build
+## No sidecars, no bundled model
 
-`pnpm dev` and `pnpm build` both run `src-tauri/download-binaries.sh` first,
-because `tauri.conf.json` declares three `externalBin` entries and Tauri will
-not bundle a sidecar it cannot find. `external-binaries/` is gitignored, so a
-fresh clone has nothing and the fetch is not optional.
+The bundle is the app alone: `tauri.conf.json` declares no `externalBin` and no
+`resources`. The hanzo-node sidecars and the 584 MB embedding model it read left
+with the node; `download-binaries.sh` and `pins` are gone, and neither release
+workflow fetches or copies anything beside the app.
 
-**One file names a version: `src-tauri/pins`.** The script sources it and
-nothing else in the repo carries a release number. Before that, the number
-lived in three places that disagreed — the script said v1.13.0, the README
-said v1.1.18, and a second downloader in `ci-scripts/` read it from an env var
-the README told you to type. The second downloader is deleted; it was reachable
-only from README prose, still fetched Ollama (retired here), and was the reason
-one number had two homes.
+## Two TypeScripts
 
-**The host is live and always was.** `download.hanzo.ai` (R2) serves the node
-archives and the embedding model. Its ROOT answers 404 because there is no
-index object, which reads as a dead host if that is all you probe. What 404s is
-a *version*: v1.13.0 was published for three of the five targets, so a clean
-checkout on arm64 Linux or Intel macOS hit `exit 1` and never reached Vite.
-v1.15.0 is published for all five and is what `pins` names.
-
-Two things about that pin are worth knowing before moving it:
-
-- **v1.15.0 answers the node API under `/v2`.** `libs/hanzo-message-ts` calls
-  `/v1/node` — 130 call sites — which node serves from **v1.19.2** on. So the
-  app builds against this pin and its node calls 404 until a v1.19.2+ archive
-  is published. Nothing newer than v1.15.0 has ever been published as a binary;
-  the later tags produced a linux/amd64 container image and nothing else.
-- **Two archives ship the wrong CPU's tool runtimes.** `file` on every member:
-  `aarch64-unknown-linux-gnu` carries **x86-64** deno and uv, and
-  `x86_64-apple-darwin` carries **arm64** ones. Those two were cross-compiled —
-  `cargo build --target` moved the Rust binary, the tool runtimes came from the
-  builder. `hanzo-node` itself is correct in all five. The archive listing, the
-  HTTP status and the unzip all look perfect; only `file` on the extracted
-  members shows it, and on arm64 Linux the app therefore installs and then
-  fails at every tool execution with `exec format error`. Build each target
-  natively, and check all three members.
-
-**Two TypeScripts, and which one is the CHECKER.** `pnpm typecheck` runs
+Which one is the CHECKER: `pnpm typecheck` runs
 **7.0.2**, the compiler rewritten in Go, invoked BY PATH
 (`node ../../node_modules/typescript-7/bin/tsc`) — two packages here ship a `tsc`
 and which one wins `node_modules/.bin` is pnpm's business, not ours.
@@ -265,32 +235,24 @@ pre-release channel of the same binary, behind stable.
 
 `Hanzo Desktop.log` (Tauri `app_log_dir()`: `~/Library/Logs/<identifier>/` on
 macOS, `<data_local_dir>/<identifier>/logs/` on Linux and Windows) receives the
-app's own `log::*` records and every stdout/stderr line of the sidecars,
-forwarded by `ProcessHandler` (stdout at INFO, stderr at ERROR). A sidecar
-release is pinned (`src-tauri/pins`), so whatever it prints is out of this
-repo's hands until the pin moves. The sink therefore never trusts its input:
+app's own `log::*` records. The sink never trusts its input:
 
 - `src-tauri/log-redact` (crate `hanzo-log-redact`, pure Rust) is the one
   redaction layer. `redact()` runs inside the tauri-plugin-log `format`
   closure in `main.rs`, so every record passes it. It removes PEM blocks,
   standalone base64 runs, secret-named fields, bearer/API tokens, long hex and
   base58, and 12+ word BIP-39 runs.
-- `StreamRedactor` sits in `ProcessHandler`: a sidecar prints a PEM one line
-  per event, and no single line holds the block, so it drops the lines between
-  `BEGIN` and `END`.
 - `scrub_log_dir()` runs in `main()` before the log plugin opens the file and
   rewrites any `*.log` still holding such material (idempotent; files also get
   mode 0600 on Unix). Upgrading cleans what older builds wrote.
-- `ProcessHandler::spawn` logs env var NAMES, never values (they carry API keys
-  and installation secrets).
+- `redact_report()` is the same redaction plus what is personal (home-folder
+  names, quoted text), for what leaves the computer: the crash screen's Copy
+  details goes through it (`report.rs` `report_redact`).
 
 `cargo test --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml`
 is a `hanzo.yml` gate. Add a fixture there for any new secret shape; keep
 fixtures synthetic and assembled at run time.
 
-- Sidecar output goes through `StreamRedactor::redact_chunk`; the ready-signal
-  check and its log line use the returned (redacted) lines, never the raw
-  event. Anything else that inspects sidecar output must do the same.
 - OAuth/PKCE fields (`code_verifier`, `code_challenge`, `client_assertion`,
   `authorization_code`, and a bare `code` inside a `grant_type`/`redirect_uri`
   exchange) are redacted like any other secret field.
@@ -347,10 +309,12 @@ computes; `manifest.sh` waits until every asset has one, since GitHub adds it a 
 `latest.json`. Change a name and the download page loses a tile.
 
 `bundle.linux.rpm.compression` in `apps/hanzo-desktop/src-tauri/tauri.conf.json`
-must stay `{"type": "none"}` while `@tauri-apps/cli` bundles `rpm 0.16.0`:
+is `{"type": "none"}` because of what the bundle once carried; the model below no
+longer ships, so with the app alone a compressed rpm is cheap again and the
+setting can be revisited. The cause, while `@tauri-apps/cli` bundles `rpm 0.16.0`:
 `rpm 0.16.0`'s `Sha256Writer::write` hashes the entire input slice before forwarding to
 `Compressor::write`, which only consumes one 32–128 KB stream chunk per call on
-compressed encoders — turning the 584 MiB `embeddinggemma-300M-BF16.gguf` resource
+compressed encoders — which turned the 584 MiB `embeddinggemma-300M-BF16.gguf` resource
 into multi-terabyte O(N^2) SHA-256 hashing and corrupting `RPMTAG_PAYLOADDIGEST`.
 `Compressor::None(Vec<u8>)` consumes the slice in a single call (~850 MiB `.rpm`,
 valid payload digest, seconds to bundle).
@@ -376,12 +340,8 @@ setup are signed themselves, so there is no second 600 MB `.tar.gz` per platform
 - A release that stays a draft: a leg failed. Re-run the failed jobs; the release job
   publishes once Linux and Windows are all in.
 - Windows is cross-built on Linux (cargo-xwin, makensis, clang-cl); it needs no Windows host.
-- `src-tauri/Cargo.toml` names `hanzoai/engine` by optional path; `prepare.sh` writes
-  stub manifests beside the checkout so cargo can resolve. Nothing compiles them.
 - `VITE_POSTHOG_API_KEY` and `SECRET_DESKTOP_INSTALLATION_PROOF_KEY` are optional and
   unset in release builds; PostHog is off and the proof key is the compiled default.
-- The two archives `pins` warns about ship the wrong CPU's deno and uv; the universal
-  macOS app therefore carries arm64-only tool runtimes.
 
 ## Browser (the user's real one, over ZAP)
 
@@ -389,6 +349,9 @@ setup are signed themselves, so there is no second 600 MB `.tar.gz` per platform
 stands for this user's ZAP router beside every hanzo-mcp process; the
 browser works with or without one running. The Hanzo extension registers as
 `browser/<host>/<engine>-<id>`.
+
+No window calls it: it is plain Rust that `local_site` uses for a capture's
+screenshot (no Tauri command).
 
 - `browsers()` — the registered browsers: `{id, caps, attrs}`.
 - `browser(method, params)` — routes to the first one. `method` is the
@@ -398,12 +361,8 @@ browser works with or without one running. The Hanzo extension registers as
   Returns the JSON answer; `ERR:<why>` from the browser becomes the error.
 - Unix only (zapd is fcntl + UDS). Pinned by git tag: crates.io stops at 1.1.2,
   before the extension joined the door without pairing.
-- Desktop has no tool registry of its own — chat tools run in hanzo-node — so
-  the Tauri commands are the whole surface.
 - Test: `cargo test --bin hanzo-desktop commands::browser` runs a router under a
-  temp `XDG_RUNTIME_DIR`/`XDG_STATE_HOME` with a fake `browser/` node. A
-  checkout builds with `TAURI_CONFIG='{"bundle":{"externalBin":[],"resources":[]}}'`
-  when the sidecars are not downloaded.
+  temp `XDG_RUNTIME_DIR`/`XDG_STATE_HOME` with a fake `browser/` node.
 
 ## Local runs: Dev in a folder, no terminal
 
@@ -458,8 +417,7 @@ and the revoke the owner's alone, 403 to anyone else, an org admin included). Th
 Machines (`@hanzo/build` `settings/shared.tsx`): the machine that is this computer, found by its hostname, has **Let
 the web use a folder…**, which opens the OS folder dialog (`local_workspace_open_dialog`) and grants the folder chosen
 with the window's own session; every machine lists its shared folders with **Stop sharing**. A refusal is shown as
-the platform says it. The hostname is `@hanzo/app` `desktopLocal().host` (0.3.143; carried by
-`patches/@hanzo__app@0.3.124.patch` while the pin is 0.3.124), the os plugin's `hostname` (`os:allow-hostname` in
+the platform says it. The hostname is `@hanzo/app` `desktopLocal().host` (0.3.143+), the os plugin's `hostname` (`os:allow-hostname` in
 `capabilities/main.json`), the same name `hanzo link` registers the machine under. `e2e-tests/share-folder.spec.ts`
 drives it against a stand-in IPC and a stubbed platform. A computer
 that is not linked has no machine to share from: link it with `hanzo link` first. Grants are unix paths; a Windows
@@ -505,37 +463,6 @@ static files into `redesign/`; the preview follows each file it saves, and later
 next) show live in the same tab. Verify the Rust side with `cargo test --bin hanzo-desktop local_site` (the whole
 default-feature suite compiles: `cargo test --bin hanzo-desktop`).
 
-## Machines (Docker Desktop replacement)
-
-Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the
-`hanzod` daemon in `hanzoai/node/machine/`. Hanzo Desktop is a drop-in
-all-in-one Docker Desktop replacement: containers, Kubernetes, and Linux
-machines from one app, one binary backend.
-
-```
-apps/hanzo-desktop/
-  src-tauri/src/machine/    # Tauri commands -> unix socket client
-    socket.rs               # ~/.hanzo/run/machined.sock resolver
-    types.rs                # mirrors machine/proto.go (Machine, ExecFrame, ...)
-  src/pages/machines/       # React UI (list, create dialog, exec stream)
-```
-
-- Tauri commands: `machine_health`, `machine_list`, `machine_create`,
-  `machine_start`, `machine_stop`, `machine_delete`, `machine_exec` (streaming).
-- Wire format is JSON over the daemon's UNIX socket - see
-  `hanzoai/node/machine/proto.go` for the authoritative contract.
-- Brand gating: the Machines / Containers / K8s pages are Hanzo-only by
-  default. Other brands must set `VITE_ENABLE_MACHINES=true`
-  (or the equivalent runtime flag in `libs/brand-config`) to reveal them.
-  See `libs/brand-config/src/index.ts::isMachinesEnabled`.
-
-### e2e
-
-`e2e-tests/machine-flow.spec.ts` runs against `pnpm dev`, mocks
-`window.__TAURI_INTERNALS__.invoke` for the `machine_*` commands, and asserts
-the create dialog round-trip. CI must pass `VITE_BRAND=hanzo` so the
-Machines route renders.
-
 ## Brand + sign-in (the ONE standard)
 
 `libs/brand-config/src/index.ts` is **THE** brand table. Nothing brand-varying
@@ -553,11 +480,10 @@ bundle identifier nothing read.
 | lux | https://lux.id | `lux-app` | `lux://oauth/lux` | `lux-iam-callback` | `com.lux.desktop` |
 | zoo | https://zoolabs.id | `zoo-app` | `zoo://oauth/zoo` | `zoo-iam-callback` | `com.zoo.desktop` |
 
-- **Login**: `src/hooks/iam-auth.ts` — OAuth 2.0 code + PKCE(S256), public
-  client, no secret. Paths from `src/lib/iam-oidc.ts` (HIP-0111:
-  `/v1/iam/oauth/authorize`, `/v1/iam/oauth/token` — no `/api/`, no legacy
-  `/login/oauth/*`). `createAuthorizeRequest()` is pure and exported so the
-  per-brand URL is directly assertable.
+- **Login**: `host.tsx` `signIn` — OAuth 2.0 code + PKCE (S256) through the
+  `@hanzo/iam` SDK, public client, no secret. The redirect is a loopback port the
+  system picks for the attempt (RFC 8252 §7.3, `loopback.rs`); the wait, the
+  deadline and Cancel are `src/lib/sign-in-attempt.ts`.
 - **Callback**: `src-tauri/src/deep_links.rs` derives the event from the URL's
   path segment (`<scheme>://oauth/<brand>` → `<brand>-iam-callback`). Never
   hardcode a brand there.
@@ -595,19 +521,18 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   `allow-hanzo-node-spawn`) and a window calls only what its capability grants.
   Without that, Tauri v2 lets every window call every command. `main.json` grants
   all of them, and the build refuses one it misses or a grant no handler serves.
-  The main window is the only window. A command that a hanzo.ai page in it must
-  not call (models, mining, the sign-in port, sign-out, the report redactor) is
-  granted in `main-local.json` instead, and a test resolves the built ACL to prove
-  no remote origin reaches it. Capabilities never share a window: Tauri merges
-  overlapping ones. The one deliberate overlap is `main-local.json` on the main window: Tauri
-  keeps each capability's origins with its own grants (tauri-utils `resolve_command`), so it
-  narrows what remote pages reach rather than widening anything. The old `commands.allow` key was inert (not in the v2 schema) and
+  The main window is the only window and `main.json` its one capability. It lists
+  no remote origin, so a page from another origin (a hanzo.ai frame in the window)
+  reaches no command and no plugin; the window never shows one itself (`away` in
+  `main.rs`). `src-tauri/src/capabilities_test.rs` resolves the built ACL as Tauri
+  does and proves it: nothing is granted to a remote origin, and the sign-in
+  (`identity_*`, `iam_loopback`), `report_redact`, mining and `local_models_*` are
+  granted to the window's own pages. The old `commands.allow` key was inert (not in the v2 schema) and
   is gone.
 - `pnpm build:ci`'s `tsc` step is a **no-op**: `tsconfig.json` has
   `files: []` + `include: []` and only `references`, so plain `tsc` checks
   nothing. Real typecheck is `pnpm typecheck` (`-p tsconfig.app.json`), which puts
-  TypeScript 7 over 846 app sources and comes back **clean** — 0 errors, measured
-  on the mirror tip and on this branch alike. It was 59, then 47 through the
+  TypeScript 7 over the app's sources and comes back **clean** — 0 errors. It was 59, then 47 through the
   eleven-primitive migration; the gui shorthand style props behind those resolve
   against the 8.2.1 / `@hanzo/ui` 8.4.13 types. So a non-zero count is now a
   regression to fix, not a baseline to compare against.
@@ -738,44 +663,7 @@ Three things worth knowing before editing the shot list:
   says nothing about architecture. An interactive shell hides it by caching the
   good path, so it reproduces only from a script.
 
-## Two defects the recorder found, both fixed
-
-**The consent checkbox was a pressable div.** `Welcome.tsx` drew an 18px box
-with a tick inside it and hung `onPress` on the row — no checkbox role, no
-checked state, no focus. It gates BOTH sign-in buttons, so a keyboard or
-screen-reader user was locked out of the app at its first screen, and the whole
-`@hanzo/ui` Checkbox it was reimplementing was already in the barrel. It is now
-that Checkbox plus a `Label` bound by `id`/`htmlFor`, which keeps the caption
-clickable without a press handler wrapping the row.
-
-**Every primary CTA in the shell was inert.** `Shell.tsx` rendered a filled
-header button with no `onPress` and passed `primary={{ label }}` with no
-handler, for all five sections — New chat, Create agent, Add tool, Add files,
-Open node manager. Clicking any of them did nothing, with no console error, so
-the app read as broken rather than unfinished. They are removed; `Docs` stays
-because it goes somewhere.
-
-Restoring one is not a UI change, it is a destination. The main window has no
-router (`main.tsx` is `createRoot` → `Gui` → `HanzoApp`), the feature pages
-under `src/pages/*` are not ported into the shell, and the `hanzo-node-manager`
-window is reachable only from Rust — `windows/mod.rs::recreate_window` carries
-no `#[tauri::command]`, so the frontend cannot open it. Give a section its
-`primary` back in the same change that gives it somewhere to go.
-
-**Chat has one.** `src/hanzo/node.ts` is the local node's client — health,
-pairing, providers, conversations, history, a turn, and the socket the answer
-streams on. `src/hanzo/useChat.ts` holds the conversation and draws nothing; it
-answers `messages` and `send`, which is the shape `@hanzo/ui/chat`'s `Chat` is
-built to be spread with, so the picture takes the state and owns none of it.
-The model list comes from the node through `ModelSelector` rather than a
-constant in the shell, and the sidebar's node row says whether it is serving.
-
-Two layout facts fell out of it and hold for anything else mounted there. The
-dock's `Panel` is not a flex parent, so a body fills it by `height`, not
-`flex` — a child asking for `flex: 1` in there takes its content's height,
-which is why the empty card used to sit at the top of the window. And `Chat`'s
-`empty` replaces the thread rather than sitting above it, so it has to take the
-thread's room or the composer floats a third of the way down.
+## Branding leak in old branches
 
 ### The tip is not the leak — 53 branches and main's own history still serve them
 
@@ -880,7 +768,7 @@ root.
 ## Desktop Architecture, Build & Keybindings (2026-11-19)
 - **Tauri Workspace Isolation (`apps/hanzo-desktop/src-tauri/Cargo.toml`)**: Includes `[workspace]` at the manifest root so Cargo never walks up to parent workspace manifests (`~/work/hanzo/Cargo.toml`) during `tauri build` or `tauri dev`.
 - **Dock Reopen (`apps/hanzo-desktop/src-tauri/src/main.rs`)**: `RunEvent::Reopen` delegates to `recreate_window(app_handle.clone(), Window::Main, true)` so reopening from the macOS Dock after closing (`⌘W`) mounts `index.html` (`main_url("/chat")`) with microphone permissions enabled rather than raw `localhost:3000`.
-- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.2.63.patch`)**:
+- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.149.patch`)**:
   - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).
@@ -901,10 +789,8 @@ root.
 
 `src/local-ai.tsx` is the screen (the bar's Local AI button); `src/lib/local-models.ts` is its one
 seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` granted in
-`capabilities/main-local.json`: the main window's own pages only, not the remote origins `main.json`
-lists, so a hanzo.ai page cannot pull models or fill the disk (`build.rs` counts `main` and
-`main-local` together; the test `only_the_windows_own_pages_reach_the_model_commands` resolves the
-built ACL). The commands also refuse a repository not in `src/lib/local-sources.json`, the one list
+`capabilities/main.json` to the window's own pages only, so a hanzo.ai page cannot pull models or
+fill the disk (`capabilities_test.rs` resolves the built ACL). The commands also refuse a repository not in `src/lib/local-sources.json`, the one list
 the window's `LOCAL_SOURCES` and the Rust side (`include_str!`) both read, and a download that would
 leave less than 2 GB free (`MIN_FREE_BYTES`):
 

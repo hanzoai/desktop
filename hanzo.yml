@@ -6,9 +6,9 @@
 # to deploy.
 #
 # `pnpm typecheck` (tsc --noEmit against the app's own tsconfig.app.json) is the
-# real gate for this tree: the app is TypeScript end to end and its libs are
-# consumed as source through the workspace, so a break in libs/hanzo-ui or
-# libs/hanzo-message-ts surfaces here rather than in whoever imports it next.
+# real gate for this tree: the app is TypeScript end to end and its two libs
+# (libs/brand-config, libs/hanzo-logo) are consumed as source through the
+# workspace, so a break in either surfaces here.
 # The install runs its scripts on purpose — postinstall applies the
 # vite-plugin-wasm patch and the libsodium-sumo symlink, and a tree without them
 # is not the tree that gets built.
