@@ -1,17 +1,13 @@
 import './globals.css';
 
-// The generated-code sandbox gets the component library as a scope object; the
-// same library this window renders its own chrome from. One copy, one theme.
-import * as hanzoUi from '@hanzo/desktop-ui';
-import { DotPattern } from '@hanzo/desktop-ui';
+import * as shadcnComponents from '@hanzo_network/hanzo-artifacts';
+import { DotPattern } from '@hanzo_network/hanzo-ui';
 import { Loader2 } from 'lucide-react';
 import * as lucideReactIcons from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as recharts from 'recharts';
-
-import { Gui } from '../../gui';
 
 class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -29,7 +25,7 @@ class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="border bg-red-100 p-4 text-sm whitespace-pre-wrap text-red-700">
+        <div className="whitespace-pre-wrap border bg-red-100 p-4 text-sm text-red-700">
           <h3 className="font-medium">Runtime Error:</h3>
           <pre>{this.state.error?.message}</pre>
         </div>
@@ -42,37 +38,13 @@ class ErrorBoundary extends React.Component<
 
 // Simple JSX-to-JS transpiler using TypeScript compiler API (loaded from CDN)
 // Replaces the heavy @babel/standalone dependency (~3MB → ~200KB)
-//
-// The type describes the CDN GLOBAL (`window.ts`, TypeScript 5.5.4), not the
-// installed compiler: typescript@7 is the native Go build and ships no
-// JS compiler API off its root export, so `typeof import('typescript')` names
-// something that no longer has `transpileModule`. Declaring the four members
-// this window actually calls keeps the annotation true to the thing at runtime.
-type TsTranspiler = {
-  transpileModule(
-    input: string,
-    options: {
-      compilerOptions: {
-        jsx: number;
-        module: number;
-        target: number;
-        esModuleInterop: boolean;
-      };
-    },
-  ): { outputText: string };
-  JsxEmit: { React: number };
-  ModuleKind: { None: number };
-  ScriptTarget: { ES2020: number };
-};
+let tsModule: typeof import('typescript') | null = null;
 
-let tsModule: TsTranspiler | null = null;
-
-async function loadTypeScript(): Promise<TsTranspiler> {
+async function loadTypeScript(): Promise<typeof import('typescript')> {
   if (tsModule) return tsModule;
   // Use the TypeScript compiler from CDN for runtime transpilation
   const script = document.createElement('script');
-  script.src =
-    'https://cdn.jsdelivr.net/npm/typescript@5.5.4/lib/typescript.min.js';
+  script.src = 'https://cdn.jsdelivr.net/npm/typescript@5.5.4/lib/typescript.min.js';
   await new Promise<void>((resolve, reject) => {
     script.onload = () => resolve();
     script.onerror = reject;
@@ -132,7 +104,9 @@ function rewriteImports(code: string, scope: Record<string, any>): string {
       // default + named: import X, { Y } from 'z'
       const mixedMatch = imports.match(/^(\w+)\s*,\s*\{(.+)\}$/);
       if (mixedMatch) {
-        result.push(`const ${mixedMatch[1]} = scope.${mixedMatch[1]};`);
+        result.push(
+          `const ${mixedMatch[1]} = scope.${mixedMatch[1]};`,
+        );
         const names = mixedMatch[2].split(',').map((n) => n.trim());
         for (const name of names) {
           result.push(`const ${name} = scope.${scopeKey}.${name};`);
@@ -190,7 +164,7 @@ export const getReactComponentFromCode = async (code: string) => {
         useState: React.useState,
         useEffect: React.useEffect,
       },
-      ...hanzoUi,
+      ...shadcnComponents,
       ...recharts,
       ...lucideReactIcons,
     };
@@ -267,11 +241,9 @@ const App = () => {
 };
 
 ReactDOM.createRoot(document.querySelector('#root') as HTMLElement).render(
-  <Gui>
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  </Gui>,
+  <React.StrictMode>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </React.StrictMode>,
 );

@@ -1,5 +1,5 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Button } from '@hanzo/desktop-ui';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { Button } from '@hanzo_network/hanzo-ui';
 import { CheckIcon, XIcon } from 'lucide-react';
 import { useNavigate } from 'react-router';
 
@@ -38,7 +38,7 @@ const AnalyticsPage = () => {
 
   return (
     <div className="mx-auto flex h-full max-w-lg flex-col gap-8">
-      <h1 className="font-sans text-4xl font-semibold">
+      <h1 className="font-inter text-4xl font-semibold">
         {t('analytics.title')}
       </h1>
       <div className="text-text-secondary flex flex-1 flex-col gap-10 text-base">

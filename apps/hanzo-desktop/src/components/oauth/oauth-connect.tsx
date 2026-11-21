@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -6,8 +6,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   buttonVariants,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { CheckCircle, ExternalLink, Loader2 } from 'lucide-react';
 import React from 'react';
 
@@ -101,7 +101,7 @@ export const OAuthConnect = () => {
 
   return (
     <AlertDialog open={oauthModalVisible}>
-      <AlertDialogContent bg="white" className="rounded-lg shadow-lg">
+      <AlertDialogContent className="rounded-lg bg-white p-6 shadow-lg">
         <AlertDialogHeader>
           <div className="flex items-center">
             {oauthData?.providerData?.image && (

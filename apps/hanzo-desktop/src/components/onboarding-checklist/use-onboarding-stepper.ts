@@ -1,9 +1,9 @@
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetHealth } from '@hanzo/desktop-node-state/v2/queries/getHealth/useGetHealth';
-import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
-import { useScanLocalModels } from '@hanzo/desktop-node-state/v2/queries/scanLocalModels/useScanLocalModels';
-import { useMap } from '@hanzo/desktop-ui/hooks';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetHealth } from '@hanzo_network/hanzo-node-state/v2/queries/getHealth/useGetHealth';
+import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
+import { useMap } from '@hanzo_network/hanzo-ui/hooks';
 import { useEffect } from 'react';
 
 import { useAuth } from '../../store/auth';

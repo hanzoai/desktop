@@ -10,12 +10,12 @@ const listenMock = vi.fn().mockResolvedValue(() => {});
 beforeEach(() => {
   invokeMock.mockReset();
   listenMock.mockClear();
-  (globalThis as { window?: unknown }).window =
-    (globalThis as { window?: unknown }).window ?? {};
-  (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ =
-    {
-      invoke: invokeMock,
-    };
+  (globalThis as { window?: unknown }).window = (
+    globalThis as { window?: unknown }
+  ).window ?? {};
+  (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ = {
+    invoke: invokeMock,
+  };
   // Stub fetch for eth_getBalance — we don't exercise the network here.
   vi.stubGlobal(
     'fetch',
@@ -31,12 +31,13 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 vi.mock('@tauri-apps/api/event', () => ({
-  listen: (...args: unknown[]) => listenMock(...(args as [string, () => void])),
+  listen: (...args: unknown[]) =>
+    listenMock(...(args as [string, () => void])),
 }));
 
-vi.mock('../../lib/lux-wallet', () => ({
-  useSelectedAccount: () => ({
-    evmAddress: '0x1111111111111111111111111111111111111111',
+vi.mock('../../store/wallet', () => ({
+  useWallet: () => ({
+    wallet: { address: '0x1111111111111111111111111111111111111111' },
   }),
 }));
 
@@ -51,7 +52,7 @@ describe('MiningPage', () => {
             work_id_hex:
               'aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899',
             reward_wei: '1000000000000000000',
-            chain_id: 36963,
+            chain_id: 96369,
             status: 'locally_verified',
             timestamp: 1_700_000_000,
             privacy: 3,

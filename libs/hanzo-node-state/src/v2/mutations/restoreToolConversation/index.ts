@@ -1,4 +1,4 @@
-import { restoreToolConversation as restoreToolConversationApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { restoreToolConversation as restoreToolConversationApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type RestoreToolConversationInput } from './types';
 

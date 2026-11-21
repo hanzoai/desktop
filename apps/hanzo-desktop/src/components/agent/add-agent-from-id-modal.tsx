@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Button,
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
   Input,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { useState, useEffect } from 'react';
 
 export default function AddAgentFromIdModal() {
@@ -35,7 +35,7 @@ export default function AddAgentFromIdModal() {
           {t('networkAgentsPage.addAgentFromId')}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md" showCloseButton={false}>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('networkAgentsPage.addAgentFromId')}</DialogTitle>
           <DialogDescription className="space-y-2">
@@ -47,7 +47,7 @@ export default function AddAgentFromIdModal() {
           value={agentId}
           onChange={(e) => setAgentId(e.target.value)}
         />
-        <DialogFooter flexDirection="row" gap={4}>
+        <DialogFooter className="flex-row gap-1">
           <Button variant="outline" size="md" onClick={() => setOpen(false)}>
             {t('common.cancel')}
           </Button>

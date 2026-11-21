@@ -1,38 +1,14 @@
 {
   "identifier": "main",
-  "description": "The main window: every plugin permission it uses and every command the app registers (build.rs refuses a command it does not grant).",
+  "description": "permissions that were migrated from v1",
   "local": true,
-  "remote": {
-    "urls": [
-      "http://localhost:3000/*",
-      "http://127.0.0.1:3000/*",
-      "http://localhost:1420/*",
-      "http://127.0.0.1:1420/*",
-      "https://hanzo.ai/*",
-      "https://*.hanzo.ai/*",
-      "https://hanzo.team/*",
-      "https://*.hanzo.team/*",
-      "https://hanzo.id/*",
-      "https://*.hanzo.id/*"
-    ]
-  },
-  "windows": [
-    "main"
-  ],
+  "windows": ["main", "spotlight"],
   "permissions": [
     "core:default",
-    "deep-link:default",
     "dialog:allow-save",
     "fs:allow-download-write",
     "shell:allow-open",
     "core:window:allow-start-dragging",
-    "core:window:default",
-    "core:window:allow-minimize",
-    "core:window:allow-maximize",
-    "core:window:allow-unmaximize",
-    "core:window:allow-toggle-maximize",
-    "core:window:allow-internal-toggle-maximize",
-    "core:window:allow-close",
     "updater:allow-check",
     "updater:allow-download",
     "updater:allow-install",
@@ -52,222 +28,31 @@
     "opener:default",
     {
       "identifier": "http:default",
-      "allow": [
-        {
-          "url": "https://mcp.composio.dev"
-        },
-        {
-          "url": "https://chatgpt.com/*"
-        },
-        {
-          "url": "https://api.anthropic.com/*"
-        },
-        {
-          "url": "https://claude.ai/*"
-        },
-        {
-          "url": "https://api.hanzo.ai/*"
-        },
-        {
-          "url": "https://hanzo.ai/*"
-        },
-        {
-          "url": "https://hanzo.id/*"
-        }
-      ],
+      "allow": [{ "url": "https://mcp.composio.dev" }],
       "deny": []
-    },
-    {
-      "identifier": "fs:allow-read-text-file",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-write-text-file",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-read-file",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-write-file",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-read-dir",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-mkdir",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-create",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-remove",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-rename",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-copy-file",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-exists",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    {
-      "identifier": "fs:allow-stat",
-      "allow": [
-        { "path": "**" },
-        { "path": "$HOME/**" }
-      ]
-    },
-    "allow-local-workspace-open-dialog",
-    "allow-local-workspace-open-file-dialog",
-    "allow-local-workspace-clone-repo",
-    "allow-local-workspace-import-file",
-    "allow-local-workspace-list",
-    "allow-local-workspace-read-file",
-    "allow-local-workspace-write-file",
-    "allow-local-workspace-create-file",
-    "allow-local-workspace-create-dir",
-    "allow-local-workspace-delete",
-    "allow-local-workspace-run-dev",
-    "allow-local-workspace-discover",
-    "allow-local-dev-setup-cancel",
-    "allow-local-site-folder",
-    "allow-local-site-capture",
-    "allow-local-preview-start",
-    "allow-local-preview-stop",
-    "allow-local-preview-open",
-    "allow-browser",
-    "allow-browsers",
-    "allow-check-claude-installed",
-    "allow-check-cursor-installed",
-    "allow-download-logs",
-    "allow-engine-get-model-id",
-    "allow-engine-get-status",
-    "allow-engine-is-model-loaded",
-    "allow-engine-list-zen5-models",
-    "allow-engine-load-gguf",
-    "allow-engine-load-model",
-    "allow-engine-probe",
-    "allow-engine-unload-model",
-    "allow-engines-discover",
-    "allow-galxe-generate-proof",
-    "allow-get-claude-config-help",
-    "allow-get-cursor-command-config-help",
-    "allow-get-cursor-sse-config-help",
-    "allow-get-request",
-    "allow-gpu-connect-get-state",
-    "allow-gpu-connect-start",
-    "allow-gpu-connect-stop",
-    "allow-hanzo-node-get-default-embedding-model",
-    "allow-hanzo-node-get-default-model",
-    "allow-hanzo-node-get-options",
-    "allow-hanzo-node-is-running",
-    "allow-hanzo-node-kill",
-    "allow-hanzo-node-open-chat-folder",
-    "allow-hanzo-node-open-storage-location",
-    "allow-hanzo-node-open-storage-location-with-path",
-    "allow-hanzo-node-remove-storage",
-    "allow-hanzo-node-set-default-options",
-    "allow-hanzo-node-set-options",
-    "allow-hanzo-node-spawn",
-    "allow-hardware-get-summary",
-    "allow-hide-spotlight-window-app",
-    "allow-is-server-registered-in-claude",
-    "allow-is-server-registered-in-cursor",
-    "allow-knowledge-graph-get-ontology",
-    "allow-knowledge-graph-query-entity",
-    "allow-knowledge-graph-read-local",
-    "allow-knowledge-graph-sync-apple",
-    "allow-knowledge-graph-update-convo",
-    "allow-machine-create",
-    "allow-machine-delete",
-    "allow-machine-events-subscribe",
-    "allow-machine-exec",
-    "allow-machine-get",
-    "allow-machine-health",
-    "allow-machine-list",
-    "allow-machine-start",
-    "allow-machine-stop",
-    "allow-mining-get-balance",
-    "allow-mining-get-history",
-    "allow-mining-get-local-pending",
-    "allow-mining-get-state",
-    "allow-mining-get-wallet-address",
-    "allow-mining-set-privacy",
-    "allow-mining-start",
-    "allow-mining-stop",
-    "allow-model-tools-bitdelta-apply",
-    "allow-model-tools-bitdelta-encode",
-    "allow-model-tools-grpo-run",
-    "allow-model-tools-soup-available",
-    "allow-model-tools-soup-average",
-    "allow-model-tools-soup-delta",
-    "allow-node-get-default-embedding-model",
-    "allow-node-get-default-model",
-    "allow-node-get-options",
-    "allow-node-is-running",
-    "allow-node-kill",
-    "allow-node-remove-storage",
-    "allow-node-set-default-options",
-    "allow-node-set-options",
-    "allow-node-spawn",
-    "allow-open-main-window-with-path-app",
-    "allow-post-request",
-    "allow-register-command-server-in-cursor",
-    "allow-register-server-in-claude",
-    "allow-register-sse-server-in-cursor",
-    "allow-retrieve-logs",
-    "allow-secure-storage-delete",
-    "allow-secure-storage-get",
-    "allow-secure-storage-set",
-    "allow-show-hanzo-node-manager-window",
-    "allow-show-node-manager-window",
-    "allow-show-spotlight-window-app",
-    "allow-studio-get-state",
-    "allow-studio-start",
-    "allow-studio-stop"
+    }
+  ],
+  "commands.allow": [
+    "hanzo_node_is_running",
+    "hanzo_node_get_options",
+    "hanzo_node_set_options",
+    "hanzo_node_spawn",
+    "hanzo_node_kill",
+    "hanzo_node_remove_storage",
+    "hanzo_node_set_default_options",
+    "hanzo_node_get_ollama_api_url",
+    "hanzo_node_get_default_model",
+    "hardware_get_summary",
+    "galxe_generate_proof",
+    "retrieve_logs",
+    "machine_health",
+    "machine_list",
+    "machine_get",
+    "machine_create",
+    "machine_start",
+    "machine_stop",
+    "machine_delete",
+    "machine_exec",
+    "machine_events_subscribe"
   ]
 }

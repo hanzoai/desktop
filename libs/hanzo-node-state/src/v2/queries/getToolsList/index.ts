@@ -1,4 +1,4 @@
-import { getTools as getToolsApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getTools as getToolsApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type GetToolsListInput } from './types';
 

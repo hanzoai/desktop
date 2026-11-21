@@ -1,9 +1,9 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { buildInboxIdFromJobId } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { DEFAULT_CHAT_CONFIG } from '@hanzo/desktop-node-state/v2/constants';
-import { useCreateJob } from '@hanzo/desktop-node-state/v2/mutations/createJob/useCreateJob';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { Badge, buttonVariants } from '@hanzo/desktop-ui';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { buildInboxIdFromJobId } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { DEFAULT_CHAT_CONFIG } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useCreateJob } from '@hanzo_network/hanzo-node-state/v2/mutations/createJob/useCreateJob';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { Badge, buttonVariants } from '@hanzo_network/hanzo-ui';
 import { invoke } from '@tauri-apps/api/core';
 import { motion } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 
 import { useSetJobScope } from '../../components/chat/context/set-job-scope-context';
 import { usePromptSelectionStore } from '../../components/prompt/context/prompt-selection-context';
-import { useRoutedDefaultAgentId } from '../../hooks/use-routed-default-agent';
 import { useAuth } from '../../store/auth';
+import { useSettings } from '../../store/settings';
 import { useHanzoNodeManager } from '../../store/hanzo-node-manager';
 
 export const showSpotlightWindow = async () => {
@@ -28,7 +28,9 @@ const EmptyMessage = () => {
     nodeAddress: auth?.node_address ?? '',
     token: auth?.api_v2_key ?? '',
   });
-  const isLocalHanzoNodeIsUse = useHanzoNodeManager((state) => state.isInUse);
+  const isLocalHanzoNodeIsUse = useHanzoNodeManager(
+    (state) => state.isInUse,
+  );
   const { t } = useTranslation();
 
   const resetJobScope = useSetJobScope((state) => state.resetJobScope);
@@ -36,7 +38,7 @@ const EmptyMessage = () => {
     (state) => state.setPromptSelected,
   );
   const navigate = useNavigate();
-  const defaultAgentId = useRoutedDefaultAgentId();
+  const defaultAgentId = useSettings((state) => state.defaultAgentId);
 
   const { mutateAsync: createJob } = useCreateJob({
     onError: (error) => {

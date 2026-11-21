@@ -1,7 +1,7 @@
-import { ToggleGroup, ToggleGroupItem } from '@hanzo/desktop-ui';
+import { ToggleGroup, ToggleGroupItem } from '@hanzo_network/hanzo-ui';
 import { LayoutGrid, List } from 'lucide-react';
 
-import { useVectorFsStore, VectorFSLayout } from '../context/vector-fs-context';
+import { useVectorFsStore,VectorFSLayout } from '../context/vector-fs-context';
 
 export default function VectorFsToggleLayout() {
   const layout = useVectorFsStore((state) => state.layout);

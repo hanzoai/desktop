@@ -478,22 +478,16 @@ export const OllamaIcon = ({ className }: { className?: string }) => {
 };
 
 export const ZenIcon = ({ className }: { className?: string }) => {
-  // Canonical Zen ensō (~/work/zen/logo · github.com/zenlm) — open brush-stroke ring; inherits theme color.
+  // Zen enso — a perfect ring. Inherits text color (currentColor).
   return (
     <svg
       className={cn('shrink-0', className)}
       fill="none"
       height="1em"
       width="1em"
-      viewBox="0 0 100 100"
+      viewBox="0 0 24 24"
     >
-      <path
-        d="M58 13 C38 9 17 22 13 44 C9 68 26 89 50 90 C74 91 91 74 89 50 C88 41 87 35 84 30"
-        stroke="currentColor"
-        strokeWidth="7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+      <circle cx="12" cy="12" r="8.6" stroke="currentColor" strokeWidth="2.3" />
     </svg>
   );
 };

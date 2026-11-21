@@ -1,4 +1,9 @@
-import { Button, Dialog, DialogContent, Input } from '@hanzo/desktop-ui';
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  Input,
+} from '@hanzo_network/hanzo-ui';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { openPath } from '@tauri-apps/plugin-opener';
 import { DownloadIcon, Loader2, RotateCw, Search } from 'lucide-react';
@@ -152,11 +157,7 @@ export const Logs = () => {
       </div>
 
       <Dialog onOpenChange={() => setSelectedLog(null)} open={!!selectedLog}>
-        <DialogContent
-          className="max-h-[90vh] w-[90vw] max-w-[800px] overflow-y-auto"
-          showCloseButton={false}
-          maxW={800}
-        >
+        <DialogContent className="max-h-[90vh] w-[90vw] max-w-[800px] overflow-y-auto">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

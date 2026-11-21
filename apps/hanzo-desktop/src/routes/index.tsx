@@ -1,6 +1,6 @@
-import { FunctionKeyV2 } from '@hanzo/desktop-node-state/v2/constants';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { TooltipProvider } from '@hanzo/desktop-ui';
+import { FunctionKeyV2 } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { TooltipProvider } from '@hanzo_network/hanzo-ui';
 import { useQueryClient } from '@tanstack/react-query';
 import { listen } from '@tauri-apps/api/event';
 import { debug } from '@tauri-apps/plugin-log';
@@ -19,6 +19,7 @@ import EditAgentPage from '../components/agent/edit-agent';
 import { ChatProvider } from '../components/chat/context/chat-context';
 import { SetJobScopeProvider } from '../components/chat/context/set-job-scope-context';
 import { ToolsProvider as ToolsProviderChat } from '../components/chat/context/tools-context';
+import { WalletsProvider } from '../components/crypto-wallet/context/wallets-context';
 import DefaultLlmProviderUpdater from '../components/default-llm-provider/default-llm-provider-updater';
 import {
   COMPLETION_DESTINATION,
@@ -63,7 +64,6 @@ import HomePage from '../pages/home';
 import InternetAccessPage from '../pages/internet-access';
 import ContainersPage from '../pages/containers';
 import KubernetesPage from '../pages/kubernetes';
-import MiningPage from '../pages/mining';
 import MachineDetailPage from '../pages/machines/[name]';
 import MachinesPage from '../pages/machines';
 import MainLayout from '../pages/layout/main-layout';
@@ -83,7 +83,6 @@ import TermsAndConditionsPage, {
   LogoTapProvider,
 } from '../pages/terms-conditions';
 import ToolFeedbackPrompt from '../pages/tool-feedback';
-import UsagePage from '../pages/usage';
 import { ToolsPage } from '../pages/tools-homepage';
 import BotPage from '../pages/bot';
 import { useAuth } from '../store/auth';
@@ -91,12 +90,7 @@ import { useSettings } from '../store/settings';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import useAppHotkeys from '../utils/use-app-hotkeys';
 
-const skipOnboardingRoutes = [
-  '/quick-connection',
-  '/restore',
-  '/connect-qr',
-  '/wallet',
-];
+const skipOnboardingRoutes = ['/quick-connection', '/restore', '/connect-qr'];
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const auth = useAuth((state) => state.auth);
@@ -110,7 +104,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { data: hanzoNodeIsRunning } = useHanzoNodeIsRunningQuery({
     refetchInterval: isCloudMode ? false : 1000,
   });
-  const { mutateAsync: hanzoNodeSetOptions } = useHanzoNodeSetOptionsMutation();
+  const { mutateAsync: hanzoNodeSetOptions } =
+    useHanzoNodeSetOptionsMutation();
   const { mutateAsync: hanzoNodeSpawn } = useHanzoNodeSpawnMutation();
   const location = useLocation();
 
@@ -129,7 +124,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     void debug(
       `initializing autoStartHanzoNodeTried.current:${autoStartHanzoNodeTried.current} isInUse:${isInUse} hanzoNodeIsRunning:${hanzoNodeIsRunning}`,
     );
-    if (!autoStartHanzoNodeTried.current && isInUse && !hanzoNodeIsRunning) {
+    if (
+      !autoStartHanzoNodeTried.current &&
+      isInUse &&
+      !hanzoNodeIsRunning
+    ) {
       autoStartHanzoNodeTried.current = true;
       void Promise.resolve().then(async () => {
         if (hanzoNodeOptions) {
@@ -334,17 +333,11 @@ const AppRoutes = () => {
               path={'quick-connection'}
             />
             <Route element={<RestoreConnectionPage />} path={'restore'} />
-            {/* <Route element={<ConnectMethodQrCodePage />} path={'connect-qr'} /> */}
           </Route>
-          {/* Native Lux Wallet & Engine Benchmark — node-independent. Reachable
-              before a node is connected so users can benchmark local engines (:36900)
-              or sign in with Wallet without onboarding a local node first. */}
-          <Route element={<CryptoWalletPage />} path={'wallet'} />
-          <Route element={<BenchmarkPage />} path={'benchmark'} />
           <Route
             element={
               <ProtectedRoute>
-                <TooltipProvider delay={0}>
+                <TooltipProvider delayDuration={0}>
                   <ChatProvider>
                     <SetJobScopeProvider>
                       <PromptSelectionProvider>
@@ -359,11 +352,12 @@ const AppRoutes = () => {
             }
           >
             <Route element={<HomePage />} path={'home'} />
+            <Route element={<BenchmarkPage />} path={'benchmark'} />
           </Route>
           <Route
             element={
               <ProtectedRoute>
-                <TooltipProvider delay={0}>
+                <TooltipProvider delayDuration={0}>
                   <ChatProvider>
                     <SetJobScopeProvider>
                       <PromptSelectionProvider>
@@ -409,7 +403,6 @@ const AppRoutes = () => {
             }
           >
             <Route element={<AIModelInstallation />} path="install-ai-models" />
-            <Route element={<UsagePage />} path="usage" />
             <Route element={<AIsPage />} path="ais" />
             <Route element={<AgentsPage />} path="agents" />
             <Route element={<AddAIPage />} path="add-ai" />
@@ -516,7 +509,14 @@ const AppRoutes = () => {
             <Route element={<AppearancePage />} path={'appearance'} />
             <Route element={<PromptLibrary />} path={'prompt-library'} />
             <Route element={<GalxeValidation />} path={'galxe-validation'} />
-            <Route element={<CryptoWalletPage />} path={'crypto-wallet'} />
+            <Route
+              element={
+                <WalletsProvider>
+                  <CryptoWalletPage />
+                </WalletsProvider>
+              }
+              path={'crypto-wallet'}
+            />
             <Route element={<InternetAccessPage />} path={'remote-access'} />
             <Route element={<ShortcutsPage />} path={'shortcuts'} />
           </Route>

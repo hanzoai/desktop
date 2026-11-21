@@ -1,4 +1,4 @@
-import { exportAgent as exportAgentApi } from '@hanzo/desktop-message-ts/api/agents/index';
+import { exportAgent as exportAgentApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
 
 import { type ExportAgentInput } from './types';
 

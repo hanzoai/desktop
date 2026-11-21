@@ -1,4 +1,4 @@
-import { createAgent as createAgentApi } from '@hanzo/desktop-message-ts/api/agents/index';
+import { createAgent as createAgentApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
 
 import { createRecurringTask } from '../createRecurringTask';
 import { type CreateAgentInput } from './types';

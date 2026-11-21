@@ -33,6 +33,9 @@
   "exportConnection": {
     "restoreText": "Bağlantıyı Zoo Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
   },
+  "extension": {
+    "welcome": "Zoo Visor ile web tarayıcı deneyiminizi AI ile dönüştürün ✨"
+  },
   "feedback": {
     "description": "Geri bildiriminizi önemsiyoruz! Zoo hakkındaki düşüncelerinizi ve deneyiminizi nasıl geliştirebileceğimiz konusunda bize bilgi verin."
   },

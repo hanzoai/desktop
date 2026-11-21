@@ -2,7 +2,7 @@ import { createCodePlugin } from '@streamdown/code';
 import { math } from '@streamdown/math';
 import { mermaid } from '@streamdown/mermaid';
 import { type ComponentPropsWithoutRef, type FC, memo } from 'react';
-import { type Components, type ExtraProps, Streamdown } from 'streamdown';
+import { Streamdown } from 'streamdown';
 import 'katex/dist/katex.min.css';
 
 import { cn } from '../utils';
@@ -40,6 +40,7 @@ const preprocessMermaidContent = (content: string): string => {
     },
   );
 };
+
 
 const isImageUrl = (url: string): boolean => {
   try {
@@ -80,13 +81,10 @@ const isVideoUrl = (url: string): boolean => {
   }
 };
 
-// `node` is the mdast element streamdown hands every custom renderer; it is
-// dropped here rather than spread, because the <a> below is a DOM node.
-const MediaAwareLink: FC<ComponentPropsWithoutRef<'a'> & ExtraProps> = ({
+const MediaAwareLink: FC<ComponentPropsWithoutRef<'a'>> = ({
   href,
   children,
   className,
-  node: _node,
   ...props
 }) => {
   const isImage = href && isImageUrl(href);
@@ -156,8 +154,6 @@ const MediaAwareLink: FC<ComponentPropsWithoutRef<'a'> & ExtraProps> = ({
   );
 };
 
-const components: Components = { a: MediaAwareLink };
-
 export type MarkdownTextProps = {
   children: string;
   className?: string;
@@ -177,7 +173,9 @@ const MarkdownTextBase = ({ children, className }: MarkdownTextProps) => {
         className,
       )}
       plugins={{ code: codePlugin, math, mermaid }}
-      components={components}
+      components={{
+        a: MediaAwareLink,
+      }}
       mermaid={{
         config: {
           theme: 'dark',

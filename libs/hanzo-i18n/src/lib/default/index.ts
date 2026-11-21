@@ -1,4 +1,8 @@
 export default {
+  extension: {
+    welcome:
+      'Transform your web browsing experience using AI with Hanzo Visor ✨',
+  },
   homepage: {
     welcomeTitle: 'How can I help you today?',
     agentConfigurationRequired:

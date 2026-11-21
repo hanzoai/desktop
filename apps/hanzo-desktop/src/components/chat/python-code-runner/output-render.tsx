@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import Plot from 'react-plotly.js';
 
 import { ErrorRender } from './error-render';

@@ -1,4 +1,5 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { type AlertDialogProps } from '@radix-ui/react-alert-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   AlertDialog,
   AlertDialogContent,
@@ -8,15 +9,13 @@ import {
   AlertDialogTitle,
   // AlertTitle,
   Button,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 
 import {
   useHanzoNodeKillMutation,
   useHanzoNodeRemoveStorageMutation,
   useHanzoNodeSpawnMutation,
 } from '../lib/hanzo-node-manager/hanzo-node-manager-client';
-import { type ComponentProps } from 'react';
-
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 
 export const ResetStorageBeforeConnectConfirmationPrompt = ({
@@ -27,14 +26,16 @@ export const ResetStorageBeforeConnectConfirmationPrompt = ({
   onCancel?: () => void;
   onRestore?: () => void;
   onReset?: () => void;
-} & ComponentProps<typeof AlertDialog>) => {
+} & AlertDialogProps) => {
   // const navigate = useNavigate();
   const { t } = useTranslation();
   const { setHanzoNodeOptions } = useHanzoNodeManager();
   const { mutateAsync: hanzoNodeKill, isPending: isHanzoNodeKillPending } =
     useHanzoNodeKillMutation();
-  const { mutateAsync: hanzoNodeSpawn, isPending: isHanzoNodeSpawnPending } =
-    useHanzoNodeSpawnMutation();
+  const {
+    mutateAsync: hanzoNodeSpawn,
+    isPending: isHanzoNodeSpawnPending,
+  } = useHanzoNodeSpawnMutation();
   const {
     mutateAsync: hanzoNodeRemoveStorage,
     isPending: isHanzoNodeRemoveStoragePending,
@@ -70,7 +71,7 @@ export const ResetStorageBeforeConnectConfirmationPrompt = ({
 
   return (
     <AlertDialog {...props}>
-      <AlertDialogContent>
+      <AlertDialogContent className="w-[100%]">
         <AlertDialogHeader>
           <AlertDialogTitle>
             {t('hanzoNode.resetNodeWarning.title')}
@@ -86,7 +87,7 @@ export const ResetStorageBeforeConnectConfirmationPrompt = ({
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="mt-4" gap={10}>
+        <AlertDialogFooter className="mt-4 flex items-center justify-end gap-2.5">
           {/*<Button className="mt-0 flex-1 text-sm" onClick={() => restore()}>*/}
           {/*  <span aria-label="restore" className="emoji" role="img">*/}
           {/*    🔑 {t('common.restore')}*/}

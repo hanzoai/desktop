@@ -1,19 +1,19 @@
 import {
   type WidgetToolType,
   type WsMessage,
-} from '@hanzo/desktop-message-ts/api/general/types';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+} from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   FunctionKeyV2,
   generateOptimisticAssistantMessage,
   OPTIMISTIC_ASSISTANT_MESSAGE_ID,
-} from '@hanzo/desktop-node-state/v2/constants';
+} from '@hanzo_network/hanzo-node-state/v2/constants';
 import {
   type FormattedMessage,
   type ChatConversationInfiniteData,
   type ToolCall,
-} from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+} from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import { useQueryClient } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { createContext, useEffect, useMemo, useRef, useState } from 'react';
@@ -42,7 +42,8 @@ const WS_RECONNECT_OPTIONS = {
   shouldReconnect: () => true,
   retryOnError: true,
   reconnectAttempts: Number.MAX_SAFE_INTEGER,
-  reconnectInterval: (attempt: number) => Math.min(1000 * 2 ** attempt, 10_000),
+  reconnectInterval: (attempt: number) =>
+    Math.min(1000 * 2 ** attempt, 10_000),
 } as const;
 
 export const useWebSocketMessage = ({

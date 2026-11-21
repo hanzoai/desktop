@@ -1,4 +1,4 @@
-import { setEnableMcpServer as setEnableMcpServerApi } from '@hanzo/desktop-message-ts/api/mcp-servers/index';
+import { setEnableMcpServer as setEnableMcpServerApi } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/index';
 
 import { SetEnableMcpServerInput } from './types';
 

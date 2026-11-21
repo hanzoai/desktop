@@ -1,0 +1,82 @@
+name: Tauri Build Matrix
+
+# Builds Hanzo Desktop natively across macOS arm64, Linux amd64, Linux arm64,
+# Windows amd64 — all on self-hosted org-scoped pools.
+#
+# Pool labels (round-robin within each pool):
+#   hanzoai-macos-arm64    → dbc
+#   hanzoai-linux-amd64    → evo WSL
+#   hanzoai-linux-arm64    → spark
+#   hanzoai-windows-amd64  → evo Windows
+#
+# Triggered manually or on tag push.
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.target.id }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - id: macos-arm64
+            runner: hanzoai-macos-arm64
+            tauri-target: aarch64-apple-darwin
+          - id: linux-amd64
+            runner: hanzoai-linux-amd64
+            tauri-target: x86_64-unknown-linux-gnu
+          - id: linux-arm64
+            runner: hanzoai-linux-arm64
+            tauri-target: aarch64-unknown-linux-gnu
+          - id: windows-amd64
+            runner: hanzoai-windows-amd64
+            tauri-target: x86_64-pc-windows-msvc
+
+    runs-on: ${{ matrix.target.runner }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show runner identity
+        run: |
+          echo "runner: ${{ matrix.target.runner }}"
+          echo "target: ${{ matrix.target.tauri-target }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '9'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target.tauri-target }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri app
+        run: |
+          cd apps/hanzo-desktop
+          pnpm tauri build --target ${{ matrix.target.tauri-target }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: hanzo-desktop-${{ matrix.target.id }}
+          path: |
+            apps/hanzo-desktop/src-tauri/target/${{ matrix.target.tauri-target }}/release/bundle/**/*
+          if-no-files-found: warn
+          retention-days: 30

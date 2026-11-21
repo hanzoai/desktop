@@ -1,4 +1,4 @@
-import { updateToolCodeImplementation as updateToolCodeImplementationApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { updateToolCodeImplementation as updateToolCodeImplementationApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type UpdateToolCodeImplementationInput } from './types';
 

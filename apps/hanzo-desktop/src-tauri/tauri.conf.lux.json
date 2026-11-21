@@ -1,5 +1,5 @@
 {
-  "productName": "Lux Desktop",
+  "productName": "Lux",
   "identifier": "com.lux.desktop",
   "bundle": {
     "icon": [
@@ -18,9 +18,7 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "lux"
-        ]
+        "schemes": ["lux"]
       }
     }
   },
@@ -30,6 +28,5 @@
         "title": "Lux Cloud"
       }
     ]
-  },
-  "mainBinaryName": "lux-desktop"
+  }
 }

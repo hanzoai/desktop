@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type Prompt } from '@hanzo/desktop-message-ts/api/tools/types';
-import { useCreatePrompt } from '@hanzo/desktop-node-state/v2/mutations/createPrompt/useCreatePrompt';
-import { useRemovePrompt } from '@hanzo/desktop-node-state/v2/mutations/removePrompt/useRemovePrompt';
-import { useUpdatePrompt } from '@hanzo/desktop-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
-// import { useUpdatePrompt } from '@hanzo/desktop-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
-import { useGetPromptList } from '@hanzo/desktop-node-state/v2/queries/getPromptList/useGetPromptList';
-import { useGetPromptSearch } from '@hanzo/desktop-node-state/v2/queries/getPromptSearch/useGetPromptSearch';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type Prompt } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useCreatePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/createPrompt/useCreatePrompt';
+import { useRemovePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/removePrompt/useRemovePrompt';
+import { useUpdatePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
+// import { useUpdatePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
+import { useGetPromptList } from '@hanzo_network/hanzo-node-state/v2/queries/getPromptList/useGetPromptList';
+import { useGetPromptSearch } from '@hanzo_network/hanzo-node-state/v2/queries/getPromptSearch/useGetPromptSearch';
 import {
   Button,
   Dialog,
@@ -29,8 +29,8 @@ import {
   SheetTitle,
   Textarea,
   TextField,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   Edit3Icon,
   // Edit3Icon,
@@ -340,7 +340,7 @@ export function CreatePromptDrawer({
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl" showCloseButton={false} maxW={672}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('prompt.drawer.createTitle')}</DialogTitle>
           <div>
@@ -371,7 +371,7 @@ export function CreatePromptDrawer({
                           <Textarea
                             autoFocus={true}
                             className="!min-h-[340px] resize-none text-sm"
-                            onKeyDown={(event: React.KeyboardEvent) => {
+                            onKeyDown={(event) => {
                               if (
                                 event.key === 'Enter' &&
                                 (event.metaKey || event.ctrlKey)
@@ -480,7 +480,7 @@ function UpdatePromptDrawer({
   };
   return (
     <Dialog onOpenChange={setOpen} open={open}>
-      <DialogContent className="max-w-2xl" showCloseButton={false} maxW={672}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('prompt.drawer.updateTitle')}</DialogTitle>
           <div>
@@ -510,7 +510,7 @@ function UpdatePromptDrawer({
                         <div className="space-y-2">
                           <Textarea
                             className="!min-h-[340px] resize-none text-sm"
-                            onKeyDown={(event: React.KeyboardEvent) => {
+                            onKeyDown={(event) => {
                               if (
                                 event.key === 'Enter' &&
                                 (event.metaKey || event.ctrlKey)

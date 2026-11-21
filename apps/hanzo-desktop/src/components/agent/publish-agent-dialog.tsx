@@ -1,14 +1,13 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type Agent } from '@hanzo/desktop-message-ts/api/agents/types';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type Agent } from '@hanzo_network/hanzo-message-ts/api/agents/types';
 import {
   type ToolOffering,
   type ToolUsageType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useSetToolOffering } from '@hanzo/desktop-node-state/v2/mutations/setToolOffering/useSetToolOffering';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetToolsWithOfferings } from '@hanzo/desktop-node-state/v2/queries/getToolsWithOfferings/useGetToolsWithOfferings';
-import { useGetWalletList } from '@hanzo/desktop-node-state/v2/queries/getWalletList/useGetWalletList';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useSetToolOffering } from '@hanzo_network/hanzo-node-state/v2/mutations/setToolOffering/useSetToolOffering';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetToolsWithOfferings } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsWithOfferings/useGetToolsWithOfferings';
+import { useGetWalletList } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletList/useGetWalletList';
 import {
   Dialog,
   DialogTrigger,
@@ -26,13 +25,14 @@ import {
   RadioGroupItem,
   Checkbox,
   Badge,
-} from '@hanzo/desktop-ui';
-import { AIAgentIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { AIAgentIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRightIcon, PlusIcon } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { toast } from 'sonner';
+import { BRAND } from '../../config/brand';
 import { useAuth } from '../../store/auth';
 type WizardStep = 'select' | 'configure' | 'publishing' | 'success';
 
@@ -167,7 +167,7 @@ export default function PublishAgentDialog() {
           {t('agents.publishDialog.open')}
         </Button>
       </DialogTrigger>
-      <DialogContent showCloseButton className="max-w-[600px]" maxW={600}>
+      <DialogContent showCloseButton className="max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{t('agents.publishDialog.open')}</DialogTitle>
         </DialogHeader>
@@ -258,8 +258,7 @@ export default function PublishAgentDialog() {
                       filteredAgents.find((a) => a.agent_id === value) ?? null,
                     )
                   }
-                  // gui bakes gap:$2 as a style prop, so `gap-1.5` lost the tie.
-                  gap={6}
+                  className="gap-1.5"
                 >
                   {filteredAgents?.map((agent) => (
                     <div
@@ -362,8 +361,8 @@ export default function PublishAgentDialog() {
                 </p>
                 <RadioGroup
                   value={pricingType}
-                  onValueChange={(value) =>
-                    setPricingType(value as 'free' | 'paid')
+                  onValueChange={(value: 'free' | 'paid') =>
+                    setPricingType(value)
                   }
                   className="px-1"
                 >
@@ -452,8 +451,9 @@ export default function PublishAgentDialog() {
                 <Textarea
                   placeholder={t('agents.publishDialog.description')}
                   value={description}
-                  onChangeText={setDescription}
-                  className="!min-h-[100px] resize-y"
+                  onChange={(e) => setDescription(e.target.value)}
+                  resize="vertical"
+                  className="!min-h-[100px] pt-3"
                 />
                 <p className="text-text-secondary mt-1 text-xs">
                   Help users understand what your agent does.
@@ -464,7 +464,7 @@ export default function PublishAgentDialog() {
                   <Checkbox
                     id="terms"
                     checked={acceptedTerms}
-                    onCheckedChange={(checked: any) =>
+                    onCheckedChange={(checked) =>
                       setAcceptedTerms(checked as boolean)
                     }
                   />
@@ -472,8 +472,8 @@ export default function PublishAgentDialog() {
                     htmlFor="terms"
                     className="cursor-pointer text-sm leading-relaxed"
                   >
-                    I understand that {getBrand().name} reserves the right to
-                    remove any agent that violates our content policy.
+                    I understand that {BRAND.name} reserves the right to remove
+                    any agent that violates our content policy.
                   </Label>
                 </div>
               </div>

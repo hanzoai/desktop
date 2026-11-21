@@ -1,42 +1,14 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Card, RadioGroup, RadioGroupItem, Label } from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import {
+  Card,
+  RadioGroup,
+  RadioGroupItem,
+  Label,
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 
 import { type ChatFontSize, useSettings } from '../store/settings';
 import { SimpleLayout } from './layout/simple-layout';
-
-/**
- * The four cards, once. `preview` is a literal class per row because Tailwind
- * scans source text — a computed `text-${value}` is never emitted.
- */
-const CHAT_FONT_SIZES = [
-  {
-    label: 'settings.appearance.chatFontSize.small',
-    preview: 'text-sm',
-    value: 'sm',
-  },
-  {
-    label: 'settings.appearance.chatFontSize.medium',
-    preview: 'text-base',
-    value: 'base',
-  },
-  {
-    label: 'settings.appearance.chatFontSize.large',
-    preview: 'text-lg',
-    value: 'lg',
-  },
-  {
-    label: 'settings.appearance.chatFontSize.extraLarge',
-    preview: 'text-xl',
-    value: 'xl',
-  },
-  // `as const` so each `label` keeps its literal type and still resolves
-  // against the translation key union; `satisfies` still checks every `value`.
-] as const satisfies readonly {
-  label: string;
-  preview: string;
-  value: ChatFontSize;
-}[];
 
 const AppearancePage = () => {
   const { t } = useTranslation();
@@ -55,54 +27,81 @@ const AppearancePage = () => {
         </div>
 
         <RadioGroup
+          className="grid grid-cols-4 gap-4"
           onValueChange={(value) => setChatFontSize(value as ChatFontSize)}
-          // gui's frame is `display:flex` (`.is_View`) with a baked `gap:$2`,
-          // and its stylesheet is injected at runtime — after the bundled CSS —
-          // so `grid grid-cols-4 gap-4` lost both ties and the four cards
-          // stacked in a column. Inline style beats every class.
-          style={{
-            display: 'grid',
-            gap: 16,
-            gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-          }}
           value={chatFontSize}
         >
-          {CHAT_FONT_SIZES.map(({ label, preview, value }) => (
-            <Label
-              className={cn(
-                'cursor-pointer space-y-2',
-                chatFontSize === value && '[&_div]:border-brand',
-              )}
-              htmlFor={value}
-              key={value}
-            >
-              {/*
-                `sr-only`'s 1px box loses to gui's baked 16px width/height and
-                1px border — the dot painted inside every card. Those three ride
-                as props; the rest of sr-only (position, clip, overflow) has no
-                gui counterpart and still comes from the class.
-              */}
-              <RadioGroupItem
-                borderWidth={0}
-                className="sr-only"
-                height={1}
-                id={value}
-                value={value}
-                width={1}
-              />
-              <Card className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 p-4">
-                <span
-                  className={cn(
-                    'font-sans flex min-h-[40px] items-center justify-center',
-                    preview,
-                  )}
-                >
-                  Aa
-                </span>
-                <span className="text-sm font-medium">{t(label)}</span>
-              </Card>
-            </Label>
-          ))}
+          <Label
+            className={cn(
+              'cursor-pointer space-y-2',
+              chatFontSize === 'sm' && '[&_div]:border-brand',
+            )}
+            htmlFor="sm"
+          >
+            <RadioGroupItem className="sr-only" id="sm" value="sm" />
+            <Card className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 p-4">
+              <span className="font-inter flex min-h-[40px] items-center justify-center text-sm">
+                Aa
+              </span>
+              <span className="text-sm font-medium">
+                {t('settings.appearance.chatFontSize.small')}
+              </span>
+            </Card>
+          </Label>
+
+          <Label
+            className={cn(
+              'cursor-pointer space-y-2',
+              chatFontSize === 'base' && '[&_div]:border-brand',
+            )}
+            htmlFor="base"
+          >
+            <RadioGroupItem className="sr-only" id="base" value="base" />
+            <Card className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 p-4">
+              <span className="font-inter flex min-h-[40px] items-center justify-center text-base">
+                Aa
+              </span>
+              <span className="text-sm font-medium">
+                {t('settings.appearance.chatFontSize.medium')}
+              </span>
+            </Card>
+          </Label>
+
+          <Label
+            className={cn(
+              'cursor-pointer space-y-2',
+              chatFontSize === 'lg' && '[&_div]:border-brand',
+            )}
+            htmlFor="lg"
+          >
+            <RadioGroupItem className="sr-only" id="lg" value="lg" />
+            <Card className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 p-4">
+              <span className="font-inter flex min-h-[40px] items-center justify-center text-lg">
+                Aa
+              </span>
+              <span className="text-sm font-medium">
+                {t('settings.appearance.chatFontSize.large')}
+              </span>
+            </Card>
+          </Label>
+
+          <Label
+            className={cn(
+              'cursor-pointer space-y-2',
+              chatFontSize === 'xl' && '[&_div]:border-brand',
+            )}
+            htmlFor="xl"
+          >
+            <RadioGroupItem className="sr-only" id="xl" value="xl" />
+            <Card className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border-2 p-4">
+              <span className="font-inter flex min-h-[40px] items-center justify-center text-xl">
+                Aa
+              </span>
+              <span className="text-sm font-medium">
+                {t('settings.appearance.chatFontSize.extraLarge')}
+              </span>
+            </Card>
+          </Label>
         </RadioGroup>
       </div>
     </SimpleLayout>

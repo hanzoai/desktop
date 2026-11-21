@@ -1,4 +1,4 @@
-import { moveFolder as moveFolderApi } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { moveFolder as moveFolderApi } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import { type MoveVRFolderInput } from './types';
 

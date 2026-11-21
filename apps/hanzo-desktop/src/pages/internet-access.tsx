@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useSetNgrokAuthToken } from '@hanzo/desktop-node-state/v2/mutations/setNgrokAuthToken/useSetNgrokAuthToken';
-import { useSetNgrokEnabled } from '@hanzo/desktop-node-state/v2/mutations/setNgrokEnabled/useSetNgrokEnabled';
-import { useGetNgrokStatus } from '@hanzo/desktop-node-state/v2/queries/getNgrokStatus/useGetNgrokStatus';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useSetNgrokAuthToken } from '@hanzo_network/hanzo-node-state/v2/mutations/setNgrokAuthToken/useSetNgrokAuthToken';
+import { useSetNgrokEnabled } from '@hanzo_network/hanzo-node-state/v2/mutations/setNgrokEnabled/useSetNgrokEnabled';
+import { useGetNgrokStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getNgrokStatus/useGetNgrokStatus';
 
 import {
   Button,
@@ -12,7 +12,7 @@ import {
   Form,
   FormField,
   TextField,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 
 import { CheckCircle2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';

@@ -18,8 +18,8 @@ use serde::{Deserialize, Serialize};
 /// Resolve the `soup` binary, in priority order:
 /// 1. `HANZO_SOUP_BIN` (explicit override — dev builds / custom installs).
 /// 2. A bundled, target-suffixed `soup-<triple>` (or `soup`) sitting next to the
-///    app executable. Nothing publishes one today, so this only resolves for a
-///    binary dropped there by hand.
+///    app executable — this is what `download-binaries.sh` fetches into
+///    `external-binaries/hanzo-engine/`.
 /// 3. Bare `soup` on `PATH` (the ml repo installs it via
 ///    `cargo install --path tensor-tools` / `cargo build -p tensor-tools --bin
 ///    soup`).

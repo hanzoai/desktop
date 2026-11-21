@@ -1,4 +1,4 @@
-import { uploadAssetsToTool as uploadAssetsToToolApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { uploadAssetsToTool as uploadAssetsToToolApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type UploadAssetsToToolInput } from './types';
 

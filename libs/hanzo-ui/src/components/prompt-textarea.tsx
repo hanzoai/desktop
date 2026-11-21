@@ -5,7 +5,8 @@ import { DotsLoader } from './dots-loader';
 import { FormLabel } from './form';
 
 const MIN_TEXTAREA_HEIGHT = 32;
-export interface PromptTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface PromptTextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   isLoading?: boolean;
   label?: string;
   field: {

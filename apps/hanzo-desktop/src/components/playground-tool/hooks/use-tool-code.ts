@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CodeLanguage } from '@hanzo/desktop-message-ts/api/tools/types';
+import { CodeLanguage } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';

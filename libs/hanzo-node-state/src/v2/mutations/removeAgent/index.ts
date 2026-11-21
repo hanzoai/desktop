@@ -1,4 +1,4 @@
-import { removeAgent as removeAgentApi } from '@hanzo/desktop-message-ts/api/agents/index';
+import { removeAgent as removeAgentApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
 
 import { type RemoveAgentInput } from './types';
 

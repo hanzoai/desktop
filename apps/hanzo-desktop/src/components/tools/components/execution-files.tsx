@@ -1,6 +1,6 @@
-import { useGetHanzoFilesProtocol } from '@hanzo/desktop-node-state/v2/queries/getHanzoFileProtocol/useGetHanzoFilesProtocol';
-import { FileList } from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useGetHanzoFilesProtocol } from '@hanzo_network/hanzo-node-state/v2/queries/getHanzoFileProtocol/useGetHanzoFilesProtocol';
+import { FileList } from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 
 import { useAuth } from '../../../store/auth';
 

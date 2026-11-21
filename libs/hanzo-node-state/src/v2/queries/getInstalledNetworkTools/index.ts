@@ -1,4 +1,4 @@
-import { getInstalledNetworkTools as getInstalledNetworkToolsApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getInstalledNetworkTools as getInstalledNetworkToolsApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 import { type GetInstalledNetworkToolsInput } from './types';
 
 export const getInstalledNetworkTools = async ({

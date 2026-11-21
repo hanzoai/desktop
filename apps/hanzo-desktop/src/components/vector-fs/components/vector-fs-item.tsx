@@ -1,5 +1,6 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type DirectoryContent } from '@hanzo/desktop-message-ts/api/vector-fs/types';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type DirectoryContent } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
 import {
   buttonVariants,
   Checkbox,
@@ -10,27 +11,22 @@ import {
   DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   CreateAIIcon,
   EmbeddingsGeneratedIcon,
   FileTypeIcon,
-} from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui/assets';
 import {
   formatDateToUSLocaleString,
   getFileExt,
-} from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { partial } from 'filesize';
-import {
-  CopyIcon,
-  Edit2Icon,
-  EllipsisVerticalIcon,
-  FileInputIcon,
-  TrashIcon,
-} from 'lucide-react';
+import { CopyIcon, Edit2Icon, FileInputIcon, TrashIcon } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -55,7 +51,7 @@ export const VectorFsItemInfo = ({
           {file.name}
         </span>
         {!!file.has_embeddings && (
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger
               asChild
               className="rounded-lg border-cyan-600 bg-cyan-900/20 p-1"
@@ -64,9 +60,11 @@ export const VectorFsItemInfo = ({
                 <EmbeddingsGeneratedIcon className="size-4 text-cyan-400" />
               </div>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Embeddings Generated</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent side="top">
+                <p>Embeddings Generated</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         )}
       </div>
@@ -146,8 +144,8 @@ const VectorFsItem = ({
         fileSize={fileSize}
       />
 
-      <TooltipProvider delay={0}>
-        <Tooltip placement="top">
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <div
               className={cn(
@@ -171,12 +169,14 @@ const VectorFsItem = ({
               <CreateAIIcon className="w-full" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{t('chat.create')}</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="top">
+              <p>{t('chat.create')}</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
-      <DropdownMenu modal={false} placement="bottom-end">
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div
             className={cn(
@@ -192,10 +192,13 @@ const VectorFsItem = ({
             tabIndex={0}
           >
             <span className="sr-only">{t('common.moreOptions')}</span>
-            <EllipsisVerticalIcon className="text-text-secondary size-4" />
+            <DotsVerticalIcon className="text-text-secondary" />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent minW={160} width={160}>
+        <DropdownMenuContent
+          align="end"
+          className="w-[160px] border px-2.5 py-2"
+        >
           {[
             file.path.includes('.txt') && {
               name: t('vectorFs.actions.edit'),
@@ -232,7 +235,7 @@ const VectorFsItem = ({
                 {idx === 2 && <DropdownMenuSeparator />}
                 <DropdownMenuItem
                   key={option.name}
-                  onClick={(event: React.MouseEvent) => {
+                  onClick={(event) => {
                     event.stopPropagation();
                     option.onClick();
                     setSelectedFile(file);

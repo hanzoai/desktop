@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
   Switch,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   type Distro,
   type MachineSpec,
@@ -111,7 +111,7 @@ export const CreateMachineDialog = ({
       }}
       open={open}
     >
-      <DialogContent className="max-w-lg" showCloseButton={false}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>New machine</DialogTitle>
           <DialogDescription>

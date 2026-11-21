@@ -25,6 +25,9 @@ pub fn header_map_to_hashmap(headers: &HeaderMap) -> HashMap<String, Vec<String>
 #[tauri::command]
 pub async fn get_request(url: String, custom_headers: String) -> Result<FetchResponse, String> {
     log::debug!("get_request called with url: {}", url);
+    log::debug!("get_request called with custom_headers: {}", custom_headers);
+    println!("get_request called with url: {}", url);
+    eprintln!("get_request");
 
     // Deserialize the JSON string into a HashMap
     let custom_headers: HashMap<String, String> = serde_json::from_str(&custom_headers)
@@ -64,6 +67,8 @@ pub async fn get_request(url: String, custom_headers: String) -> Result<FetchRes
 #[tauri::command]
 pub async fn post_request(url: String, custom_headers: String, body: String) -> Result<FetchResponse, String> {
     log::debug!("post_request called with url: {}", url);
+    println!("post_request called with url: {}", url);
+    eprintln!("posting data");
 
     // Deserialize the JSON string into a HashMap
     let custom_headers: HashMap<String, String> = serde_json::from_str(&custom_headers)

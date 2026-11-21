@@ -1,9 +1,9 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type McpServer } from '@hanzo/desktop-message-ts/api/mcp-servers/types';
-import { useDeleteMcpServer } from '@hanzo/desktop-node-state/v2/mutations/deleteMcpServer/useDeleteMcpServer';
-import { useGetMCPServerTools } from '@hanzo/desktop-node-state/v2/queries/getMCPServerTools/useGetMCPServerTool';
+import { DialogClose } from '@radix-ui/react-dialog';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type McpServer } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
+import { useDeleteMcpServer } from '@hanzo_network/hanzo-node-state/v2/mutations/deleteMcpServer/useDeleteMcpServer';
+import { useGetMCPServerTools } from '@hanzo_network/hanzo-node-state/v2/queries/getMCPServerTools/useGetMCPServerTool';
 import {
-  DialogClose,
   Badge,
   Button,
   buttonVariants,
@@ -26,9 +26,9 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { ToolsIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { BoltIcon, ChevronDown, MoreVertical, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
@@ -109,7 +109,7 @@ export const McpServerCard = ({
               onOpenChange={setIsToolsDialogOpen}
               open={isToolsDialogOpen}
             >
-              <Tooltip placement="top">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <DialogTrigger asChild>
                     <Badge
@@ -130,15 +130,11 @@ export const McpServerCard = ({
                     </Badge>
                   </DialogTrigger>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent align="center" side="top">
                   {t('mcpServers.viewAvailableTools')}
                 </TooltipContent>
               </Tooltip>
-              <DialogContent
-                className="sm:max-w-3xl"
-                showCloseButton
-                maxW={768}
-              >
+              <DialogContent className="sm:max-w-3xl" showCloseButton>
                 <DialogHeader>
                   <DialogTitle>
                     {t('mcpServers.toolsFor', { name: server.name })}
@@ -177,7 +173,9 @@ export const McpServerCard = ({
                               )}
                             </div>
                             {tool.description && (
-                              <MarkdownText className="text-text-secondary">
+                              <MarkdownText
+                                className="text-text-secondary"
+                              >
                                 {tool.description}
                               </MarkdownText>
                             )}
@@ -235,7 +233,7 @@ export const McpServerCard = ({
           <div />
         )}
 
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger>
             <Switch
               checked={server.is_enabled}
@@ -248,7 +246,7 @@ export const McpServerCard = ({
             {server.is_enabled ? 'MCP Server Enabled' : 'MCP Server Disabled'}
           </TooltipContent>
         </Tooltip>
-        <DropdownMenu placement="bottom-end">
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               className="size-8 p-2"
@@ -259,7 +257,7 @@ export const McpServerCard = ({
               <MoreVertical className="size-full" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent align="end" className="p-2.5">
             <DropdownMenuItem
               className="flex items-center gap-2.5 text-xs"
               onClick={() => setIsConfigureModalOpen(true)}
@@ -278,7 +276,7 @@ export const McpServerCard = ({
         </DropdownMenu>
       </div>
       <Dialog onOpenChange={setIsDeleteDialogOpen} open={isDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogTitle className="pb-0">{t('mcpServers.delete')}</DialogTitle>
           <DialogDescription>
             {t('mcpServers.deleteDescription', { name: server.name })}

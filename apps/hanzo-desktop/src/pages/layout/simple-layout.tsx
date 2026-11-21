@@ -1,5 +1,5 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { LucideArrowLeft } from 'lucide-react';
 import React from 'react';
 import { Link, type To } from 'react-router';
@@ -19,7 +19,7 @@ export const SubpageLayout = ({
 }) => {
   const { t } = useTranslation();
   return (
-    <div className={cn('relative container py-10', className)}>
+    <div className={cn('container relative py-10', className)}>
       <div className="mb-8 flex items-center gap-2">
         <div
           className={cn(
@@ -68,7 +68,7 @@ export const FixedHeaderLayout = ({
             <LucideArrowLeft />
             <span className="sr-only">{t('common.back')}</span>
           </Link>
-          <h1 className="font-sans text-center text-2xl font-semibold tracking-tight">
+          <h1 className="font-inter text-center text-2xl font-semibold tracking-tight">
             {title}
           </h1>
         </div>
@@ -95,7 +95,7 @@ export const SimpleLayout = ({
     >
       <div className="flex items-center justify-between gap-4">
         {title ? (
-          <h1 className="font-sans text-3xl font-medium">{title}</h1>
+          <h1 className="font-inter text-3xl font-medium">{title}</h1>
         ) : null}
         {headerRightElement}
       </div>

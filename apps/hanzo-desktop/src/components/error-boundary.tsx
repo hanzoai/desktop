@@ -1,8 +1,7 @@
-import { type FallbackProps } from 'react-error-boundary';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Button } from '@hanzo/desktop-ui';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { Button } from '@hanzo_network/hanzo-ui';
 
-const FullPageErrorFallback = ({ error }: FallbackProps) => {
+const FullPageErrorFallback = ({ error }: { error: Error }) => {
   const { t } = useTranslation();
   return (
     <div
@@ -10,8 +9,8 @@ const FullPageErrorFallback = ({ error }: FallbackProps) => {
       role="alert"
     >
       <p>{t('errorBoundary.genericError')}</p>
-      <pre className="mb-4 text-center text-balance break-all whitespace-pre-wrap">
-        {error instanceof Error ? error.message : String(error)}
+      <pre className="mb-4 whitespace-pre-wrap text-balance break-all text-center">
+        {error.message}
       </pre>
       <Button
         onClick={() => window.location.reload()}

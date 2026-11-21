@@ -1,4 +1,4 @@
-import { removeLLMProvider as removeLLMProviderApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { removeLLMProvider as removeLLMProviderApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type RemoveLLMProviderInput } from './types';
 

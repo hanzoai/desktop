@@ -19,7 +19,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   type Machine,
   useDeleteMachine,
@@ -125,7 +125,7 @@ const MachinesPage = () => {
     <div className="container flex flex-col py-10">
       <header className="flex items-center justify-between pb-6">
         <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-3xl font-medium">Machines</h1>
+          <h1 className="font-inter text-3xl font-medium">Machines</h1>
           <p className="text-text-secondary text-sm">
             Linux virtual machines managed by hanzod.
           </p>
@@ -190,7 +190,7 @@ const MachinesPage = () => {
                     {formatAge(m.created_at)}
                   </TableCell>
                   <TableCell onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu placement="bottom-end">
+                    <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           aria-label={`Actions for ${m.name}`}
@@ -200,11 +200,9 @@ const MachinesPage = () => {
                           <MoreHorizontal className="size-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent>
+                      <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          disabled={
-                            m.state === 'running' || m.state === 'starting'
-                          }
+                          disabled={m.state === 'running' || m.state === 'starting'}
                           onClick={() => handleStart(m)}
                         >
                           <Play className="mr-2 size-4" /> Start
@@ -217,9 +215,7 @@ const MachinesPage = () => {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           disabled={m.state !== 'running'}
-                          onClick={() =>
-                            navigate(`/machines/${m.name}?tab=shell`)
-                          }
+                          onClick={() => navigate(`/machines/${m.name}?tab=shell`)}
                         >
                           <Terminal className="mr-2 size-4" /> Open shell
                         </DropdownMenuItem>
@@ -256,8 +252,8 @@ const MachinesPage = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete machine?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently destroy &quot;{confirmDelete?.name}&quot;
-              and its disk. This cannot be undone.
+              This will permanently destroy &quot;{confirmDelete?.name}&quot; and
+              its disk. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

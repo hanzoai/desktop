@@ -13,8 +13,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@hanzo/desktop-ui';
-import { runExecToString, useMachines } from '../machine-state';
+} from '@hanzo_network/hanzo-ui';
+import {
+  runExecToString,
+  useMachines,
+} from '../machine-state';
 import { Boxes, Copy, Play } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -48,10 +51,7 @@ const checkK3sStatus = async (machine: string): Promise<K3sStatus> => {
     `if [ -f ${K3S_KUBECONFIG_PATH} ]; then echo enabled; else echo disabled; fi; ` +
       `if command -v kubectl >/dev/null 2>&1 && kubectl --kubeconfig=${K3S_KUBECONFIG_PATH} get nodes >/dev/null 2>&1; then echo ready; else echo notready; fi`,
   ]);
-  const lines = stdout
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
+  const lines = stdout.split('\n').map((l) => l.trim()).filter(Boolean);
   const enabled = lines.includes('enabled');
   const ready = enabled && lines.includes('ready');
   return {
@@ -165,13 +165,13 @@ const KubernetesPage = () => {
     <div className="container flex flex-col gap-6 py-10">
       <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="font-sans text-3xl font-medium">Kubernetes</h1>
+          <h1 className="font-inter text-3xl font-medium">Kubernetes</h1>
           <p className="text-text-secondary text-sm">
             Run k3s inside a machine for local cluster development.
           </p>
         </div>
         <Select onValueChange={setActive} value={active ?? ''}>
-          <SelectTrigger width={220}>
+          <SelectTrigger className="w-[220px]">
             <SelectValue placeholder="select machine" />
           </SelectTrigger>
           <SelectContent>
@@ -214,10 +214,10 @@ const KubernetesPage = () => {
                 {status.isLoading
                   ? 'checking...'
                   : status.data?.ready
-                    ? 'Ready'
-                    : status.data?.enabled
-                      ? 'Starting'
-                      : 'Disabled'}
+                  ? 'Ready'
+                  : status.data?.enabled
+                  ? 'Starting'
+                  : 'Disabled'}
               </p>
             </div>
             {!status.data?.enabled && (
@@ -283,7 +283,9 @@ const KubernetesPage = () => {
                   <TableCell className="text-text-secondary font-mono text-xs">
                     {n.version}
                   </TableCell>
-                  <TableCell className="text-text-secondary">{n.age}</TableCell>
+                  <TableCell className="text-text-secondary">
+                    {n.age}
+                  </TableCell>
                 </TableRow>
               ))}
               {nodes.data && nodes.data.length === 0 && (
