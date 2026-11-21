@@ -71,6 +71,27 @@ pub struct MiningManager {
     storage_dir: PathBuf,
     backend: Arc<dyn MiningBackend>,
     signing_key: Arc<RwLock<MlDsa65SigningKey>>,
+    /// The one running loop's task. Stop aborts it and waits for it to end, so
+    /// off-then-on can never leave an old loop running beside a new one.
+    task: tokio::sync::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
+    /// Loops alive right now: each holds one count until its task ends.
+    live: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+/// One live loop's count, given back when its task ends, aborted or not.
+struct Alive(Arc<std::sync::atomic::AtomicUsize>);
+
+impl Alive {
+    fn new(live: &Arc<std::sync::atomic::AtomicUsize>) -> Self {
+        live.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        Self(live.clone())
+    }
+}
+
+impl Drop for Alive {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 impl MiningManager {
@@ -86,6 +107,8 @@ impl MiningManager {
             storage_dir,
             backend: Arc::new(CpuBackend),
             signing_key: Arc::new(RwLock::new(key)),
+            task: tokio::sync::Mutex::new(None),
+            live: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
         }
     }
 
@@ -135,11 +158,23 @@ impl MiningManager {
     }
 
     pub async fn start_mining(&self, app: AppHandle, wallet_address: String, chain_id: u64) {
+        self.run(wallet_address, chain_id, move |event, payload| {
+            let _ = app.emit(event, payload);
+        })
+        .await;
+    }
+
+    /// Starts the loop unless one is running; `emit` hears its events.
+    async fn run<E>(&self, wallet_address: String, chain_id: u64, emit: E)
+    where
+        E: Fn(&'static str, serde_json::Value) + Send + 'static,
+    {
+        let mut task = self.task.lock().await;
+        if task.as_ref().is_some_and(|t| !t.inner().is_finished()) {
+            return;
+        }
         {
             let mut s = self.state.write().await;
-            if s.is_mining {
-                return;
-            }
             if !wallet_address.is_empty() {
                 s.wallet_address = wallet_address;
             }
@@ -156,13 +191,12 @@ impl MiningManager {
         let backend = self.backend.clone();
         let key = self.signing_key.clone();
 
-        tauri::async_runtime::spawn(async move {
+        let alive = Alive::new(&self.live);
+        *task = Some(tauri::async_runtime::spawn(async move {
+            let _alive = alive;
             let mut ticker = interval(Duration::from_secs(TICK_SECS));
             loop {
                 ticker.tick().await;
-                if !state.read().await.is_mining {
-                    break;
-                }
 
                 let (wallet, privacy) = {
                     let s = state.read().await;
@@ -186,19 +220,24 @@ impl MiningManager {
                         s.history_count = history.len();
                         let snapshot = s.clone();
                         drop(s);
-                        let _ = app.emit("mining://progress", &record);
-                        let _ = app.emit("mining-update", &snapshot);
+                        emit("mining://progress", serde_json::to_value(&record).unwrap_or_default());
+                        emit("mining-update", serde_json::to_value(&snapshot).unwrap_or_default());
                     }
                     Err(e) => {
                         log::error!("mining tick failed: {e}");
-                        let _ = app.emit("mining://error", e.to_string());
+                        emit("mining://error", e.to_string().into());
                     }
                 }
             }
-        });
+        }));
     }
 
+    /// Stops the loop now: its task is aborted and has ended when this returns.
     pub async fn stop_mining(&self) {
+        if let Some(task) = self.task.lock().await.take() {
+            task.abort();
+            let _ = task.await;
+        }
         self.state.write().await.is_mining = false;
     }
 }
@@ -311,6 +350,23 @@ mod tests {
 
     fn fresh_dir() -> TempDir {
         TempDir::new().expect("tempdir")
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn off_and_on_leaves_exactly_one_loop_and_off_stops_it_now() {
+        use std::sync::atomic::Ordering::SeqCst;
+        let tmp = fresh_dir();
+        let m = MiningManager::new(tmp.path().join("mining"));
+        for _ in 0..2 {
+            m.run("0xabc".into(), 96369, |_, _| {}).await;
+            m.run("0xabc".into(), 96369, |_, _| {}).await;
+            assert_eq!(m.live.load(SeqCst), 1, "on while on starts nothing more");
+            m.stop_mining().await;
+            assert_eq!(m.live.load(SeqCst), 0, "off has stopped the loop when it returns");
+        }
+        m.run("0xabc".into(), 96369, |_, _| {}).await;
+        assert_eq!(m.live.load(SeqCst), 1, "off, on, off, on: one loop");
+        m.stop_mining().await;
     }
 
     #[test]
