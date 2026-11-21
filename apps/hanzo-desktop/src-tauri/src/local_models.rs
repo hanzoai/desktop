@@ -237,8 +237,16 @@ fn not_offered(repo: &str) -> String {
     format!("{repo} is not one of the models this app offers.")
 }
 
+/// Where `path` really is: its deepest existing ancestor with every link
+/// resolved. The cache folder may not exist yet, and it (or `HF_HOME`) may be a
+/// link to another disk, whose text alone would match `/`.
+fn real_place(path: &Path) -> Option<PathBuf> {
+    path.ancestors().find_map(|a| a.canonicalize().ok())
+}
+
 /// Free bytes on the disk that holds `path`, or `None` when it cannot be read.
 fn free_bytes(path: &Path) -> Option<u64> {
+    let path = real_place(path)?;
     let disks = sysinfo::Disks::new_with_refreshed_list();
     disks
         .list()
@@ -852,6 +860,22 @@ mod tests {
         assert!(err.contains("less than 2.0 GB"), "{err}");
         // This computer's own disk is readable.
         assert!(free_bytes(&std::env::temp_dir()).is_some());
+    }
+
+    /// A cache that is a link to another disk is measured where it leads.
+    #[cfg(unix)]
+    #[test]
+    fn the_free_disk_is_read_where_a_linked_cache_really_is() {
+        let tmp = tempfile::tempdir().unwrap();
+        let elsewhere = tmp.path().join("Volumes/External/hf");
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        let link = tmp.path().join("home/.cache/huggingface");
+        std::fs::create_dir_all(link.parent().unwrap()).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, &link).unwrap();
+        // The hub folder inside it does not exist yet: the deepest one that does is resolved.
+        assert_eq!(real_place(&link.join("hub")), Some(elsewhere.canonicalize().unwrap()));
+        assert_eq!(real_place(&tmp.path().join("no/such/dir")), Some(tmp.path().canonicalize().unwrap()));
+        assert!(free_bytes(&link.join("hub")).is_some());
     }
 
     #[test]
