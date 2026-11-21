@@ -714,7 +714,9 @@ repository, nothing sent to the platform. The window supplies four commands
   is no windows-arm64 asset in hanzoai/dev-v1's release. The agent is started with `CREATE_NO_WINDOW`. Nothing
   here is run on a Windows host: CI type-checks the pure crates (and their tests) for
   `x86_64-pc-windows-msvc` (`hanzo.yml` `windows-cross-check`, `cargo check --tests`, no linker needed), and
-  the release lane's cross-build (cargo-xwin) compiles the app itself.
+  the release lane's cross-build (cargo-xwin) compiles the app itself. A pull request touching `src-tauri/` also runs
+  `.github/workflows/windows-check.yml`: `cargo xwin check` of the whole crate for `x86_64-pc-windows-msvc` with the
+  release's toolchain (`scripts/release/cross-windows.sh`), so a unix-only API outside `cfg(unix)` fails the PR, not the tag.
 
 Auto (the Folder pill) is `@hanzo/build` `route(folders, ask)`: the folder whose name the ask says, then the
 folders it sits in, else the folder used last; same words, same folder, a tie goes to the more recent. The
