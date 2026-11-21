@@ -13,12 +13,7 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
-import {
-  createFnVoiceController,
-  createMicLeaseArbitrator,
-  DesktopSettings,
-  windowKey,
-} from './desktop-shortcuts';
+import { DesktopSettings, windowKey } from './desktop-shortcuts';
 import { adopt, share } from './identity';
 import { keychain } from './keychain';
 import {
@@ -660,58 +655,6 @@ function Gate() {
     return () => {
       unlistenCreate?.();
       unlistenNavigate?.();
-    };
-  }, []);
-
-  // Wire Desktop `Fn` key push-to-talk (hold Fn) and hands-free voice (double-tap Fn)
-  // with cross-window / cross-app mic lease arbitration so multiple open Hanzo apps never fight over the mic.
-  useEffect(() => {
-    const instanceId = `${brand.brand}-${Math.random().toString(36).slice(2, 10)}`;
-    const lease = createMicLeaseArbitrator({
-      instanceId,
-      onPreempted: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
-          mic.click();
-        }
-      },
-    });
-    const controller = createFnVoiceController({
-      isListening: () => findMic()?.getAttribute('aria-pressed') === 'true',
-      start: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') !== 'true') {
-          lease.claim();
-          mic.click();
-        }
-      },
-      stop: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
-          mic.click();
-          lease.release();
-        }
-      },
-      toggle: () => {
-        const mic = findMic();
-        if (!mic || mic.disabled) return;
-        const active = mic.getAttribute('aria-pressed') === 'true';
-        if (active) {
-          mic.click();
-          lease.release();
-        } else {
-          lease.claim();
-          mic.click();
-        }
-      },
-    });
-    window.addEventListener('keydown', controller.onKeyDown);
-    window.addEventListener('keyup', controller.onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', controller.onKeyDown);
-      window.removeEventListener('keyup', controller.onKeyUp);
-      controller.dispose();
-      lease.dispose();
     };
   }, []);
 

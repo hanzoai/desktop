@@ -5,13 +5,22 @@
  * in Dev at once.
  */
 import { DEV_MODE_KEY } from '@hanzo/build/dev-mode';
+import { GuiProvider } from '@hanzo/gui';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 
+import config from '../../gui.config';
 import { DesktopSettings } from '../desktop-shortcuts';
 
-const page = () =>
-  render(<DesktopSettings isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />);
+// Developer mode lives under Advanced, the section this address opens.
+const page = () => {
+  window.history.replaceState(null, '', '/settings/advanced');
+  return render(
+    <GuiProvider config={config} defaultTheme="dark">
+      <DesktopSettings isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
+    </GuiProvider>,
+  );
+};
 
 describe('Developer mode in Settings', () => {
   beforeEach(() => window.localStorage.clear());
