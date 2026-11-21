@@ -117,8 +117,10 @@ async fn capture<B: page::Browse>(url: &str, dir: &str, eye: &B) -> Result<SiteS
         return Err("That is not a folder.".into());
     }
     let url = fetch::address(url)?;
-    let local = fetch::loopback(&url);
     let fetched = fetch::page(&url).await?;
+    // The stylesheets of the page that was reached are opened by the rule the person's typing earned: a page that
+    // began on this computer or a private network and ended on a public site has no private address to ask for.
+    let local = fetch::typed_local(&url) && fetch::typed_local(&fetched.url);
     let html = String::from_utf8_lossy(&fetched.body).into_owned();
     let read = page::read(fetched.url, &html);
 
@@ -306,15 +308,16 @@ mod tests {
         let text = std::fs::read_to_string(dir.path().join(".hanzo/reference/text.md")).unwrap();
         assert!(text.contains("# Welcome") && text.contains("We fix things."), "{text}");
 
-        // Nothing is saved for a folder that is not there, or an address that is not allowed.
+        // Nothing is saved for a folder that is not there, or an address that is never opened (the cloud metadata
+        // address, typed or not; a private address the person types is opened, see fetch.rs).
         let file = dir.path().join("a-file");
         std::fs::write(&file, "x").unwrap();
         assert_eq!(capture("example.com", &file.to_string_lossy(), &page::Nobody).await, Err("That is not a folder.".to_string()));
-        assert!(capture("http://192.168.0.1/", &folder, &page::Nobody).await.is_err());
+        assert!(capture("http://169.254.169.254/", &folder, &page::Nobody).await.is_err());
 
         // A site that will not open leaves no folder behind; one that does makes its own.
         let fresh = dir.path().join("Hanzo/new-site");
-        assert!(capture("http://10.0.0.1/", &fresh.to_string_lossy(), &page::Nobody).await.is_err());
+        assert!(capture("http://0.0.0.0/", &fresh.to_string_lossy(), &page::Nobody).await.is_err());
         assert!(!fresh.exists());
         capture(&format!("127.0.0.1:{port}"), &fresh.to_string_lossy(), &page::Nobody).await.unwrap();
         assert!(fresh.join(".hanzo/reference/text.md").is_file());
