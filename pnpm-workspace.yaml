@@ -80,14 +80,14 @@ overrides:
 # already answered). @hanzo/studio 0.1.15 so a GPU status that is not a fleet no
 # longer crashes Studio in lit(), and the window reaches the engine through the
 # hanzo-studio scheme (src-tauri/src/studio_proxy.rs), since studio.hanzo.ai's
-# CORS admits no window origin. @hanzo/app 0.3.115 with what only a desktop
+# CORS admits no window origin. @hanzo/app 0.3.117 with what only a desktop
 # window does: a signed-out reader chats with the local engine (any local model,
 # images and text files read in the window, Local AI from a failed turn), lists
 # that stay empty without a session, the desktop's ⌘N and ⇧⌘M in the shortcut
 # list, and no Google Workspace until Google verifies its scopes. Drop each when
 # its pin moves to a release that carries it.
 patchedDependencies:
-  '@hanzo/app@0.3.115': patches/@hanzo__app@0.3.115.patch
+  '@hanzo/app@0.3.117': patches/@hanzo__app@0.3.117.patch
   '@hanzo/ui@8.33.6': patches/@hanzo__ui@8.33.6.patch
   '@hanzo/studio@0.1.15': patches/@hanzo__studio@0.1.15.patch
   '@hanzogui/shell@8.4.3': patches/@hanzogui__shell@8.4.3.patch
@@ -101,11 +101,13 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
+  - '@hanzo/app@0.3.117'
   - '@hanzo/app@0.3.115'
   - '@hanzo/app@0.3.109'
   - '@hanzo/app@0.3.107'
   - '@hanzo/ai@0.7.0'
   - '@hanzo/appearance@0.2.15'
+  - '@hanzo/build@0.2.141'
   - '@hanzo/build@0.2.138'
   - '@hanzo/build@0.2.132'
   - '@hanzo/build@0.2.130'
@@ -247,7 +249,7 @@ catalog:
   '@hanzo/ai': '0.7.0'
   '@hanzo/appearance': '0.2.15'
   '@hanzo/brand': '1.4.8'
-  '@hanzo/build': '0.2.138'
+  '@hanzo/build': '0.2.141'
   '@hanzo/composer': '0.2.1'
   '@hanzo/data': '1.2.4'
   '@hanzo/design': '0.5.44'
@@ -258,7 +260,7 @@ catalog:
   '@hanzo/iam': '0.21.42'
   '@hanzo/personas': '1.0.5'
   '@hanzo/plans': '1.8.17'
-  '@hanzo/app': '0.3.115'
+  '@hanzo/app': '0.3.117'
   '@hanzo/studio': '0.1.15'
   # The commit hanzo-inc/app's lock holds (0.1.17); npm stops at 0.1.7, under
   # @hanzo/app's floor of 0.1.8.
