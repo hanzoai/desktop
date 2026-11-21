@@ -775,7 +775,7 @@ root.
 ## Desktop Architecture, Build & Keybindings (2026-11-19)
 - **Tauri Workspace Isolation (`apps/hanzo-desktop/src-tauri/Cargo.toml`)**: Includes `[workspace]` at the manifest root so Cargo never walks up to parent workspace manifests (`~/work/hanzo/Cargo.toml`) during `tauri build` or `tauri dev`.
 - **Dock Reopen (`apps/hanzo-desktop/src-tauri/src/main.rs`)**: `RunEvent::Reopen` delegates to `recreate_window(app_handle.clone(), Window::Main, true)` so reopening from the macOS Dock after closing (`⌘W`) mounts `index.html` (`main_url("/chat")`) with microphone permissions enabled rather than raw `localhost:3000`.
-- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.149.patch`)**:
+- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.157.patch`)**:
   - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).

@@ -1,8 +1,8 @@
 diff --git a/dist/Chat.js b/dist/Chat.js
-index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829bfd40a76 100644
+index 8871da9..f77b9d4 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
-@@ -884,10 +884,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -933,10 +933,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      };
      const listed = useMemo(() => mind.models.filter(chats), [mind.models]);
      const filteredListed = useMemo(() => {
@@ -17,7 +17,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
      const models = filteredListed;
      // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
      // read from the catalog's own fields (`parseModels`): its class, its family.
-@@ -899,7 +901,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -948,7 +950,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const wanted = mind.model;
      // A model the catalog lists is sent as picked, whatever it answers with; only
      // a name the catalog does not list falls to one that converses (`served`).
@@ -27,7 +27,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
      const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
      // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
      // headers and read again whenever a send settles, below. The pane draws no
-@@ -1124,7 +1127,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1184,7 +1187,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      // identity changes on every `setMessages` — `useChat` closes over `messages` —
      // so an effect depending on it re-runs after each streamed token.
      const latest = useRef(send);
@@ -36,7 +36,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
      // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
      // it. `Chat` owns a draft of its own and spreads `composer` after it, so
      // passing value/onChange/onSend takes that ownership over rather than fighting
-@@ -1244,10 +1247,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1290,10 +1293,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
          anonStopped.current = true;
          anonRequest.current?.abort();
      }, []);
@@ -55,7 +55,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
          try {
              sessionStorage.setItem("hanzo.build.prompt", clean);
              const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
-@@ -1384,7 +1392,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1430,7 +1438,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
          if (queued === null || resolving)
              return;
          setQueued(null);
@@ -67,7 +67,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
      }, [queued, resolving]);
      const streaming = useRef(false);
      streaming.current = chat.streaming;
-@@ -1487,16 +1498,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1533,16 +1544,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
       * it leaves its place in the thread and is asked at the end, so it is asked
       * once and not twice.
       */
@@ -88,7 +88,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
          if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
              apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
              if (again)
-@@ -1504,10 +1513,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1550,10 +1559,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      const { [again]: _gone, ...rest } = all;
                      return rest;
                  });
@@ -101,7 +101,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -2019,6 +2028,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2113,6 +2122,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -130,7 +130,7 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2081,6 +2112,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2175,6 +2206,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -140,39 +140,17 @@ index 62bb43b815dda947c886c9fa727549c1e442814b..3cbf1d0cedcb135a9b384f649044a829
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2108,7 +2142,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
-                                 : how?.provider
-                                     ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
-                                     : plainly(wrong, t("this conversation"), t);
--        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
-+        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, pictures), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, anonymous || how?.provider ? (_jsxs(XStack, { gap: "$2", flexWrap: "wrap", "data-slot": "failure-local-ai", children: [_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") }), anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null] })) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
+@@ -2207,7 +2241,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+                                     : how?.provider
+                                         ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
+                                         : plainly(wrong, t("this conversation"), t);
+-        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
++        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, pictures), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, anonymous || how?.provider ? (_jsxs(XStack, { gap: "$2", flexWrap: "wrap", "data-slot": "failure-local-ai", children: [_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") }), anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null] })) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
                                  if (typeof window !== "undefined") {
                                      localStorage.removeItem("hanzo_iam_access_token");
                                      localStorage.removeItem("hanzo_iam_refresh_token");
-diff --git a/dist/help.js b/dist/help.js
-index 043263edc86e435970eb8cb187be3b720703f2ef..3b738b104faf1ad5f648f6884d3dfd1e1d3f1c22 100644
---- a/dist/help.js
-+++ b/dist/help.js
-@@ -35,12 +35,17 @@ export const legal = () => [
- export const KEYS = [
-     { does: phrase('Search chats'), mac: '⌘K', pc: 'Ctrl+K', group: 'Navigation', command: 'commandPalette.toggle' },
-     { does: phrase('New chat'), mac: '⌘⇧O', pc: 'Ctrl+Shift+O', group: 'Navigation', command: 'chat.new' },
-+    // Hanzo Desktop: ⌘N also opens a new chat in the window, answered by the host
-+    // (host.tsx), not the app's key handler, so its row names no `command`.
-+    { does: phrase('New chat'), mac: '⌘N', pc: 'Ctrl+N', group: 'Navigation' },
-     { does: phrase('Settings'), mac: '⌘,', pc: 'Ctrl+,', group: 'Navigation', command: 'settings.open' },
-     { does: phrase('Keyboard shortcuts'), mac: '⌘/', pc: 'Ctrl+/', group: 'Navigation', command: 'keybindings.open' },
-     { does: phrase('Toggle sidebar'), mac: '⌘B', pc: 'Ctrl+B', group: 'Workspace', command: 'sidebar.toggle' },
-     { does: phrase('Side panel'), mac: '⌘.', pc: 'Ctrl+.', group: 'Workspace' },
-     { does: phrase('Toggle theme'), mac: '⌘⌥⇧A', pc: 'Ctrl+Alt+Shift+A', group: 'Workspace', command: 'appearance.cycle' },
-     { does: phrase('Attach files'), mac: '⌘U', pc: 'Ctrl+U', group: 'Chat' },
-+    // Hanzo Desktop: ⌘⇧M turns the composer's microphone on and off (host.tsx).
-+    { does: phrase('Voice input'), mac: '⌘⇧M', pc: 'Ctrl+Shift+M', group: 'Chat' },
-     { does: phrase('Send'), mac: 'Enter', pc: 'Enter', group: 'Chat' },
-     { does: phrase('New line'), mac: '⇧Enter', pc: 'Shift+Enter', group: 'Chat' },
-     { does: phrase('Rename chat'), mac: said('rename', true), pc: said('rename', false), group: 'Chat' },
 diff --git a/dist/pane.js b/dist/pane.js
-index d0b1f5874378bf30e087641f6ef6fb80476a8ec5..50f7afc057aacfa7a879ddbc0cf474db4f942b31 100644
+index d0b1f58..50f7afc 100644
 --- a/dist/pane.js
 +++ b/dist/pane.js
 @@ -126,14 +126,26 @@ function watch(api, f, key, id) {
