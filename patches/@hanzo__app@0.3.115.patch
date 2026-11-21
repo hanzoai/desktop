@@ -1,5 +1,5 @@
 diff --git a/dist/Chat.js b/dist/Chat.js
-index dca4365..46e2461 100644
+index 88c81c9..b89d175 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
 @@ -876,10 +876,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
@@ -101,7 +101,7 @@ index dca4365..46e2461 100644
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -1974,6 +1983,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1975,6 +1984,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -130,7 +130,7 @@ index dca4365..46e2461 100644
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2036,6 +2067,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2037,6 +2068,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -140,7 +140,7 @@ index dca4365..46e2461 100644
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2060,7 +2094,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2061,7 +2095,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                              : how?.provider
                                  ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
                                  : plainly(wrong, t("this conversation"), t);
