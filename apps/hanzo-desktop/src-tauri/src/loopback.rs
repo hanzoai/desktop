@@ -105,6 +105,22 @@ fn callback(target: &str) -> Option<OAuthDeepLinkPayload> {
 mod tests {
     use super::{brand_event, callback};
 
+    /// Only the window's own pages may open a sign-in port: a hanzo.ai page in
+    /// the window could otherwise catch the browser's hand-back.
+    #[test]
+    fn no_remote_page_reaches_the_sign_in_port() {
+        use std::collections::BTreeMap;
+        use tauri::utils::acl::{capability::Capability, manifest::Manifest, resolved::Resolved, ExecutionContext};
+        let acl: BTreeMap<String, Manifest> =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/acl-manifests.json"))).unwrap();
+        let caps: BTreeMap<String, Capability> =
+            serde_json::from_str(include_str!(concat!(env!("OUT_DIR"), "/capabilities.json"))).unwrap();
+        let resolved = Resolved::resolve(&acl, caps, tauri::utils::platform::Target::current()).unwrap();
+        let grants = &resolved.allowed_commands["iam_loopback"];
+        assert!(grants.iter().any(|c| c.windows.iter().any(|w| w.matches("main")) && c.context == ExecutionContext::Local));
+        assert!(grants.iter().all(|c| c.context == ExecutionContext::Local), "a remote page");
+    }
+
     #[test]
     fn each_brand_hears_its_own_callback_and_nothing_else_is_emitted() {
         for b in ["hanzo", "lux", "zoo"] {

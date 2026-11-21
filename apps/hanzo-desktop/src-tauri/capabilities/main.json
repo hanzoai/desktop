@@ -162,7 +162,6 @@
         { "path": "$HOME/**" }
       ]
     },
-    "allow-iam-loopback",
     "allow-identity-adopt",
     "allow-identity-file",
     "allow-local-workspace-open-dialog",
