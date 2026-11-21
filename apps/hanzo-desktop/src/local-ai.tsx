@@ -358,20 +358,23 @@ export async function handleLocalChatCompletion(
     );
   }
 
+  // Outside the app (a plain browser) nothing can say who serves the port, so
+  // whatever answers there is used; in the app, only the model it started.
+  let ours = !status;
   if (status?.engine) {
     const want =
       askedSource && installedRepos.has(askedSource.repo) ? askedSource.repo : status.installed[0]?.repo ?? null;
-    if (want && status.serving !== want) {
+    if (want) {
       try {
-        await serveModel(want);
-        await waitForEngine();
+        if (status.serving !== want) await serveModel(want);
+        ours = await waitForEngine(want);
       } catch {
         // said below: nothing answers
       }
     }
   }
 
-  const served = await servedIds(`${LOCAL_ENGINE_URL}/v1`, nativeFetch);
+  const served = ours ? await servedIds(`${LOCAL_ENGINE_URL}/v1`, nativeFetch) : [];
   if (served.length > 0) {
     try {
       const res = await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
@@ -534,7 +537,7 @@ export function LocalAiManager() {
     setStarting(src.tag);
     try {
       await serveModel(src.repo);
-      if (!(await waitForEngine())) {
+      if (!(await waitForEngine(src.repo))) {
         const after = await engineStatus().catch(() => null);
         const said = after?.serve_error?.split('\n').filter(Boolean).pop();
         setError(src.tag, `${src.title} did not start${said ? `: ${said}` : '.'}`);
