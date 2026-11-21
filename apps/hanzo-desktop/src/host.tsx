@@ -617,10 +617,13 @@ function Gate() {
   // Signed out, opening Chat from outside Welcome is the same as "Not now" (a
   // guest). Signed in it changes nothing: a guest flag set then would make the
   // person a guest after a later sign-out without their choosing it.
+  // While sign-in is still being read, nobody is known to be signed out yet.
   const signedIn = useRef(isAuthenticated);
   signedIn.current = isAuthenticated;
+  const reading = useRef(iamLoading);
+  reading.current = iamLoading;
   const visit = () => {
-    if (signedIn.current) return;
+    if (signedIn.current || reading.current) return;
     stayGuest();
     setVisiting(true);
   };

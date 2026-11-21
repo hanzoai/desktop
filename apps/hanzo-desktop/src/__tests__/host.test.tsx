@@ -90,6 +90,13 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
+  it('marks nobody a guest while sign-in is still being read', async () => {
+    iam.state = { isLoading: true, isAuthenticated: false, sdk: {} };
+    await open('/settings');
+    fireEvent.click(screen.getByText('Settings back'));
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
   it('brings a signed-out person back from Settings into Chat as a guest', async () => {
     await open('/settings');
     fireEvent.click(screen.getByText('Settings back'));
