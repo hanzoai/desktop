@@ -653,6 +653,42 @@ Auto (the Folder pill) is `@hanzo/build` `route(folders, ask)`: the folder whose
 folders it sits in, else the folder used last; same words, same folder, a tie goes to the more recent. The
 pill reads `Auto · <folder>` as the ask is typed, and a folder the person chose is never moved by the words.
 
+## Redesign a site: open it, critique it, rebuild it, watch it live (hanzo-inc/app#312)
+
+A person pastes a site's address in Dev's New on This computer (or picks **Redesign a site…**). The agent that
+rebuilds it has no network, so the window does what the agent cannot
+(`src-tauri/src/commands/local_site/`, each command its own `allow-` entry in `capabilities/main.json`;
+`@hanzo/app` `lib/local-site.ts` `desktopSite()` is `@hanzo/build`'s `Host.site` over them, `site.ts` there is the
+contract and the prompt the agent is given):
+
+- `local_site_folder(name)` names a new folder `<Documents>/Hanzo/<name>` (`-2`, `-3`… when taken) and makes
+  nothing: a site that will not open leaves no folder behind. A folder the person chose is built in instead.
+- `local_site_capture(url, dir)` opens the site from this computer's connection (`fetch.rs`) and saves
+  `<dir>/.hanzo/reference/` (`page.rs`): `page.html`, `text.md` (address, description, words in reading order,
+  pictures), up to six `style-N.css`, and `screenshot.*` when a paired browser can take one. Each capture replaces
+  the last. **What it will open:** http and https only, no login in the address; any public address, and an
+  address on this computer only when the person typed `localhost` or a loopback address themselves. A private
+  network (10/8, 172.16/12, 192.168/16, link-local, carrier-grade NAT, IPv6 unique-local) is never opened, and a
+  redirect cannot reach anywhere the typed address could not: a name is resolved here, every address judged, and
+  the request pinned to the one that passed (so a name that answers a private address is refused too).
+  15 seconds, 5 MB a page, 600 KB a stylesheet, six redirects, HTML only. The picture is best effort over ZAP
+  (`commands/browser.rs`: open the page in a tab, wait for `document.readyState`, `hanzo.screenshot`, close the
+  tab); no browser paired, or Windows (no ZAP bridge), means no picture and no failure.
+- `local_preview_start(dir)` serves `<dir>/redesign` (`preview.rs`) on `127.0.0.1` on a free port: GET and HEAD,
+  files under the folder only (a climbing path, NUL, backslash or a link out is refused), only for a `Host` that
+  is its own address (a name a web page controls pointing at it is refused), and a server-sent event stream
+  (`/__hanzo/events`) that every HTML page's injected script listens on: a file added, changed or removed reloads
+  the page. Until `index.html` exists it answers "Hanzo is building your new design" and the same script swaps it
+  for the real one. The same folder is the same address while it runs. Previews stop when the main window is
+  destroyed, and on exit; `local_preview_stop(dir)` stops one.
+- `local_preview_open(url)` shows a preview in Chrome (macOS `open -a "Google Chrome"`, Windows and Linux Chrome
+  or Chromium by path), else the default browser. It opens only a preview this app is serving.
+
+The agent is the ordinary `local_workspace_run_dev`: it reads `.hanzo/reference`, answers with a critique and writes
+static files into `redesign/`; the preview follows each file it saves, and later runs in that folder (Auto picks it
+next) show live in the same tab. Verify the Rust side with `cargo test --bin hanzo-desktop --no-default-features
+local_site` (the `machine` feature's own tests need an import the tree does not have yet).
+
 ## Machines (Docker Desktop replacement)
 
 Desktop UI for Linux VMs (vfkit) and the docker / k3s stack served by the
