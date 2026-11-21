@@ -113,15 +113,16 @@ impl Drop for Lock {
 
 /// Write `bytes` to `path` owner-only, by rename, so a reader never sees half.
 fn private(path: &Path, bytes: &[u8]) -> Result<(), String> {
-    use std::os::unix::fs::OpenOptionsExt;
     let tmp = path.with_extension(format!("tmp{}", std::process::id()));
-    let mut f = OpenOptions::new()
-        .create(true)
-        .truncate(true)
-        .write(true)
-        .mode(0o600)
-        .open(&tmp)
-        .map_err(|e| format!("writing {}: {e}", tmp.display()))?;
+    let mut open = OpenOptions::new();
+    open.create(true).truncate(true).write(true);
+    // Elsewhere the file is as private as the profile folder it is in.
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        open.mode(0o600);
+    }
+    let mut f = open.open(&tmp).map_err(|e| format!("writing {}: {e}", tmp.display()))?;
     f.write_all(bytes).and_then(|_| f.sync_all()).map_err(|e| e.to_string())?;
     fs::rename(&tmp, path).map_err(|e| format!("replacing {}: {e}", path.display()))
 }
