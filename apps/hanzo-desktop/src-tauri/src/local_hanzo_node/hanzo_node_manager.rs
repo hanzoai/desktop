@@ -106,8 +106,10 @@ impl HanzoNodeManager {
     pub async fn kill(&mut self) {
         self.emit_event(HanzoNodeManagerEvent::StoppingHanzoNode);
         self.emit_event(HanzoNodeManagerEvent::HanzoNodeStopped);
+        // Not `local_models::stop_all()`: "Reset connection" and respawn come
+        // through here, and neither should stop the person's model or cancel a
+        // download. The app's exit paths stop those (main.rs, tray.rs).
         self.emit_event(HanzoNodeManagerEvent::StoppingEngine);
-        crate::local_models::stop_all();
         self.emit_event(HanzoNodeManagerEvent::EngineStopped);
     }
 
