@@ -30,6 +30,7 @@ import {
 import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
 import { Update } from './update';
 import { Welcome } from './Welcome';
+import { awaitCallback, type Callback, SignInCancelled } from './lib/sign-in-attempt';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -280,48 +281,40 @@ const SIGN_IN_WINDOW = 15 * 60 * 1000;
  * the browser opens is the brand's own (hanzo.ai/login), which finishes this
  * app's authorize request. PKCE's verifier and the state stay in this window's
  * storage, where the callback is read.
+ *
+ * `signal` is the Welcome screen's Cancel; `ready` hands it "Open the sign-in
+ * page again" once the page has been opened. The wait itself (the callback that
+ * matches this attempt's state, the deadline, Cancel) is sign-in-attempt.ts.
  */
-async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
+async function signIn(
+  sdk: ReturnType<typeof useIam>['sdk'],
+  { signal, ready }: { signal: AbortSignal; ready?: (reopen: () => void) => void },
+): Promise<void> {
   const port = await invoke<number>('iam_loopback');
+  if (signal.aborted) throw new SignInCancelled();
   const redirect = `http://127.0.0.1:${port}/callback`;
   // The SDK sends the redirect its configuration names at the code exchange, so
   // it names this attempt's before the authorize request is built.
   (sdk as unknown as { config: { redirectUri: string } }).config.redirectUri = redirect;
   const issuer = new URL(await sdk.getSigninUrl());
   const url = brand.iam.page ? `${brand.iam.page}${issuer.search}` : issuer.href;
-  // The loopback port closes after SIGN_IN_WINDOW (loopback.rs) and nothing can
-  // come back once it has. Without the timer a reader who closed the browser
-  // tab kept a disabled "Finish signing in…" button until the app was quit, and
-  // every retry left another listener behind.
-  let stop: (() => void) | null = null;
-  let expire: ReturnType<typeof setTimeout> | undefined;
-  try {
-    await new Promise<void>((resolve, reject) => {
-      expire = setTimeout(
-        () => reject(new Error('Sign-in was not finished in the browser. Try again.')),
-        SIGN_IN_WINDOW,
-      );
-      void safeListen<{ state: string; code: string }>(brand.iam.callbackEvent, (event) => {
-        // The browser came back: the exchange below decides the outcome now.
-        clearTimeout(expire);
-        const back = new URL(redirect);
-        back.searchParams.set('code', event.payload.code);
-        back.searchParams.set('state', event.payload.state);
-        sdk
-          .handleCallback(back.href)
-          .then(() => share())
-          .then(() => resolve(), reject);
-      })
-        .then((unlisten) => {
-          stop = unlisten;
-          return openUrl(url);
-        })
-        .then(undefined, reject);
-    });
-  } finally {
-    clearTimeout(expire);
-    (stop as (() => void) | null)?.();
-  }
+  const open = () => openUrl(url);
+  const back = await awaitCallback({
+    state: issuer.searchParams.get('state') ?? '',
+    listen: (on) => safeListen<Callback>(brand.iam.callbackEvent, (event) => on(event.payload)),
+    open: async () => {
+      await open();
+      ready?.(() => void open().catch(() => undefined));
+    },
+    windowMs: SIGN_IN_WINDOW,
+    signal,
+  });
+  // The browser came back with this attempt's state: the exchange decides now.
+  const callback = new URL(redirect);
+  callback.searchParams.set('code', back.code);
+  callback.searchParams.set('state', back.state);
+  await sdk.handleCallback(callback.href);
+  await share();
   window.location.replace(onward());
 }
 
@@ -572,6 +565,39 @@ function Gate() {
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
   const [visiting, setVisiting] = useState(guest);
+  // The attempt in progress, so Cancel can stop it and a new press can replace
+  // it; and "Open the sign-in page again", once its page has been opened.
+  const attempt = useRef<AbortController | null>(null);
+  const [reopen, setReopen] = useState<(() => void) | null>(null);
+
+  const startSignIn = () => {
+    attempt.current?.abort();
+    const ctrl = new AbortController();
+    attempt.current = ctrl;
+    setBusy(true);
+    setError(null);
+    setReopen(null);
+    signIn(sdk, {
+      signal: ctrl.signal,
+      ready: (again) => {
+        if (attempt.current === ctrl) setReopen(() => again);
+      },
+    }).catch((err: unknown) => {
+      // A cancelled or replaced attempt has already handed the screen back.
+      if (attempt.current !== ctrl) return;
+      attempt.current = null;
+      setBusy(false);
+      setReopen(null);
+      if (!(err instanceof SignInCancelled)) setError(err instanceof Error ? err : new Error(String(err)));
+    });
+  };
+  const cancelSignIn = () => {
+    const ctrl = attempt.current;
+    attempt.current = null;
+    ctrl?.abort();
+    setBusy(false);
+    setReopen(null);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => setLoadingTimedOut(true), 1500);
@@ -719,25 +745,14 @@ function Gate() {
       <Welcome
         busy={busy}
         error={error}
-        onSignIn={() => {
-          setBusy(true);
-          setError(null);
-          signIn(sdk).catch((err: unknown) => {
-            setBusy(false);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          });
-        }}
+        onSignIn={startSignIn}
+        onCancel={cancelSignIn}
+        onReopen={reopen ?? undefined}
         onSkip={() => {
+          cancelSignIn();
           stayGuest();
-          setBusy(false);
           setVisiting(true);
           window.history.replaceState(null, '', DOORS.has(path) || path === '/' ? onward() : here);
-        }}
-        onBenchmark={() => {
-          stayGuest();
-          setBusy(false);
-          setVisiting(true);
-          window.history.replaceState(null, '', '/benchmark');
         }}
       />
     );
@@ -757,12 +772,9 @@ function Gate() {
         localEngineUrl={LOCAL_ENGINE_URL}
         barInset={BAR.inset ?? 0}
         onSignIn={() => {
-          setBusy(true);
-          setError(null);
-          signIn(sdk).catch((err: unknown) => {
-            setBusy(false);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          });
+          // Signing in is the Welcome screen's job: it shows the attempt and its Cancel.
+          window.history.pushState(null, '', '/login?next=/settings');
+          startSignIn();
         }}
         onBack={() => {
           stayGuest();
