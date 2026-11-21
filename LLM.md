@@ -588,6 +588,37 @@ rest:
   which then gains the darwin platforms. The host needs Xcode's command line tools
   and `jq` (macOS 15 ships it); the app is ad-hoc signed, not notarized.
 
+### macOS signing: ready for notarisation, short of the Developer ID
+
+Tauri signs the `.app` under the hardened runtime (`bundle.macOS.hardenedRuntime`,
+default on) with `src-tauri/entitlements.plist`, named once, in
+`tauri.macos.conf.json`. That file holds one key, `device.audio-input`, for
+dictation and talk mode; everything else it carried was sandbox-only (no effect
+without `app-sandbox`), unreached (camera, location), or deno's (gone with the
+sidecars). There is no debug entitlements file because nothing needs one: `tauri
+dev` does not codesign, so a dev binary has no hardened runtime to attach past, and
+`get-task-allow` in a release is a notary rejection.
+
+Tauri signs every `externalBin` with that same file (tauri-bundler `sign.rs`), so a
+sidecar cannot be given entitlements of its own; the bundle ships none. `Info.plist`
+carries a usage sentence for exactly the protected resources the app reaches
+(microphone; speech recognition, which `@hanzo/voice` falls back to when the
+platform transcriber refuses and which WebKit refuses without the sentence; local
+network; Documents, Desktop, Downloads), none naming a
+brand, since every brand ships the one file. There is no `NSBonjourServices`:
+LAN discovery is `mdns-sd`, which multicasts on its own sockets rather than
+through Apple's Bonjour APIs, so only the local-network sentence applies (Apple
+TN3179, rev. 2026-10-06; the multicast entitlement is not required on macOS).
+
+`scripts/check-macos-signing.py` (gate `macos-signing`, with its self-test) refuses
+any drift from that. `desktop-release-macos.yml` and `scripts/local-build.sh` run it
+before the build and again with `--app` on the signed bundle, which reads what
+`codesign` actually signed in and holds it to the file, hardened runtime included. What is left is Hanzo's: a Developer ID Application
+certificate and an App Store Connect API key in KMS `/desktop`, and the
+`APPLE_SIGNING_IDENTITY: '-'` line in `desktop-release-macos.yml` replaced by them.
+Tauri then notarizes and staples the `.app`; the `.dmg` is notarized and stapled
+after it.
+
 `scripts/release/` is the lane's whole logic, and each script says what it does at
 its head: `meta.sh` (which release, creates the draft), `sysroot.sh`, `rust.sh`,
 `prepare.sh`, `kms.sh`, `signing.sh`, `stage.sh`, `verify.py`, `manifest.sh`,
@@ -871,13 +902,19 @@ bundle identifier nothing read.
 - **Secrets**: `src/lib/secure-storage.ts` (OS keychain via `secure_storage_*`,
   in-memory outside Tauri, **never** localStorage). The keychain service name is
   the running bundle's identifier, resolved in Rust from `app.config()`.
-- **Identifier**: `com.<brand>.desktop`, and it must be the SAME string in
-  `tauri.conf.json`, `tauri.conf.<brand>.json`, `Info.plist` and the brand
-  table. Because the keychain service, the log file name and the `.app` name
-  all derive from the running bundle's identity, a disagreement silently
-  strands a user's saved secrets when they move between build variants — which
-  is what `ai.hanzo.desktop` in the base config did. `src/lib/brand-identity.test.ts`
-  asserts all four agree; the `.dev` / `.local` variants deliberately keep
+- **Identifier**: one per brand (`ai.hanzo.desktop`, `com.zoo.desktop`,
+  `com.lux.desktop`), written in the brand table, `tauri.conf.json` (hanzo's)
+  and `tauri.conf.<brand>.json`, and nowhere else. `Info.plist` carries no
+  `CFBundleIdentifier`: tauri-bundler merges that file OVER the plist it
+  generates, so one there replaced the config's identifier wherever nothing
+  patched it: the `.local` build, the `.dev` build and plain `tauri dev` were
+  all `ai.hanzo.desktop` to macOS, sharing its WebKit storage, preferences and
+  microphone grant (brand builds escaped only because `brand-build.cjs`
+  rewrote the key, a second copy of the identifier that is now gone too). Because the data folder, the log file name and the `.app`
+  name derive from the running bundle's identity, a disagreement strands what a
+  person kept when they move between build variants.
+  `src/lib/brand-identity.test.ts` asserts the configs and the table agree and
+  that `Info.plist` has no identifier; the `.dev` / `.local` variants keep
   their own suffixed identifier so side-by-side installs don't collide.
 
 Verify a brand end to end with the production bundle:

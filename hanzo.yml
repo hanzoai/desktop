@@ -89,6 +89,15 @@ test:
       for crate in log-redact engine-bin dev-agent node-env projects; do
         cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
       done
+  # The macOS bundle is signed under the hardened runtime with entitlements.plist
+  # alone, holding only what the app uses: get-task-allow (which the notary
+  # service rejects) or any dropped entitlement coming back fails here, as does a
+  # usage sentence for a resource the app does not use. Stdlib Python, any runner.
+  - name: macos-signing
+    run: |
+      set -e
+      python3 -I scripts/test_check_macos_signing.py
+      python3 -I scripts/check-macos-signing.py
   # No secret-bearing value may be printed or logged from the Tauri crate:
   # whole-call (multiline) scan plus Debug-format of credential-like values.
   # The self-test proves the scanner still catches the shapes it must.
