@@ -252,6 +252,17 @@ function guest(): boolean {
   }
 }
 
+/** A signed-in window is nobody's guest: an old build's flag must not outlive a sign-in. */
+function forgetGuest(): void {
+  try {
+    window.localStorage.removeItem(GUEST);
+    window.sessionStorage.removeItem('hanzo.anon.try');
+    (window as any).__hanzoAnonChat = false;
+  } catch {
+    // Without storage there is no flag to clear.
+  }
+}
+
 function stayGuest(): void {
   try {
     window.localStorage.setItem(GUEST, '1');
@@ -613,6 +624,12 @@ function Gate() {
     stayGuest();
     setVisiting(true);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    forgetGuest();
+    setVisiting(false);
+  }, [isAuthenticated]);
 
   // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
   const startChat = () => {
