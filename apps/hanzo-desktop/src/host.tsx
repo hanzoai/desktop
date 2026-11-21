@@ -568,30 +568,9 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
       }
     }
 
-    try {
-      return await nativeFetch(input, init);
-    } catch (err) {
-      // Offline, a signed-in window's side lists read as empty rather than
-      // erroring. Only reads: a write, or anything about conversations, fails as
-      // itself. The guest conversations on this computer are never the account's.
-      const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
-      if (isCloudApi && parsed && method === 'GET') {
-        const path = parsed.pathname;
-        if (path === '/v1/agent/sessions' || path === '/v1/agents/sessions') {
-          return jsonResponse({ sessions: [] });
-        }
-        if (path === '/v1/agents') {
-          return jsonResponse({ agents: [] });
-        }
-        if (path === '/v1/project') {
-          return jsonResponse([]);
-        }
-        if (path === '/v1/pref' || path === '/v1/preferences') {
-          return jsonResponse({});
-        }
-      }
-      throw err;
-    }
+    // Signed in, every call is the cloud's, and offline it fails as itself: the
+    // app says so with its own Try again. Nothing here stands in for the account.
+    return nativeFetch(input, init);
   };
 }
 
