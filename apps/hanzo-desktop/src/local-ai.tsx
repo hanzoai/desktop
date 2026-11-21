@@ -492,7 +492,7 @@ export function LocalAiManager() {
       const current = kept().model;
       setSelected(current);
       if (!current || ROUTER_ALIASES.has(current)) return;
-      if (window.localStorage.getItem('hanzo_iam_access_token')) return;
+      if (keychain.getItem('hanzo_iam_access_token')) return;
       const models = await probeInstalledLocalModels();
       const isCatalogModel = CHAT_MODELS.some((m) => m.tags.some((t) => t.name === current));
       if (isCatalogModel && !models.some((m) => m.id === current)) {

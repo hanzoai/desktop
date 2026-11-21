@@ -139,6 +139,32 @@ describe('the Local AI screen', () => {
     }
   });
 
+  it('opens on a signed-out pick of a model not on this computer, and never for a signed-in person', async () => {
+    desktop(() => base);
+    render(
+      <GuiProvider config={config} defaultTheme="dark">
+        <LocalAiManager />
+      </GuiProvider>,
+    );
+    const pick = async () => {
+      window.localStorage.setItem('hanzo.mind', JSON.stringify({ model: 'zen-nano:0.6b' }));
+      await act(async () => {
+        window.dispatchEvent(new Event('hanzo:mind'));
+        await new Promise((r) => setTimeout(r, 0));
+      });
+    };
+    // The token lives in the in-memory keychain, not localStorage.
+    keychain.setItem('hanzo_iam_access_token', 'held');
+    try {
+      await pick();
+      expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
+    } finally {
+      keychain.removeItem('hanzo_iam_access_token');
+    }
+    await pick();
+    await waitFor(() => expect(screen.getByTestId('local-ai-manager-modal')).toBeTruthy());
+  });
+
   it('says nothing about signing in to a guest', async () => {
     desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1_208_031_405 }] }));
     await openScreen();
