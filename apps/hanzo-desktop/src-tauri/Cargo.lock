@@ -2218,7 +2218,6 @@ dependencies = [
  "blake3",
  "bytes",
  "chrono",
- "coins-bip39",
  "dirs",
  "fips204",
  "fix-path-env",
@@ -2228,7 +2227,6 @@ dependencies = [
  "hanzo-log-redact",
  "hanzo-projects",
  "hex",
- "k256",
  "libc",
  "log",
  "mdns-sd",
@@ -2237,7 +2235,6 @@ dependencies = [
  "rand 0.8.6",
  "regex",
  "reqwest 0.11.27",
- "rlp",
  "serde",
  "serde_json",
  "sysinfo",
@@ -2259,7 +2256,6 @@ dependencies = [
  "tempfile",
  "thiserror 1.0.69",
  "time",
- "tiny-keccak",
  "tokio",
  "toml_edit 0.25.12+spec-1.1.0",
  "uuid",
@@ -4589,16 +4585,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rlp"
-version = "0.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb919243f34364b6bd2fc10ef797edbfa75f33c252e7998527479c6d6b47e1ec"
-dependencies = [
- "bytes",
- "rustc-hex",
-]
-
-[[package]]
 name = "rust-ini"
 version = "0.21.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4619,12 +4605,6 @@ name = "rustc-hash"
 version = "2.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94300abf3f1ae2e2b8ffb7b58043de3d399c73fa6f4b73826402a5c457614dbe"
-
-[[package]]
-name = "rustc-hex"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e75f6a532d0fd9f7f13144f392b6ad56a32696bfcd9c78f797f16bbb6f072d6"
 
 [[package]]
 name = "rustc_version"

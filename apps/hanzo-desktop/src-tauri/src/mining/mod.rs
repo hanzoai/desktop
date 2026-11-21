@@ -5,7 +5,6 @@
 //! On-chain submission is Phase 2 and intentionally out of scope here.
 
 pub mod backend;
-pub mod claim;
 pub mod error;
 pub mod precompile;
 pub mod proof;

@@ -6,10 +6,9 @@
 //! every platform. The crypto is FIPS 204 ML-DSA (`fips204`) + BLAKE3
 //! (`blake3`) — both already in the dependency tree.
 //!
-//! The stateful selectors (`is_spent`/`mark_spent` — the double-spend ledger)
+//! The stateful selectors (`isSpent`/`markSpent`, the double-spend ledger)
 //! belong to the EVM journal and are served by the revm precompile in the node
-//! (tier 2). Locally the `MiningManager` keeps its own spent cache, so they are
-//! intentional no-ops here.
+//! (tier 2); nothing here stands in for them.
 
 use blake3::Hasher;
 use fips204::traits::{SerDes, Verifier};
@@ -123,19 +122,6 @@ pub fn compute_work_id(
     let mut out = [0u8; 32];
     h.finalize_xof().fill(&mut out);
     Ok(out)
-}
-
-/// `isSpent(workId) -> bool`. Stateful selector: the EVM journal owns the spent
-/// set (revm precompile, tier 2). Locally the `MiningManager` keeps its own
-/// cache, so this reports "not spent".
-pub fn is_spent(_work_id: &[u8; 32]) -> Result<bool, MiningError> {
-    Ok(false)
-}
-
-/// `markSpent(workId)` — local cache only in Phase 1; the on-chain state write
-/// happens in Phase 2 via a wallet transaction.
-pub fn mark_spent(_work_id: &[u8; 32]) -> Result<(), MiningError> {
-    Ok(())
 }
 
 /// `calculateReward(workProof, chainId) -> wei`. Reward =
