@@ -1,6 +1,6 @@
 /**
- * The main window's bar, measured: the sidebar's toggle, Back and Forward at the top-left, Local AI at the
- * right, the bar dragging the window. Runs against the Vite frontend with no Tauri runtime, so the visitor
+ * The main window's bar, measured: the sidebar's toggle, Back and Forward at the top-left, nothing else
+ * (Local AI is reached from Settings), the bar dragging the window. Runs against the Vite frontend with no Tauri runtime, so the visitor
  * is the signed-out one "Not now" admits.
  */
 import { expect, type Page, test } from '@playwright/test';
@@ -21,7 +21,7 @@ test('the bar holds the sidebar toggle, Back and Forward at the top-left, and dr
   const names = await bar.locator('[aria-label]').evaluateAll((all) =>
     all.filter((n) => (n as HTMLElement).offsetParent !== null).map((n) => n.getAttribute('aria-label')),
   );
-  expect(names).toEqual(['Close sidebar', 'Back', 'Forward', 'Local AI & Node']);
+  expect(names).toEqual(['Close sidebar', 'Back', 'Forward']);
   const toggle = await bar.getByRole('button', { name: 'Close sidebar' }).boundingBox();
   const forward = await bar.getByRole('button', { name: 'Forward' }).boundingBox();
   expect(toggle!.y, 'at the top').toBeLessThan(16);
@@ -74,26 +74,21 @@ test('a narrow window opens the sidebar as a drawer from the bar, and nothing sc
   await page.screenshot({ path: `${SHOTS}/desktop-390-drawer.png` });
 });
 
-test('hides Google Workspace setup, aligns top controls with traffic lights, and opens Local AI manager', async ({ page }) => {
+test('hides Google Workspace setup, aligns the toggle with the traffic lights, and reaches Local AI from Settings', async ({ page }) => {
   await enter(page);
   // Google Workspace setup card must not be shown
   await expect(page.locator('[data-slot="setup-workspace"]')).toHaveCount(0);
   await expect(page.getByText('Google Workspace')).toHaveCount(0);
 
-  // Top-left bar toggle and top-right conversation controls should align near y=16.5px (macOS traffic light center)
+  // The top-left toggle sits on the macOS traffic lights' centre line (y=16.5px).
   const toggleBox = await page.locator('[data-slot="title-bar"]').getByRole('button', { name: 'Close sidebar' }).boundingBox();
-  const localAiBtn = page.locator('[data-slot="header-local-ai"]');
-  await expect(localAiBtn).toBeVisible();
-  const localAiBox = await localAiBtn.boundingBox();
   expect(toggleBox).not.toBeNull();
-  expect(localAiBox).not.toBeNull();
-  const toggleCenterY = toggleBox!.y + toggleBox!.height / 2;
-  const localAiCenterY = localAiBox!.y + localAiBox!.height / 2;
-  expect(Math.abs(toggleCenterY - 16.5)).toBeLessThanOrEqual(2.5);
-  expect(Math.abs(localAiCenterY - 16.5)).toBeLessThanOrEqual(2.5);
+  expect(Math.abs(toggleBox!.y + toggleBox!.height / 2 - 16.5)).toBeLessThanOrEqual(2.5);
 
-  // Clicking "Local AI" opens the Local AI Models & Hanzo Node Manager modal
-  await localAiBtn.click();
+  // The bar has no Local AI button; Settings > Local models opens the Local AI screen.
+  await expect(page.locator('[data-slot="header-local-ai"]')).toHaveCount(0);
+  await page.evaluate(() => window.history.pushState(null, '', '/settings/local-models'));
+  await page.getByRole('button', { name: 'Manage local models' }).click();
   const modal = page.getByTestId('local-ai-manager-modal');
   await expect(modal).toBeVisible();
   await page.screenshot({ path: `${SHOTS}/desktop-1280-local-ai-modal.png` });

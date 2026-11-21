@@ -162,12 +162,12 @@ owns:
 - **Look**: `gui.config.ts` is `@hanzo/ui/gui-config`'s `monochrome`, hanzo.ai's
   config, for every window; `main.tsx` loads hanzo.ai's stylesheets in its order.
 - **The panels are the app's** (`@hanzo/app` 0.3.124+): a 33px bar for the window (traffic-light
-  inset, toggle, Back, Forward, Local AI, the update mark), then the sidebar and the chat as two
+  inset, toggle, Back, Forward, the update mark), then the sidebar and the chat as two
   panels cut by one `pane()`: one colour, one `--pane-gap` under the bar, between them and at the
   edges, the chat's icons in the chat's header. `src/app.css` only sets the dark palette
   (`--pane-*`, scoped to dark; light keeps the app's tokens) and the bar's alignment.
   `e2e-tests/panels.spec.ts` measures the gaps and the colours, `appearance.spec.ts` the contrast.
-- **Updates**: `src/update.tsx`, in the bar beside Local AI. Once the window is up
+- **Updates**: `src/update.tsx`, the bar's one control. Once the window is up
   and every 30 minutes it asks the feed (`plugins.updater`); with a newer
   version the bar says "Update available" and nothing else moves. One press
   downloads, stops a served model and calls off a download, installs and
@@ -793,7 +793,9 @@ root.
 
 ## Local AI: models on this computer, on Hanzo's engine
 
-`src/local-ai.tsx` is the screen (the bar's Local AI button); `src/lib/local-models.ts` is its one
+`src/local-ai.tsx` is the screen, opened from Settings > Local models (Manage local models) and by a
+signed-out answer that needs a model (the app's "Select / Download Local Model", and `needsModel`);
+the bar has no button for it. `src/lib/local-models.ts` is its one
 seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` granted in
 `capabilities/main.json` to the window's own pages only, so a hanzo.ai page cannot pull models or
 fill the disk (`capabilities_test.rs` resolves the built ACL). The commands also refuse a repository not in `src/lib/local-sources.json`, the one list

@@ -17,6 +17,7 @@ import {
   shortcutGroups,
   windowKey,
 } from '../desktop-shortcuts';
+import { LocalAiManager } from '../local-ai';
 import config from '../../gui.config';
 
 /** A section's entry in the side nav (the phone-width chips repeat it). */
@@ -223,6 +224,24 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     const advanced = screen.getByTestId('desktop-advanced');
     expect(advanced.textContent).toMatch(/127\.0\.0\.1:9630/);
     expect(advanced.textContent).toMatch(/127\.0\.0\.1:36900/);
+  });
+
+  it('reaches the Local AI screen from Settings > Local models, now that the bar has no button for it', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => {
+      throw new TypeError('Failed to fetch');
+    }));
+    window.history.replaceState(null, '', '/settings/local-models');
+    render(
+      gui(
+        <>
+          <DesktopSettings isAuthenticated={false} onBack={vi.fn()} onSignIn={vi.fn()} />
+          <LocalAiManager />
+        </>,
+      ),
+    );
+    expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Manage local models' }));
+    expect(await screen.findByTestId('local-ai-manager-modal')).toBeTruthy();
   });
 
   it('answers the window keys @hanzo/app leaves to it: ⌘N and ⌘⇧M', () => {

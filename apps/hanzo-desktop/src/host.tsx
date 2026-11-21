@@ -1,13 +1,12 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
-import { GuiProvider, XStack } from '@hanzo/gui';
+import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Titlebar } from '@hanzo/app/App';
 import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
-import { Button, Text } from '@hanzo/ui';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
@@ -21,7 +20,6 @@ import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
-  openLocalAiManager,
 } from './local-ai';
 import { Update } from './update';
 import { Welcome } from './Welcome';
@@ -99,35 +97,15 @@ if (window.location.pathname === '/' || window.location.pathname === '/index.htm
   window.history.replaceState(null, '', `/chat${window.location.search}${window.location.hash}`);
 }
 
-/** The bar's own control: the local models and node (local-ai.tsx), from any page. */
-function LocalAi() {
-  return (
-    <Button
-      size="xs"
-      variant="outline"
-      data-slot="header-local-ai"
-      aria-label="Local AI & Node"
-      height={24}
-      px="$2.5"
-      rounded="$3"
-      onPress={() => openLocalAiManager('models')}
-    >
-      <Text fontSize="$1" fontWeight="600" color="$ink">
-        Local AI
-      </Text>
-    </Button>
-  );
-}
-
 // THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
 // the app draws the bar a browser would: the sidebar toggle, Back and Forward
 // through the router below. macOS paints its traffic lights over the page's
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
-// page and need none. The bar drags the window. Its controls are the window's:
-// Local AI, in place of the minimise, maximise and close a frameless window
-// would draw, which the native title bar already has, and, when there is a newer
-// version, the one quiet line that installs it (update.tsx).
+// page and need none. The bar drags the window. Its one control is the window's:
+// when there is a newer version, the quiet line that installs it (update.tsx).
+// Local models are reached from Settings > Local models and from a signed-out
+// answer that needs one (the Local AI screen, local-ai.tsx), not from the bar.
 const MAC = /Mac/.test(navigator.userAgent);
 // The focused pages (Gate's sheets: organization, plan) carry their own header,
 // whose wordmark starts at the page's gutter, under the traffic lights (app.css).
@@ -136,12 +114,7 @@ if (MAC) document.documentElement.dataset.mac = '';
 const BAR: Titlebar = {
   inset: MAC ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
-  controls: (
-    <XStack items="center" gap="$2">
-      <Update />
-      <LocalAi />
-    </XStack>
-  ),
+  controls: <Update />,
 };
 
 /** The composer's microphone, on whatever page draws it. */
