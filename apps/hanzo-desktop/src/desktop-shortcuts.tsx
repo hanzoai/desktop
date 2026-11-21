@@ -5,12 +5,14 @@ import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
 import { Button, Kbd, Switch, Text, ToggleGroup, ToggleGroupItem, XStack, YStack } from '@hanzo/ui';
 import { Card, Group, Heading, Row, Settings } from '@hanzo/ui/settings';
 import { ArrowLeft } from '@hanzogui/lucide-icons-2';
+import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
 import { keychain } from './keychain';
 import { engineStatus, sourceForRepo } from './lib/local-models';
 import { LOCAL_MODELS_UPDATED_EVENT, openLocalAiManager, probeInstalledLocalModels } from './local-ai';
+import { isTauriAvailable } from './utils/tauri-check';
 
 export type Platform = 'mac' | 'other';
 
@@ -183,6 +185,17 @@ export function DesktopSettings({
   const [section, setSection] = useState<Section>(() => sectionOf(window.location.pathname));
   const [theme, setTheme] = useState<Preference['theme']>(() => read().theme ?? 'system');
   const [devMode, setDevMode] = useDevMode();
+  // Mining's switch (src-tauri mining `is_enabled`): off until the person turns it on.
+  // Null outside the desktop app, where there is nothing to share.
+  const [mining, setMining] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!isTauriAvailable()) return;
+    invoke<boolean>('mining_get_enabled').then(setMining, () => setMining(null));
+  }, []);
+  const turnMining = (on: boolean) => {
+    setMining(on);
+    invoke('mining_set_enabled', { on }).catch(() => setMining(!on));
+  };
   const [count, setCount] = useState<number | null>(null);
   const [engineInstalled, setEngineInstalled] = useState<boolean | null>(null);
   const [serving, setServing] = useState<string | null>(null);
@@ -405,6 +418,23 @@ export function DesktopSettings({
                 />
               </Card>
             </YStack>
+            {mining !== null && (
+              <Card>
+                <Row
+                  first
+                  title="Earn rewards by sharing this computer's power"
+                  detail={`While on, ${getBrand().name} uses this computer's processor in the background, once a minute, to make work proofs for its network; rewards are counted on this computer and are not paid out yet.`}
+                  trailing={
+                    <Switch
+                      aria-label="Earn rewards by sharing this computer's power"
+                      data-testid="desktop-mining-switch"
+                      checked={mining}
+                      onCheckedChange={turnMining}
+                    />
+                  }
+                />
+              </Card>
+            )}
             <Group title="Local services">
               <Card>
                 <Row

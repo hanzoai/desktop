@@ -89,6 +89,28 @@ impl MiningManager {
         }
     }
 
+    /// The person's own yes, kept across launches: a file in the mining dir.
+    /// Absent (a new install, or turned off) means no mining at all.
+    fn consent_path(&self) -> PathBuf {
+        self.storage_dir.join("enabled")
+    }
+
+    pub fn is_enabled(&self) -> bool {
+        self.consent_path().exists()
+    }
+
+    pub fn set_enabled(&self, on: bool) -> std::io::Result<()> {
+        if on {
+            std::fs::create_dir_all(&self.storage_dir)?;
+            std::fs::write(self.consent_path(), b"1")
+        } else {
+            match std::fs::remove_file(self.consent_path()) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
+                _ => Ok(()),
+            }
+        }
+    }
+
     pub async fn get_state(&self) -> MiningState {
         self.state.read().await.clone()
     }
@@ -314,6 +336,19 @@ mod tests {
 
     fn fresh_dir() -> TempDir {
         TempDir::new().expect("tempdir")
+    }
+
+    #[test]
+    fn mining_is_off_until_the_person_turns_it_on_and_the_choice_is_kept() {
+        let tmp = fresh_dir();
+        let dir = tmp.path().join("mining");
+        assert!(!MiningManager::new(dir.clone()).is_enabled(), "a new install is off");
+        MiningManager::new(dir.clone()).set_enabled(true).unwrap();
+        assert!(MiningManager::new(dir.clone()).is_enabled(), "kept across launches");
+        let m = MiningManager::new(dir.clone());
+        m.set_enabled(false).unwrap();
+        m.set_enabled(false).unwrap();
+        assert!(!MiningManager::new(dir).is_enabled());
     }
 
     #[test]
