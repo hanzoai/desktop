@@ -137,7 +137,7 @@ fn repo_folder(repo: &str) -> String {
 /// The files the engine needs: top-level files only (the subfolders hold other
 /// formats), and no weight format that duplicates the safetensors.
 pub fn wanted(files: &[String]) -> Vec<String> {
-    let top: Vec<&String> = files.iter().filter(|f| !f.contains('/')).collect();
+    let top: Vec<&String> = files.iter().filter(|f| plain_name(f)).collect();
     let has_safetensors = top.iter().any(|f| f.ends_with(".safetensors"));
     top.into_iter()
         .filter(|f| {
@@ -147,6 +147,17 @@ pub fn wanted(files: &[String]) -> Vec<String> {
         })
         .cloned()
         .collect()
+}
+
+/// One file name and nothing else, on every platform. The names come from the
+/// library (any mirror `HF_ENDPOINT` names) and are joined onto the snapshot
+/// folder, so `..\x` or `C:\x`, harmless on a Mac, would write outside the
+/// cache on Windows.
+fn plain_name(f: &str) -> bool {
+    let mut parts = Path::new(f).components();
+    matches!(parts.next(), Some(std::path::Component::Normal(_)))
+        && parts.next().is_none()
+        && !f.contains(['/', '\\', ':'])
 }
 
 /// Finished models in the cache: `refs/main` names a snapshot and no file in
@@ -488,6 +499,16 @@ mod tests {
         }
         // Without safetensors, PyTorch weights are the weights.
         assert_eq!(wanted(&["pytorch_model.bin".to_string()]), vec!["pytorch_model.bin".to_string()]);
+    }
+
+    #[test]
+    fn a_hostile_library_cannot_name_a_file_outside_the_snapshot() {
+        let files: Vec<String> = [
+            "..\\..\\x", "C:\\x", "C:x", "/etc/x", "a/../../x", "..", ".", "", "a\\b", "x:stream", "config.json",
+        ]
+        .map(String::from)
+        .to_vec();
+        assert_eq!(wanted(&files), vec!["config.json".to_string()]);
     }
 
     #[test]
