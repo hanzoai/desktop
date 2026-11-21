@@ -9,6 +9,8 @@
 # CI signs with its own identity through APPLE_SIGNING_IDENTITY; this only supplies one when unset.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+# Apple's xattr: tauri runs `xattr -cr` on the bundle, which a Homebrew xattr earlier on PATH refuses.
+export PATH="/usr/bin:$PATH"
 
 if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
   APPLE_SIGNING_IDENTITY="$(security find-identity -p codesigning -v | sed -n 's/.*"\(Apple Development: [^"]*\)".*/\1/p' | head -1)"
