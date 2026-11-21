@@ -53,6 +53,7 @@ vi.mock('../desktop-shortcuts', () => ({
   ),
 }));
 
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
 import { keychain } from '../keychain';
 
@@ -128,4 +129,23 @@ describe('Host', () => {
       expect((await res.json()).conversations.map((c: { id: string }) => c.id)).toEqual(['local-1']);
     });
   });
+
+  it.each(['/settings/organization', '/settings/organization/members', '/billing', '/usage', '/keys'])(
+    '%s opens on hanzo.ai in the browser, and the window stays where it was',
+    (address) => {
+      window.history.replaceState(null, '', '/chat');
+      vi.mocked(openUrl).mockClear();
+      window.history.pushState(null, '', address);
+      expect(openUrl).toHaveBeenCalledWith(`https://hanzo.ai${address}`);
+      expect(window.location.pathname).toBe('/chat');
+    },
+  );
+
+  it('an address the window draws is not sent away', () => {
+    vi.mocked(openUrl).mockClear();
+    window.history.pushState(null, '', '/settings/account');
+    expect(openUrl).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe('/settings/account');
+  });
 });
+

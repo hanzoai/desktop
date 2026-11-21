@@ -161,10 +161,32 @@ const IAM = {
 // (lib/host `go`), so the window re-renders on every push and replace as well
 // as on popstate. A push to another origin cannot happen in a webview; it opens
 // in the browser instead.
+//
+// The app's own addresses this window has no page for (organization, billing,
+// usage, keys) are hanzo.ai's: they open there, in the system browser, and the
+// window stays where it was. One rule here, where every move passes: the router
+// below and the rooms' own `go` alike.
+const WEB = /^\/(billing|usage|keys)(\/|$)|^\/settings\/organization(\/|$)/;
+
+/** The hanzo.ai page an address of this window's names, or null for one the window draws. */
+export function onTheWeb(href: string): string | null {
+  try {
+    const url = new URL(href, window.location.href);
+    return url.origin === window.location.origin && WEB.test(url.pathname) ? `${SITE}${url.pathname}${url.search}` : null;
+  } catch {
+    return null;
+  }
+}
+
 const MOVED = 'hanzo:moved';
 for (const name of ['pushState', 'replaceState'] as const) {
   const original = window.history[name].bind(window.history);
   window.history[name] = (...args: Parameters<History['pushState']>) => {
+    const out = args[2] == null ? null : onTheWeb(String(args[2]));
+    if (out) {
+      void openUrl(out);
+      return;
+    }
     original(...args);
     window.dispatchEvent(new Event(MOVED));
   };

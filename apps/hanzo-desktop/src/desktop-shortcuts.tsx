@@ -132,9 +132,13 @@ const SECTIONS = [
 ] as const;
 type Section = (typeof SECTIONS)[number]['id'];
 
-/** The section an address names (`/settings/advanced`), Appearance otherwise. */
-const sectionOf = (path: string): Section =>
-  SECTIONS.find((s) => path === `/settings/${s.id}`)?.id ?? 'appearance';
+/**
+ * The section an address names (`/settings/advanced`). Any other settings address,
+ * bare `/settings` included, is the app's Profile, Personalization or Account, which
+ * the Account section answers (the pages themselves are hanzo.ai's).
+ */
+export const sectionOf = (path: string): Section =>
+  SECTIONS.find((s) => path === `/settings/${s.id}`)?.id ?? 'account';
 
 const HANZOD_URL = 'http://127.0.0.1:9630';
 
@@ -375,10 +379,10 @@ export function DesktopSettings({
                 <Row
                   first
                   title="Signed in"
-                  detail="Billing, members and API keys are managed on the web."
+                  detail={`Your profile, personalization, organization, billing, usage and API keys are on ${new URL(siteUrl).host}, in your browser.`}
                   trailing={
                     <Button size="sm" variant="outline" onPress={() => void openUrl(`${siteUrl}/settings`)}>
-                      Open account settings
+                      {`Open on ${new URL(siteUrl).host}`}
                     </Button>
                   }
                 />
