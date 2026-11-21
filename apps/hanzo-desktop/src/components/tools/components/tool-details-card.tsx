@@ -1,23 +1,22 @@
 import { type FormProps } from '@rjsf/core';
 import validator from '@rjsf/validator-ajv8';
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   CodeLanguage,
   type OAuth,
   type HanzoTool,
   type HanzoToolType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useDuplicateTool } from '@hanzo/desktop-node-state/v2/mutations/duplicateTool/useDuplicateTool';
-import { useExecuteToolCode } from '@hanzo/desktop-node-state/v2/mutations/executeToolCode/useExecuteToolCode';
-import { useExportTool } from '@hanzo/desktop-node-state/v2/mutations/exportTool/useExportTool';
-import { usePublishTool } from '@hanzo/desktop-node-state/v2/mutations/publishTool/usePublishTool';
-import { useSetCommonToolsetConfig } from '@hanzo/desktop-node-state/v2/mutations/setCommonToolsetConfig/useSetCommonToolsetConfig';
-import { useToggleEnableTool } from '@hanzo/desktop-node-state/v2/mutations/toggleEnableTool/useToggleEnableTool';
-import { useUpdateTool } from '@hanzo/desktop-node-state/v2/mutations/updateTool/useUpdateTool';
-import { useGetToolPlaygroundMetadata } from '@hanzo/desktop-node-state/v2/queries/getToolPlaygroundMetadata/useGetToolPlaygroundMetadata';
-import { useGetToolsFromToolset } from '@hanzo/desktop-node-state/v2/queries/getToolsFromToolset/useGetToolsFromToolset';
-import { useGetToolStoreDetails } from '@hanzo/desktop-node-state/v2/queries/getToolStoreDetails/useGetToolStoreDetails';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useDuplicateTool } from '@hanzo_network/hanzo-node-state/v2/mutations/duplicateTool/useDuplicateTool';
+import { useExecuteToolCode } from '@hanzo_network/hanzo-node-state/v2/mutations/executeToolCode/useExecuteToolCode';
+import { useExportTool } from '@hanzo_network/hanzo-node-state/v2/mutations/exportTool/useExportTool';
+import { usePublishTool } from '@hanzo_network/hanzo-node-state/v2/mutations/publishTool/usePublishTool';
+import { useSetCommonToolsetConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/setCommonToolsetConfig/useSetCommonToolsetConfig';
+import { useToggleEnableTool } from '@hanzo_network/hanzo-node-state/v2/mutations/toggleEnableTool/useToggleEnableTool';
+import { useUpdateTool } from '@hanzo_network/hanzo-node-state/v2/mutations/updateTool/useUpdateTool';
+import { useGetToolPlaygroundMetadata } from '@hanzo_network/hanzo-node-state/v2/queries/getToolPlaygroundMetadata/useGetToolPlaygroundMetadata';
+import { useGetToolsFromToolset } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsFromToolset/useGetToolsFromToolset';
+import { useGetToolStoreDetails } from '@hanzo_network/hanzo-node-state/v2/queries/getToolStoreDetails/useGetToolStoreDetails';
 import {
   Alert,
   AlertDescription,
@@ -38,10 +37,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { ToolsIcon } from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
@@ -59,6 +58,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
+import { BRAND } from '../../../config/brand';
 import { useAuth } from '../../../store/auth';
 import { useSettings } from '../../../store/settings';
 import { HANZO_STORE_URL } from '../../../utils/store';
@@ -626,13 +626,13 @@ export default function ToolDetailsCard({
                     Open in Playground
                   </Link>
                 )}
-              <DropdownMenu placement="bottom-end">
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button rounded="lg" size="sm" variant="outline">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end" className="p-2.5">
                   <DropdownMenuItem
                     className="text-xs"
                     disabled={isExportingTool}
@@ -730,7 +730,7 @@ export default function ToolDetailsCard({
                   Configuration
                   {!isConfigOKToEnableTool && (
                     <div className="relative flex items-center">
-                      <Tooltip placement="top">
+                      <Tooltip>
                         <TooltipTrigger asChild>
                           <span className="h-2 w-2 rounded-full bg-red-500" />
                         </TooltipTrigger>
@@ -1340,9 +1340,9 @@ export default function ToolDetailsCard({
                         rel="noreferrer"
                         target="_blank"
                       >
-                        {getBrand().name} Store
+                        {BRAND.company} Store
                       </a>{' '}
-                      to make it available to all {getBrand().name} users.
+                      to make it available to all {BRAND.name} users.
                     </p>
                   </div>
 

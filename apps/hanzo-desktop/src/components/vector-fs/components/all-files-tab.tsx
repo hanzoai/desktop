@@ -1,7 +1,8 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type DirectoryContent } from '@hanzo/desktop-message-ts/api/vector-fs/types';
-import { useGetListDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
-import { useGetSearchDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getSearchDirectoryContents/useGetSearchDirectoryContents';
+import { HomeIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type DirectoryContent } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
+import { useGetListDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
+import { useGetSearchDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getSearchDirectoryContents/useGetSearchDirectoryContents';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -24,25 +25,20 @@ import {
   Skeleton,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AddNewFolderIcon,
   CreateAIIcon,
   FileEmptyStateIcon,
   FileTypeIcon,
   GenerateDocIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { motion } from 'framer-motion';
-import {
-  ChevronRight,
-  FileType2Icon,
-  HomeIcon,
-  PlusIcon,
-  XIcon,
-} from 'lucide-react';
+import { ChevronRight, FileType2Icon, PlusIcon, XIcon } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
@@ -212,7 +208,6 @@ const AllFiles = () => {
         modal={false}
         onOpenChange={(value) => setMenuOpened(value)}
         open={isMenuOpened}
-        placement="bottom-end"
       >
         <DropdownMenuTrigger asChild>
           <Button
@@ -222,7 +217,12 @@ const AllFiles = () => {
             <PlusIcon className="h-4 w-4" /> {t('vectorFs.actions.addNew')}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent sideOffset={10} width={200}>
+        <DropdownMenuContent
+          align="end"
+          alignOffset={-10}
+          className="w-[200px] px-2 py-2"
+          sideOffset={10}
+        >
           {actionList.map((item, index) => (
             <DropdownMenuItem key={index} onClick={item.onClick}>
               {item.icon}
@@ -242,7 +242,7 @@ const AllFiles = () => {
 
         <div className="flex gap-3">
           <VectorFsToggleSortName />
-          <Separator className="bg-divider" vertical />
+          <Separator className="bg-divider" decorative orientation="vertical" />
           <VectorFsToggleLayout />
         </div>
       </div>
@@ -422,8 +422,8 @@ const AllFiles = () => {
         </ContextMenuContent>
       </ContextMenu>
 
-      <TooltipProvider delay={0}>
-        <Tooltip placement="left">
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <MotionButton
               className={cn(
@@ -468,9 +468,11 @@ const AllFiles = () => {
               </motion.div>
             </MotionButton>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{t('chat.create')}</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="left">
+              <p>{t('chat.create')}</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
       {isVRSelectionActive && (

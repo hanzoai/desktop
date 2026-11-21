@@ -32,7 +32,7 @@ use std::path::PathBuf;
 use tiny_keccak::{Hasher, Keccak};
 
 use crate::mining::error::MiningError;
-use crate::mining::{read_history, sum_pending, write_history};
+use crate::mining::{read_history, sum_pending, write_history, ProofRecord};
 
 /// Selector for `verifyAndMintWork` — the first 4 calldata bytes the precompile
 /// switches on (`SelectorVerifyAndMintWork` in `lux/precompile/ai/module.go`).

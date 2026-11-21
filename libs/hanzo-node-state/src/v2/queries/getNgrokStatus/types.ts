@@ -1,5 +1,5 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
-import { type NgrokStatusResponse } from '@hanzo/desktop-message-ts/api/ngrok';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type NgrokStatusResponse } from '@hanzo_network/hanzo-message-ts/api/ngrok';
 import { type QueryObserverOptions } from '@tanstack/react-query';
 import { type FunctionKeyV2 } from '../../constants';
 

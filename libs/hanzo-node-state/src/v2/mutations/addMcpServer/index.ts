@@ -1,5 +1,5 @@
-import { addMcpServer as addMcpServerApi } from '@hanzo/desktop-message-ts/api/mcp-servers/index';
-import { type AddMcpServerRequest } from '@hanzo/desktop-message-ts/api/mcp-servers/types';
+import { addMcpServer as addMcpServerApi } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/index';
+import { type AddMcpServerRequest } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
 
 import { type AddMcpServerInput } from './types';
 

@@ -1,5 +1,5 @@
-import { createJob as createJobApi } from '@hanzo/desktop-message-ts/api/jobs/index';
-import { createRecurringTask as createRecurringTaskApi } from '@hanzo/desktop-message-ts/api/recurring-tasks/index';
+import { createJob as createJobApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
+import { createRecurringTask as createRecurringTaskApi } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/index';
 
 import { type CreateRecurringTaskInput } from './types';
 

@@ -2,13 +2,19 @@ import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { RotateCcw, Download } from 'lucide-react';
 import mermaid from 'mermaid';
-import { type FC, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import svgPanZoom from 'svg-pan-zoom';
 import { cn } from '../utils';
 import { Button } from './button';
 import { type SyntaxHighlighterProps } from './markdown-preview';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@hanzo/ui';
+import { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
 
 export type MermaidDiagramProps = SyntaxHighlighterProps & {
   className?: string;
@@ -192,7 +198,7 @@ export const MermaidDiagram: FC<MermaidDiagramProps> = ({
       cancelled = true;
     };
   }, [code, isComplete]);
-
+  
   useEffect(() => {
     return () => {
       instanceRef.current?.destroy();
@@ -204,7 +210,7 @@ export const MermaidDiagram: FC<MermaidDiagramProps> = ({
     <div className="relative">
       {hasDiagram && !error && (
         <div className="absolute top-2 right-2 z-10 flex gap-1">
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="tertiary"
@@ -219,7 +225,7 @@ export const MermaidDiagram: FC<MermaidDiagramProps> = ({
               <p>Reset Zoom</p>
             </TooltipContent>
           </Tooltip>
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="tertiary"
@@ -261,7 +267,9 @@ export const MermaidDiagram: FC<MermaidDiagramProps> = ({
             <p className="text-destructive font-semibold">
               Mermaid diagram failed to render
             </p>
-            <p className="text-text-secondary text-xs">{error}</p>
+            <p className="text-xs text-text-secondary">
+              {error}
+            </p>
             <div className="mt-4 text-left">
               <pre className="bg-bg-darker text-text-default overflow-x-auto rounded-md p-3 text-left text-xs">
                 <code>{code}</code>

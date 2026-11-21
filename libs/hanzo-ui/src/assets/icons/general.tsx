@@ -1,5 +1,4 @@
-import { getBrand } from '@hanzo/desktop-brand-config';
-import { BrandMark } from '@hanzo/desktop-logo';
+import { getBrand } from '@hanzo_network/brand-config';
 import BoringAvatar from 'boring-avatars';
 import React from 'react';
 
@@ -32,19 +31,64 @@ export const HanzoLogoSoloIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-/**
- * The brand mark, delegating to the ONE implementation in
- * `@hanzo/desktop-logo`. The Hanzo/Zoo glyphs used to be re-typed here and
- * there was no Lux branch at all, so a Lux build silently rendered the Hanzo
- * block-H. Geometry lives in exactly one file now.
- */
+export const HanzoCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => (
+  <svg
+    className={cn('shrink-0', className)}
+    viewBox="0 0 67 67"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M22.21 67V44.6369H0V67H22.21Z" fill="currentColor"/>
+    <path d="M0 44.6369L22.21 46.8285V44.6369H0Z" fill="currentColor" opacity="0.8"/>
+    <path d="M66.7038 22.3184H22.2534L0.0878906 44.6367H44.4634L66.7038 22.3184Z" fill="currentColor"/>
+    <path d="M22.21 0H0V22.3184H22.21V0Z" fill="currentColor"/>
+    <path d="M66.7198 0H44.5098V22.3184H66.7198V0Z" fill="currentColor"/>
+    <path d="M66.6753 22.3185L44.5098 20.0822V22.3185H66.6753Z" fill="currentColor" opacity="0.8"/>
+    <path d="M66.7198 67V44.6369H44.5098V67H66.7198Z" fill="currentColor"/>
+  </svg>
+);
+
+// Source: ~/work/zoo/logo/dist/zoo-logo-white.svg — three intersecting rings
+// clipped to a circle. Uses currentColor so it inherits text color (matches
+// hanzo's same convention) and works on light + dark.
+export const ZooCombinationMarkIcon = ({
+  className,
+}: {
+  className?: string;
+}) => (
+  <svg
+    className={cn('shrink-0', className)}
+    viewBox="0 0 1024 1024"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <clipPath id="zoo-outer-clip">
+        <circle cx="508" cy="510" r="283" />
+      </clipPath>
+    </defs>
+    <g clipPath="url(#zoo-outer-clip)" stroke="currentColor" fill="none">
+      <circle cx="513" cy="369" r="234" strokeWidth="33" />
+      <circle cx="365" cy="595" r="234" strokeWidth="33" />
+      <circle cx="643" cy="595" r="234" strokeWidth="33" />
+      <circle cx="508" cy="510" r="265" strokeWidth="36" />
+    </g>
+  </svg>
+);
+
 export const BrandCombinationMarkIcon = ({
   className,
 }: {
   className?: string;
 }) => {
   const { brand } = getBrand();
-  return <BrandMark brand={brand} className={cn('shrink-0', className)} />;
+  return brand === 'zoo' ? (
+    <ZooCombinationMarkIcon className={className} />
+  ) : (
+    <HanzoCombinationMarkIcon className={className} />
+  );
 };
 
 export const SendIcon = ({ className }: { className?: string }) => (

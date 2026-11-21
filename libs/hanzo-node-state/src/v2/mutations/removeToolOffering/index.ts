@@ -1,4 +1,4 @@
-import { removeToolOffering as removeToolOfferingApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { removeToolOffering as removeToolOfferingApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type RemoveToolInput } from './types';
 

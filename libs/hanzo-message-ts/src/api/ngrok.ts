@@ -12,7 +12,7 @@ export const getNgrokStatus = async (
   bearerToken: string,
 ): Promise<NgrokStatusResponse> => {
   const response = await httpClient.get(
-    urlJoin(nodeAddress, '/v2/get_ngrok_status'),
+    urlJoin(nodeAddress, '/v1/node/get_ngrok_status'),
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
       responseType: 'json',
@@ -27,7 +27,7 @@ export const setNgrokAuthToken = async (
   authToken: string,
 ): Promise<void> => {
   await httpClient.post(
-    urlJoin(nodeAddress, '/v2/set_ngrok_auth_token'),
+    urlJoin(nodeAddress, '/v1/node/set_ngrok_auth_token'),
     { auth_token: authToken },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },
@@ -42,7 +42,7 @@ export const setNgrokEnabled = async (
   enabled: boolean,
 ): Promise<{ tunnel?: string }> => {
   const response = await httpClient.post(
-    urlJoin(nodeAddress, '/v2/set_ngrok_enabled'),
+    urlJoin(nodeAddress, '/v1/node/set_ngrok_enabled'),
     { enabled },
     {
       headers: { Authorization: `Bearer ${bearerToken}` },

@@ -3,7 +3,7 @@
  *
  * HTTP client for the local inference engine.
  * Defaults to hanzo-engine on 36900 (OpenAI / Anthropic compatible).
- * Override with VITE_ENGINE_BASE_URL=… to point at zen6-server (8000)
+ * Override with VITE_ENGINE_BASE_URL=… to point at zen5-server (8000)
  * or a remote endpoint.
  */
 
@@ -16,8 +16,6 @@ import type {
   ModelsResponse,
   EmbeddingRequest,
   EmbeddingResponse,
-  LsaConfig,
-  LsaStatusResponse,
 } from './types';
 
 // Default engine endpoint. Brand-neutral name (was HANZO_ENGINE_BASE_URL).
@@ -43,53 +41,24 @@ export class HanzoEngineClient {
 
   /**
    * Get engine status (model loaded, device, etc.)
-   * Supports both EmbeddedEngine (/v1/engine/status) and standalone hanzo-server (/v1/models + /v1/system/info).
    */
   async getStatus(): Promise<EngineStatus> {
-    try {
-      const response = await fetch(`${this.baseUrl}/v1/engine/status`);
-      if (response.ok) {
-        return response.json();
-      }
-    } catch {
-      // Fall through to canonical hanzo-server endpoints
+    const response = await fetch(`${this.baseUrl}/v1/engine/status`);
+    if (!response.ok) {
+      throw new Error(`Failed to get engine status: ${response.statusText}`);
     }
-
-    const [modelsRes, sysRes] = await Promise.all([
-      fetch(`${this.baseUrl}/v1/models`),
-      fetch(`${this.baseUrl}/v1/system/info`).catch(() => null),
-    ]);
-    if (!modelsRes.ok) {
-      throw new Error(`Failed to get engine status: ${modelsRes.statusText}`);
-    }
-    const modelsJson: ModelsResponse = await modelsRes.json();
-    const sysJson: any = sysRes && sysRes.ok ? await sysRes.json().catch(() => null) : null;
-    const loadedModel = modelsJson?.data?.[0]?.id ?? null;
-    const device =
-      sysJson?.accelerator ||
-      (sysJson?.cuda_available ? 'cuda' : sysJson?.metal_available ? 'metal' : 'cuda (GB10)');
-    return {
-      initialized: Boolean(loadedModel),
-      loaded_model: loadedModel,
-      device: String(device),
-      memory_usage: sysJson?.memory_used_mb ?? null,
-      is_busy: false,
-    };
+    return response.json();
   }
 
   /**
    * List available/loaded models
    */
   async listModels(): Promise<ModelsResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/models`);
-    if (response.ok) {
-      return response.json();
+    const response = await fetch(`${this.baseUrl}/v1/engine/models`);
+    if (!response.ok) {
+      throw new Error(`Failed to list models: ${response.statusText}`);
     }
-    const fallback = await fetch(`${this.baseUrl}/v1/engine/models`);
-    if (!fallback.ok) {
-      throw new Error(`Failed to list models: ${fallback.statusText}`);
-    }
-    return fallback.json();
+    return response.json();
   }
 
   /**
@@ -134,7 +103,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -164,7 +133,7 @@ export class HanzoEngineClient {
       ...options,
     };
 
-    const response = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/chat/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -224,7 +193,7 @@ export class HanzoEngineClient {
   ): Promise<EmbeddingResponse> {
     const request: EmbeddingRequest = { model, input };
 
-    const response = await fetch(`${this.baseUrl}/v1/embeddings`, {
+    const response = await fetch(`${this.baseUrl}/v1/engine/embeddings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -243,58 +212,14 @@ export class HanzoEngineClient {
    */
   async isAvailable(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/health`, {
+      const response = await fetch(`${this.baseUrl}/v1/engine/status`, {
         method: 'GET',
         signal: AbortSignal.timeout(2000),
       });
-      if (response.ok) return true;
-      const fallback = await fetch(`${this.baseUrl}/v1/engine/status`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(2000),
-      });
-      return fallback.ok;
+      return response.ok;
     } catch {
       return false;
     }
-  }
-
-  /**
-   * Inspect live Latent Sparse Attention (D-LSA / N-LSA) status on the engine
-   */
-  async getLsaStatus(): Promise<LsaStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/lsa`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch LSA status: ${response.statusText}`);
-    }
-    return response.json();
-  }
-
-  /**
-   * Enable or update Latent Sparse Attention (D-LSA / N-LSA) live on the engine
-   */
-  async enableLsa(config: LsaConfig): Promise<LsaStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/lsa`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to enable LSA: ${response.statusText}`);
-    }
-    return response.json();
-  }
-
-  /**
-   * Disable Latent Sparse Attention and revert to standard full attention
-   */
-  async disableLsa(): Promise<LsaStatusResponse> {
-    const response = await fetch(`${this.baseUrl}/v1/lsa`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to disable LSA: ${response.statusText}`);
-    }
-    return response.json();
   }
 }
 

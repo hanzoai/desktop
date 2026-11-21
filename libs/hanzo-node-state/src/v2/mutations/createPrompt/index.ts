@@ -1,4 +1,4 @@
-import { createPrompt as createPromptApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { createPrompt as createPromptApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type CreatePromptInput } from './types';
 

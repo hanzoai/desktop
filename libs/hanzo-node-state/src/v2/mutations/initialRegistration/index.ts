@@ -1,5 +1,5 @@
-import { initialRegistration as initialRegistrationApi } from '@hanzo/desktop-message-ts/api/general/index';
-import { type InitialRegistrationResponse } from '@hanzo/desktop-message-ts/api/general/types';
+import { initialRegistration as initialRegistrationApi } from '@hanzo_network/hanzo-message-ts/api/general/index';
+import { type InitialRegistrationResponse } from '@hanzo_network/hanzo-message-ts/api/general/types';
 
 export type InitialRegistrationInput = {
   nodeAddress: string;

@@ -1,7 +1,7 @@
 import {
   addLLMProvider as addLLMProviderAPI,
   testLLMProvider,
-} from '@hanzo/desktop-message-ts/api/jobs/index';
+} from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type AddLLMProviderInput } from './types';
 

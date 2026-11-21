@@ -1,4 +1,4 @@
-import { getMessageTraces as getMessageTracesApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { getMessageTraces as getMessageTracesApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 import { type GetMessageTracesInput } from './types';
 
 export const getMessageTraces = async ({

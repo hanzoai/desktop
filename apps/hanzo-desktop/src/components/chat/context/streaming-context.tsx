@@ -1,7 +1,7 @@
 import {
   type ToolCall,
   type TextStatus,
-} from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
+} from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
 import type React from 'react';
 import { createContext, useCallback, useContext, useState } from 'react';
 import { createStore, useStore } from 'zustand';

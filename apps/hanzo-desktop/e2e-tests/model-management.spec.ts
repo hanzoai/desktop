@@ -113,7 +113,7 @@ test.describe('Engine Switching', () => {
 
   test('should test engine configuration via API', async ({ request }) => {
     // Test if we can query available engines
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_llm_providers`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_llm_providers`);
 
     if (response.ok()) {
       const providers = await response.json();
@@ -144,7 +144,7 @@ test.describe('Engine Switching', () => {
     console.log('Testing agent creation with payload:', agentPayload);
 
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/node/create_agent`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/create_agent`, {
         data: agentPayload,
         timeout: 10000,
       });
@@ -199,7 +199,7 @@ test.describe('Model Configuration Persistence', () => {
 
   test('should verify agent list persistence via API', async ({ request }) => {
     // Get list of agents before and after page reload
-    const response1 = await request.get(`${ZOO_NODE_URL}/v1/node/available_agents`);
+    const response1 = await request.get(`${ZOO_NODE_URL}/v2/available_agents`);
 
     if (response1.ok()) {
       const agents1 = await response1.json();
@@ -209,7 +209,7 @@ test.describe('Model Configuration Persistence', () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Query again
-      const response2 = await request.get(`${ZOO_NODE_URL}/v1/node/available_agents`);
+      const response2 = await request.get(`${ZOO_NODE_URL}/v2/available_agents`);
 
       if (response2.ok()) {
         const agents2 = await response2.json();
@@ -305,7 +305,7 @@ test.describe('Model Download and Installation', () => {
     }
 
     // Try to query if the model is loaded
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_models`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_models`);
 
     if (response.ok()) {
       const models = await response.json();

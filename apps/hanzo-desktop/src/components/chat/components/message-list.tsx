@@ -1,10 +1,10 @@
-import { type ChatConversationInfiniteData } from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
-import { Skeleton } from '@hanzo/desktop-ui';
+import { type ChatConversationInfiniteData } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
+import { Skeleton } from '@hanzo_network/hanzo-ui';
 import {
   getRelativeDateLabel,
   groupMessagesByDate,
-} from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   type FetchPreviousPageOptions,
   type InfiniteQueryObserverResult,

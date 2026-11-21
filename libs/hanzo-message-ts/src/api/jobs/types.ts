@@ -132,7 +132,7 @@ export type LLMProviderInterface = {
   OpenAI?: OpenAI;
   OpenAILegacy?: OpenAILegacy;
   TogetherAI?: TogetherAI;
-  LocalEngine?: LocalEngine;
+  Ollama?: Ollama;
   LMStudio?: LMStudio;
   Gemini?: Gemini;
   Exo?: Exo;

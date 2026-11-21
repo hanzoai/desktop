@@ -1,4 +1,4 @@
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import {
   Badge,
   Button,
@@ -15,12 +15,13 @@ import {
   SearchInput,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { ToolsIcon } from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { BoltIcon } from 'lucide-react';
 
 import { useMemo, useState } from 'react';
@@ -98,7 +99,7 @@ export function ToolsSelection({
   };
 
   return (
-    <TooltipProvider delay={0}>
+    <TooltipProvider delayDuration={0}>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogTrigger asChild>
           <div
@@ -112,10 +113,7 @@ export function ToolsSelection({
             tabIndex={0}
           >
             {value.length > 0 ? (
-              <Badge
-                className="bg-bg-dark border-divider text-text-default inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]"
-                style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-              >
+              <Badge className="bg-bg-dark border-divider text-text-default inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]">
                 {value.length}
               </Badge>
             ) : (
@@ -124,11 +122,7 @@ export function ToolsSelection({
             Tools
           </div>
         </DialogTrigger>
-        <DialogContent
-          className="flex max-h-[85vh] w-full max-w-2xl flex-col gap-4 p-6"
-          showCloseButton={false}
-          maxW={672}
-        >
+        <DialogContent className="flex max-h-[85vh] w-full max-w-2xl flex-col gap-4 p-6">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">
               Select Tools
@@ -244,7 +238,7 @@ export function ToolsSelection({
                               )}
                             </div>
                             {(tool.config ?? []).length > 0 && (
-                              <Tooltip placement="top">
+                              <Tooltip>
                                 <TooltipTrigger
                                   asChild
                                   className="flex shrink-0 items-center gap-1"
@@ -256,11 +250,16 @@ export function ToolsSelection({
                                     <BoltIcon className="size-4" />
                                   </Link>
                                 </TooltipTrigger>
-                                <TooltipContent
-                                  className="max-w-md"
-                                >
-                                  <p>Configure tool</p>
-                                </TooltipContent>
+                                <TooltipPortal>
+                                  <TooltipContent
+                                    align="center"
+                                    alignOffset={-10}
+                                    className="max-w-md"
+                                    side="top"
+                                  >
+                                    <p>Configure tool</p>
+                                  </TooltipContent>
+                                </TooltipPortal>
                               </Tooltip>
                             )}
                           </div>

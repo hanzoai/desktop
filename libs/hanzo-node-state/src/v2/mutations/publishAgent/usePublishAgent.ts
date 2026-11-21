@@ -1,6 +1,6 @@
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 
-import type { PublishAgentResponse } from '@hanzo/desktop-message-ts/api/agents/types';
+import type { PublishAgentResponse } from '@hanzo_network/hanzo-message-ts/api/agents/types';
 
 import type { APIError } from '../../types';
 

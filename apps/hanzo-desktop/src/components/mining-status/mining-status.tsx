@@ -1,16 +1,12 @@
-import { Button } from '@hanzo/desktop-ui';
+import { Button } from '@hanzo_network/hanzo-ui';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronRight, Wallet, WifiOff } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { useMiningWithWallet } from '../../hooks/useMiningWithWallet';
-import { useSelectedAccount } from '../../lib/lux-wallet';
-import {
-  isTauriAvailable,
-  safeInvoke,
-  safeListen,
-} from '../../utils/tauri-check';
+import { useWallet } from '../../store/wallet';
+import { isTauriAvailable, safeInvoke, safeListen } from '../../utils/tauri-check';
 
 // Synthesize a 3-note ascending coin-jingle using Web Audio (no asset file).
 // Triggered when balance increases. ~250ms total. Falls back silently if
@@ -18,8 +14,7 @@ import {
 function playCoinJingle() {
   try {
     const Ctx =
-      (window as unknown as { AudioContext?: typeof AudioContext })
-        .AudioContext ??
+      (window as unknown as { AudioContext?: typeof AudioContext }).AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext })
         .webkitAudioContext;
     if (!Ctx) return;
@@ -95,12 +90,12 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
   };
 
   useMiningWithWallet();
-  const account = useSelectedAccount();
+  const { wallet } = useWallet();
 
   useEffect(() => {
     const loadMiningState = async () => {
       if (!isTauriAvailable()) {
-        setWalletAddress(account?.evmAddress || '0x0000...0000');
+        setWalletAddress(wallet?.address || '0x0000...0000');
         setBalance(0);
         setIsMining(false);
         return;
@@ -109,15 +104,15 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
       const state = await safeInvoke<MiningState>('mining_get_state');
       if (state) {
         setBalance(weiToTokenNumber(state.local_pending_wei));
-        setWalletAddress(account?.evmAddress || state.wallet_address);
+        setWalletAddress(wallet?.address || state.wallet_address);
         setIsMining(state.is_mining);
       } else {
-        setWalletAddress(account?.evmAddress || '0x0000...0000');
+        setWalletAddress(wallet?.address || '0x0000...0000');
       }
     };
 
     void loadMiningState();
-  }, [account?.evmAddress]);
+  }, [wallet?.address]);
 
   useEffect(() => {
     if (!isTauriAvailable()) return;
@@ -154,7 +149,7 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
         className="border-divider flex w-full items-center justify-center border-t p-2 hover:bg-white/5"
         onClick={handleWalletClick}
         size="auto"
-        variant="tertiary"
+        variant="ghost"
       >
         <Wallet className="h-5 w-5 text-white" />
       </Button>
@@ -166,7 +161,7 @@ export const MiningStatus: React.FC<MiningStatusProps> = ({
       className="border-divider group relative flex w-full items-center gap-3 border-t px-4 py-3 hover:bg-white/5"
       onClick={handleWalletClick}
       size="auto"
-      variant="tertiary"
+      variant="ghost"
     >
       <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/10">
         {isMining && (

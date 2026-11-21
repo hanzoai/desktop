@@ -1,4 +1,4 @@
-import { getAllPrompts as getPromptListAPI } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getAllPrompts as getPromptListAPI } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type GetPromptListInput } from './types';
 

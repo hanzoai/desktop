@@ -1,5 +1,5 @@
-import { TriangleAlertIcon } from 'lucide-react';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 
 type ErrorRenderProps = { error: string };
 
@@ -9,7 +9,7 @@ export const ErrorRender = ({ error }: ErrorRenderProps) => {
   return (
     <div className="rounded-md border border-red-200 bg-red-50 p-4">
       <div className="mb-2 flex items-center">
-        <TriangleAlertIcon className="mr-2 h-5 w-5 text-red-600" />
+        <ExclamationTriangleIcon className="mr-2 h-5 w-5 text-red-600" />
         <h3 className="font-bold text-red-700">
           {i18n.t('codeRunner.errorOccurred')}
         </h3>

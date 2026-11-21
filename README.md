@@ -1,5 +1,3 @@
-<p align="center"><img src=".github/hero.svg" alt="desktop" width="880"></p>
-
 <h1 align="center">
 <img width="36" height="36" src="assets/icon.png"/>
   Hanzo
@@ -17,9 +15,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hanzoai/desktop/stargazers"><img src="https://img.shields.io/github/stars/hanzoai/desktop?style=social" alt="GitHub stars"></a>
-  <a href="https://discord.gg/CJCyAsm9Vr"><img src="https://img.shields.io/badge/Discord-join-7289DA?logo=discord&logoColor=white" alt="Discord"></a>
-  <a href="https://x.com/hanzoai"><img src="https://img.shields.io/twitter/follow/hanzoai?style=social" alt="Twitter Follow"></a>
+  <a href="https://github.com/hanzo-ai/hanzo-desktop/stargazers"><img src="https://img.shields.io/github/stars/hanzo-ai/hanzo-desktop?style=social" alt="GitHub stars"></a>
+  <a href="https://discord.gg/EuA45U3sEu"><img src="https://img.shields.io/discord/1303749220842340412?color=7289DA&label=Discord&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://x.com/HanzoLocalAI"><img src="https://img.shields.io/twitter/follow/HanzoLocalAI?style=social" alt="Twitter Follow"></a>
 </p>
 
 <p align="center">
@@ -27,6 +25,15 @@
   <br/>
   Hanzo is a free, open-source platform that democratizes AI agent creation.
   No coding required – just drag, drop, and deploy intelligent agents that can work across platforms and handle real-world tasks.
+</p>
+
+<p align="center">
+  Read this in:
+  <a href="README.zh.md">简体中文</a> |
+  <a href="README.zh-HK.md">粵語</a> |
+  <a href="README.ko.md">한국어</a> |
+  <a href="README.ja.md">日本語</a> |
+  <a href="README.es.md">Español</a>
 </p>
 
 <p align="center">
@@ -58,14 +65,9 @@
 
 ## 🎬 Demo
 
-[![Hanzo Desktop — 31s demo](assets/hero-poster.png)](https://github.com/hanzoai/desktop/raw/main/assets/hero.mp4)
+[![Demo Video](assets/hanzo-screenshot.png)](https://github.com/user-attachments/assets/bc5bb7da-7ca5-477d-838a-8239951b6c01)
 
-_Click to play — 31s, recorded from this commit's own frontend: onboarding,
-the workspace, the Zen models, light and back, then every section. The still is
-a frame of that same film,
-so the poster cannot promise a screen the video does not show. Regenerate both
-with `pnpm film && pnpm film:masters`. (GitHub plays video inline only for
-assets uploaded through its own attachment flow, hence the poster-and-link.)_
+_Watch Hanzo agents collaborate to analyze market data, execute trades, and manage complex workflows autonomously._
 
 ## 📋 Examples
 
@@ -83,7 +85,7 @@ assets uploaded through its own attachment flow, hence the poster-and-link.)_
 
 ### One-Click Installation
 
-1. **Download** the latest release for your platform from our [releases page](https://github.com/hanzoai/desktop/releases)
+1. **Download** the latest release for your platform from our [releases page](https://github.com/hanzo-ai/hanzo-desktop/releases)
 2. **Install** and launch Hanzo
 3. **Create** your first AI agent using our step-by-step guided interface
 
@@ -126,26 +128,42 @@ Hanzo is built as a modern monorepo using **NX** for orchestration and dependenc
 #### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/hanzoai/desktop
-cd desktop
+git clone https://github.com/hanzo-ai/hanzo-desktop
+cd hanzo-desktop
 nvm use
 npm ci
 ```
 
-#### 2. Fetch the side binaries
+#### 2. Download Required Side Binaries
 
-The app spawns a Hanzo Node beside itself, so the node binary and the embedding
-model have to be on disk before Tauri can bundle them. One command, every
-platform — it reads your OS and architecture, and takes the release from
-`apps/hanzo-desktop/src-tauri/pins`:
+Before running Hanzo, you'll need to download the embedded Hanzo Node binary that powers the application's core functionality. This can be done with a single command based on your platform:
+
+**macOS (Apple Silicon):**
 
 ```bash
-cd apps/hanzo-desktop && pnpm download-binaries
+ARCH="aarch64-apple-darwin" \
+HANZO_NODE_VERSION="v1.1.18" \
+OLLAMA_VERSION="v0.12.3" \
+npx ts-node ./ci-scripts/download-side-binaries.ts
 ```
 
-`pnpm dev` and `pnpm build` run it for you; the command above is for fetching
-ahead of time, or after changing the pin. To move to a different node release,
-edit `pins` — no other file names a version.
+**Linux:**
+
+```bash
+ARCH="x86_64-unknown-linux-gnu" \
+OLLAMA_VERSION="v0.12.3" \
+HANZO_NODE_VERSION="v1.1.18" \
+npx ts-node ./ci-scripts/download-side-binaries.ts
+```
+
+**Windows:**
+
+```powershell
+$ENV:OLLAMA_VERSION="v0.12.3"
+$ENV:HANZO_NODE_VERSION="v1.1.18"
+$ENV:ARCH="x86_64-pc-windows-msvc"
+npx ts-node ./ci-scripts/download-side-binaries.ts
+```
 
 ### 📦 Essential Commands
 
@@ -200,7 +218,7 @@ npx nx run-many --target=lint
 ### 🏗 Project Structure
 
 ```
-desktop/
+hanzo-desktop/
 ├── apps/
 │   └── hanzo-desktop/          # Main desktop application
 ├── libs/
@@ -262,15 +280,15 @@ npx nx run hanzo-i18n:i18n
 ### 📚 Additional Resources
 
 - **[Official Documentation](https://docs.hanzo.ai)** – Comprehensive guides and API reference
-- **[Discord Community](https://discord.gg/CJCyAsm9Vr)** – Get help and connect with other developers
-- **[Twitter Updates](https://x.com/hanzoai)** – Latest news and announcements
+- **[Discord Community](https://discord.gg/EuA45U3sEu)** – Get help and connect with other developers
+- **[Twitter Updates](https://x.com/HanzoLocalAI)** – Latest news and announcements
 
 ---
 
 <p align="center">
   <strong>Built with ❤️ by the Hanzo community</strong>
   <br/>
-  <a href="https://github.com/hanzoai/desktop/blob/main/LICENSE">Apache License</a> •
-  <a href="https://github.com/hanzoai/desktop/issues">Report Bug</a> •
-  <a href="https://github.com/hanzoai/desktop/issues">Request Feature</a>
+  <a href="https://github.com/hanzo-ai/hanzo-desktop/blob/main/LICENSE">Apache License</a> •
+  <a href="https://github.com/hanzo-ai/hanzo-desktop/issues">Report Bug</a> •
+  <a href="https://github.com/hanzo-ai/hanzo-desktop/issues">Request Feature</a>
 </p>

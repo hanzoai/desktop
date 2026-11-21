@@ -1,14 +1,15 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
 import {
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Brain } from 'lucide-react';
 import { memo } from 'react';
 import { useParams } from 'react-router';
@@ -32,8 +33,8 @@ function ThinkingSwitchActionBarBase({
 }: ThinkingSwitchActionBarProps) {
   const { t } = useTranslation();
   return (
-    <TooltipProvider delay={0}>
-      <Tooltip placement="top">
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <button
             className={cn(
@@ -56,15 +57,17 @@ function ThinkingSwitchActionBarBase({
             <span>{t('hanzoNode.models.labels.thinkingCapability')}</span>
           </button>
         </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-text-secondary mt-1 text-xs">
-            {forceEnabled
-              ? 'Thinking Mode is always enabled for this model and cannot be turned off.'
-              : checked
-                ? 'Click to disable AI Thinking Mode'
-                : 'Click to enable AI Thinking Mode'}
-          </p>
-        </TooltipContent>
+        <TooltipPortal>
+          <TooltipContent>
+            <p className="text-text-secondary mt-1 text-xs">
+              {forceEnabled
+                ? 'Thinking Mode is always enabled for this model and cannot be turned off.'
+                : checked
+                  ? 'Click to disable AI Thinking Mode'
+                  : 'Click to enable AI Thinking Mode'}
+            </p>
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
     </TooltipProvider>
   );

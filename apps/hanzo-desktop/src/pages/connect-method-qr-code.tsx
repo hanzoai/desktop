@@ -1,17 +1,17 @@
 // TODO: Ignore it until we support qr code connection
 
 // import { zodResolver } from '@hookform/resolvers/zod';
-// import { QRSetupData } from '@hanzo/desktop-message-ts/api/general/types';
-// import { useSubmitRegistration } from '@hanzo/desktop-node-state/v2/mutations/submitRegistation/useSubmitRegistration';
-// import { generateMyEncryptionKeys } from '@hanzo/desktop-node-state/v2/queries/getEncryptionKeys/index';
-// import { useGetEncryptionKeys } from '@hanzo/desktop-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
+// import { QRSetupData } from '@hanzo_network/hanzo-message-ts/api/general/types';
+// import { useSubmitRegistration } from '@hanzo_network/hanzo-node-state/v2/mutations/submitRegistation/useSubmitRegistration';
+// import { generateMyEncryptionKeys } from '@hanzo_network/hanzo-node-state/v2/queries/getEncryptionKeys/index';
+// import { useGetEncryptionKeys } from '@hanzo_network/hanzo-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
 // import {
 //   Button,
 //   ErrorMessage,
 //   Form,
 //   FormField,
 //   TextField,
-// } from '@hanzo/desktop-ui';
+// } from '@hanzo_network/hanzo-ui';
 // import { BrowserQRCodeReader } from '@zxing/browser';
 // import { QrCode, Trash, Upload } from 'lucide-react';
 // import React, { useEffect, useState } from 'react';

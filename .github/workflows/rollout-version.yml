@@ -1,0 +1,87 @@
+name: Rollout new version
+
+on:
+  workflow_dispatch:
+    inputs:
+      manual_ref:
+        description: 'Optional: Override selected ref (e.g., 1.0.0)'
+        required: false
+        type: string
+
+jobs:
+  check-tag:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    outputs:
+      version: ${{ steps.check-tag.outputs.version }}
+    steps:
+      - name: Validate version tag
+        id: check-tag
+        run: |
+          # Use manual ref if provided, otherwise extract from github.ref
+          if [ -n "${{ inputs.manual_ref }}" ]; then
+            REF_NAME="${{ inputs.manual_ref }}"
+          else
+            REF_NAME=$(echo "${{ github.ref }}" | sed 's/refs\/[^\/]*\///')
+          fi
+          
+          # Check if input matches version pattern (e.g., 1.0.0)
+          if ! [[ "$REF_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Selected ref $REF_NAME is not a valid version tag (e.g., 1.0.0)"
+            exit 1
+          fi
+          
+          echo "version=$REF_NAME" >> $GITHUB_OUTPUT
+
+  rollout:
+    needs: check-tag
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install AWS CLI v2 (R2 compatible version)
+        id: install_aws_cli
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.22.25.zip" -o /tmp/awscliv2.zip
+          unzip -q /tmp/awscliv2.zip -d /tmp
+          rm /tmp/awscliv2.zip
+          sudo /tmp/aws/install --update
+          rm -rf /tmp/aws/
+
+      - name: Fetch deploy credentials from KMS
+        id: kms
+        env:
+          KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+          KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+          HANZO_API_KEY: ${{ secrets.HANZO_API_KEY }}
+          KMS_ENDPOINT: ${{ vars.KMS_ENDPOINT || 'https://kms.hanzo.ai' }}
+        run: |
+          # Auth: Universal Auth (preferred) or legacy API key
+          if [ -n "${KMS_CLIENT_ID}" ] && [ -n "${KMS_CLIENT_SECRET}" ]; then
+            HANZO_API_KEY=$(curl -sf "${KMS_ENDPOINT}/api/v1/auth/universal-auth/login" \
+              -H "Content-Type: application/json" \
+              -d "{\"clientId\":\"${KMS_CLIENT_ID}\",\"clientSecret\":\"${KMS_CLIENT_SECRET}\"}" | jq -r '.accessToken')
+          fi
+          response=$(curl -sf "${KMS_ENDPOINT}/api/v3/secrets/raw?workspaceId=e1359bf4-31b4-4dfa-bb90-323e2c298ad8&secretPath=/deploy&environment=prod" \
+            -H "Authorization: Bearer ${HANZO_API_KEY}" 2>/dev/null || echo "")
+          extract() { echo "$response" | jq -r ".secrets[] | select(.secretKey==\"$1\") | .secretValue // empty"; }
+          if [ -n "$response" ]; then
+            for key in R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_ZONE_ID CLOUDFLARE_AUTH_EMAIL CLOUDFLARE_AUTH_KEY CLOUDFLARE_RULES CLOUDFLARE_RULESET_ID; do
+              val=$(extract "$key")
+              if [ -n "$val" ]; then
+                echo "::add-mask::${val}"
+                echo "${key}=${val}" >> "$GITHUB_ENV"
+              fi
+            done
+          fi
+
+      - name: Execute rollout script
+        run: |
+          chmod +x ./scripts/rollout-version.sh
+          ./scripts/rollout-version.sh
+          VERSION: ${{ needs.check-tag.outputs.version }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }} 

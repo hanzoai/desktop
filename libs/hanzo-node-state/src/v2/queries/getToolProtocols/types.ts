@@ -1,3 +1,3 @@
-import { type GetToolProtocolsResponse } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type GetToolProtocolsResponse } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 export type GetToolProtocolsOutput = GetToolProtocolsResponse;

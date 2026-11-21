@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useImportAgent } from '@hanzo/desktop-node-state/v2/mutations/importAgent/useImportAgent';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useImportAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/importAgent/useImportAgent';
 import {
   Button,
   buttonVariants,
@@ -17,9 +17,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@hanzo/desktop-ui';
-import { ImportIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { ImportIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';

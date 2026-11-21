@@ -1,6 +1,6 @@
 {
-  "productName": "Hanzo",
-  "identifier": "ai.hanzo.desktop",
+  "productName": "Hanzo Desktop",
+  "identifier": "com.hanzo.desktop",
   "bundle": {
     "icon": [
       "icons/32x32.png",
@@ -16,6 +16,5 @@
         "title": "Hanzo"
       }
     ]
-  },
-  "mainBinaryName": "hanzo-desktop"
+  }
 }

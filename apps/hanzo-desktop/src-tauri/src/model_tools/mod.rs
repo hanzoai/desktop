@@ -15,7 +15,7 @@
 //! ## Invocation model
 //!
 //! Both shell out to native binaries, mirroring how the inference engine
-//! (`hanzo-server` / hanzo-engine) is spawned in
+//! (`mistralrs-server` / hanzo-engine) is spawned in
 //! [`crate::local_hanzo_node::hanzo_node_manager`]. The binary locations are
 //! env-overridable so a developer build can point at a local checkout:
 //!
@@ -27,3 +27,4 @@ mod commands;
 mod soup;
 
 pub use commands::*;
+pub use soup::*;

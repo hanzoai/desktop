@@ -1,4 +1,4 @@
-import { type LocaleMode, switchLanguage } from '@hanzo/desktop-i18n';
+import { type LocaleMode, switchLanguage } from '@hanzo_network/hanzo-i18n';
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 
@@ -40,8 +40,6 @@ type SettingsStore = {
 
   defaultAgentId: string;
   setDefaultAgentId: (defaultAgentId: string) => void;
-  selectedEngineBaseUrl: string;
-  setSelectedEngineBaseUrl: (selectedEngineBaseUrl: string) => void;
   defaultSpotlightAiId: string;
   setDefaultSpotlightAiId: (defaultSpotlightAiId: string) => void;
   sidebarExpanded: boolean;
@@ -52,8 +50,6 @@ type SettingsStore = {
   ) => void;
   optInExperimental?: boolean;
   setOptInExperimental: (optInExperimental: boolean) => void;
-  smartRouting: boolean;
-  setSmartRouting: (smartRouting: boolean) => void;
   userLanguage: LocaleMode;
   setUserLanguage: (userLanguage: LocaleMode) => void;
   evmAddress: string;
@@ -177,11 +173,6 @@ export const useSettings = create<SettingsStore>()(
           set({ defaultAgentId });
         },
 
-        selectedEngineBaseUrl: '',
-        setSelectedEngineBaseUrl: (selectedEngineBaseUrl) => {
-          set({ selectedEngineBaseUrl });
-        },
-
         defaultSpotlightAiId: '',
         setDefaultSpotlightAiId: (defaultSpotlightAiId) => {
           set({ defaultSpotlightAiId });
@@ -200,11 +191,6 @@ export const useSettings = create<SettingsStore>()(
         optInExperimental: false,
         setOptInExperimental: (optInExperimental) => {
           set({ optInExperimental });
-        },
-
-        smartRouting: false,
-        setSmartRouting: (smartRouting) => {
-          set({ smartRouting });
         },
 
         userLanguage: 'auto',
@@ -300,7 +286,6 @@ export const useSettings = create<SettingsStore>()(
             sidebarExpanded: false,
             isGetStartedChecklistHidden: false,
             optInExperimental: false,
-            smartRouting: false,
             userLanguage: 'auto',
             evmAddress: '',
             heightRow: 'large',

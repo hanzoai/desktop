@@ -10,12 +10,12 @@ const listenMock = vi.fn().mockResolvedValue(() => {});
 beforeEach(() => {
   invokeMock.mockReset();
   listenMock.mockClear();
-  (globalThis as { window?: unknown }).window =
-    (globalThis as { window?: unknown }).window ?? {};
-  (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ =
-    {
-      invoke: invokeMock,
-    };
+  (globalThis as { window?: unknown }).window = (
+    globalThis as { window?: unknown }
+  ).window ?? {};
+  (window as unknown as { __TAURI_INTERNALS__: unknown }).__TAURI_INTERNALS__ = {
+    invoke: invokeMock,
+  };
   // Stub fetch for eth_getBalance — we don't exercise the network here.
   vi.stubGlobal(
     'fetch',
@@ -31,12 +31,13 @@ vi.mock('@tauri-apps/api/core', () => ({
 }));
 
 vi.mock('@tauri-apps/api/event', () => ({
-  listen: (...args: unknown[]) => listenMock(...(args as [string, () => void])),
+  listen: (...args: unknown[]) =>
+    listenMock(...(args as [string, () => void])),
 }));
 
-vi.mock('../../lib/lux-wallet', () => ({
-  useSelectedAccount: () => ({
-    evmAddress: '0x1111111111111111111111111111111111111111',
+vi.mock('../../store/wallet', () => ({
+  useWallet: () => ({
+    wallet: { address: '0x1111111111111111111111111111111111111111' },
   }),
 }));
 

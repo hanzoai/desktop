@@ -1,7 +1,7 @@
-import { BackgroundBeams, buttonVariants } from '@hanzo/desktop-ui';
+import { BackgroundBeams, buttonVariants } from '@hanzo_network/hanzo-ui';
 
-import { useScrollRestoration } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { useScrollRestoration } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { ArrowRight } from 'lucide-react';
 import { FeedbackModal } from '../components/feedback/feedback-modal';
 
@@ -33,7 +33,7 @@ export function ToolsPage() {
         <div className="bg-bg-dark relative rounded-lg">
           <div className="relative z-[1] mx-auto flex flex-col items-center gap-8 p-10 text-center">
             <div className="flex flex-col gap-2">
-              <h3 className="font-sans max-w-xl text-2xl font-semibold tracking-normal">
+              <h3 className="font-inter max-w-xl text-2xl font-semibold tracking-normal">
                 Discover More Tools
               </h3>
               <p className="text-text-secondary max-w-xl text-base leading-relaxed tracking-tight">

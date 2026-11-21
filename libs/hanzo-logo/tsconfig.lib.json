@@ -6,8 +6,7 @@
       "node",
       "../../typings/image.d.ts",
       "vite/client"
-    ],
-    "jsx": "react-jsx"
+    ]
   },
   "exclude": [
     "**/*.spec.ts",
@@ -15,7 +14,6 @@
   ],
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
     "assets/**/*.ts",
     "**/*.d.ts"
   ]

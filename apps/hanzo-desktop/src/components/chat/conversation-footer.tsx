@@ -1,24 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { PlusCircledIcon } from '@radix-ui/react-icons';
 import validator from '@rjsf/validator-ajv8';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   extractJobIdFromInbox,
   isJobInbox,
-} from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+} from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   type ChatMessageFormSchema,
   chatMessageFormSchema,
-} from '@hanzo/desktop-node-state/forms/chat/chat-message';
-import { DEFAULT_CHAT_CONFIG } from '@hanzo/desktop-node-state/v2/constants';
-import { useSendMessageToJob } from '@hanzo/desktop-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
-import { useStopGeneratingLLM } from '@hanzo/desktop-node-state/v2/mutations/stopGeneratingLLM/useStopGeneratingLLM';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { useGetJobFolderName } from '@hanzo/desktop-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
-import { useGetNodeStorageLocation } from '@hanzo/desktop-node-state/v2/queries/getNodeStorageLocation/useGetNodeStorageLocation';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
-import { useGetSearchTools } from '@hanzo/desktop-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
+} from '@hanzo_network/hanzo-node-state/forms/chat/chat-message';
+import { DEFAULT_CHAT_CONFIG } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useSendMessageToJob } from '@hanzo_network/hanzo-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
+import { useStopGeneratingLLM } from '@hanzo_network/hanzo-node-state/v2/mutations/stopGeneratingLLM/useStopGeneratingLLM';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useGetJobFolderName } from '@hanzo_network/hanzo-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
+import { useGetNodeStorageLocation } from '@hanzo_network/hanzo-node-state/v2/queries/getNodeStorageLocation/useGetNodeStorageLocation';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useGetSearchTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
 import {
   Button,
   ChatInput,
@@ -39,24 +40,24 @@ import {
   ToggleGroupItem,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   fileIconMap,
   FileTypeIcon,
   PlusIcon,
   SendIcon,
   ToolsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { formatText, getFileExt } from '@hanzo/desktop-ui/helpers';
-import { useDebounce } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatText, getFileExt } from '@hanzo_network/hanzo-ui/helpers';
+import { useDebounce } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { invoke } from '@tauri-apps/api/core';
 import equal from 'fast-deep-equal';
 import { partial } from 'filesize';
 import { motion } from 'framer-motion';
 import {
-  CirclePlusIcon,
   CornerDownRight,
   EllipsisIcon,
   Loader2,
@@ -89,7 +90,6 @@ import { UpdateToolsSwitchActionBar } from './chat-action-bar/tools-switch-actio
 import { UpdateVectorFsActionBar } from './chat-action-bar/vector-fs-action-bar';
 import { useChatStore } from './context/chat-context';
 import { useSetJobScope } from './context/set-job-scope-context';
-import { Mic } from './mic';
 
 export const actionButtonClassnames = cn(
   'text-text-secondary hover:bg-bg-quaternary inline-flex h-[32px] w-[32px] shrink-0 cursor-pointer items-center justify-center gap-1.5 truncate rounded-full p-[8px] px-3 text-left text-[13px] font-normal hover:text-white disabled:cursor-not-allowed disabled:opacity-50',
@@ -180,19 +180,13 @@ export const SUGGESTED_TOOLS_COUNT = 3;
 function ConversationChatFooter({
   inboxId,
   isLoadingMessage,
-  reply,
 }: {
   inboxId: string;
   isLoadingMessage: boolean;
-  /** The assistant's last settled reply — what the microphone reads back. */
-  reply?: string | null;
 }) {
   const { t } = useTranslation();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // gui's CommandList renders a ScrollView whose ref type is an unnameable
-  // intersection (RN ScrollView & GuiElement). On web the ref IS the host DOM
-  // node, which is what this only ever uses it as.
   const toolListRef = useRef<HTMLDivElement>(null);
 
   const scrollUpWhenSearchingTools = useCallback(() => {
@@ -471,11 +465,7 @@ function ConversationChatFooter({
         })}
       >
         <div className="relative z-[1]">
-          <Popover
-            onOpenChange={setIsCommandOpen}
-            open={isCommandOpen}
-            placement="top-start"
-          >
+          <Popover onOpenChange={setIsCommandOpen} open={isCommandOpen}>
             <PopoverAnchor>
               <ChatInputArea
                 {...(selectedTool && {
@@ -501,8 +491,8 @@ function ConversationChatFooter({
                 bottomAddons={
                   <div className="flex items-center justify-between gap-4 px-3 pb-2">
                     <div className="flex items-center gap-2.5">
-                      <Popover placement="bottom-start">
-                        <Tooltip placement="top">
+                      <Popover>
+                        <Tooltip>
                           <TooltipTrigger asChild>
                             <PopoverTrigger asChild>
                               <Button
@@ -515,9 +505,13 @@ function ConversationChatFooter({
                               </Button>
                             </PopoverTrigger>
                           </TooltipTrigger>
-                          <TooltipContent>Add</TooltipContent>
+                          <TooltipPortal>
+                            <TooltipContent align="center" side="top">
+                              Add
+                            </TooltipContent>
+                          </TooltipPortal>
                         </Tooltip>
-                        <PopoverContent p="$2" width={192}>
+                        <PopoverContent align="start" className="w-48 p-2">
                           <div className="flex flex-col items-start gap-1">
                             {!selectedTool && (
                               <FileSelectionActionBar
@@ -581,24 +575,6 @@ function ConversationChatFooter({
                     <div className="flex items-center gap-2">
                       {isAgentInbox || selectedTool ? null : (
                         <UpdateChatConfigActionBar inboxId={inboxId} />
-                      )}
-
-                      {selectedTool ? null : (
-                        <Mic
-                          disabled={isLoadingMessage}
-                          onPartial={(heard) =>
-                            chatForm.setValue('message', heard, {
-                              shouldValidate: true,
-                            })
-                          }
-                          onUtterance={(said) => {
-                            chatForm.setValue('message', said, {
-                              shouldValidate: true,
-                            });
-                            void chatForm.handleSubmit(onSubmit)();
-                          }}
-                          reply={reply}
-                        />
                       )}
 
                       {selectedTool ? (
@@ -723,13 +699,18 @@ function ConversationChatFooter({
                 value={chatForm.watch('message')}
               />
             </PopoverAnchor>
-            <PopoverContent p={0} sideOffset={10} width={500}>
+            <PopoverContent
+              align="start"
+              className="w-[500px] p-0"
+              side="top"
+              sideOffset={10}
+            >
               <Command>
                 <CommandInput
                   onValueChange={scrollUpWhenSearchingTools}
                   placeholder={t('tools.searchPlaceholder')}
                 />
-                <CommandList ref={toolListRef as never}>
+                <CommandList ref={toolListRef}>
                   <CommandEmpty>{t('tools.commandEmpty')}</CommandEmpty>
                   <CommandGroup heading={t('tools.commandActiveHeading')}>
                     {isToolsListSuccess &&
@@ -783,7 +764,7 @@ function ConversationChatFooter({
                   Suggested Tools
                 </span>
                 {searchToolList?.map((tool, idx) => (
-                  <Tooltip placement="top-start" key={tool.tool_router_key}>
+                  <Tooltip key={tool.tool_router_key}>
                     <TooltipTrigger asChild>
                       <motion.button
                         animate={{ opacity: 1, x: 0 }}
@@ -809,16 +790,22 @@ function ConversationChatFooter({
                         {formatText(tool.name)}
                       </motion.button>
                     </TooltipTrigger>
-                    <TooltipContent className="max-w-[500px]">
-                      <span className="whitespace-pre-wrap">
-                        {tool.description}
-                      </span>
+                    <TooltipPortal>
+                      <TooltipContent
+                        align="start"
+                        className="max-w-[500px]"
+                        side="top"
+                      >
+                        <span className="whitespace-pre-wrap">
+                          {tool.description}
+                        </span>
 
-                      <br />
-                      <div className="text-text-secondary flex items-center justify-end gap-2 text-xs">
-                        <CommandShortcut>⌘ + {idx + 1}</CommandShortcut>
-                      </div>
-                    </TooltipContent>
+                        <br />
+                        <div className="text-text-secondary flex items-center justify-end gap-2 text-xs">
+                          <CommandShortcut>⌘ + {idx + 1}</CommandShortcut>
+                        </div>
+                      </TooltipContent>
+                    </TooltipPortal>
                   </Tooltip>
                 ))}
                 <Link
@@ -853,8 +840,7 @@ export default memo(
   ConversationChatFooter,
   (prev, next) =>
     prev.inboxId === next.inboxId &&
-    prev.isLoadingMessage === next.isLoadingMessage &&
-    prev.reply === next.reply,
+    prev.isLoadingMessage === next.isLoadingMessage,
 );
 
 function StopGeneratingButtonInPlaceBase({ inboxId }: { inboxId: string }) {
@@ -873,7 +859,7 @@ function StopGeneratingButtonInPlaceBase({ inboxId }: { inboxId: string }) {
   };
 
   return (
-    <Tooltip placement="top">
+    <Tooltip>
       <TooltipTrigger asChild>
         <Button
           className={cn('bg-bg-quaternary size-[36px] fill-white p-2')}
@@ -896,7 +882,11 @@ function StopGeneratingButtonInPlaceBase({ inboxId }: { inboxId: string }) {
           </svg>
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Stop generating response</TooltipContent>
+      <TooltipPortal>
+        <TooltipContent align="center" side="top">
+          Stop generating response
+        </TooltipContent>
+      </TooltipPortal>
     </Tooltip>
   );
 }
@@ -980,7 +970,7 @@ export const DropFileActive = () => (
   >
     <div className="w-full rounded-lg border border-dashed border-gray-100">
       <div className="flex w-full items-center justify-center px-4 py-3.5">
-        <CirclePlusIcon className="h-4 w-4 text-white" />
+        <PlusCircledIcon className="h-4 w-4 text-white" />
         <span className="ml-2 text-xs font-medium text-white">
           Drop file here to add to your conversation
         </span>
@@ -1067,7 +1057,7 @@ export const SelectedToolChat = ({
       transition={{ duration: 0.2, ease: 'easeInOut' }}
     >
       <div className="text-text-secondary flex flex-1 flex-col gap-2 text-sm">
-        <Tooltip placement="top-start">
+        <Tooltip>
           <TooltipTrigger asChild>
             <div className="flex items-center gap-2">
               <ToolsIcon className="size-3.5" />
@@ -1076,12 +1066,17 @@ export const SelectedToolChat = ({
               </span>
             </div>
           </TooltipTrigger>
-          <TooltipContent
-            className="max-w-[400px]"
-            sideOffset={10}
-          >
-            <span className="text-xs text-white">{description}</span>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent
+              align="start"
+              alignOffset={-10}
+              className="max-w-[400px]"
+              side="top"
+              sideOffset={10}
+            >
+              <span className="text-xs text-white">{description}</span>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
         {chatToolView === 'form' && (
           <JsonForm
@@ -1117,8 +1112,8 @@ export const SelectedToolChat = ({
       </div>
       <div className="text-text-secondary absolute top-3 right-3 flex items-center gap-6 hover:text-white">
         <ToggleGroup
-          className="bg-background inline-flex -space-x-px rounded-lg shadow-xs shadow-black/5 rtl:space-x-reverse"
-          onValueChange={(value: string) => {
+          className="bg-background inline-flex gap-0 -space-x-px rounded-lg shadow-xs shadow-black/5 rtl:space-x-reverse"
+          onValueChange={(value) => {
             if (value) {
               let text = '';
               if (Object.keys(toolFormData || {}).length === 0) {
@@ -1138,18 +1133,8 @@ export const SelectedToolChat = ({
           value={chatToolView}
           variant="outline"
         >
-          {/*
-            A segmented control: the two halves join in the middle and round
-            only at the outer ends. gui bakes `rounded:$3` as a style prop, so
-            `rounded-none first:rounded-s-lg last:rounded-e-lg` lost the tie and
-            both segments came out fully rounded with their borders overlapping.
-            Two static segments, so each states its own corners.
-          */}
           <ToggleGroupItem
-            borderBottomRightRadius={0}
-            borderTopRightRadius={0}
-            className="shadow-none focus-visible:z-10"
-            rounded={8}
+            className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
             size="sm"
             value="form"
           >
@@ -1157,10 +1142,7 @@ export const SelectedToolChat = ({
           </ToggleGroupItem>
 
           <ToggleGroupItem
-            borderBottomLeftRadius={0}
-            borderTopLeftRadius={0}
-            className="shadow-none focus-visible:z-10"
-            rounded={8}
+            className="rounded-none shadow-none first:rounded-s-lg last:rounded-e-lg focus-visible:z-10"
             size="sm"
             value="raw"
           >

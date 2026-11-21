@@ -1,6 +1,6 @@
 'use client';
 
-import { useControllableState } from '../hooks/use-controllable-state';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { ChevronDownIcon } from 'lucide-react';
 import {
   type ComponentProps,
@@ -12,7 +12,11 @@ import {
 } from 'react';
 
 import { cn } from '../utils';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@hanzo/ui';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from './collapsible';
 import { MarkdownText } from './markdown-preview';
 import { TextShimmer } from './text-shimmer';
 

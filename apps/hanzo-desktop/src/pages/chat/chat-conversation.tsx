@@ -1,21 +1,21 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   buildInboxIdFromJobId,
   extractJobIdFromInbox,
-} from '@hanzo/desktop-message-ts/utils';
+} from '@hanzo_network/hanzo-message-ts/utils';
 import {
   FunctionKeyV2,
   generateOptimisticAssistantMessage,
-} from '@hanzo/desktop-node-state/v2/constants';
-import { useForkJobMessages } from '@hanzo/desktop-node-state/v2/mutations/forkJobMessages/useForkJobMessages';
-import { useRetryMessage } from '@hanzo/desktop-node-state/v2/mutations/retryMessage/useRetryMessage';
-import { useSendMessageToJob } from '@hanzo/desktop-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
+} from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useForkJobMessages } from '@hanzo_network/hanzo-node-state/v2/mutations/forkJobMessages/useForkJobMessages';
+import { useRetryMessage } from '@hanzo_network/hanzo-node-state/v2/mutations/retryMessage/useRetryMessage';
+import { useSendMessageToJob } from '@hanzo_network/hanzo-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
 
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { type ChatConversationInfiniteData } from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
-import { useGetChatConversationWithPagination } from '@hanzo/desktop-node-state/v2/queries/getChatConversation/useGetChatConversationWithPagination';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { type ChatConversationInfiniteData } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
+import { useGetChatConversationWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/useGetChatConversationWithPagination';
 
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import { useQueryClient } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { useEffect, useMemo } from 'react';
@@ -180,17 +180,6 @@ const ChatConversation = () => {
     );
   }, [data?.pages, inboxId]);
 
-  // The reply the microphone reads back: the assistant's last message, once it
-  // has settled. Null while it is still arriving, which is what makes the next
-  // one a change rather than a repeat.
-  const reply = useMemo(() => {
-    const lastMessage = data?.pages?.at(-1)?.at(-1);
-    return lastMessage?.role === 'assistant' &&
-      lastMessage.status.type === 'complete'
-      ? lastMessage.content
-      : null;
-  }, [data?.pages]);
-
   useEffect(() => {
     if (isError) {
       toast.error('Failed loading chat conversation', {
@@ -304,7 +293,6 @@ const ChatConversation = () => {
       <ConversationChatFooter
         inboxId={inboxId}
         isLoadingMessage={!!isLoadingMessage}
-        reply={reply}
       />
     </div>
   );

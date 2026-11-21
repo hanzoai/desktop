@@ -1,4 +1,4 @@
-import { uploadFilesToVR } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { uploadFilesToVR } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 
 import { type UploadVRFilesInput } from './types';
 

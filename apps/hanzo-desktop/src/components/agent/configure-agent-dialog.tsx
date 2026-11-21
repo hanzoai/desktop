@@ -1,11 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type ToolOffering,
   type ToolUsageType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useSetToolOffering } from '@hanzo/desktop-node-state/v2/mutations/setToolOffering/useSetToolOffering';
-import { type FormattedNetworkAgent } from '@hanzo/desktop-node-state/v2/queries/getNetworkAgents/types';
-import { useGetWalletList } from '@hanzo/desktop-node-state/v2/queries/getWalletList/useGetWalletList';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useSetToolOffering } from '@hanzo_network/hanzo-node-state/v2/mutations/setToolOffering/useSetToolOffering';
+import { type FormattedNetworkAgent } from '@hanzo_network/hanzo-node-state/v2/queries/getNetworkAgents/types';
+import { useGetWalletList } from '@hanzo_network/hanzo-node-state/v2/queries/getWalletList/useGetWalletList';
 import {
   Dialog,
   DialogTrigger,
@@ -20,7 +20,7 @@ import {
   RadioGroup,
   Label,
   RadioGroupItem,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { Settings } from 'lucide-react';
@@ -165,7 +165,7 @@ export default function ConfigureAgentDialog({
           {t('common.configure')}
         </Button>
       </DialogTrigger>
-      <DialogContent showCloseButton className="max-w-[600px]" maxW={600}>
+      <DialogContent showCloseButton className="max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Configure Agent: {agent.name}</DialogTitle>
         </DialogHeader>
@@ -180,9 +180,7 @@ export default function ConfigureAgentDialog({
             </p>
             <RadioGroup
               value={pricingType}
-              onValueChange={(value) =>
-                setPricingType(value as 'free' | 'paid')
-              }
+              onValueChange={(value: 'free' | 'paid') => setPricingType(value)}
               className="px-1"
             >
               <div className="space-y-3">
@@ -258,8 +256,9 @@ export default function ConfigureAgentDialog({
             <Textarea
               placeholder={t('agents.publishDialog.description')}
               value={description}
-              onChangeText={setDescription}
-              className="!min-h-[100px] resize-y"
+              onChange={(e) => setDescription(e.target.value)}
+              resize="vertical"
+              className="!min-h-[100px] pt-3"
             />
             <p className="text-text-secondary mt-1 text-xs">
               Help users understand what your agent does.

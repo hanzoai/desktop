@@ -1,4 +1,3 @@
-import { ready, sends } from '@hanzo/ui/chat';
 import * as React from 'react';
 
 import { cn } from '../../utils';
@@ -54,37 +53,12 @@ const ChatInputBase = ({
         className,
       )}
       id="chat-input"
-      /**
-       * The two decisions come from `@hanzo/ui/chat` — pure functions, no gui
-       * runtime, the same rules every Hanzo composer runs.
-       *
-       * The rule here used to be `key === 'Enter' && !shiftKey`, which sends a
-       * keystroke the IME has claimed: a Japanese, Chinese or Korean writer
-       * pressing Enter to ACCEPT a candidate submitted the half-typed word
-       * instead. `sends` reads all three signals browsers use for that
-       * (`isComposing`, `key === 'Process'`, `keyCode === 229`) because Safari
-       * sets only the last two. It also honours Cmd/Ctrl+Enter as force-send.
-       *
-       * `ready` stops a whitespace-only draft. Every call site here submits
-       * through a validated form, so an empty Enter was already a silent
-       * no-op — now it does not make the round trip to find that out.
-       */
       onKeyDown={(event) => {
         onKeyDown?.(event);
-        // React's synthetic event carries the modifiers but not `isComposing`,
-        // which lives on the native one — read both, as the shell's own
-        // composer does.
-        const mods = {
-          shiftKey: event.shiftKey,
-          altKey: event.altKey,
-          metaKey: event.metaKey,
-          ctrlKey: event.ctrlKey,
-          isComposing: event.nativeEvent?.isComposing,
-          keyCode: event.nativeEvent?.keyCode,
-        };
-        if (!sends(event.key, mods)) return;
-        event.preventDefault();
-        if (ready(String(props.value ?? ''), false, props.disabled)) onSend?.();
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
+          onSend?.();
+        }
       }}
       ref={textAreaRef}
       spellCheck={false}

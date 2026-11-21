@@ -1,8 +1,8 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import {
   type McpServer,
   type McpServerType,
-} from '@hanzo/desktop-message-ts/api/mcp-servers/types';
+} from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
 
 export type AddMcpServerInput = Token & {
   nodeAddress: string;

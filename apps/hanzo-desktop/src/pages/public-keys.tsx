@@ -1,15 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type PublicKeysFormSchema,
   publicKeysSchema,
-} from '@hanzo/desktop-node-state/forms/settings/public-keys';
+} from '@hanzo_network/hanzo-node-state/forms/settings/public-keys';
 import {
   CopyToClipboardIcon,
   Form,
   FormField,
   TextField,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { useForm } from 'react-hook-form';
 
 import { useAuth } from '../store/auth';

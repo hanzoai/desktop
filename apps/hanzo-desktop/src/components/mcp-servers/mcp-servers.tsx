@@ -1,8 +1,8 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { McpServerType } from '@hanzo/desktop-message-ts/api/mcp-servers/types';
-import { type ImportMCPServerFromGithubURLOutput } from '@hanzo/desktop-node-state/v2/mutations/importMCPServerFromGithubURL/types';
-import { useSetEnableMcpServer } from '@hanzo/desktop-node-state/v2/mutations/setEnableMcpServer/useSetEnableMcpServer';
-import { useGetMcpServers } from '@hanzo/desktop-node-state/v2/queries/getMcpServers/useGetMcpServers';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { McpServerType } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
+import { type ImportMCPServerFromGithubURLOutput } from '@hanzo_network/hanzo-node-state/v2/mutations/importMCPServerFromGithubURL/types';
+import { useSetEnableMcpServer } from '@hanzo_network/hanzo-node-state/v2/mutations/setEnableMcpServer/useSetEnableMcpServer';
+import { useGetMcpServers } from '@hanzo_network/hanzo-node-state/v2/queries/getMcpServers/useGetMcpServers';
 import {
   Button,
   DropdownMenu,
@@ -15,7 +15,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -118,14 +118,14 @@ export const McpServers = () => {
                 value={searchQuery}
               />
 
-              <DropdownMenu placement="bottom-end">
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button className="min-w-[100px]" size="md">
                     <Plus className="h-4 w-4" />
                     <span>Add MCP Server</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="end" className="p-1.5 px-2">
                   <DropdownMenuItem
                     onClick={() => setIsAddMcpServerModalOpen(true)}
                   >

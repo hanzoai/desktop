@@ -1,8 +1,8 @@
-import { executeToolCode as executeToolCodeApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { executeToolCode as executeToolCodeApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 import {
   CodeLanguage,
   DynamicToolType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 import { type ExecuteToolCodeInput } from './types';
 

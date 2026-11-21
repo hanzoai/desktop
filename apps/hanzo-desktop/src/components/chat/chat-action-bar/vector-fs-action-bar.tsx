@@ -1,21 +1,22 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils';
-import { useUpdateJobScope } from '@hanzo/desktop-node-state/v2/mutations/updateJobScope/useUpdateJobScope';
-import { useGetListDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
-import { useGetJobFolderName } from '@hanzo/desktop-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
-import { useGetJobScope } from '@hanzo/desktop-node-state/v2/queries/getJobScope/useGetJobScope';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { useUpdateJobScope } from '@hanzo_network/hanzo-node-state/v2/mutations/updateJobScope/useUpdateJobScope';
+import { useGetListDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
+import { useGetJobFolderName } from '@hanzo_network/hanzo-node-state/v2/queries/getJobFolderName/useGetJobFolderName';
+import { useGetJobScope } from '@hanzo_network/hanzo-node-state/v2/queries/getJobScope/useGetJobScope';
 import {
   Badge,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   DirectoryTypeIcon,
   FilesIcon,
   FileTypeIcon,
-} from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { X } from 'lucide-react';
 import { useParams } from 'react-router';
 import { toast } from 'sonner';
@@ -41,7 +42,7 @@ function VectorFsActionBarBase({
   if (!showLabel) {
     return (
       <>
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <button
               className={cn(
@@ -56,10 +57,7 @@ function VectorFsActionBarBase({
               type="button"
             >
               {aiFilesCount > 0 ? (
-                <Badge
-                  className="bg-bg-dark text-text-default border-divider inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]"
-                  style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-                >
+                <Badge className="bg-bg-dark text-text-default border-divider inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]">
                   {aiFilesCount}
                 </Badge>
               ) : (
@@ -68,7 +66,11 @@ function VectorFsActionBarBase({
               {t('vectorFs.localFiles')}
             </button>
           </TooltipTrigger>
-          <TooltipContent>{t('vectorFs.localFiles')}</TooltipContent>
+          <TooltipPortal>
+            <TooltipContent align="center" side="top">
+              {t('vectorFs.localFiles')}
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </>
     );
@@ -83,10 +85,7 @@ function VectorFsActionBarBase({
       <FilesIcon className="size-4" />
       <span className="">{t('vectorFs.localFiles')}</span>
       {aiFilesCount > 0 ? (
-        <Badge
-          className="bg-bg-dark border-divider text-text-default inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]"
-          style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-        >
+        <Badge className="bg-bg-dark border-divider text-text-default inline-flex size-4 items-center justify-center rounded-full p-0 text-center text-[10px]">
           {aiFilesCount}
         </Badge>
       ) : null}

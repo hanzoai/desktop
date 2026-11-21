@@ -34,6 +34,9 @@
   "exportConnection": {
     "restoreText": "Úsalo con tu frase de paso para restaurar la conexión a tu Nodo Zoo"
   },
+  "extension": {
+    "welcome": "Transforma tu experiencia de navegación web utilizando IA con Zoo Visor ✨"
+  },
   "feedback": {
     "description": "¡Valoramos tus comentarios! Por favor, háznos saber tus pensamientos sobre Zoo y cómo podemos mejorar tu experiencia."
   },

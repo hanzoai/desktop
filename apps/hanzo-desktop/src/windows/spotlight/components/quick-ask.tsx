@@ -1,21 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type HanzoToolHeader } from '@hanzo/desktop-message-ts/api/tools/types';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type HanzoToolHeader } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   buildInboxIdFromJobId,
   extractJobIdFromInbox,
-} from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+} from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   type CreateJobFormSchema,
   createJobFormSchema,
-} from '@hanzo/desktop-node-state/forms/chat/create-job';
-import { DEFAULT_CHAT_CONFIG } from '@hanzo/desktop-node-state/v2/constants';
-import { useCreateJob } from '@hanzo/desktop-node-state/v2/mutations/createJob/useCreateJob';
-import { useRetryMessage } from '@hanzo/desktop-node-state/v2/mutations/retryMessage/useRetryMessage';
-import { useSendMessageToJob } from '@hanzo/desktop-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+} from '@hanzo_network/hanzo-node-state/forms/chat/create-job';
+import { DEFAULT_CHAT_CONFIG } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useCreateJob } from '@hanzo_network/hanzo-node-state/v2/mutations/createJob/useCreateJob';
+import { useRetryMessage } from '@hanzo_network/hanzo-node-state/v2/mutations/retryMessage/useRetryMessage';
+import { useSendMessageToJob } from '@hanzo_network/hanzo-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import {
   Button,
   ChatInputArea,
@@ -31,10 +31,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { SendIcon, ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { SendIcon, ToolsIcon } from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 
@@ -61,7 +61,6 @@ import {
   UpdateToolsSwitchActionBar,
 } from '../../../components/chat/chat-action-bar/tools-switch-action-bar';
 import { MessageList } from '../../../components/chat/components/message-list';
-import { Mic } from '../../../components/chat/mic';
 import {
   DropFileActive,
   FileList,
@@ -117,8 +116,6 @@ function QuickAsk() {
   const isLoadingResponse = useQuickAskStore(
     (state) => state.isLoadingResponse,
   );
-  // The assistant's last settled answer — what the microphone reads back.
-  const messageResponse = useQuickAskStore((state) => state.messageResponse);
 
   const { defaultSpotlightAiId, setDefaultSpotlightAiId } =
     useDefaultSpotlightAiByDefault();
@@ -144,7 +141,8 @@ function QuickAsk() {
       token: auth?.api_v2_key ?? '',
     },
     {
-      select: (data: HanzoToolHeader[]) => data.filter((tool) => tool.enabled),
+      select: (data: HanzoToolHeader[]) =>
+        data.filter((tool) => tool.enabled),
     },
   );
 
@@ -295,9 +293,6 @@ function QuickAsk() {
     },
   });
 
-  // gui's CommandList renders a ScrollView whose ref type is an unnameable
-  // intersection (RN ScrollView & GuiElement). On web the ref IS the host DOM
-  // node, which is what this only ever uses it as.
   const toolListRef = useRef<HTMLDivElement>(null);
 
   const scrollUpWhenSearchingTools = useCallback(() => {
@@ -403,7 +398,7 @@ function QuickAsk() {
       <div className="font-lg flex h-[50px] items-center justify-between px-3 py-1.5">
         <span className="pl-1 text-base">{inboxId ? null : 'New Chat'}</span>
         <div className="flex items-center gap-2">
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="tertiary"
@@ -428,7 +423,7 @@ function QuickAsk() {
               </span>
             </TooltipContent>
           </Tooltip>
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="tertiary"
@@ -462,11 +457,7 @@ function QuickAsk() {
         })}
       >
         <div className="relative z-[1]">
-          <Popover
-            placement="top-start"
-            onOpenChange={setIsCommandOpen}
-            open={isCommandOpen}
-          >
+          <Popover onOpenChange={setIsCommandOpen} open={isCommandOpen}>
             <PopoverAnchor>
               <ChatInputArea
                 autoFocus
@@ -553,23 +544,6 @@ function QuickAsk() {
                         isExistingChat && (
                           <UpdateChatConfigActionBar inboxId={inboxId ?? ''} />
                         )}
-                      {isToolSelected ? null : (
-                        <Mic
-                          disabled={isLoadingResponse}
-                          onPartial={(heard) =>
-                            chatForm.setValue('message', heard, {
-                              shouldValidate: true,
-                            })
-                          }
-                          onUtterance={(said) => {
-                            chatForm.setValue('message', said, {
-                              shouldValidate: true,
-                            });
-                            void chatForm.handleSubmit(onSubmit)();
-                          }}
-                          reply={messageResponse || null}
-                        />
-                      )}
                       {isLoadingResponse ? (
                         <StopGeneratingButtonInPlace inboxId={inboxId ?? ''} />
                       ) : (
@@ -645,13 +619,18 @@ function QuickAsk() {
                 value={chatForm.watch('message')}
               />
             </PopoverAnchor>
-            <PopoverContent p={0} sideOffset={-200} width={500}>
+            <PopoverContent
+              align="start"
+              className="w-[500px] p-0"
+              side="top"
+              sideOffset={-200}
+            >
               <Command>
                 <CommandInput
                   onValueChange={scrollUpWhenSearchingTools}
                   placeholder="Search tools..."
                 />
-                <CommandList ref={toolListRef as never}>
+                <CommandList ref={toolListRef}>
                   <CommandEmpty>No tools found.</CommandEmpty>
                   <CommandGroup heading="Your Active Tools">
                     {isToolsListSuccess &&
@@ -714,7 +693,7 @@ const QuickAskBody = () => {
           initial={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <h1 className="font-sans text-2xl font-semibold text-white">
+          <h1 className="font-inter text-2xl font-semibold text-white">
             How can I help you today?
           </h1>
         </motion.div>

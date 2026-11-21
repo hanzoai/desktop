@@ -1,5 +1,5 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
-import { type GetChatConfigResponse } from '@hanzo/desktop-message-ts/api/jobs/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type GetChatConfigResponse } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 
 export type GetChatConfigInput = Token & {
   nodeAddress: string;

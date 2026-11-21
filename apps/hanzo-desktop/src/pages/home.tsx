@@ -1,16 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { buildInboxIdFromJobId } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { buildInboxIdFromJobId } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   type ChatMessageFormSchema,
   chatMessageFormSchema,
-} from '@hanzo/desktop-node-state/forms/chat/chat-message';
-import { DEFAULT_CHAT_CONFIG } from '@hanzo/desktop-node-state/v2/constants';
-import { useCreateJob } from '@hanzo/desktop-node-state/v2/mutations/createJob/useCreateJob';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
-import { useGetSearchTools } from '@hanzo/desktop-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
+} from '@hanzo_network/hanzo-node-state/forms/chat/chat-message';
+import { DEFAULT_CHAT_CONFIG } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useCreateJob } from '@hanzo_network/hanzo-node-state/v2/mutations/createJob/useCreateJob';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useGetSearchTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
 import {
   Badge,
   Button,
@@ -28,8 +28,9 @@ import {
   PopoverTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AIAgentIcon,
   DirectoryTypeIcon,
@@ -37,10 +38,10 @@ import {
   PlusIcon,
   SendIcon,
   ToolsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { useDebounce } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { useDebounce } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { invoke } from '@tauri-apps/api/core';
 import axios from 'axios';
 import { motion } from 'framer-motion';
@@ -82,16 +83,16 @@ import {
   SUGGESTED_TOOLS_COUNT,
   useSelectedFilesChat,
 } from '../components/chat/conversation-footer';
-import { Mic } from '../components/chat/mic';
 import { FeedbackModal } from '../components/feedback/feedback-modal';
 import { usePromptSelectionStore } from '../components/prompt/context/prompt-selection-context';
 import { useAgentRequiresToolConfigurations } from '../hooks/use-agent-requires-tool-configurations';
-import { useRoutedDefaultAgentId } from '../hooks/use-routed-default-agent';
 // import { VideoBanner } from '../components/video-banner';
 import { useAnalytics } from '../lib/posthog-provider';
 import { useAuth } from '../store/auth';
+import { useSettings } from '../store/settings';
 import { useViewportStore } from '../store/viewport';
 import { getThinkingConfig } from '../utils/thinking-config';
+// import { HANZO_DOCS_URL, HANZO_TUTORIALS } from '../utils/constants';
 
 export const showSpotlightWindow = async () => {
   return invoke('show_spotlight_window_app');
@@ -128,9 +129,6 @@ const PROMPT_SUGGESTIONS = [
 const EmptyMessage = () => {
   const auth = useAuth((state) => state.auth);
   const navigate = useNavigate();
-  // gui's CommandList renders a ScrollView whose ref type is an unnameable
-  // intersection (RN ScrollView & GuiElement). On web the ref IS the host DOM
-  // node, which is what this only ever uses it as.
   const toolListRef = useRef<HTMLDivElement>(null);
 
   const scrollUpWhenSearchingTools = useCallback(() => {
@@ -218,7 +216,7 @@ const EmptyMessage = () => {
         }
 
         const response = await axios.get(
-          `${auth.node_address}/v2/check_default_tools_sync`,
+          `${auth.node_address}/v1/node/check_default_tools_sync`,
           {
             headers: {
               Authorization: `Bearer ${auth.api_v2_key}`,
@@ -315,15 +313,12 @@ const EmptyMessage = () => {
     (state) => state.setPromptSelected,
   );
 
-  // Resolves to a Hanzo Cloud `auto` router provider when Smart routing is on,
-  // otherwise the persisted default. Only seeds the default — an explicit pick
-  // in the composer (selector / locationState) still wins via its own effect.
-  const routedDefaultAgentId = useRoutedDefaultAgentId();
+  const defaultAgentId = useSettings((state) => state.defaultAgentId);
 
   useEffect(() => {
-    if (!routedDefaultAgentId) return;
-    chatForm.setValue('agent', routedDefaultAgentId);
-  }, [chatForm, routedDefaultAgentId]);
+    if (!defaultAgentId) return;
+    chatForm.setValue('agent', defaultAgentId);
+  }, [chatForm, defaultAgentId]);
 
   const { mutateAsync: createJob, isPending } = useCreateJob({
     onError: (error) => {
@@ -571,7 +566,7 @@ const EmptyMessage = () => {
       <FeedbackModal buttonProps={{ className: 'absolute right-4 top-4' }} />
       <div className="mx-auto mt-[110px] flex w-full max-w-[1050px] flex-col items-stretch gap-6">
         <div className="mb-4 flex flex-col items-center gap-2">
-          <h1 className="font-sans text-text-default text-3xl font-medium">
+          <h1 className="font-inter text-text-default text-3xl font-medium">
             {t('homepage.welcomeTitle')}
           </h1>
           <AIModelSelector
@@ -626,11 +621,7 @@ const EmptyMessage = () => {
           })}
         >
           <div className="relative z-[1]">
-            <Popover
-              onOpenChange={setIsCommandOpen}
-              open={isCommandOpen}
-              placement="bottom-start"
-            >
+            <Popover onOpenChange={setIsCommandOpen} open={isCommandOpen}>
               <PopoverAnchor>
                 <ChatInputArea
                   {...(selectedTool && {
@@ -656,8 +647,8 @@ const EmptyMessage = () => {
                   bottomAddons={
                     <div className="flex items-center justify-between gap-4 px-3 pb-2">
                       <div className="flex items-center gap-2.5">
-                        <Popover placement="bottom-start">
-                          <Tooltip placement="top">
+                        <Popover>
+                          <Tooltip>
                             <TooltipTrigger asChild>
                               <PopoverTrigger asChild>
                                 <Button
@@ -670,9 +661,13 @@ const EmptyMessage = () => {
                                 </Button>
                               </PopoverTrigger>
                             </TooltipTrigger>
-                            <TooltipContent>Add</TooltipContent>
+                            <TooltipPortal>
+                              <TooltipContent align="center" side="top">
+                                Add
+                              </TooltipContent>
+                            </TooltipPortal>
                           </Tooltip>
-                          <PopoverContent p="$2" width={192}>
+                          <PopoverContent align="start" className="w-48 p-2">
                             <div className="flex flex-col items-start gap-1">
                               {!selectedTool && (
                                 <VectorFsActionBar
@@ -740,27 +735,7 @@ const EmptyMessage = () => {
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <CreateChatConfigActionBar
-                          form={chatConfigForm}
-                          currentAI={currentAI}
-                        />
-
-                        {selectedTool ? null : (
-                          <Mic
-                            disabled={isPending}
-                            onPartial={(heard) =>
-                              chatForm.setValue('message', heard, {
-                                shouldValidate: true,
-                              })
-                            }
-                            onUtterance={(said) => {
-                              chatForm.setValue('message', said, {
-                                shouldValidate: true,
-                              });
-                              void chatForm.handleSubmit(onSubmit)();
-                            }}
-                          />
-                        )}
+                        <CreateChatConfigActionBar form={chatConfigForm} currentAI={currentAI} />
 
                         <Button
                           className={cn('size-[36px] p-2')}
@@ -894,13 +869,18 @@ const EmptyMessage = () => {
                   value={chatForm.watch('message')}
                 />
               </PopoverAnchor>
-              <PopoverContent p={0} sideOffset={-200} width={500}>
+              <PopoverContent
+                align="start"
+                className="w-[500px] p-0"
+                side="bottom"
+                sideOffset={-200}
+              >
                 <Command>
                   <CommandInput
                     onValueChange={scrollUpWhenSearchingTools}
                     placeholder={t('tools.searchPlaceholder')}
                   />
-                  <CommandList ref={toolListRef as never}>
+                  <CommandList ref={toolListRef}>
                     <CommandEmpty>{t('tools.commandEmpty')}</CommandEmpty>
                     <CommandGroup heading={t('tools.commandActiveHeading')}>
                       {isToolsListSuccess &&
@@ -956,7 +936,7 @@ const EmptyMessage = () => {
                     Suggested Tools
                   </span>
                   {searchToolList?.map((tool, idx) => (
-                    <Tooltip placement="top-start" key={tool.tool_router_key}>
+                    <Tooltip key={tool.tool_router_key}>
                       <TooltipTrigger asChild>
                         <motion.button
                           animate={{ opacity: 1, x: 0 }}
@@ -982,14 +962,20 @@ const EmptyMessage = () => {
                           {formatText(tool.name)}
                         </motion.button>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-[500px]">
-                        {tool.description}
+                      <TooltipPortal>
+                        <TooltipContent
+                          align="start"
+                          className="max-w-[500px]"
+                          side="top"
+                        >
+                          {tool.description}
 
-                        <br />
-                        <div className="text-text-secondary flex items-center justify-end gap-2 text-xs">
-                          <CommandShortcut>⌘ + {idx + 1}</CommandShortcut>
-                        </div>
-                      </TooltipContent>
+                          <br />
+                          <div className="text-text-secondary flex items-center justify-end gap-2 text-xs">
+                            <CommandShortcut>⌘ + {idx + 1}</CommandShortcut>
+                          </div>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   ))}
                   <Link

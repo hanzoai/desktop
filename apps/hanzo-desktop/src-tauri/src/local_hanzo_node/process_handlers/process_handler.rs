@@ -1,7 +1,6 @@
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
-use hanzo_log_redact::StreamRedactor;
 use tauri::AppHandle;
 use tauri_plugin_shell::{
     process::{CommandChild, CommandEvent},
@@ -52,35 +51,16 @@ impl ProcessHandler {
         let _ = event_sender.send(event).await;
     }
 
-    /// Forwards a sidecar's output to the log. Lines pass through a
-    /// per-stream `StreamRedactor`, which drops the body of a PEM block that
-    /// arrives one line per event, so key material never reaches the file.
-    /// Returns the redacted stdout/stderr lines; any further matching (the
-    /// ready signal) runs on these, never on the raw event.
-    fn command_event_to_message_log(
-        process_name: &str,
-        event: CommandEvent,
-        stdout_redactor: &mut StreamRedactor,
-        stderr_redactor: &mut StreamRedactor,
-    ) -> Vec<String> {
+    fn command_event_to_message_log(process_name: &str, event: CommandEvent) {
         match event {
             CommandEvent::Stdout(message) => {
-                let lines = stdout_redactor.redact_chunk(&String::from_utf8_lossy(&message));
-                for line in &lines {
-                    log::info!(target: process_name, "{}", line);
-                }
-                lines
+                log::info!(target: process_name, "{}", String::from_utf8_lossy(&message));
             }
             CommandEvent::Stderr(message) => {
-                let lines = stderr_redactor.redact_chunk(&String::from_utf8_lossy(&message));
-                for line in &lines {
-                    log::error!(target: process_name, "{}", line);
-                }
-                lines
+                log::error!(target: process_name, "{}", String::from_utf8_lossy(&message));
             }
             CommandEvent::Error(message) => {
-                log::error!("[{}] error: {}", process_name, hanzo_log_redact::redact(&message));
-                Vec::new()
+                log::error!("[{}] error: {}", process_name, message);
             }
             CommandEvent::Terminated(payload) => {
                 log::info!(
@@ -89,9 +69,8 @@ impl ProcessHandler {
                     payload.code,
                     payload.signal
                 );
-                Vec::new()
             }
-            _ => Vec::new(),
+            _ => {}
         }
     }
 
@@ -107,14 +86,11 @@ impl ProcessHandler {
         args: Vec<&str>,
         current_dir: Option<PathBuf>,
     ) -> Result<(), String> {
-        // Names only: the values carry API keys and installation secrets.
-        let mut spawn_var_names: Vec<&String> = env.keys().collect();
-        spawn_var_names.sort();
         log::info!(
-            "[{}] attempting to spawn process with args {:?} and env vars {:?}",
+            "[{}] attempting to spawn process with args {:?} and env {:?}",
             self.process_name,
             args,
-            spawn_var_names
+            env
         );
         {
             let process = self.process.read().await;
@@ -162,15 +138,8 @@ impl ProcessHandler {
 
         let ready_matcher = self.ready_matcher.clone();
         tauri::async_runtime::spawn(async move {
-            let mut stdout_redactor = StreamRedactor::new();
-            let mut stderr_redactor = StreamRedactor::new();
             while let Some(event) = rx.recv().await {
-                let logged_lines = Self::command_event_to_message_log(
-                    &process_name,
-                    event.clone(),
-                    &mut stdout_redactor,
-                    &mut stderr_redactor,
-                );
+                Self::command_event_to_message_log(&process_name, event.clone());
                 match event {
                     CommandEvent::Terminated(_) => {
                         {
@@ -183,14 +152,13 @@ impl ProcessHandler {
                         }
                         break;
                     }
-                    CommandEvent::Stdout(_) | CommandEvent::Stderr(_) => {
-                        if let Some(line) =
-                            logged_lines.iter().find(|l| ready_matcher.is_match(l))
-                        {
+                    CommandEvent::Stdout(message) | CommandEvent::Stderr(message) => {
+                        let message_str = String::from_utf8_lossy(&message);
+                        if ready_matcher.is_match(&message_str) {
                             log::info!(
                                 "[{}] process ready signal detected in message: {}",
                                 process_name,
-                                line
+                                message_str
                             );
                             let mut is_ready = is_ready_mutex.lock().await;
                             *is_ready = true;

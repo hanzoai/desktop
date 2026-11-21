@@ -7,9 +7,10 @@ import {
   TabsTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
@@ -54,7 +55,7 @@ const ArtifactPreview = () => {
   }, [artifact]);
 
   return (
-    <TooltipProvider delay={0}>
+    <TooltipProvider delayDuration={0}>
       <Tabs
         className="flex h-screen w-full flex-col overflow-hidden"
         defaultValue="preview"
@@ -63,7 +64,7 @@ const ArtifactPreview = () => {
           <div className="flex size-full flex-col overflow-hidden">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 px-2">
-                <Tooltip placement="top">
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       className="text-text-secondary flex items-center gap-2"
@@ -77,9 +78,11 @@ const ArtifactPreview = () => {
                       <span className="sr-only">Close Artifact Panel</span>
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent className="flex flex-col items-center gap-1">
-                    <p>Close Artifact Panel</p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent className="flex flex-col items-center gap-1">
+                      <p>Close Artifact Panel</p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 </Tooltip>
                 <h1 className="line-clamp-1 text-sm font-medium text-white">
                   {artifact?.title}
@@ -112,7 +115,7 @@ const ArtifactPreview = () => {
                 </h2>
                 {iframeLoaded && (
                   <div className="flex items-center gap-2">
-                    <Tooltip placement="top">
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
                           <CopyToClipboardIcon
@@ -121,11 +124,13 @@ const ArtifactPreview = () => {
                           />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="flex flex-col items-center gap-1">
-                        <p>Copy Code</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent className="flex flex-col items-center gap-1">
+                          <p>Copy Code</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
-                    <Tooltip placement="top">
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           className="text-text-secondary flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 bg-transparent transition-colors hover:bg-gray-300 hover:text-white [&>svg]:h-3 [&>svg]:w-3"
@@ -161,9 +166,11 @@ const ArtifactPreview = () => {
                           <DownloadIcon className="h-4 w-4" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="flex flex-col items-center gap-1">
-                        <p>Download Code</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent className="flex flex-col items-center gap-1">
+                          <p>Download Code</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   </div>
                 )}

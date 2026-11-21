@@ -1,7 +1,7 @@
 import {
   restoreLocalWallet as restoreLocalWalletapi,
   type WalletSource,
-} from '@hanzo/desktop-message-ts/api/wallets';
+} from '@hanzo_network/hanzo-message-ts/api/wallets';
 
 import { type RestoreLocalWalletInput } from './types';
 

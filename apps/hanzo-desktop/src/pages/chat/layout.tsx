@@ -1,19 +1,19 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { t, useTranslation } from '@hanzo/desktop-i18n';
+import { t, useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   extractJobIdFromInbox,
   isJobInbox,
-} from '@hanzo/desktop-message-ts/utils';
+} from '@hanzo_network/hanzo-message-ts/utils';
 import {
   type UpdateInboxNameFormSchema,
   updateInboxNameFormSchema,
-} from '@hanzo/desktop-node-state/forms/chat/inbox';
-import { useRemoveJob } from '@hanzo/desktop-node-state/v2/mutations/removeJob/useRemoveJob';
-import { useUpdateInboxName } from '@hanzo/desktop-node-state/v2/mutations/updateInboxName/useUpdateInboxName';
-import { useGetAgent } from '@hanzo/desktop-node-state/v2/queries/getAgent/useGetAgent';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetAgentInboxes } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetAgentInboxes';
-import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+} from '@hanzo_network/hanzo-node-state/forms/chat/inbox';
+import { useRemoveJob } from '@hanzo_network/hanzo-node-state/v2/mutations/removeJob/useRemoveJob';
+import { useUpdateInboxName } from '@hanzo_network/hanzo-node-state/v2/mutations/updateInboxName/useUpdateInboxName';
+import { useGetAgent } from '@hanzo_network/hanzo-node-state/v2/queries/getAgent/useGetAgent';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetAgentInboxes } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetAgentInboxes';
+import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import {
   DialogClose,
   Button,
@@ -35,11 +35,15 @@ import {
   Skeleton,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { AIAgentIcon, ScheduledTasksIcon } from '@hanzo/desktop-ui/assets';
-import { formatDateToLocaleStringWithTime } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import {
+  AIAgentIcon,
+  ScheduledTasksIcon,
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatDateToLocaleStringWithTime } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   ChevronLeft,
@@ -115,7 +119,7 @@ const InboxMessageButtonBase = ({
   const [isEditable, setIsEditable] = useState(false);
 
   return (
-    <Tooltip placement="right-end">
+    <Tooltip>
       <TooltipTrigger asChild>
         <div>
           {isEditable ? (
@@ -141,7 +145,7 @@ const InboxMessageButtonBase = ({
                 {inboxName}
               </span>
               <div className="group-hover:bg-bg-tertiary absolute right-0 rounded-full bg-transparent opacity-0 duration-200 group-hover:opacity-100">
-                <Tooltip placement="top">
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <div
                       className={cn(
@@ -153,11 +157,13 @@ const InboxMessageButtonBase = ({
                       <Edit3 className="h-4 w-4" />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('common.rename')}</p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent>
+                      <p>{t('common.rename')}</p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 </Tooltip>
-                <Tooltip placement="top">
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <div
                       className={cn(
@@ -173,9 +179,11 @@ const InboxMessageButtonBase = ({
                       <Trash2Icon className="h-4 w-4" />
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Delete</p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent>
+                      <p>Delete</p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 </Tooltip>
               </div>
               <RemoveInboxMessageModal
@@ -187,9 +195,11 @@ const InboxMessageButtonBase = ({
           )}
         </div>
       </TooltipTrigger>
-      <TooltipContent className="max-w-[200px]">
-        <p>{inboxName}</p>
-      </TooltipContent>
+      <TooltipPortal>
+        <TooltipContent align="end" className="max-w-[200px]" side="right">
+          <p>{inboxName}</p>
+        </TooltipContent>
+      </TooltipPortal>
     </Tooltip>
   );
 };
@@ -221,7 +231,7 @@ function RemoveInboxMessageModal({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
           {t('chat.actions.deleteInboxConfirmationTitle')}
         </DialogTitle>
@@ -351,11 +361,11 @@ const ChatList = () => {
   return (
     <div className="">
       <div className="mb-1 flex h-8 items-center justify-between gap-2 pl-3">
-        <h2 className="font-sans text-base font-medium tracking-wide">
+        <h2 className="font-inter text-base font-medium tracking-wide">
           {t('chat.chats')}
         </h2>
         <div className="flex items-center">
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className="text-text-secondary hover:text-text-default flex size-8 items-center justify-center rounded-full"
@@ -364,11 +374,13 @@ const ChatList = () => {
                 <ListIcon className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>{t('chat.actions.manageChats')}</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent>
+                <p>{t('chat.actions.manageChats')}</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
-          <Tooltip placement="top">
+          <Tooltip>
             <TooltipTrigger asChild>
               <button
                 className="text-text-secondary hover:text-text-default flex size-8 items-center justify-center rounded-full"
@@ -379,9 +391,11 @@ const ChatList = () => {
                 <PlusIcon className="h-4 w-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>New Chat</p>
-            </TooltipContent>
+            <TooltipPortal>
+              <TooltipContent>
+                <p>New Chat</p>
+              </TooltipContent>
+            </TooltipPortal>
           </Tooltip>
         </div>
       </div>
@@ -464,11 +478,11 @@ const AgentInboxList = ({ agentId }: { agentId?: string }) => {
   return (
     <div className=" ">
       <div className="flex h-8 items-center justify-between gap-1">
-        <h2 className="font-sans flex items-center gap-2 px-2 text-sm font-normal tracking-wide capitalize">
+        <h2 className="font-inter flex items-center gap-2 px-2 text-sm font-normal tracking-wide capitalize">
           <AIAgentIcon name={agent?.name ?? ''} size="xs" />
           {agent?.name}
         </h2>
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <button
               className="text-text-secondary flex size-8 items-center justify-center rounded-full hover:text-white"
@@ -481,9 +495,11 @@ const AgentInboxList = ({ agentId }: { agentId?: string }) => {
               <PlusIcon className="h-4 w-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>New Chat</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent>
+              <p>New Chat</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </div>
       <div className="flex flex-col gap-2 py-4">
@@ -551,10 +567,10 @@ const AgentList = ({
   return (
     <div className="">
       <div className="mb-1 flex h-8 items-center justify-between gap-2 pl-3">
-        <h2 className="font-sans text-base font-medium tracking-wide">
+        <h2 className="font-inter text-base font-medium tracking-wide">
           {t('chat.agents')}
         </h2>
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <button
               className="text-text-secondary hover:text-text-default flex size-8 items-center justify-center rounded-full"
@@ -565,9 +581,11 @@ const AgentList = ({
               <PlusIcon className="h-4 w-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>New Agent</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent>
+              <p>New Agent</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </div>
       <div className="w-full space-y-1 bg-transparent">
@@ -591,7 +609,7 @@ const AgentList = ({
               <span className="line-clamp-1 flex-1 pr-2 text-left text-xs break-all capitalize">
                 {agent.name}
               </span>
-              <Tooltip placement="top">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     className="inline-flex items-center opacity-0 group-hover:opacity-100"
@@ -604,12 +622,14 @@ const AgentList = ({
                     <PlusIcon className="mr-2 h-4 w-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  <p>New Chat With Agent</p>
-                </TooltipContent>
+                <TooltipPortal>
+                  <TooltipContent>
+                    <p>New Chat With Agent</p>
+                  </TooltipContent>
+                </TooltipPortal>
               </Tooltip>
               {agent.cron_tasks?.length && agent.cron_tasks.length > 0 && (
-                <Tooltip placement="top">
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       className="inline-flex items-center"
@@ -622,9 +642,11 @@ const AgentList = ({
                       <ScheduledTasksIcon className="mr-2 h-4 w-4" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>View scheduled tasks</p>
-                  </TooltipContent>
+                  <TooltipPortal>
+                    <TooltipContent>
+                      <p>View scheduled tasks</p>
+                    </TooltipContent>
+                  </TooltipPortal>
                 </Tooltip>
               )}
               <ChevronRight className="h-4 w-4" />

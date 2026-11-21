@@ -1,39 +1,41 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { PlusIcon } from '@radix-ui/react-icons';
+import * as SelectPrimitive from '@radix-ui/react-select'; // <-- Import SelectPrimitive
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type HanzoTool,
   type HanzoToolHeader,
   type HanzoToolType,
-} from '@hanzo/desktop-message-ts/api/tools/types';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   buildInboxIdFromJobId,
   extractJobIdFromInbox,
-} from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
+} from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
 import {
   type UploadVRFilesFormSchema,
   uploadVRFilesFormSchema,
-} from '@hanzo/desktop-node-state/forms/vector-fs/folder';
-import { transformDataToTreeNodes } from '@hanzo/desktop-node-state/lib/utils/files';
+} from '@hanzo_network/hanzo-node-state/forms/vector-fs/folder';
+import { transformDataToTreeNodes } from '@hanzo_network/hanzo-node-state/lib/utils/files';
 import {
   DEFAULT_CHAT_CONFIG,
   FunctionKeyV2,
-} from '@hanzo/desktop-node-state/v2/constants';
-import { useCreateAgent } from '@hanzo/desktop-node-state/v2/mutations/createAgent/useCreateAgent';
-import { useCreateJob } from '@hanzo/desktop-node-state/v2/mutations/createJob/useCreateJob';
-import { useCreateRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/createRecurringTask/useCreateRecurringTask';
-import { useRemoveRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/removeRecurringTask/useRemoveRecurringTask';
-import { useRetryMessage } from '@hanzo/desktop-node-state/v2/mutations/retryMessage/useRetryMessage';
-import { useSendMessageToJob } from '@hanzo/desktop-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
-import { useUpdateAgent } from '@hanzo/desktop-node-state/v2/mutations/updateAgent/useUpdateAgent';
-import { useUploadVRFiles } from '@hanzo/desktop-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
-import { useGetAgent } from '@hanzo/desktop-node-state/v2/queries/getAgent/useGetAgent';
-import { useGetListDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
-import { useGetAgentInboxes } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetAgentInboxes';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetSearchDirectoryContents } from '@hanzo/desktop-node-state/v2/queries/getSearchDirectoryContents/useGetSearchDirectoryContents';
-import { useGetTool } from '@hanzo/desktop-node-state/v2/queries/getTool/useGetTool';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
-import { useGetSearchTools } from '@hanzo/desktop-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
+} from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useCreateAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/createAgent/useCreateAgent';
+import { useCreateJob } from '@hanzo_network/hanzo-node-state/v2/mutations/createJob/useCreateJob';
+import { useCreateRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/createRecurringTask/useCreateRecurringTask';
+import { useRemoveRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/removeRecurringTask/useRemoveRecurringTask';
+import { useRetryMessage } from '@hanzo_network/hanzo-node-state/v2/mutations/retryMessage/useRetryMessage';
+import { useSendMessageToJob } from '@hanzo_network/hanzo-node-state/v2/mutations/sendMessageToJob/useSendMessageToJob';
+import { useUpdateAgent } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgent/useUpdateAgent';
+import { useUploadVRFiles } from '@hanzo_network/hanzo-node-state/v2/mutations/uploadVRFiles/useUploadVRFiles';
+import { useGetAgent } from '@hanzo_network/hanzo-node-state/v2/queries/getAgent/useGetAgent';
+import { useGetListDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getDirectoryContents/useGetListDirectoryContents';
+import { useGetAgentInboxes } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetAgentInboxes';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetSearchDirectoryContents } from '@hanzo_network/hanzo-node-state/v2/queries/getSearchDirectoryContents/useGetSearchDirectoryContents';
+import { useGetTool } from '@hanzo_network/hanzo-node-state/v2/queries/getTool/useGetTool';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useGetSearchTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsSearch/useGetToolsSearch';
 import {
   DialogClose,
   Badge,
@@ -49,10 +51,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   FileUploader,
   Form,
   FormControl,
@@ -88,20 +86,20 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   DirectoryTypeIcon,
   FileTypeIcon,
   ScheduledTasksIcon,
   SendIcon,
-} from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui/assets';
 import {
   formatDateToLocaleStringWithTime,
   formatText,
   getFileExt,
-} from '@hanzo/desktop-ui/helpers';
-import { useDebounce } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/helpers';
+import { useDebounce } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import cronstrue from 'cronstrue';
 import {
@@ -113,7 +111,6 @@ import {
   HistoryIcon,
   LucideArrowLeft,
   MessageSquare,
-  PlusIcon,
   Trash2,
   XIcon,
 } from 'lucide-react';
@@ -159,7 +156,7 @@ const agentFormSchema = z.object({
   storage_path: z.string(),
   knowledge: z.array(z.string()),
   tools: z.array(z.string()),
-  tools_config_override: z.record(z.string(), z.record(z.string(), z.any())).optional(),
+  tools_config_override: z.record(z.record(z.any())).optional(),
   debugMode: z.boolean(),
   config: z
     .object({
@@ -173,7 +170,7 @@ const agentFormSchema = z.object({
       thinking: z.boolean(),
       reasoning_effort: z.enum(['low', 'medium', 'high']).optional(),
       web_search_enabled: z.boolean().optional(),
-      other_model_params: z.record(z.string(), z.string()),
+      other_model_params: z.record(z.string()),
     })
     .nullable(),
   cronExpression: z.string().optional(),
@@ -194,10 +191,7 @@ const TabNavigation = () => {
         className="data-[state=active]:bg-bg-secondary text-text-secondary border-divider data-[state=active]:text-text-default h-full gap-2 rounded-full border bg-transparent px-4 py-2 text-xs font-medium"
         value="persona"
       >
-        <Badge
-          className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]"
-          style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-        >
+        <Badge className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]">
           1
         </Badge>
         <span>{t('agents.create.persona')}</span>
@@ -206,10 +200,7 @@ const TabNavigation = () => {
         className="data-[state=active]:bg-bg-secondary text-text-secondary border-divider data-[state=active]:text-text-default h-full gap-2 rounded-full border bg-transparent px-4 py-2 text-xs font-medium"
         value="knowledge"
       >
-        <Badge
-          className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]"
-          style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-        >
+        <Badge className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]">
           2
         </Badge>
         <span>{t('agents.create.knowledge')}</span>
@@ -218,10 +209,7 @@ const TabNavigation = () => {
         className="data-[state=active]:bg-bg-secondary text-text-secondary border-divider data-[state=active]:text-text-default h-full gap-2 rounded-full border bg-transparent px-4 py-2 text-xs font-medium"
         value="tools"
       >
-        <Badge
-          className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]"
-          style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-        >
+        <Badge className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]">
           3
         </Badge>
         <span>{t('agents.create.tools')}</span>
@@ -230,10 +218,7 @@ const TabNavigation = () => {
         className="data-[state=active]:bg-bg-secondary text-text-secondary border-divider data-[state=active]:text-text-default h-full gap-2 rounded-full border bg-transparent px-4 py-2 text-xs font-medium"
         value="schedule"
       >
-        <Badge
-          className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]"
-          style={{ minHeight: 0, padding: 0, borderRadius: 9999 }}
-        >
+        <Badge className="bg-bg-quaternary border-divider text-text-secondary inline-flex size-5 items-center justify-center rounded-full border-none p-0 text-center text-[10px]">
           4
         </Badge>
         <span>{t('agents.create.schedule')}</span>
@@ -389,7 +374,7 @@ function AgentSideChat({
             {/* Buttons Group */}
             <div className="flex items-center gap-2">
               {/* New Chat Button*/}
-              <Tooltip placement="top">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     className="text-text-secondary p-2"
@@ -405,39 +390,32 @@ function AgentSideChat({
                 </TooltipContent>
               </Tooltip>
 
-              {/* A menu, not a Select. gui's select trigger is a ListItem
-                  with children of its own, so `asChild` fails
-                  React.Children.only — the control would have to BE the
-                  trigger, and a gui SelectTrigger cannot be an icon button:
-                  it drops `title`, its floor is 44px against this row's 34,
-                  and floating-ui's reference props overwrite a Tooltip's hover
-                  handlers so the tip never opens. All three measured. Picking a
-                  past chat is navigation rather than form input, so the menu is
-                  also the truer control.
-                  No <Tooltip> around the trigger: a Tooltip wrapping a
-                  DropdownMenuTrigger stops the menu opening at all — measured in
-                  Chromium on the raw @hanzo/ui parts too, so it is upstream's,
-                  not this file's. `title` + `aria-label` is what @hanzo/ui's own
-                  `tip()` helper does for an icon-only control. */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    aria-label={t('agents.form.chatHistory')}
-                    className="text-text-secondary p-2"
-                    disabled={!agentInboxes || agentInboxes.length === 0}
-                    size="auto"
-                    title={t('agents.form.chatHistory')}
-                    variant="tertiary"
-                  >
-                    <HistoryIcon className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent maxW={320} overflow="scroll">
+              <Select
+                onValueChange={(value) => {
+                  if (value) setChatInboxId(value);
+                }}
+                value={chatInboxId === null ? undefined : chatInboxId}
+              >
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SelectPrimitive.Trigger asChild>
+                      <Button
+                        className="text-text-secondary p-2"
+                        disabled={!agentInboxes || agentInboxes.length === 0}
+                        size="auto"
+                        variant="tertiary"
+                      >
+                        <HistoryIcon className="size-4" />
+                      </Button>
+                    </SelectPrimitive.Trigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{t('agents.form.chatHistory')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <SelectContent className="w-[300px]">
                   {agentInboxes?.map((inbox) => (
-                    <DropdownMenuItem
-                      key={inbox.inbox_id}
-                      onClick={() => setChatInboxId(inbox.inbox_id)}
-                    >
+                    <SelectItem key={inbox.inbox_id} value={inbox.inbox_id}>
                       <div className="flex w-full flex-col">
                         <span className="text-text-default max-w-[255px] truncate text-sm">
                           {inbox.custom_name || inbox.inbox_id}
@@ -448,12 +426,12 @@ function AgentSideChat({
                           )}
                         </span>
                       </div>
-                    </DropdownMenuItem>
+                    </SelectItem>
                   ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </SelectContent>
+              </Select>
 
-              <Tooltip placement="top">
+              <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     className="text-text-tertiary p-2"
@@ -1318,7 +1296,7 @@ function AgentForm({ mode }: AgentFormProps) {
                 <LucideArrowLeft />
                 <span className="sr-only">{t('common.back')}</span>
               </Link>
-              <h1 className="font-sans text-2xl font-medium">
+              <h1 className="font-inter text-2xl font-medium">
                 {mode === 'edit'
                   ? t('agents.form.updateAgent')
                   : t('agents.form.createAgent')}
@@ -1422,7 +1400,7 @@ function AgentForm({ mode }: AgentFormProps) {
                               <FormControl>
                                 <Textarea
                                   className="!min-h-[100px] text-sm"
-                                  onChangeText={field.onChange}
+                                  onChange={field.onChange}
                                   placeholder={t(
                                     'agents.create.descriptionPlaceholder',
                                   )}
@@ -1448,10 +1426,11 @@ function AgentForm({ mode }: AgentFormProps) {
                               </FormLabel>
                               <FormControl>
                                 <Textarea
-                                  className="!max-h-[auto] !min-h-[300px] resize-y text-sm"
+                                  className="!max-h-[auto] !min-h-[300px] text-sm"
                                   placeholder={t(
                                     'agents.create.systemInstructionsPlaceholder',
                                   )}
+                                  resize="vertical"
                                   spellCheck={false}
                                   {...field}
                                 />
@@ -1671,11 +1650,7 @@ function AgentForm({ mode }: AgentFormProps) {
                                               value={field.value}
                                               onValueChange={field.onChange}
                                             >
-                                              <SelectTrigger
-                                                height={40}
-                                                width={120}
-                                                className="!h-10 w-[120px] py-2 pr-10 [&>svg]:!top-2.5"
-                                              >
+                                              <SelectTrigger className="!h-10 w-[120px] py-2 pr-10 [&>svg]:!top-2.5">
                                                 <SelectValue placeholder="Select effort" />
                                               </SelectTrigger>
                                               <SelectContent>
@@ -1731,9 +1706,8 @@ function AgentForm({ mode }: AgentFormProps) {
                                           </HoverCardTrigger>
                                           <HoverCardContent
                                             align="start"
-                                            className="px-2 py-3 text-xs"
+                                            className="w-[260px] px-2 py-3 text-xs"
                                             side="left"
-                                            width={260}
                                           >
                                             {t(
                                               'agents.create.temperatureDescription',
@@ -1779,9 +1753,8 @@ function AgentForm({ mode }: AgentFormProps) {
                                           </HoverCardTrigger>
                                           <HoverCardContent
                                             align="start"
-                                            className="px-2 py-3 text-xs"
+                                            className="w-[260px] px-2 py-3 text-xs"
                                             side="left"
-                                            width={260}
                                           >
                                             {t('agents.create.topPDescription')}
                                           </HoverCardContent>
@@ -1824,9 +1797,8 @@ function AgentForm({ mode }: AgentFormProps) {
                                           </HoverCardTrigger>
                                           <HoverCardContent
                                             align="start"
-                                            className="px-2 py-3 text-xs"
+                                            className="w-[260px] px-2 py-3 text-xs"
                                             side="left"
-                                            width={260}
                                           >
                                             {t('agents.create.topKDescription')}
                                           </HoverCardContent>
@@ -1862,14 +1834,7 @@ function AgentForm({ mode }: AgentFormProps) {
                           <h2 className="inline-flex items-center gap-2 text-base font-medium">
                             {t('agents.create.knowledgeBase')}
                             {Object.keys(selectedKeys ?? {}).length > 0 && (
-                              <Badge
-                                className="bg-bg-quaternary border-divider text-text-tertiary inline-flex size-6 items-center justify-center rounded-full p-0 text-center text-sm"
-                                style={{
-                                  minHeight: 0,
-                                  padding: 0,
-                                  borderRadius: 9999,
-                                }}
-                              >
+                              <Badge className="bg-bg-quaternary border-divider text-text-tertiary inline-flex size-6 items-center justify-center rounded-full p-0 text-center text-sm">
                                 {Object.keys(selectedKeys ?? {}).length}
                               </Badge>
                             )}
@@ -1924,7 +1889,7 @@ function AgentForm({ mode }: AgentFormProps) {
                                   checked={
                                     selectedKeys?.[file.path]?.checked ?? false
                                   }
-                                  onCheckedChange={(checked: any) => {
+                                  onCheckedChange={(checked) => {
                                     const newKeys = { ...selectedKeys };
                                     if (checked) {
                                       newKeys[file.path] = { checked: true };
@@ -2417,7 +2382,7 @@ function AgentForm({ mode }: AgentFormProps) {
                                     toolsList?.length
                                 }
                                 id="all"
-                                onCheckedChange={(checked: any) => {
+                                onCheckedChange={(checked) => {
                                   const isAllConfigFilled = toolsList
                                     ?.map((tool) => tool.config)
                                     .filter((item) => !!item)
@@ -2660,11 +2625,12 @@ function AgentForm({ mode }: AgentFormProps) {
                                           <FormControl>
                                             <Textarea
                                               {...field}
-                                              className="!min-h-[220px] resize-y"
+                                              className="min-h-[220px]"
                                               id="aiPrompt"
                                               placeholder={t(
                                                 'agents.create.scheduleAIInstructionsDescription',
                                               )}
+                                              resize="vertical"
                                             />
                                           </FormControl>
 
@@ -2960,33 +2926,27 @@ function AgentForm({ mode }: AgentFormProps) {
         isOpen={!!isAddFilesDialogOpen}
         onOpenChange={setIsAddFilesDialogOpen}
       />
-      {/*
-        Side Chat Panel. The handle and the panel are SIBLINGS of the group, not
-        a fragment: ResizablePanelGroup scans its children for `type ===
-        ResizablePanel` to build the layout, and `Children.toArray` does not
-        flatten a fragment — a wrapped panel is invisible to that scan, which
-        silently costs it its size and disables the handle beside it.
-      */}
+      {/* Side Chat Panel */}
       {isSideChatOpen && mode === 'edit' && agent && (
-        <ResizableHandle className="bg-divider" />
-      )}
-      {isSideChatOpen && mode === 'edit' && agent && (
-        <ResizablePanel
-          className="flex h-full min-h-0 flex-col"
-          collapsible
-          defaultSize={30}
-          maxSize={50}
-          minSize={20}
-        >
-          <div className="h-full min-h-0 overflow-hidden">
-            <ToolsProvider>
-              <AgentSideChat
-                agentId={agent.agent_id}
-                onClose={() => setIsSideChatOpen(false)}
-              />
-            </ToolsProvider>
-          </div>
-        </ResizablePanel>
+        <>
+          <ResizableHandle className="bg-divider" />
+          <ResizablePanel
+            className="flex h-full min-h-0 flex-col"
+            collapsible
+            defaultSize={30}
+            maxSize={50}
+            minSize={20}
+          >
+            <div className="h-full min-h-0 overflow-hidden">
+              <ToolsProvider>
+                <AgentSideChat
+                  agentId={agent.agent_id}
+                  onClose={() => setIsSideChatOpen(false)}
+                />
+              </ToolsProvider>
+            </div>
+          </ResizablePanel>
+        </>
       )}
     </ResizablePanelGroup>
   );
@@ -3040,11 +3000,9 @@ const ToolConfigModal = ({
     <Dialog onOpenChange={onOpenChange} open={isOpen}>
       <DialogContent
         className="flex max-h-[80vh] min-h-[600px] max-w-screen-md flex-col overflow-y-auto"
-        onInteractOutside={(e: Event) => {
+        onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        showCloseButton={false}
-        maxW={768}
       >
         <DialogClose asChild>
           <Button
@@ -3162,10 +3120,7 @@ const UploadFileDialog = ({
       }}
       open={!!isOpen}
     >
-      <DialogContent
-        className={cn('flex max-w-lg flex-col')}
-        showCloseButton={false}
-      >
+      <DialogContent className={cn('flex max-w-lg flex-col')}>
         <DialogClose
           className={cn(
             buttonVariants({

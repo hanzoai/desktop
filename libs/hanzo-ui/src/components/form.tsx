@@ -1,4 +1,5 @@
-import { Label } from '@hanzo/ui';
+import type * as LabelPrimitive from '@radix-ui/react-label';
+import { Slot } from '@radix-ui/react-slot';
 import * as React from 'react';
 import {
   Controller,
@@ -10,7 +11,7 @@ import {
 } from 'react-hook-form';
 
 import { cn } from '../utils';
-import { Slot } from './slot';
+import { Label } from './label';
 
 const Form = FormProvider;
 
@@ -86,7 +87,7 @@ FormItem.displayName = 'FormItem';
 const FormLabel = ({
   className,
   ...props
-}: React.ComponentProps<typeof Label>) => {
+}: React.ComponentProps<typeof LabelPrimitive.Root>) => {
   const { error, formItemId } = useFormField();
 
   return (

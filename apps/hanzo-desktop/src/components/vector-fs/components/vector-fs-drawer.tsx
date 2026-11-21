@@ -1,6 +1,10 @@
-import { DialogClose } from '@hanzo/desktop-ui';
-import { buttonVariants, Dialog, DialogContent } from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+import { DialogClose } from '@hanzo_network/hanzo-artifacts';
+import {
+  buttonVariants,
+  Dialog,
+  DialogContent,
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { XIcon } from 'lucide-react';
 
 import { useVectorFsStore } from '../context/vector-fs-context';
@@ -63,15 +67,13 @@ const VectorFSDrawer = () => {
             activeDrawerMenuOption === VectorFsFolderAction.Copy) &&
             'max-w-xl',
         )}
-        showCloseButton={false}
-        maxW={576}
       >
         <DialogClose
           className={cn(
             buttonVariants({ variant: 'tertiary', size: 'icon' }),
-            'absolute top-3 right-3 p-1',
+            'absolute right-3 top-3 p-1',
             activeDrawerMenuOption === VectorFsGlobalAction.VectorFileDetails &&
-              'top-5 right-5',
+              'right-5 top-5',
           )}
         >
           <XIcon className="size-4" />

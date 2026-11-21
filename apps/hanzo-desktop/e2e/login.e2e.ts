@@ -1,45 +1,36 @@
-// Real Tauri E2E — the sign-in control on the LIVE onboarding surface.
-//
-// The live main window is the converged Tamagui shell (`src/hanzo/Welcome.tsx`),
-// not the pre-convergence `/terms-conditions` route this spec used to drive. It
-// offers one cloud path ("Sign in with <Brand>") and one local path ("Continue
-// without an account"), both gated on the terms checkbox.
-//
-// The button is labelled with the ACTIVE BRAND, so the assertion is brand-driven
-// too: a Zoo build says "Sign in with Zoo" and a Lux build "Sign in with Lux".
-// Set BRAND to match the binary under test (brand-build.cjs sets the same value
-// as VITE_BRAND at build time).
-import { $, expect, waitForAppMounted } from './helpers';
+// Real Tauri E2E — the login control is present and behaves.
+// The onboarding screen always offers a "Login" button (cloud sign-in) and a
+// "Skip" button (local-only). The Login button is gated on accepting the terms
+// checkbox — a real interaction we exercise here, no mocks.
+import { $, expect, waitForAppMounted, navigateTo } from './helpers';
 
-const BRAND_NAME =
-  ({ hanzo: 'Hanzo', zoo: 'Zoo', lux: 'Lux' } as const)[
-    (process.env.BRAND ?? 'hanzo') as 'hanzo' | 'zoo' | 'lux'
-  ] ?? 'Hanzo';
-
-describe('sign in', () => {
+describe('login button', () => {
   before(async () => {
     await waitForAppMounted();
+    // Make sure we're on the onboarding/terms screen regardless of prior spec.
+    await navigateTo('/terms-conditions');
   });
 
-  it(`shows "Sign in with ${BRAND_NAME}" on the onboarding screen`, async () => {
-    const signIn = await $(`button=Sign in with ${BRAND_NAME}`);
-    await signIn.waitForExist({ timeout: 30000 });
-    await expect(signIn).toBeExisting();
+  it('shows the Login button on the onboarding screen', async () => {
+    const login = await $('button=Login');
+    await login.waitForExist({ timeout: 30000 });
+    await expect(login).toBeExisting();
   });
 
-  it('shows the local-only path alongside cloud sign-in', async () => {
-    await expect($('button=Continue without an account')).toBeExisting();
+  it('shows the local-only "Skip" path alongside cloud Login', async () => {
+    await expect($('button=Skip')).toBeExisting();
   });
 
-  it('enables sign-in only after the terms are accepted', async () => {
-    const signIn = await $(`button=Sign in with ${BRAND_NAME}`);
-    await expect(signIn).toBeDisabled();
+  it('enables Login only after the terms checkbox is accepted', async () => {
+    const login = await $('button=Login');
+    // Before accepting terms the button is disabled.
+    await expect(login).toBeDisabled();
 
-    // The terms row is the whole label — pressing it toggles the checkbox.
-    const terms = await $('*=I agree to the Terms of Service');
-    await terms.waitForClickable({ timeout: 15000 });
-    await terms.click();
+    // Accept the terms — the checkbox is a radix Checkbox (role=checkbox).
+    const checkbox = await $('[role="checkbox"]');
+    await checkbox.waitForClickable({ timeout: 15000 });
+    await checkbox.click();
 
-    await expect(signIn).toBeEnabled();
+    await expect(login).toBeEnabled();
   });
 });

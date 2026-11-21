@@ -1,4 +1,4 @@
-import { getToolsFromToolset as getToolsFromToolsetApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getToolsFromToolset as getToolsFromToolsetApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type GetToolsFromToolsetInput, type GetToolsFromToolsetOutput } from './types';
 

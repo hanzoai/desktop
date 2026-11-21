@@ -1,5 +1,5 @@
 {
-  "name": "@hanzo/desktop-node-state",
+  "name": "@hanzo_network/hanzo-node-state",
   "version": "0.0.1",
   "main": "./index.js",
   "types": "./index.d.ts",

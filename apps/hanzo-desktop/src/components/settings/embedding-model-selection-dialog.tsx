@@ -1,6 +1,6 @@
-import { useStartEmbeddingMigration } from '@hanzo/desktop-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
-import { useGetEmbeddingMigrationStatus } from '@hanzo/desktop-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
-import { useScanLocalModels } from '@hanzo/desktop-node-state/v2/queries/scanLocalModels/useScanLocalModels';
+import { useStartEmbeddingMigration } from '@hanzo_network/hanzo-node-state/v2/mutations/startEmbeddingMigration/useStartEmbeddingMigration';
+import { useGetEmbeddingMigrationStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
 import {
   Badge,
   Button,
@@ -14,7 +14,7 @@ import {
   Label,
   RadioGroup,
   RadioGroupItem,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { Edit3Icon } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -158,8 +158,7 @@ const EmbeddingModelSelectionDialog = () => {
           <RadioGroup
             value={selectedEmbeddingModel}
             onValueChange={setSelectedEmbeddingModel}
-            // gui bakes gap:$2 as a style prop, so `gap-1.5` lost the tie.
-            gap={6}
+            className="gap-1.5"
           >
             {availableEmbeddingModels.map((model) => (
               <div
@@ -198,7 +197,7 @@ const EmbeddingModelSelectionDialog = () => {
           </RadioGroup>
         </div>
 
-        <DialogFooter className="mt-8" flexDirection="column" gap={4}>
+        <DialogFooter className="mt-8 flex flex-col gap-1">
           <Button
             onClick={cancelMigration}
             disabled={isMigratingEmbedding}

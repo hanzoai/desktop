@@ -1,4 +1,4 @@
-import { getWalletBalance as getWalletBalanceApi } from '@hanzo/desktop-message-ts/api/wallets';
+import { getWalletBalance as getWalletBalanceApi } from '@hanzo_network/hanzo-message-ts/api/wallets';
 import { type GetWalletBalanceInput } from './types';
 
 export const getWalletBalance = async ({

@@ -1,5 +1,5 @@
 {
-  "name": "@hanzo/desktop-message-ts",
+  "name": "@hanzo_network/hanzo-message-ts",
   "version": "0.4.5",
   "description": "Hanzo Message TS wrapper for wasm library",
   "type": "module",
@@ -15,10 +15,10 @@
     "access": "public"
   },
   "dependencies": {
-    "@noble/ed25519": "catalog:",
-    "axios": "catalog:",
-    "curve25519-js": "catalog:",
-    "libsodium-wrappers-sumo": "catalog:"
+    "@noble/ed25519": "^3.2.0",
+    "axios": "^1.20.0",
+    "curve25519-js": "^0.0.4",
+    "libsodium-wrappers-sumo": "^0.8.4"
   },
   "exports": {
     ".": {

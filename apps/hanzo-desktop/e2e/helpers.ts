@@ -22,19 +22,16 @@ export async function waitForAppMounted(): Promise<void> {
 
 /**
  * Seed the *real* persisted zustand stores so the app boots as a returning,
- * signed-in user with onboarding finished — the same envelope the app writes
- * itself. This unlocks the post-onboarding surfaces WITHOUT mocking any IPC or
- * component behaviour. Cloud mode (`hanzo_token` present) is used so no local
- * node spawn is required.
+ * signed-in user with onboarding finished — the same localStorage envelope the
+ * app writes itself. This unlocks the ProtectedRoute surfaces (home, chat,
+ * mining) WITHOUT mocking any IPC or component behaviour. Cloud mode
+ * (`hanzo_token` present) is used so no local node spawn is required.
  *
- * The auth record no longer lives in localStorage — it persists to the OS
- * keychain through the `secure_storage_*` commands (see
- * `src/lib/secure-storage.ts`), so this writes through that same real command
- * rather than `localStorage.setItem`. `settings` is not a secret and still uses
- * localStorage.
+ * Onboarding is just two required steps (terms-conditions, analytics); marking
+ * both completed makes `isOnboardingComplete()` true.
  */
 export async function restoreSignedInSession(): Promise<void> {
-  await browser.execute(async () => {
+  await browser.execute(() => {
     const auth = {
       state: {
         auth: {
@@ -62,22 +59,19 @@ export async function restoreSignedInSession(): Promise<void> {
       },
       version: 0,
     };
-    await (
-      window as unknown as {
-        __TAURI_INTERNALS__: {
-          invoke: (cmd: string, args: unknown) => Promise<unknown>;
-        };
-      }
-    ).__TAURI_INTERNALS__.invoke('secure_storage_set', {
-      key: 'auth',
-      value: JSON.stringify(auth),
-    });
+    localStorage.setItem('auth', JSON.stringify(auth));
     localStorage.setItem('settings', JSON.stringify(settings));
   });
   await browser.refresh();
   await waitForAppMounted();
 }
 
+/**
+ * Navigate the in-app router (react-router `BrowserRouter`) to a path using
+ * client-side history — pushState + a `popstate` event, which react-router
+ * listens to — so we stay inside the real SPA instead of triggering a full
+ * document load the embedded protocol can't serve.
+ */
 export async function navigateTo(routePath: string): Promise<void> {
   await browser.execute((p: string) => {
     window.history.pushState({}, '', p);
