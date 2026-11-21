@@ -1,4 +1,5 @@
-import { CheckIcon, LoaderCircle } from 'lucide-react';
+import { CheckIcon } from '@radix-ui/react-icons';
+import { LoaderCircle } from 'lucide-react';
 import * as React from 'react';
 import { createContext, useContext } from 'react';
 
@@ -142,7 +143,8 @@ const StepperItem = ({
 StepperItem.displayName = 'StepperItem';
 
 // StepperTrigger
-interface StepperTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface StepperTriggerProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   asChild?: boolean;
 }
 
@@ -205,7 +207,8 @@ const StepperIndicator = ({
           </span>
           <CheckIcon
             aria-hidden="true"
-            className="absolute size-4 scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
+            className="absolute scale-0 opacity-0 transition-all group-data-[state=completed]/step:scale-100 group-data-[state=completed]/step:opacity-100"
+            // size={16}
             strokeWidth={2}
           />
           {isLoading && (

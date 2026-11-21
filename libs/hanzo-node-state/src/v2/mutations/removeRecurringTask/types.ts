@@ -1,5 +1,5 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
-import { type RemoveRecurringTaskResponse } from '@hanzo/desktop-message-ts/api/recurring-tasks/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
+import { type RemoveRecurringTaskResponse } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/types';
 
 export type RemoveRecurringTaskOutput = RemoveRecurringTaskResponse;
 

@@ -1,4 +1,4 @@
-import { type HanzoToolHeader } from '@hanzo/desktop-message-ts/api/tools/types';
+import { type HanzoToolHeader } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 
 export const formatText = (text: string | null | undefined) => {
   if (!text) return '';

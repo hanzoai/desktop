@@ -1,4 +1,4 @@
-import { getWalletList as getWalletListApi } from '@hanzo/desktop-message-ts/api/wallets';
+import { getWalletList as getWalletListApi } from '@hanzo_network/hanzo-message-ts/api/wallets';
 
 import { type GetWalletListInput } from './types';
 

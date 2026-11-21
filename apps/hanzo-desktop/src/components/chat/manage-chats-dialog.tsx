@@ -1,10 +1,10 @@
 /** biome-ignore-all lint/a11y/useSemanticElements: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils';
-import { useRemoveJob } from '@hanzo/desktop-node-state/v2/mutations/removeJob/useRemoveJob';
-import { useRemoveJobs } from '@hanzo/desktop-node-state/v2/mutations/removeMultipleJobs/useRemoveMultipleJobs';
-import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { useRemoveJob } from '@hanzo_network/hanzo-node-state/v2/mutations/removeJob/useRemoveJob';
+import { useRemoveJobs } from '@hanzo_network/hanzo-node-state/v2/mutations/removeMultipleJobs/useRemoveMultipleJobs';
+import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import {
   DialogClose,
   Button,
@@ -17,8 +17,8 @@ import {
   ScrollArea,
   SearchInput,
   Skeleton,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -245,7 +245,6 @@ export function ManageChatsDialog({
       <DialogContent
         showCloseButton
         className="flex h-[85vh] max-h-[700px] flex-col sm:max-w-[700px]"
-        maxW={700}
       >
         <DialogTitle className="text-lg">
           {t('chat.actions.manageChats')}
@@ -266,7 +265,12 @@ export function ManageChatsDialog({
         </div>
 
         <ScrollArea className="min-h-0 flex-1 pr-4 [&>div>div]:!block">
-          <div className={cn('py-1.5', selectedInboxIds.size > 0 && 'pb-20')}>
+          <div
+            className={cn(
+              'py-1.5',
+              selectedInboxIds.size > 0 && 'pb-20',
+            )}
+          >
             {isPending &&
               Array.from({ length: 6 }).map((_, index) => (
                 <Skeleton
@@ -341,7 +345,7 @@ export function ManageChatsDialog({
                       checked={isSelected}
                       className="shrink-0"
                       onCheckedChange={() => handleToggleSelect(inbox.inbox_id)}
-                      onClick={(e: any) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex flex-1 cursor-pointer items-center gap-3 overflow-hidden">
                       <span className="text-text-default truncate text-sm font-medium">

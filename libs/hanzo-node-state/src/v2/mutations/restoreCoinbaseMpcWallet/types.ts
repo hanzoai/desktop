@@ -1,9 +1,9 @@
-import { type Token } from '@hanzo/desktop-message-ts/api/general/types';
+import { type Token } from '@hanzo_network/hanzo-message-ts/api/general/types';
 import {
   type NetworkIdentifier,
   type RestoreCoinbaseMPCWalletResponse,
   type WalletRole,
-} from '@hanzo/desktop-message-ts/api/wallets';
+} from '@hanzo_network/hanzo-message-ts/api/wallets';
 
 export type RestoreCoinbaseMpcWalletInput = Token & {
   nodeAddress: string;

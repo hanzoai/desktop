@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useImportTool } from '@hanzo/desktop-node-state/v2/mutations/importTool/useImportTool';
-import { useImportToolZip } from '@hanzo/desktop-node-state/v2/mutations/importToolZip/useImportToolZip';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useImportTool } from '@hanzo_network/hanzo-node-state/v2/mutations/importTool/useImportTool';
+import { useImportToolZip } from '@hanzo_network/hanzo-node-state/v2/mutations/importToolZip/useImportToolZip';
 import {
   Button,
   buttonVariants,
@@ -20,10 +20,10 @@ import {
   FormLabel,
   FormMessage,
   TextField,
-} from '@hanzo/desktop-ui';
-import { ImportIcon } from '@hanzo/desktop-ui/assets';
-import { useMeasure } from '@hanzo/desktop-ui/hooks';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { ImportIcon } from '@hanzo_network/hanzo-ui/assets';
+import { useMeasure } from '@hanzo_network/hanzo-ui/hooks';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Link, Package2Icon, XIcon } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
@@ -311,10 +311,9 @@ export default function ImportToolModal() {
       </DialogTrigger>
       <DialogContent
         className="max-w-[500px]"
-        onInteractOutside={(e: Event) => {
+        onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        showCloseButton={false}
       >
         <motion.div
           animate={{

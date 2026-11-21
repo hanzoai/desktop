@@ -34,6 +34,9 @@
   "exportConnection": {
     "restoreText": "Gunakan dengan frasa sandi Anda untuk memulihkan koneksi ke Node Zoo Anda"
   },
+  "extension": {
+    "welcome": "Transformasikan pengalaman menjelajah web Anda menggunakan kecerdasan buatan dengan Zoo Visor ✨"
+  },
   "feedback": {
     "description": "Kami menghargai umpan balik Anda! Silakan beri tahu kami pendapat Anda tentang Zoo dan bagaimana kami dapat meningkatkan pengalaman Anda."
   },

@@ -1,4 +1,4 @@
-import { getToolPlaygroundMetadata as getToolPlaygroundMetadataApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { getToolPlaygroundMetadata as getToolPlaygroundMetadataApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type GetToolPlaygroundMetadataInput, type GetToolPlaygroundMetadataOutput } from './types';
 

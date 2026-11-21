@@ -1,14 +1,14 @@
 import { type FormProps } from '@rjsf/core';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type ToolMetadata } from '@hanzo/desktop-message-ts/api/tools/types';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type ToolMetadata } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   buildInboxIdFromJobId,
   extractJobIdFromInbox,
-} from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useCreateToolCode } from '@hanzo/desktop-node-state/v2/mutations/createToolCode/useCreateToolCode';
-import { useCreateToolMetadata } from '@hanzo/desktop-node-state/v2/mutations/createToolMetadata/useCreateToolMetadata';
-import { useExecuteToolCode } from '@hanzo/desktop-node-state/v2/mutations/executeToolCode/useExecuteToolCode';
-import { useUpdateToolCodeImplementation } from '@hanzo/desktop-node-state/v2/mutations/updateToolCodeImplementation/useUpdateToolCodeImplementation';
+} from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useCreateToolCode } from '@hanzo_network/hanzo-node-state/v2/mutations/createToolCode/useCreateToolCode';
+import { useCreateToolMetadata } from '@hanzo_network/hanzo-node-state/v2/mutations/createToolMetadata/useCreateToolMetadata';
+import { useExecuteToolCode } from '@hanzo_network/hanzo-node-state/v2/mutations/executeToolCode/useExecuteToolCode';
+import { useUpdateToolCodeImplementation } from '@hanzo_network/hanzo-node-state/v2/mutations/updateToolCodeImplementation/useUpdateToolCodeImplementation';
 import { debug } from '@tauri-apps/plugin-log';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';

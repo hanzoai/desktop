@@ -1,4 +1,4 @@
-import { useScanLocalModels } from '@hanzo/desktop-node-state/v2/queries/scanLocalModels/useScanLocalModels';
+import { useScanLocalModels } from '@hanzo_network/hanzo-node-state/v2/queries/scanLocalModels/useScanLocalModels';
 import {
   Card,
   CardContent,
@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
   ScrollArea,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Database } from 'lucide-react';
 
 import { ModelProvider } from '../ais/constants';
@@ -46,15 +46,9 @@ export const LocalModels = ({ className }: { className?: string }) => {
           <div className="grid grid-cols-1 gap-3 pb-4 md:grid-cols-2">
             {models.map((model) => (
               <Card key={model.model} className="flex flex-col">
-                <CardHeader
-                  className="flex flex-row items-center gap-3 p-4 pb-2"
-                  flexDirection="row"
-                >
+                <CardHeader className="flex flex-row items-center gap-3 p-4 pb-2">
                   <div className="flex h-7 w-7 items-center justify-center">
-                    <ProviderIcon
-                      model={model.model}
-                      provider={ModelProvider.OpenAI}
-                    />
+                    <ProviderIcon provider={ModelProvider.OpenAI} />
                   </div>
                   <div className="flex flex-col">
                     <CardTitle className="text-sm font-medium">

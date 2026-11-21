@@ -1,11 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateAgentInJob } from '@hanzo/desktop-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateAgentInJob } from '@hanzo_network/hanzo-node-state/v2/mutations/updateAgentInJob/useUpdateAgentInJob';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import {
   Badge,
   CommandShortcut,
@@ -18,10 +18,11 @@ import {
   DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { BotIcon, ChevronDownIcon } from 'lucide-react';
 import { memo, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
@@ -70,7 +71,6 @@ export function AIModelSelectorToolsBase({
       return (
         <ProviderIcon
           className="mx-1 size-4"
-          model={selectedProvider.model}
           provider={selectedProvider.model.split(':')[0]}
         />
       );
@@ -107,12 +107,8 @@ export function AIModelSelectorToolsBase({
   }, [llmProviders]);
 
   return (
-    <DropdownMenu
-      onOpenChange={setIsDialogOpen}
-      open={isDialogOpen}
-      placement="bottom-start"
-    >
-      <Tooltip placement="top">
+    <DropdownMenu onOpenChange={setIsDialogOpen} open={isDialogOpen}>
+      <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
             <button
@@ -149,26 +145,35 @@ export function AIModelSelectorToolsBase({
             </button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent className="flex flex-col gap-1">
-          <span className="text-text-default text-center text-xs">
-            {t('llmProviders.switch')}
-          </span>
-          {isRegularChatPage && (
-            <div className="flex items-center gap-4 text-left">
-              <div className="text-text-secondary flex items-center justify-center gap-2 text-xs">
-                <CommandShortcut>⌘ [</CommandShortcut> or
-                <CommandShortcut>⌘ ]</CommandShortcut>
+        <TooltipPortal>
+          <TooltipContent
+            align="center"
+            className="flex flex-col gap-1"
+            side="top"
+          >
+            <span className="text-text-default text-center text-xs">
+              {t('llmProviders.switch')}
+            </span>
+            {isRegularChatPage && (
+              <div className="flex items-center gap-4 text-left">
+                <div className="text-text-secondary flex items-center justify-center gap-2 text-xs">
+                  <CommandShortcut>⌘ [</CommandShortcut> or
+                  <CommandShortcut>⌘ ]</CommandShortcut>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="text-text-secondary text-xs">
+                    Prev / Next AI
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-text-secondary text-xs">
-                  Prev / Next AI
-                </span>
-              </div>
-            </div>
-          )}
-        </TooltipContent>
+            )}
+          </TooltipContent>
+        </TooltipPortal>
       </Tooltip>
-      <DropdownMenuContent maxW={400} overflow="scroll">
+      <DropdownMenuContent
+        align="start"
+        className="size-full max-h-[60vh] w-full max-w-[400px] overflow-y-auto border p-1 py-2"
+      >
         <div className="space-y-1 px-2 py-2">
           <DropdownMenuLabel>Best Models for Tool Builder</DropdownMenuLabel>
           <p className="text-text-secondary text-xs">
@@ -187,7 +192,6 @@ export function AIModelSelectorToolsBase({
                 <div className="bg-bg-secondary border-divider flex size-5 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                   <ProviderIcon
                     className="mt-0.5 size-3 shrink-0"
-                    model={llmProvider.model}
                     provider={llmProvider.model.split(':')[0]}
                   />
                 </div>
@@ -224,7 +228,6 @@ export function AIModelSelectorToolsBase({
               <div className="bg-bg-secondary border-divider flex size-5 shrink-0 items-center justify-center gap-2 rounded-lg border p-2">
                 <ProviderIcon
                   className="mt-0.5 size-4 shrink-0"
-                  model={llmProvider.model}
                   provider={llmProvider.model.split(':')[0]}
                 />
               </div>

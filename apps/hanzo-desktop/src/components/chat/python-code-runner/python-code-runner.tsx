@@ -1,9 +1,9 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { addFileToJob } from '@hanzo/desktop-message-ts/api/jobs/index';
-import { type DirectoryContent } from '@hanzo/desktop-message-ts/api/vector-fs/types';
-import { useGetDownloadFile } from '@hanzo/desktop-node-state/v2/queries/getDownloadFile/useGetDownloadFile';
-import { useGetJobContents } from '@hanzo/desktop-node-state/v2/queries/getJobContents/useGetJobContents';
-import { Button } from '@hanzo/desktop-ui';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { addFileToJob } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
+import { type DirectoryContent } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
+import { useGetDownloadFile } from '@hanzo_network/hanzo-node-state/v2/queries/getDownloadFile/useGetDownloadFile';
+import { useGetJobContents } from '@hanzo_network/hanzo-node-state/v2/queries/getJobContents/useGetJobContents';
+import { Button } from '@hanzo_network/hanzo-ui';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { AnimatePresence, motion } from 'framer-motion';

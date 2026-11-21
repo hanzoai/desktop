@@ -33,6 +33,9 @@
   "exportConnection": {
     "restoreText": "使用您的密码短语来恢复与 Zoo 节点的连接"
   },
+  "extension": {
+    "welcome": "使用 Zoo Visor ✨ 变革您的网页浏览体验"
+  },
   "galxe": {
     "errors": {
       "registerDesktopInstallation": "注册Zoo Desktop安装时出错。请确保您的EVM地址之前未用于注册其他安装。"

@@ -1,7 +1,5 @@
 import { create } from 'zustand';
-import { createJSONStorage, devtools, persist } from 'zustand/middleware';
-
-import { secureStorage } from '../lib/secure-storage';
+import { devtools, persist } from 'zustand/middleware';
 
 export type Auth = {
   profile: string;
@@ -32,13 +30,6 @@ export const useAuth = create<AuthStore>()(
       }),
       {
         name: 'auth',
-        // This record holds the node API key and the IAM bearer/refresh tokens.
-        // It used to persist to localStorage — plaintext on disk, readable by
-        // anything running in the webview. It now goes to the OS keychain via
-        // the `secure_storage_*` commands, scoped to the running bundle's
-        // identifier so brands never share an entry. `persist` accepts an async
-        // storage and rehydrates when the read resolves.
-        storage: createJSONStorage(() => secureStorage),
       },
     ),
   ),

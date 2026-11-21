@@ -1,4 +1,7 @@
 {
+  "extension": {
+    "welcome": "Transform your web browsing experience using AI with Zoo Visor ✨"
+  },
   "desktop": {
     "welcome": "Welcome to Zoo",
     "welcomeDescription": "<b>Zoo AI lets you build AI agents in minutes — fast, private, and secure.</b> Run locally, collaborate through a decentralized network, and create AI workflows effortlessly. ",

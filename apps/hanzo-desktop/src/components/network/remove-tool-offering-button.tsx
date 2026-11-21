@@ -1,5 +1,5 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { useRemoveToolOffering } from '@hanzo/desktop-node-state/v2/mutations/removeToolOffering/useRemoveToolOffering';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { useRemoveToolOffering } from '@hanzo_network/hanzo-node-state/v2/mutations/removeToolOffering/useRemoveToolOffering';
 import {
   DialogClose,
   Button,
@@ -13,8 +13,8 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 
 import { EyeOffIcon } from 'lucide-react';
 import { useState } from 'react';
@@ -57,7 +57,7 @@ export default function RemoveToolOfferingButton({
 
   return (
     <Dialog onOpenChange={setIsOpen} open={isOpen}>
-      <Tooltip placement="top">
+      <Tooltip>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
             <button
@@ -73,11 +73,11 @@ export default function RemoveToolOfferingButton({
             </button>
           </DialogTrigger>
         </TooltipTrigger>
-        <TooltipContent>
+        <TooltipContent align="center" side="top">
           {t('networkAgentsPage.removeToolOffering')}
         </TooltipContent>
       </Tooltip>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
           {t('networkAgentsPage.removeToolOffering')}
         </DialogTitle>

@@ -1,11 +1,12 @@
 import {
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { PromptLibraryIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { PromptLibraryIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { memo } from 'react';
 
 import { usePromptSelectionStore } from '../../prompt/context/prompt-selection-context';
@@ -24,8 +25,8 @@ function PromptSelectionActionBarBase({
 
   if (!showLabel) {
     return (
-      <TooltipProvider delay={0}>
-        <Tooltip placement="top">
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <button
               className={cn(actionButtonClassnames)}
@@ -38,7 +39,11 @@ function PromptSelectionActionBarBase({
               <PromptLibraryIcon className="h-full w-full" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>Prompt Library</TooltipContent>
+          <TooltipPortal>
+            <TooltipContent align="center" side="top">
+              Prompt Library
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
     );

@@ -8,12 +8,11 @@ use hyper::{Method, Request, Response, StatusCode};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use thiserror::Error;
-#[cfg(unix)]
 use tokio::net::UnixStream;
 use tokio::sync::mpsc;
 
 use super::socket::machined_socket_path;
-use super::types::{ExecFrame, Health, Machine, MachineEvent, MachineSpec};
+use super::types::{ExecFrame, ExecStream, Health, Machine, MachineEvent, MachineSpec};
 
 #[derive(Debug, Error)]
 pub enum MachinedError {
@@ -161,7 +160,6 @@ impl MachinedClient {
         Ok(())
     }
 
-    #[cfg(unix)]
     async fn raw_request(
         &self,
         method: Method,
@@ -194,22 +192,6 @@ impl MachinedClient {
         let req = builder.body(Full::new(req_body))?;
         let res = sender.send_request(req).await.map_err(MachinedError::Send)?;
         Ok(res)
-    }
-
-    #[cfg(not(unix))]
-    async fn raw_request(
-        &self,
-        _method: Method,
-        _path: &str,
-        _body: Option<Bytes>,
-    ) -> Result<Response<Incoming>, MachinedError> {
-        Err(MachinedError::Connect {
-            path: self.socket.clone(),
-            source: std::io::Error::new(
-                std::io::ErrorKind::Unsupported,
-                "hanzo-machined UNIX socket is not supported on Windows",
-            ),
-        })
     }
 }
 
@@ -312,7 +294,7 @@ async fn stream_sse(
     let mut event_name: Option<String> = None;
     let mut data_buf = String::new();
 
-    let flush =
+    let mut flush =
         |event_name: &mut Option<String>, data_buf: &mut String| -> Option<MachineEvent> {
             if data_buf.is_empty() {
                 event_name.take();
@@ -447,9 +429,8 @@ impl<T: AsyncWrite + Unpin> Write for TokioIo<T> {
 // Tests
 // =========================================================================
 
-#[cfg(all(test, unix))]
+#[cfg(test)]
 mod tests {
-    use super::super::types::ExecStream;
     use super::*;
     use std::convert::Infallible;
     use std::sync::Arc;

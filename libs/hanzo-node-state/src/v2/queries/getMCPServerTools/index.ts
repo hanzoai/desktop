@@ -1,4 +1,4 @@
-import { getMcpServerTools as getMcpServerToolsApi } from '@hanzo/desktop-message-ts/api/mcp-servers/index';
+import { getMcpServerTools as getMcpServerToolsApi } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/index';
 
 import type { GetMcpServerToolsInput } from './types';
 

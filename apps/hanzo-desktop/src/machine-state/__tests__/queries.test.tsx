@@ -67,10 +67,7 @@ beforeEach(() => {
 
 describe('useMachines', () => {
   it('returns the list from machine_list and subscribes to events', async () => {
-    const machines = [
-      machineFixture({ name: 'a' }),
-      machineFixture({ name: 'b' }),
-    ];
+    const machines = [machineFixture({ name: 'a' }), machineFixture({ name: 'b' })];
     invokeMock.mockImplementation(async (cmd: string) => {
       if (cmd === 'machine_list') return machines;
       if (cmd === 'machine_events_subscribe') return undefined;

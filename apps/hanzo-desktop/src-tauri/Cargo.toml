@@ -1,26 +1,25 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.59"
+version = "0.0.0"
 description = "A first class Desktop application to interact with Hanzo Node"
-authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
-license = "Apache-2.0"
-repository = "https://github.com/hanzoai/desktop"
+authors = ["nico@dcspark.io"]
+license = ""
+repository = ""
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "2.6", features = [] }
+tauri-build = { version = "2.4.0", features = [] }
 
 [dependencies]
-tauri = { version = "2.11", features = [ "macos-private-api", "tray-icon", "image-png", "devtools"] }
+tauri = { version = "2.4", features = [ "macos-private-api", "tray-icon", "image-png", "devtools"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
-mdns-sd = "0.20.1"
 lazy_static = "1.4.0"
-tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "rt", "net", "sync", "io-util", "time"] }
+tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "rt", "net", "sync", "io-util"] }
 chrono = "0.4.38"
 futures-util = "0.3"
 regex = "1.10.4"
@@ -43,31 +42,13 @@ base64 = "0.22.1"
 time = "^0.3.36"
 listeners = "0.2"
 log = "0.4"
-# Scrubs key material and credentials out of every log record (and the log
-# files older builds left on disk). See log-redact/src/lib.rs.
-hanzo-log-redact = { path = "log-redact" }
-hanzo-node-secret = { path = "node-secret" }
-# Finds a local hanzo-server, or says there is none (cloud#760). See engine-bin/src/lib.rs.
-hanzo-engine-bin = { path = "engine-bin" }
-# Finds Hanzo Dev, or names the release the app fetches so a local run needs no terminal. See dev-agent/src/lib.rs.
-hanzo-dev-agent = { path = "dev-agent" }
-# The project folders Auto can pick from. See projects/src/lib.rs.
-hanzo-projects = { path = "projects" }
-# The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
-# sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
-hanzo-node-env = { path = "node-env" }
 anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
 kill_tree = { version = "0.2", features = ["tokio"] }
 semver = "1.0"
 sha2 = "0.10"
 rand = "0.8"
-# The OS keychain on every platform the app ships for: Keychain on macOS, the
-# Credential Manager on Windows, the Secret Service (libsecret, over D-Bus) on
-# Linux. keyring 3 has NO default store: with no feature it is the mock, whose
-# entries live and die with one `Entry`, so a session written at sign-in was
-# gone by the reload that follows it and the app came back signed out.
-keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+keyring = "3.6"
 
 # hanzo-machined client (UNIX-socket HTTP/JSON)
 hyper = { version = "1.4", features = ["client", "http1"] }
@@ -82,14 +63,14 @@ hanzo-mining = "1.1.21"
 
 tauri-plugin-global-shortcut = "2.3"
 tauri-plugin-shell = "2.3"
-tauri-plugin-single-instance = { version = "2.4", features = ["deep-link"] }
-tauri-plugin-updater = "2.10"
-tauri-plugin-dialog = "2.7"
-tauri-plugin-fs = "2.5"
-tauri-plugin-os = "2.3"
+tauri-plugin-single-instance = { version = "2.3", features = ["deep-link"] }
+tauri-plugin-updater = "2.9"  
+tauri-plugin-dialog = "2.3"
+tauri-plugin-fs ="2.2"
+tauri-plugin-os = "2.2"
 tauri-plugin-process = "2.3"
-tauri-plugin-log = "~2.9"
-tauri-plugin-deep-link = "2.4"
+tauri-plugin-log = "2.6"
+tauri-plugin-deep-link = "2.2.0"
 tauri-plugin-opener = "2.5"
 tauri-plugin-notification = "2.3"
 tauri-plugin-http = "2.5"
@@ -103,40 +84,24 @@ fips204 = "0.4"
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
 # --- Native Hanzo Engine (embedded, in-process) -----------------------------
-# In-process LLM inference via hanzoai/engine, pinned to a release tag. The engine workspace was
+# In-process LLM inference via the Hanzo Engine fork at ~/work/hanzo/engine
+# (../../../../engine relative to this manifest). The engine workspace was
 # rebranded mistralrs-* -> hanzo-*: `hanzo` is the high-level SDK, `hanzo-engine`
-# is the core. Optional and OFF by default so the standard build stays light. Enable with the
+# is the core. Optional and OFF by default so the standard build stays light and
+# does not require the engine repo checked out as a sibling. Enable with the
 # `native-engine` feature plus a backend, e.g.
 #   cargo build --release --features "native-engine metal"   (Apple Silicon)
 #   cargo build --release --features "native-engine cuda"    (NVIDIA)
-#   cargo build --release --features "native-engine vulkan"  (AMD/Linux)
-hanzo = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
-hanzo-engine = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
+hanzo = { path = "../../../../engine/hanzo", optional = true }
+hanzo-engine = { path = "../../../../engine/hanzo-engine", optional = true }
 # The canonical server: the SAME crate `hanzo serve` builds on. The desktop's
 # embedded engine reuses its `HanzoForServerBuilder` (state) +
 # `HanzoServerRouterBuilder` (axum Router) instead of a hand-rolled server, so
 # the node serves /v1/chat/completions, /v1/responses and /v1/messages
 # identically. `default-features = false` drops the bundled swagger-ui (the
 # inference routes don't need it; the builder gates docs behind that feature).
-hanzo-server-core = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true, default-features = false }
+hanzo-server-core = { path = "../../../../engine/hanzo-server-core", optional = true, default-features = false }
 axum = { version = "0.8", optional = true }
-
-# SIGTERM the managed GPU-fleet / studio children so they mark the machine
-# offline (fleet) and shut down cleanly, instead of a hard SIGKILL that waits
-# out the heartbeat window. Already in the dependency tree.
-[target.'cfg(unix)'.dependencies]
-libc = "0.2"
-# The ZAP router (commands/browser.rs): Desktop embeds it, as every hanzo-mcp
-# does, and reaches the user's browser through the Hanzo extension. A tag, not
-# crates.io: crates.io stops at 1.1.2, before the extension could join the door
-# without pairing (1.1.4) and before the door took 9998 (1.1.5).
-zapd = { git = "https://github.com/zap-proto/zapd", tag = "v1.1.5" }
-
-# WebKitGTK denies `getUserMedia` unless the app answers its permission-request
-# signal (windows/microphone.rs). Pinned to what tauri-runtime-wry links, so
-# cargo unifies on one binding rather than two views of the same C library.
-[target.'cfg(target_os = "linux")'.dependencies]
-webkit2gtk = { version = "=2.0", features = ["v2_40"] }
 
 [dev-dependencies]
 tempfile = "3"
@@ -148,7 +113,7 @@ default = ["machine"]
 custom-protocol = ["tauri/custom-protocol"]
 
 # hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
-# Other brands can opt out by disabling default-features.
+# Brand-specific configs (zoo, liquidity) can opt out by disabling default-features.
 machine = []
 
 # Embed the native Hanzo Engine for in-process inference. This runs the canonical
@@ -161,7 +126,5 @@ native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:hanzo-server-core", "dep:
 # a backend never force-enables the engine unless `native-engine` is also on.
 metal = ["hanzo?/metal", "hanzo-engine?/metal", "hanzo-server-core?/metal"]
 cuda = ["hanzo?/cuda", "hanzo-engine?/cuda", "hanzo-server-core?/cuda"]
-vulkan = ["hanzo?/vulkan", "hanzo-engine?/vulkan", "hanzo-server-core?/vulkan"]
 accelerate = ["hanzo-engine?/accelerate", "hanzo-server-core?/accelerate"]
 flash-attn = ["hanzo?/flash-attn", "hanzo-server-core?/flash-attn"]
-

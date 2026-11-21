@@ -29,6 +29,9 @@
   "exportConnection": {
     "restoreText": "パスフレーズと一緒に使用して、接続をZooノードに復元します"
   },
+  "extension": {
+    "welcome": "Zoo Visorを使用してAIでWebブラウジング体験を変えましょう ✨"
+  },
   "galxe": {
     "errors": {
       "registerDesktopInstallation": "Zoo Desktopのインストールを登録する際にエラーが発生しました。以前に使用されたEVMアドレスを確認してください。"

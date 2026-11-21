@@ -1,5 +1,5 @@
-import { type Agent } from '@hanzo/desktop-message-ts/api/agents/types';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+import { type Agent } from '@hanzo_network/hanzo-message-ts/api/agents/types';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import { useMemo } from 'react';
 
 import { useAuth } from '../store/auth';

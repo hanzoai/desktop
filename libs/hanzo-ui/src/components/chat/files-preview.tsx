@@ -1,13 +1,14 @@
+import { DialogClose } from '@radix-ui/react-dialog';
 import {
   type Attachment,
   FileTypeSupported,
-} from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
+} from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
 import { partial } from 'filesize';
-import { AnimatePresence, type HTMLMotionProps, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CircleSlashIcon, XIcon } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -21,12 +22,15 @@ import {
 } from '../../assets/icons';
 import { getFileExt } from '../../helpers/file';
 import { cn } from '../../utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@hanzo/ui';
+import { Avatar, AvatarFallback, AvatarImage } from '../avatar';
 import { Button } from '../button';
-import { Dialog, DialogContent, Tooltip, TooltipContent } from '@hanzo/ui';
-// The repaired parts, not @hanzo/ui's originals — see ../gui-repairs. Imported
-// from the module rather than ../index because ../index re-exports this file.
-import { DialogClose, TooltipTrigger } from '../gui-repairs';
+import { Dialog, DialogContent } from '../dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipPortal,
+  TooltipTrigger,
+} from '../tooltip';
 import { SqlitePreview } from './sqlite-preview';
 
 export type FileListProps = {
@@ -106,8 +110,12 @@ const ImagePreview = ({
     className="border-divider hover:bg-bg-secondary flex h-14 w-full max-w-[210px] min-w-[210px] shrink-0 cursor-pointer items-center gap-2 rounded-md border py-1.5 pr-1.5 pl-2 text-left"
     onClick={() => onFullscreen(true)}
   >
-    <Avatar bg="$color4" circular={false} rounded="$1" size={40}>
-      <AvatarImage alt={name} src={url} />
+    <Avatar className="bg-bg-quaternary text-text-default flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xs transition-colors">
+      <AvatarImage
+        alt={name}
+        className="border-divider aspect-square h-full w-full rounded-xs border object-cover"
+        src={url}
+      />
       <AvatarFallback>
         <CircleSlashIcon className="text-text-secondary h-4 w-4" />
       </AvatarFallback>
@@ -359,7 +367,7 @@ const CsvPreview = ({
       </div>
       <div className="bg-bg-default relative flex-1 overflow-auto">
         <table className="min-w-full border-collapse text-left text-xs">
-          <thead className="bg-bg-tertiary sticky top-0 z-10">
+          <thead className="sticky top-0 z-10 bg-bg-tertiary">
             <tr>
               {Array.from({ length: columnCount }).map((_, index) => (
                 <th
@@ -381,7 +389,7 @@ const CsvPreview = ({
               >
                 {Array.from({ length: columnCount }).map((_, columnIndex) => (
                   <td
-                    className="border-divider text-text-secondary border px-3 py-2 align-top whitespace-pre-line"
+                    className="border-divider text-text-secondary whitespace-pre-line border px-3 py-2 align-top"
                     key={`cell-${rowIndex}-${columnIndex}`}
                   >
                     {row?.[columnIndex] ?? ''}
@@ -394,8 +402,7 @@ const CsvPreview = ({
       </div>
       {(isRowTruncated || isColumnTruncated) && (
         <div className="text-text-secondary border-divider bg-bg-secondary border-t px-4 py-2 text-xs">
-          Preview truncated for performance. Download the file to view it in
-          full.
+          Preview truncated for performance. Download the file to view it in full.
         </div>
       )}
     </div>
@@ -531,10 +538,7 @@ p { color: var(--color-text-secondary); }
 
     if (hasHtmlTag) {
       if (hasHeadTag) {
-        return trimmed.replace(
-          /<head[^>]*>/i,
-          (match) => `${match}${styleTag}`,
-        );
+        return trimmed.replace(/<head[^>]*>/i, (match) => `${match}${styleTag}`);
       }
 
       return trimmed.replace(
@@ -671,10 +675,7 @@ const FullscreenDialog = ({
   isOpeningInSystem?: boolean;
 }) => (
   <Dialog onOpenChange={setOpen} open={open}>
-    <DialogContent className="flex size-full max-h-[99vh] max-w-[99vw] flex-col gap-2 bg-transparent p-1 py-8"
-      showCloseButton={false}
-      maxW={'99vw'}
-    >
+    <DialogContent className="flex size-full max-h-[99vh] max-w-[99vw] flex-col gap-2 bg-transparent p-1 py-8">
       <div className="flex w-full items-center justify-between gap-16 px-10">
         <div className="text-text-default max-w-3xl truncate text-left text-sm">
           {name}
@@ -766,13 +767,15 @@ export const FilePreview = ({
   );
 
   return (
-    <Tooltip placement="top">
+    <Tooltip>
       <TooltipTrigger asChild>
         <div>{children}</div>
       </TooltipTrigger>
-      <TooltipContent className="container break-words">
-        <p>{fileName}</p>
-      </TooltipContent>
+      <TooltipPortal>
+        <TooltipContent className="container break-words" side="top">
+          <p>{fileName}</p>
+        </TooltipContent>
+      </TooltipPortal>
       <FullscreenDialog
         content={content}
         blob={blob}
@@ -833,7 +836,7 @@ export const FilePreview = ({
   );
 };
 
-const animations: HTMLMotionProps<'li'> = {
+const animations = {
   initial: { scale: 0.97, opacity: 0, y: 10 },
   animate: {
     scale: 1,

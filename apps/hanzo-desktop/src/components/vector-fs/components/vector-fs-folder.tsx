@@ -1,5 +1,6 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type DirectoryContent } from '@hanzo/desktop-message-ts/api/vector-fs/types';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type DirectoryContent } from '@hanzo_network/hanzo-message-ts/api/vector-fs/types';
 import {
   buttonVariants,
   Checkbox,
@@ -10,23 +11,19 @@ import {
   DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AISearchContentIcon,
   CreateAIIcon,
   DirectoryTypeIcon,
   SharedFolderIcon,
-} from '@hanzo/desktop-ui/assets';
-import { formatDateToUSLocaleString } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
-import {
-  CopyIcon,
-  EllipsisVerticalIcon,
-  FolderInputIcon,
-  TrashIcon,
-} from 'lucide-react';
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatDateToUSLocaleString } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
+import { CopyIcon, FolderInputIcon, TrashIcon } from 'lucide-react';
 import React from 'react';
 import { useNavigate } from 'react-router';
 
@@ -127,8 +124,8 @@ const VectorFsFolder = ({
         layout={layout}
         totalItem={totalItem}
       />
-      <TooltipProvider delay={0}>
-        <Tooltip placement="top">
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <div
               className={cn(
@@ -152,12 +149,14 @@ const VectorFsFolder = ({
               <CreateAIIcon className="w-full" />
             </div>
           </TooltipTrigger>
-          <TooltipContent>
-            <p>{t('chat.create')}</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent side="top">
+              <p>{t('chat.create')}</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
-      <DropdownMenu modal={false} placement="bottom-end">
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div
             className={cn(
@@ -173,10 +172,10 @@ const VectorFsFolder = ({
             tabIndex={0}
           >
             <span className="sr-only">{t('common.moreOptions')}</span>
-            <EllipsisVerticalIcon className="text-text-secondary size-4" />
+            <DotsVerticalIcon className="text-text-secondary" />
           </div>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
+        <DropdownMenuContent align="end" className="min-w-[160px] px-2.5 py-2">
           {[
             {
               name: t('vectorFs.actions.move'),
@@ -219,7 +218,7 @@ const VectorFsFolder = ({
                 )}
                 <DropdownMenuItem
                   key={option.name}
-                  onClick={(event: React.MouseEvent) => {
+                  onClick={(event) => {
                     event.stopPropagation();
                     option?.onClick();
                     setSelectedFolder(folder);

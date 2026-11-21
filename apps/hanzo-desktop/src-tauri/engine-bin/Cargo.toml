@@ -1,9 +1,0 @@
-[package]
-name = "hanzo-engine-bin"
-version = "0.1.0"
-edition = "2021"
-publish = false
-description = "Finds the local hanzo-server (Hanzo Engine) binary the desktop may spawn, or says there is none"
-license = "Apache-2.0"
-
-[dependencies]

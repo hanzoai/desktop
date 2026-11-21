@@ -1,4 +1,4 @@
-import { deleteMcpServer as deleteMcpServerApi } from '@hanzo/desktop-message-ts/api/mcp-servers/index';
+import { deleteMcpServer as deleteMcpServerApi } from '@hanzo_network/hanzo-message-ts/api/mcp-servers/index';
 
 import { type DeleteMcpServerInput } from './types';
 

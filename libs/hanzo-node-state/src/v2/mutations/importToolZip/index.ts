@@ -1,4 +1,4 @@
-import { importToolZip as importToolZipApi } from '@hanzo/desktop-message-ts/api/tools/index';
+import { importToolZip as importToolZipApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { type ImportToolFromZipInput } from './types';
 

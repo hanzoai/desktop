@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useUpdateChatConfig } from '@hanzo/desktop-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
-import { useGetChatConfig } from '@hanzo/desktop-node-state/v2/queries/getChatConfig/useGetChatConfig';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { PopoverClose } from '@radix-ui/react-popover';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useUpdateChatConfig } from '@hanzo_network/hanzo-node-state/v2/mutations/updateChatConfig/useUpdateChatConfig';
+import { useGetChatConfig } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConfig/useGetChatConfig';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import {
   Button,
   Form,
@@ -31,11 +32,10 @@ import {
   Slider,
   Switch,
   Textarea,
-  PopoverClose,
-} from '@hanzo/desktop-ui';
-import { ChatSettingsIcon } from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui';
+import { ChatSettingsIcon } from '@hanzo_network/hanzo-ui/assets';
 
-import { cn } from '@hanzo/desktop-ui/utils';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { memo, useEffect, useMemo } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 import { useParams } from 'react-router';
@@ -165,9 +165,8 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
                 </HoverCardTrigger>
                 <HoverCardContent
                   align="start"
-                  className="bg-gray-600 px-2 py-3 text-xs"
+                  className="w-[300px] bg-gray-600 px-2 py-3 text-xs"
                   side="left"
-                  width={300}
                 >
                   Temperature is a parameter that affects the randomness of AI
                   outputs. Higher temp = more unexpected, lower temp = more
@@ -221,9 +220,8 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
                 </HoverCardTrigger>
                 <HoverCardContent
                   align="start"
-                  className="bg-gray-600 px-2 py-3 text-xs"
+                  className="w-[300px] bg-gray-600 px-2 py-3 text-xs"
                   side="left"
-                  width={300}
                 >
                   Adjust the probability threshold to increase the relevance of
                   results. For example, a threshold of 0.9 could be optimal for
@@ -278,9 +276,8 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
                 </HoverCardTrigger>
                 <HoverCardContent
                   align="start"
-                  className="bg-gray-600 px-2 py-3 text-xs"
+                  className="w-[300px] bg-gray-600 px-2 py-3 text-xs"
                   side="left"
-                  width={300}
                 >
                   Adjust the count of key words for creating sequences. This
                   parameter governs the extent of the generated passage,
@@ -320,7 +317,7 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
               </FormLabel>
               <FormControl>
                 <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select reasoning effort" />
                   </SelectTrigger>
                   <SelectContent>
@@ -339,7 +336,7 @@ function ChatConfigForm({ form, thinkingConfig }: ChatConfigFormProps) {
           <div className="flex gap-3">
             <Switch
               checked={form.watch('customPrompt') === ARTIFACTS_SYSTEM_PROMPT}
-              onCheckedChange={(checked: any) => {
+              onCheckedChange={(checked) => {
                 form.setValue(
                   'customPrompt',
                   checked ? ARTIFACTS_SYSTEM_PROMPT : '',
@@ -459,7 +456,6 @@ export function UpdateChatConfigActionBarBase({
     <div className="flex items-center gap-2">
       {/* <ToolsDisabledAlert isToolsDisabled={!form.watch('useTools')} /> */}
       <Popover
-        placement="top-end"
         onOpenChange={(open) => {
           if (open) {
             form.reset({
@@ -476,8 +472,8 @@ export function UpdateChatConfigActionBarBase({
           }
         }}
       >
-        <TooltipProvider delay={0}>
-          <Tooltip placement="top">
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
             <PopoverTrigger asChild>
               <TooltipTrigger asChild>
                 <button
@@ -488,7 +484,11 @@ export function UpdateChatConfigActionBarBase({
                 </button>
               </TooltipTrigger>
             </PopoverTrigger>
-            <PopoverContent className="text-xs" minW={380} px={24} py={28}>
+            <PopoverContent
+              align="end"
+              className="min-w-[380px] px-6 py-7 text-xs"
+              side="top"
+            >
               <h2 className="text-text-secondary mb-5 text-xs leading-1 uppercase">
                 Chat Settings
               </h2>
@@ -577,9 +577,9 @@ export function CreateChatConfigActionBar({
 
   return (
     <div className="flex items-center gap-2">
-      <Popover placement="bottom">
-        <TooltipProvider delay={0}>
-          <Tooltip placement="top">
+      <Popover>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
             <PopoverTrigger asChild>
               <TooltipTrigger asChild>
                 <button
@@ -591,12 +591,8 @@ export function CreateChatConfigActionBar({
               </TooltipTrigger>
             </PopoverTrigger>
             <PopoverContent
-              className="text-xs"
-              maxH="50vh"
-              minW={380}
-              overflow="scroll"
-              px={24}
-              py={28}
+              className="max-h-[50vh] min-w-[380px] overflow-auto px-6 py-7 text-xs"
+              side="bottom"
             >
               <h2 className="text-text-secondary mb-5 text-xs leading-1 uppercase">
                 Chat Settings

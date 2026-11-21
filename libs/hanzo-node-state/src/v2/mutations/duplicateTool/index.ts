@@ -1,4 +1,4 @@
-import { duplicateTool as duplicateToolApi } from "@hanzo/desktop-message-ts/api/tools/index";
+import { duplicateTool as duplicateToolApi } from "@hanzo_network/hanzo-message-ts/api/tools/index";
 
 import { type DuplicateToolInput, type DuplicateToolOutput } from "./types";
 

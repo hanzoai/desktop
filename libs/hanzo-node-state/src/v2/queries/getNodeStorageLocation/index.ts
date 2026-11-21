@@ -1,4 +1,4 @@
-import { getNodeStorageLocation as getNodeStorageLocationApi } from "@hanzo/desktop-message-ts/api/general/index";
+import { getNodeStorageLocation as getNodeStorageLocationApi } from "@hanzo_network/hanzo-message-ts/api/general/index";
 
 import { type GetNodeStorageLocationInput } from "./types";
 

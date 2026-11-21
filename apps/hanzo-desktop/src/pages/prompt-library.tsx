@@ -1,12 +1,12 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type Prompt } from '@hanzo/desktop-message-ts/api/tools/types';
-import { buildInboxIdFromJobId } from '@hanzo/desktop-message-ts/utils/inbox_name_handler';
-import { useCreateJob } from '@hanzo/desktop-node-state/v2/mutations/createJob/useCreateJob';
-import { useRemovePrompt } from '@hanzo/desktop-node-state/v2/mutations/removePrompt/useRemovePrompt';
-import { useUpdatePrompt } from '@hanzo/desktop-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type Prompt } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { buildInboxIdFromJobId } from '@hanzo_network/hanzo-message-ts/utils/inbox_name_handler';
+import { useCreateJob } from '@hanzo_network/hanzo-node-state/v2/mutations/createJob/useCreateJob';
+import { useRemovePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/removePrompt/useRemovePrompt';
+import { useUpdatePrompt } from '@hanzo_network/hanzo-node-state/v2/mutations/updatePrompt/useUpdatePrompt';
 
-import { useGetPromptList } from '@hanzo/desktop-node-state/v2/queries/getPromptList/useGetPromptList';
-import { useGetPromptSearch } from '@hanzo/desktop-node-state/v2/queries/getPromptSearch/useGetPromptSearch';
+import { useGetPromptList } from '@hanzo_network/hanzo-node-state/v2/queries/getPromptList/useGetPromptList';
+import { useGetPromptSearch } from '@hanzo_network/hanzo-node-state/v2/queries/getPromptSearch/useGetPromptSearch';
 import {
   Button,
   CopyToClipboardIcon,
@@ -17,10 +17,11 @@ import {
   Textarea,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   CirclePlayIcon,
@@ -29,7 +30,7 @@ import {
   StopCircleIcon,
   Trash2Icon,
 } from 'lucide-react';
-import { type ComponentRef, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
@@ -185,7 +186,7 @@ function PromptPreview({
 }) {
   const { t } = useTranslation();
   const auth = useAuth((state) => state.auth);
-  const scrollRef = useRef<ComponentRef<typeof ScrollArea>>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [editing, setEditing] = useState(false);
   const [promptEditContent, setPromptEditContent] = useState('');
@@ -222,12 +223,7 @@ function PromptPreview({
   });
 
   useEffect(() => {
-    // gui's ScrollArea puts the ref on its OUTER box, which is
-    // position:relative + overflow:hidden — scrolling it is a silent no-op. The
-    // element that actually scrolls is the viewport inside it.
-    (scrollRef.current as HTMLElement | null)
-      ?.querySelector('[data-slot="scroll-area-viewport"]')
-      ?.scrollTo(0, 0);
+    scrollRef.current?.scrollTo(0, 0);
   }, [selectedPrompt]);
 
   if (!selectedPrompt) {
@@ -244,8 +240,8 @@ function PromptPreview({
             <div className="flex items-center gap-2">
               {!isTryActive && (
                 <>
-                  <TooltipProvider delay={0}>
-                    <Tooltip placement="top">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           className={cn(
@@ -259,13 +255,15 @@ function PromptPreview({
                           <Edit3 />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Edit Prompt</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent>
+                          <p>Edit Prompt</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   </TooltipProvider>
-                  <TooltipProvider delay={0}>
-                    <Tooltip placement="top">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <div>
                           <CopyToClipboardIcon
@@ -276,13 +274,15 @@ function PromptPreview({
                           />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{t('common.copy')}</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent>
+                          <p>{t('common.copy')}</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   </TooltipProvider>
-                  <TooltipProvider delay={0}>
-                    <Tooltip placement="top">
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           className={cn(
@@ -299,9 +299,11 @@ function PromptPreview({
                           <Trash2Icon className="h-4 w-4" />
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Remove Prompt</p>
-                      </TooltipContent>
+                      <TooltipPortal>
+                        <TooltipContent>
+                          <p>Remove Prompt</p>
+                        </TooltipContent>
+                      </TooltipPortal>
                     </Tooltip>
                   </TooltipProvider>
                 </>
@@ -349,7 +351,9 @@ function PromptPreview({
               setPromptEditContent={setPromptEditContent}
             />
           ) : (
-            <MarkdownText className="prose-h1:!text-text-secondary prose-h1:!text-xs !text-text-secondary">
+            <MarkdownText
+              className="prose-h1:!text-text-secondary prose-h1:!text-xs !text-text-secondary"
+            >
               {selectedPrompt?.prompt ?? ''}
             </MarkdownText>
           )}
@@ -375,15 +379,14 @@ export const PromptEditor = ({
   <div>
     <Textarea
       autoFocus
-      className="!max-h-[60vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
-      height="100%"
-      onChangeText={setPromptEditContent}
-      onFocus={(e: React.FocusEvent) => {
-        // gui's TextArea renders a real <textarea>, but types the focus event's
-        // target as the union RN allows. It is the field at runtime.
-        const el = e.target as unknown as HTMLTextAreaElement;
-        el.setSelectionRange(el.value.length, el.value.length);
-        el.scrollTop = el.scrollHeight;
+      className="h-full !max-h-[60vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
+      onChange={(e) => setPromptEditContent(e.target.value)}
+      onFocus={(e) => {
+        e.target.setSelectionRange(
+          e.target.value.length,
+          e.target.value.length,
+        );
+        e.target.scrollTop = e.target.scrollHeight;
       }}
       spellCheck={false}
       value={promptEditContent}
@@ -483,15 +486,14 @@ export const PromptTryOut = ({
     <div>
       <Textarea
         autoFocus
-        className="!max-h-[50vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
-        height="100%"
-        onChangeText={setPromptEditContent}
-        onFocus={(e: React.FocusEvent) => {
-          // gui's TextArea renders a real <textarea>, but types the focus event's
-          // target as the union RN allows. It is the field at runtime.
-          const el = e.target as unknown as HTMLTextAreaElement;
-          el.setSelectionRange(el.value.length, el.value.length);
-          el.scrollTop = el.scrollHeight;
+        className="h-full !max-h-[50vh] !min-h-[100px] resize-none pt-2 pl-2 text-sm placeholder-transparent"
+        onChange={(e) => setPromptEditContent(e.target.value)}
+        onFocus={(e) => {
+          e.target.setSelectionRange(
+            e.target.value.length,
+            e.target.value.length,
+          );
+          e.target.scrollTop = e.target.scrollHeight;
         }}
         spellCheck={false}
         value={promptEditContent}
@@ -520,7 +522,9 @@ export const PromptTryOut = ({
               Output
             </p>
             <div className="p-4">
-              <MarkdownText className="prose-h1:!text-text-default prose-h1:!text-xs !text-text-secondary !text-xs">
+              <MarkdownText
+                className="prose-h1:!text-text-default prose-h1:!text-xs !text-text-secondary !text-xs"
+              >
                 {data?.pages?.at(-1)?.at(-1)?.content ?? ''}
               </MarkdownText>
             </div>

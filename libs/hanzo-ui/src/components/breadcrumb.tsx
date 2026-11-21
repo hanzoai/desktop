@@ -1,8 +1,8 @@
+import { Slot } from '@radix-ui/react-slot';
 import { ChevronRight, MoreHorizontal } from 'lucide-react';
 import * as React from 'react';
 
 import { cn } from '../utils';
-import { Slot } from './slot';
 
 type BreadcrumbProps = React.ComponentPropsWithoutRef<'nav'> & {
   separator?: React.ReactNode;

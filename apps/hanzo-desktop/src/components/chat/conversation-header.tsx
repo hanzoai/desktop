@@ -1,9 +1,10 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { extractJobIdFromInbox } from '@hanzo/desktop-message-ts/utils';
-import { useExportMessagesFromInbox } from '@hanzo/desktop-node-state/v2/mutations/exportMessagesFromInbox/useExportMessagesFromInbox';
-import { useGetAgents } from '@hanzo/desktop-node-state/v2/queries/getAgents/useGetAgents';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
-import { useGetProviderFromJob } from '@hanzo/desktop-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { extractJobIdFromInbox } from '@hanzo_network/hanzo-message-ts/utils';
+import { useExportMessagesFromInbox } from '@hanzo_network/hanzo-node-state/v2/mutations/exportMessagesFromInbox/useExportMessagesFromInbox';
+import { useGetAgents } from '@hanzo_network/hanzo-node-state/v2/queries/getAgents/useGetAgents';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useGetProviderFromJob } from '@hanzo_network/hanzo-node-state/v2/queries/getProviderFromJob/useGetProviderFromJob';
 import { getProviderModelLabel } from '../../lib/hanzo-node-manager/local-model-names';
 import {
   Accordion,
@@ -22,31 +23,31 @@ import {
   SheetTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipTrigger,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   AgentIcon,
   ScheduledTasksIcon,
   ToolsIcon,
-} from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { save } from '@tauri-apps/plugin-dialog';
 import * as fs from '@tauri-apps/plugin-fs';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
 import cronstrue from 'cronstrue';
 import {
-  DownloadIcon,
-  EllipsisVerticalIcon,
   ExternalLinkIcon,
   FileIcon,
   FolderIcon,
   PanelRightClose,
   PanelRightOpen,
+  DownloadIcon,
 } from 'lucide-react';
 import { memo } from 'react';
 import { Link, useParams } from 'react-router';
@@ -144,7 +145,7 @@ const ConversationHeaderWithInboxId = () => {
   return (
     <div className="border-divider flex h-[58px] items-center justify-between border-b px-4 py-2">
       <div className="flex flex-1 items-center gap-2">
-        <Tooltip placement="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <Button
               className="text-text-secondary flex items-center gap-2"
@@ -162,13 +163,15 @@ const ConversationHeaderWithInboxId = () => {
               </span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent className="flex flex-col items-center gap-1">
-            <p> Toggle Chat Sidebar</p>
-            <div className="text-text-secondary flex items-center justify-center gap-2 text-center">
-              <span>⌘</span>
-              <span>B</span>
-            </div>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent className="flex flex-col items-center gap-1">
+              <p> Toggle Chat Sidebar</p>
+              <div className="text-text-secondary flex items-center justify-center gap-2 text-center">
+                <span>⌘</span>
+                <span>B</span>
+              </div>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
 
         <div className="inline w-full flex-1 truncate text-sm font-medium whitespace-nowrap text-white capitalize">
@@ -201,12 +204,12 @@ const ConversationHeaderWithInboxId = () => {
                     <SheetHeader className="">
                       <div className="flex items-center gap-4">
                         <AgentIcon className="size-5" />
-                        <SheetTitle className="font-sans inline-flex items-center gap-2 text-xl font-medium tracking-wide capitalize">
+                        <SheetTitle className="font-inter inline-flex items-center gap-2 text-xl font-medium tracking-wide capitalize">
                           {selectedAgent.name}
                           {selectedAgent?.cron_tasks?.length &&
                             selectedAgent?.cron_tasks?.length > 0 && (
                               <Badge
-                                className="font-sans border bg-emerald-900/40 px-1 py-0 text-xs font-medium tracking-normal text-emerald-400"
+                                className="font-inter border bg-emerald-900/40 px-1 py-0 text-xs font-medium tracking-normal text-emerald-400"
                                 variant="secondary"
                               >
                                 Scheduled
@@ -233,7 +236,6 @@ const ConversationHeaderWithInboxId = () => {
                             <div className="flex size-4 items-center justify-center rounded-lg">
                               <ProviderIcon
                                 className="size-full"
-                                model={selectedModel?.model}
                                 provider={selectedModel?.id.split(':')[0]}
                               />
                             </div>
@@ -256,13 +258,8 @@ const ConversationHeaderWithInboxId = () => {
                           ]}
                           type="multiple"
                         >
-                          {/*
-                            gui's AccordionItem bakes borderBottomWidth:1 as a
-                            style prop, so `border-b-0` lost the tie and every
-                            row grew a rule this panel never had.
-                          */}
                           <AccordionItem
-                            borderBottomWidth={0}
+                            className="border-b-0"
                             value="instructions"
                           >
                             <AccordionTrigger className="py-3 hover:no-underline">
@@ -282,7 +279,7 @@ const ConversationHeaderWithInboxId = () => {
                             </AccordionContent>
                           </AccordionItem>
 
-                          <AccordionItem borderBottomWidth={0} value="tools">
+                          <AccordionItem className="border-b-0" value="tools">
                             <AccordionTrigger className="py-3 hover:no-underline">
                               <div className="text-text-secondary flex items-center gap-2">
                                 <span className="text-sm font-medium">
@@ -329,7 +326,7 @@ const ConversationHeaderWithInboxId = () => {
                           </AccordionItem>
 
                           <AccordionItem
-                            borderBottomWidth={0}
+                            className="border-b-0"
                             value="knowledge"
                           >
                             <AccordionTrigger className="py-3 hover:no-underline">
@@ -398,7 +395,7 @@ const ConversationHeaderWithInboxId = () => {
                             </AccordionContent>
                           </AccordionItem>
 
-                          <AccordionItem borderBottomWidth={0} value="tasks">
+                          <AccordionItem className="border-b-0" value="tasks">
                             <AccordionTrigger className="py-3 hover:no-underline">
                               <div className="text-text-secondary flex items-center gap-2">
                                 <span className="text-sm font-medium">
@@ -468,7 +465,7 @@ const ConversationHeaderWithInboxId = () => {
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <DropdownMenu modal={false} placement="bottom-end">
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <div
               className={cn(
@@ -480,10 +477,10 @@ const ConversationHeaderWithInboxId = () => {
               tabIndex={0}
             >
               <span className="sr-only">{t('common.moreOptions')}</span>
-              <EllipsisVerticalIcon className="text-text-secondary size-4" />
+              <DotsVerticalIcon className="text-text-secondary" />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent width={200}>
+          <DropdownMenuContent align="end" className="w-[200px] px-2.5 py-2">
             <DropdownMenuItem
               onClick={async () => {
                 await exportMessages({

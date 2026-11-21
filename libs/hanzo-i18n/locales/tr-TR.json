@@ -415,6 +415,9 @@
     "label": "Bağlantıyı Dışa Aktar",
     "restoreText": "Bağlantıyı Düğümünüze geri yüklemek için şifrenizle birlikte kullanın"
   },
+  "extension": {
+    "welcome": "Hanzo Visor ile web tarayıcı deneyiminizi AI ile dönüştürün ✨"
+  },
   "feedback": {
     "button": "Geri Bildirim",
     "description": "Geri bildiriminizi önemsiyoruz! Hanzo hakkındaki düşüncelerinizi ve deneyiminizi nasıl geliştirebileceğimiz konusunda bize bilgi verin.",

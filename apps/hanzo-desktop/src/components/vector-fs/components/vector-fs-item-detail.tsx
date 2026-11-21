@@ -1,20 +1,20 @@
-import { useGetDownloadFile } from '@hanzo/desktop-node-state/v2/queries/getDownloadFile/useGetDownloadFile';
+import { useGetDownloadFile } from '@hanzo_network/hanzo-node-state/v2/queries/getDownloadFile/useGetDownloadFile';
 import {
   Badge,
   Button,
   DialogHeader,
   DialogTitle,
   MarkdownText,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   EmbeddingsGeneratedIcon,
   FileTypeIcon,
-} from '@hanzo/desktop-ui/assets';
+} from '@hanzo_network/hanzo-ui/assets';
 import {
   formatDateToLocaleStringWithTime,
   formatDateToUSLocaleString,
   getFileExt,
-} from '@hanzo/desktop-ui/helpers';
+} from '@hanzo_network/hanzo-ui/helpers';
 import { save } from '@tauri-apps/plugin-dialog';
 import { BaseDirectory } from '@tauri-apps/plugin-fs';
 import * as fs from '@tauri-apps/plugin-fs';

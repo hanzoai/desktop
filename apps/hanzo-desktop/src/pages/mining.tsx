@@ -1,15 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-import { getBrand } from '@hanzo/desktop-brand-config';
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { getBrand } from '@hanzo_network/brand-config';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { formatWei, useChainBalance } from '../hooks/useChainBalance';
-import { useSelectedAccount } from '../lib/lux-wallet';
+import { useWallet } from '../store/wallet';
 import { isTauriAvailable, safeInvoke, safeListen } from '../utils/tauri-check';
 
 type Privacy = 'public' | 'private' | 'confidential' | 'sovereign';
@@ -45,7 +39,7 @@ const HASHRATE_WINDOW_MS = 5 * 60 * 1000;
 export default function MiningPage() {
   const brand = getBrand();
   const token = brand.network.token;
-  const account = useSelectedAccount();
+  const { wallet } = useWallet();
 
   const [history, setHistory] = useState<ProofRecord[]>([]);
   const [pendingWei, setPendingWei] = useState<string>('0');
@@ -54,8 +48,9 @@ export default function MiningPage() {
   const recentTickRef = useRef<number[]>([]);
   const [hashrateProofsPer5Min, setHashrateProofsPer5Min] = useState<number>(0);
 
-  const { balanceWei: chainBalanceWei, loading: chainLoading } =
-    useChainBalance(account?.evmAddress ?? null);
+  const { balanceWei: chainBalanceWei, loading: chainLoading } = useChainBalance(
+    wallet?.address ?? null,
+  );
 
   const refresh = useCallback(async () => {
     if (!isTauriAvailable()) return;
@@ -102,8 +97,8 @@ export default function MiningPage() {
   };
 
   const recent = useMemo(() => history.slice(-10).reverse(), [history]);
-  const explorerUrl = account?.evmAddress
-    ? `${brand.network.blockExplorer}/address/${account.evmAddress}`
+  const explorerUrl = wallet?.address
+    ? `${brand.network.blockExplorer}/address/${wallet.address}`
     : brand.network.blockExplorer;
 
   return (
@@ -124,10 +119,7 @@ export default function MiningPage() {
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="border-divider rounded border p-4">
           <div className="text-text-secondary text-xs uppercase">On-chain</div>
-          <div
-            className="mt-2 text-2xl font-semibold"
-            data-testid="onchain-balance"
-          >
+          <div className="mt-2 text-2xl font-semibold" data-testid="onchain-balance">
             {chainLoading && !chainBalanceWei
               ? '…'
               : `${formatWei(chainBalanceWei || '0')} ${token}`}
@@ -145,10 +137,7 @@ export default function MiningPage() {
           <div className="text-text-secondary text-xs uppercase">
             Local pending (ready to claim)
           </div>
-          <div
-            className="mt-2 text-2xl font-semibold"
-            data-testid="pending-balance"
-          >
+          <div className="mt-2 text-2xl font-semibold" data-testid="pending-balance">
             {formatWei(pendingWei)} {token}
           </div>
           <div className="text-text-secondary mt-2 text-xs">
@@ -178,8 +167,7 @@ export default function MiningPage() {
                 onClick={() => void handlePrivacyChange(p)}
                 type="button"
               >
-                {meta.label}{' '}
-                <span className="text-text-secondary">{meta.multiplier}</span>
+                {meta.label} <span className="text-text-secondary">{meta.multiplier}</span>
               </button>
             );
           })}

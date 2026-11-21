@@ -1,10 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type RecurringTask } from '@hanzo/desktop-message-ts/api/recurring-tasks/types';
-import { DEFAULT_CHAT_CONFIG } from '@hanzo/desktop-node-state/v2/constants';
-import { useCreateRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/createRecurringTask/useCreateRecurringTask';
-import { useUpdateRecurringTask } from '@hanzo/desktop-node-state/v2/mutations/updateRecurringTask/useUpdateRecurringTask';
-import { useGetTools } from '@hanzo/desktop-node-state/v2/queries/getToolsList/useGetToolsList';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type RecurringTask } from '@hanzo_network/hanzo-message-ts/api/recurring-tasks/types';
+import { DEFAULT_CHAT_CONFIG } from '@hanzo_network/hanzo-node-state/v2/constants';
+import { useCreateRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/createRecurringTask/useCreateRecurringTask';
+import { useUpdateRecurringTask } from '@hanzo_network/hanzo-node-state/v2/mutations/updateRecurringTask/useUpdateRecurringTask';
+import { useGetTools } from '@hanzo_network/hanzo-node-state/v2/queries/getToolsList/useGetToolsList';
 import {
   Badge,
   Button,
@@ -30,10 +30,13 @@ import {
   Switch,
   Textarea,
   TextField,
-} from '@hanzo/desktop-ui';
-import { ScheduledTasksIcon, ToolsIcon } from '@hanzo/desktop-ui/assets';
-import { formatText } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import {
+  ScheduledTasksIcon,
+  ToolsIcon,
+} from '@hanzo_network/hanzo-ui/assets';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import cronstrue from 'cronstrue';
 import { ChevronDownIcon } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
@@ -298,8 +301,9 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                   <FormLabel>{t('cronTask.taskPrompt')}</FormLabel>
                   <FormControl>
                     <Textarea
-                      className="!min-h-[130px] resize-y text-sm"
+                      className="!min-h-[130px] text-sm"
                       placeholder={t('cronTask.promptPlaceholder')}
+                      resize="vertical"
                       spellCheck={false}
                       {...field}
                     />
@@ -391,7 +395,7 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                       {t('cronTask.forceToolUsage')}
                     </span>
 
-                    <DropdownMenu placement="top-start">
+                    <DropdownMenu>
                       <DropdownMenuTrigger
                         className={cn(
                           actionButtonClassnames,
@@ -412,7 +416,11 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                         </div>
                         <ChevronDownIcon className="icon h-3 w-3" />
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent minW={330} overflow="scroll">
+                      <DropdownMenuContent
+                        align="start"
+                        className="max-h-[400px] min-w-[330px] overflow-y-auto p-1 py-2"
+                        side="top"
+                      >
                         <DropdownMenuRadioGroup
                           onValueChange={(value) => {
                             form.setValue('jobMessage.tool_key', value);
@@ -466,7 +474,8 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                           <FormLabel>System Prompt</FormLabel>
                           <FormControl>
                             <Textarea
-                              className="!min-h-[130px] resize-y text-sm"
+                              className="!min-h-[130px] text-sm"
+                              resize="vertical"
                               spellCheck={false}
                               {...field}
                             />
@@ -549,9 +558,8 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                               </HoverCardTrigger>
                               <HoverCardContent
                                 align="start"
-                                className="px-2 py-3 text-xs"
+                                className="w-[260px] px-2 py-3 text-xs"
                                 side="left"
-                                width={260}
                               >
                                 {t('cronTask.temperatureInfo')}
                               </HoverCardContent>
@@ -593,9 +601,8 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                               </HoverCardTrigger>
                               <HoverCardContent
                                 align="start"
-                                className="px-2 py-3 text-xs"
+                                className="w-[260px] px-2 py-3 text-xs"
                                 side="left"
-                                width={260}
                               >
                                 {t('cronTask.topPInfo')}
                               </HoverCardContent>
@@ -636,9 +643,8 @@ function CronTask({ mode, initialValues }: CronTaskProps) {
                               </HoverCardTrigger>
                               <HoverCardContent
                                 align="start"
-                                className="px-2 py-3 text-xs"
+                                className="w-[260px] px-2 py-3 text-xs"
                                 side="left"
-                                width={260}
                               >
                                 {t('cronTask.topKInfo')}
                               </HoverCardContent>

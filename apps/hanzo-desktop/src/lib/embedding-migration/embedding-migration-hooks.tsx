@@ -1,4 +1,4 @@
-import { useGetEmbeddingMigrationStatus } from '@hanzo/desktop-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
+import { useGetEmbeddingMigrationStatus } from '@hanzo_network/hanzo-node-state/v2/queries/getEmbeddingMigrationStatus/useGetEmbeddingMigrationStatus';
 import { useEffect, useRef, useState } from 'react';
 
 import { useAuth } from '../../store/auth';
@@ -29,11 +29,12 @@ export const useEmbeddingMigrationToast = () => {
     (state) => state.setHanzoNodeOptions,
   );
 
-  const { mutateAsync: hanzoNodeSetOptions } = useHanzoNodeSetOptionsMutation({
-    onSuccess: (options) => {
-      setHanzoNodeOptions(options);
-    },
-  });
+  const { mutateAsync: hanzoNodeSetOptions } =
+    useHanzoNodeSetOptionsMutation({
+      onSuccess: (options) => {
+        setHanzoNodeOptions(options);
+      },
+    });
 
   const { data: embeddingMigrationStatus } = useGetEmbeddingMigrationStatus(
     { nodeAddress: auth?.node_address ?? '', token: auth?.api_v2_key ?? '' },

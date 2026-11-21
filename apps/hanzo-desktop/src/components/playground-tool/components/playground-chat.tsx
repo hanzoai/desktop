@@ -1,7 +1,7 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type CodeLanguage } from '@hanzo/desktop-message-ts/api/tools/types';
-import { type ChatConversationInfiniteData } from '@hanzo/desktop-node-state/v2/queries/getChatConversation/types';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type CodeLanguage } from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { type ChatConversationInfiniteData } from '@hanzo_network/hanzo-node-state/v2/queries/getChatConversation/types';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
 import {
   Button,
   ChatInputArea,
@@ -9,9 +9,9 @@ import {
   FormField,
   FormItem,
   FormLabel,
-} from '@hanzo/desktop-ui';
-import { SendIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { SendIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   type InfiniteQueryObserverResult,
   type FetchPreviousPageOptions,
@@ -75,7 +75,7 @@ const PlaygroundChatBase = ({
   });
 
   const currentAI = form.watch('llmProviderId');
-
+  
   const thinkingConfig = useMemo(() => {
     if (!currentAI || !llmProviders) {
       return {
@@ -153,17 +153,11 @@ const PlaygroundChatBase = ({
                       />
                       {thinkingConfig.supportsThinking && (
                         <ThinkingSwitchActionBar
-                          checked={
-                            thinkingConfig.forceEnabled ||
-                            !!form.watch('thinking')
-                          }
+                          checked={thinkingConfig.forceEnabled || !!form.watch('thinking')}
                           disabled={thinkingConfig.forceEnabled}
                           onClick={() => {
                             if (!thinkingConfig.forceEnabled) {
-                              form.setValue(
-                                'thinking',
-                                !form.watch('thinking'),
-                              );
+                              form.setValue('thinking', !form.watch('thinking'));
                             }
                           }}
                           forceEnabled={thinkingConfig.forceEnabled}

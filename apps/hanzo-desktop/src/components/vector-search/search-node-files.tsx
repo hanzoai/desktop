@@ -1,12 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { type HanzoPath } from '@hanzo/desktop-message-ts/api/jobs/types';
-import { retrieveVectorResource } from '@hanzo/desktop-message-ts/api/vector-fs/index';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { type HanzoPath } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
+import { retrieveVectorResource } from '@hanzo_network/hanzo-message-ts/api/vector-fs/index';
 import {
   type SearchVectorFormSchema,
   searchVectorFormSchema,
-} from '@hanzo/desktop-node-state/forms/vector-fs/vector-search';
-import { useGetVRSeachSimplified } from '@hanzo/desktop-node-state/v2/queries/getVRSearchSimplified/useGetSearchVRItems';
+} from '@hanzo_network/hanzo-node-state/forms/vector-fs/vector-search';
+import { useGetVRSeachSimplified } from '@hanzo_network/hanzo-node-state/v2/queries/getVRSearchSimplified/useGetSearchVRItems';
 import {
   Badge,
   Button,
@@ -24,11 +24,12 @@ import {
   SheetTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { FileTypeIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { FileTypeIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { motion } from 'framer-motion';
 import { SearchIcon } from 'lucide-react';
 import { Checkbox } from 'primereact/checkbox';
@@ -125,6 +126,7 @@ const SearchNodeFiles = () => {
         <motion.div
           animate={{
             y: isSearchEntered ? '0%' : '30vh',
+            from: '20vh',
           }}
           initial={false}
           transition={{
@@ -338,8 +340,8 @@ function SelectFolderButton() {
 
   return (
     <Sheet>
-      <TooltipProvider delay={100}>
-        <Tooltip placement="top">
+      <TooltipProvider delayDuration={100}>
+        <Tooltip>
           <SheetTrigger asChild>
             <TooltipTrigger asChild>
               <Button
@@ -352,9 +354,11 @@ function SelectFolderButton() {
               </Button>
             </TooltipTrigger>
           </SheetTrigger>
-          <TooltipContent>
-            <p>{selectedFolderPath}</p>
-          </TooltipContent>
+          <TooltipPortal>
+            <TooltipContent>
+              <p>{selectedFolderPath}</p>
+            </TooltipContent>
+          </TooltipPortal>
         </Tooltip>
       </TooltipProvider>
 

@@ -4,12 +4,12 @@
 //! `hanzo` SDK (`Model`, `send_chat_request`, ...) behind a bespoke OpenAI
 //! server. That parallel implementation is gone. The embedded engine now builds
 //! and serves the canonical `hanzo-server-core` stack -- the exact same
-//! `SharedState` + axum `Router` that `hanzo serve` uses -- so the desktop
+//! `SharedHanzoState` + axum `Router` that `hanzo serve` uses -- so the desktop
 //! node speaks `/v1/chat/completions`, `/v1/responses` and `/v1/messages`
 //! identically to the CLI, with zero duplicated route logic.
 //!
 //! [`EmbeddedEngine`] owns the model lifecycle: loading a model builds a fresh
-//! `SharedState` via [`ServerBuilder`] (which loads the weights,
+//! `SharedHanzoState` via [`HanzoForServerBuilder`] (which loads the weights,
 //! exactly as the CLI does) and rebinds the canonical server on
 //! [`DEFAULT_PORT`]. Unloading stops the server and drops the state. There is
 //! only one model-load path; the Tauri IPC commands and the `/v1/engine/*` HTTP
@@ -21,7 +21,10 @@ use anyhow::{anyhow, Result};
 use tokio::sync::RwLock;
 
 use hanzo_engine::ModelSelected;
-use hanzo_server_core::{router::RouterBuilder, server::ServerBuilder, types::SharedState};
+use hanzo_server_core::{
+    hanzo_for_server_builder::HanzoForServerBuilder,
+    hanzo_server_router_builder::HanzoServerRouterBuilder, types::SharedHanzoState,
+};
 
 use super::server::DEFAULT_PORT;
 use super::types::*;
@@ -44,7 +47,7 @@ struct ServerHandle {
 /// empty server up front).
 pub struct EmbeddedEngine {
     /// The canonical shared state (`Arc<Hanzo>`). `Some` once a model is loaded.
-    state: Option<SharedState>,
+    state: Option<SharedHanzoState>,
     /// Current model identifier (the HF repo / path that was loaded).
     model_id: Option<String>,
     /// Current model format.
@@ -85,10 +88,6 @@ impl EmbeddedEngine {
         {
             return "cuda".to_string();
         }
-        #[cfg(feature = "vulkan")]
-        {
-            return "vulkan".to_string();
-        }
         "cpu".to_string()
     }
 
@@ -109,7 +108,7 @@ impl EmbeddedEngine {
     }
 
     /// The canonical shared state, if a model is loaded.
-    pub fn state(&self) -> Option<SharedState> {
+    pub fn state(&self) -> Option<SharedHanzoState> {
         self.state.clone()
     }
 
@@ -138,7 +137,7 @@ impl EmbeddedEngine {
             _ => None,
         };
 
-        let builder = ServerBuilder::new()
+        let builder = HanzoForServerBuilder::new()
             .with_model(model_selected)
             .with_interactive_mode(false)
             .with_cpu(force_cpu)
@@ -215,7 +214,7 @@ impl EmbeddedEngine {
 
     /// Build the canonical router (+ `/v1/engine/*` management) for `state` and
     /// serve it in the background on [`Self::port`]. Stores the shutdown handle.
-    async fn start_server(&mut self, state: SharedState) -> Result<()> {
+    async fn start_server(&mut self, state: SharedHanzoState) -> Result<()> {
         let app = build_app(state, self.management_state()).await?;
         let addr = format!("127.0.0.1:{}", self.port);
         let listener = tokio::net::TcpListener::bind(&addr).await?;
@@ -255,10 +254,10 @@ impl Default for EmbeddedEngine {
 
 /// Build the merged canonical + management axum app for `state`.
 pub(super) async fn build_app(
-    state: SharedState,
+    state: SharedHanzoState,
     management: Option<Arc<RwLock<EmbeddedEngine>>>,
 ) -> Result<axum::Router> {
-    let canonical = RouterBuilder::new()
+    let canonical = HanzoServerRouterBuilder::new()
         .with_hanzo(state)
         .build()
         .await?;

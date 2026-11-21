@@ -1,4 +1,4 @@
-import { updateLLMProviderInJob } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { updateLLMProviderInJob } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type UpdateAgentInJobInput } from './types';
 

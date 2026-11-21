@@ -1,5 +1,5 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
-import { Button } from '@hanzo/desktop-ui';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
+import { Button } from '@hanzo_network/hanzo-ui';
 import { CheckIcon, XIcon } from 'lucide-react';
 
 import { OnboardingStep } from '../components/onboarding/constants';

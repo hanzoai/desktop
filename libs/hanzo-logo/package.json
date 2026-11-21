@@ -1,5 +1,5 @@
 {
-  "name": "@hanzo/desktop-logo",
+  "name": "@hanzo_network/hanzo-logo",
   "version": "0.0.1",
   "type": "module",
   "main": "src/index.ts",

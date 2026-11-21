@@ -1,4 +1,4 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Button,
   Dialog,
@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hanzo/desktop-ui';
-import { formatText } from '@hanzo/desktop-ui/helpers';
+} from '@hanzo_network/hanzo-ui';
+import { formatText } from '@hanzo_network/hanzo-ui/helpers';
 
 interface ConfirmToolsetUpdateDialogProps {
   isOpen: boolean;
@@ -64,12 +64,7 @@ export function ConfirmToolsetUpdateDialog({
             </ul>
           </div>
         )}
-        <DialogFooter
-        $sm={{ justify: 'center' }}
-        className="pt-4"
-        flexDirection="column"
-        gap={8}
-      >
+        <DialogFooter className="flex flex-col gap-2 pt-4 sm:justify-center">
           <Button
             className="flex-1"
             disabled={isSettingCommonToolsetConfig}

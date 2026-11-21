@@ -1,4 +1,4 @@
-import { type GetAllInboxesWithPaginationRequest } from '@hanzo/desktop-message-ts/api/jobs/types';
+import { type GetAllInboxesWithPaginationRequest } from '@hanzo_network/hanzo-message-ts/api/jobs/types';
 import { type InfiniteData, useInfiniteQuery } from '@tanstack/react-query';
 
 import { FunctionKeyV2 } from '../../constants';

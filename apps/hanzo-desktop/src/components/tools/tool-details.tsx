@@ -6,10 +6,10 @@ import {
   type RustHanzoTool,
   type McpServerTool as McpServerToolType,
   type HanzoTool,
-} from '@hanzo/desktop-message-ts/api/tools/types';
-import { useGetPlaygroundTools } from '@hanzo/desktop-node-state/v2/queries/getPlaygroundTools/useGetPlaygroundTools';
-import { useGetTool } from '@hanzo/desktop-node-state/v2/queries/getTool/useGetTool';
-import { Skeleton } from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-message-ts/api/tools/types';
+import { useGetPlaygroundTools } from '@hanzo_network/hanzo-node-state/v2/queries/getPlaygroundTools/useGetPlaygroundTools';
+import { useGetTool } from '@hanzo_network/hanzo-node-state/v2/queries/getTool/useGetTool';
+import { Skeleton } from '@hanzo_network/hanzo-ui';
 import { MoreVertical } from 'lucide-react';
 import { useParams } from 'react-router';
 
@@ -26,7 +26,9 @@ export function isDenoHanzoTool(tool: HanzoTool): tool is DenoHanzoTool {
   return (tool as DenoHanzoTool).js_code !== undefined;
 }
 
-export function isPythonHanzoTool(tool: HanzoTool): tool is PythonHanzoTool {
+export function isPythonHanzoTool(
+  tool: HanzoTool,
+): tool is PythonHanzoTool {
   return (tool as PythonHanzoTool).py_code !== undefined;
 }
 

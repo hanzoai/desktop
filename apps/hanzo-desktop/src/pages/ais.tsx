@@ -1,13 +1,13 @@
-import { providerCatalog, type ProviderCatalogEntry } from '@hanzo/usage';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { DotsVerticalIcon } from '@radix-ui/react-icons';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type EditAIModelFormSchema,
   editAIModelSchema,
-} from '@hanzo/desktop-node-state/forms/agents/edit-ai';
-import { Models } from '@hanzo/desktop-node-state/lib/utils/models';
-import { useRemoveLLMProvider } from '@hanzo/desktop-node-state/v2/mutations/removeLLMProvider/useRemoveLLMProvider';
-import { useUpdateLLMProvider } from '@hanzo/desktop-node-state/v2/mutations/updateLLMProvider/useUpdateLLMProvider';
-import { useGetLLMProviders } from '@hanzo/desktop-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
+} from '@hanzo_network/hanzo-node-state/forms/agents/edit-ai';
+import { useRemoveLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/removeLLMProvider/useRemoveLLMProvider';
+import { useUpdateLLMProvider } from '@hanzo_network/hanzo-node-state/v2/mutations/updateLLMProvider/useUpdateLLMProvider';
+import { useGetLLMProviders } from '@hanzo_network/hanzo-node-state/v2/queries/getLLMProviders/useGetLLMProviders';
 import {
   DialogClose,
   Badge,
@@ -33,49 +33,22 @@ import {
   SearchInput,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { CreateAIIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { open } from '@tauri-apps/plugin-shell';
-import {
-  Edit,
-  EllipsisVerticalIcon,
-  ExternalLink,
-  Plus,
-  TrashIcon,
-} from 'lucide-react';
+} from '@hanzo_network/hanzo-ui';
+import { CreateAIIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
+import { Edit, Plus, TrashIcon } from 'lucide-react';
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
-import LocalNetworkEngines from '../components/ais/local-network-engines';
-import { providerIconSvgs } from '../components/ais/provider-catalog-icons';
 import ProviderIcon from '../components/ais/provider-icon';
 import { useAuth } from '../store/auth';
 import { useHanzoNodeManager } from '../store/hanzo-node-manager';
 import { getModelObject } from './add-ai';
-
-// Console page where cloud-only providers are connected server-side.
-const HANZO_CLOUD_ACCOUNTS_URL = 'https://console.hanzo.ai/ai-accounts';
-
-// Catalog provider id → the desktop's native LLMProvider type. Entries here are
-// added in-app via the add-AI flow (prefilled); everything else is tracked via
-// Hanzo Cloud.
-const nativeProviderModels: Record<string, Models> = {
-  openai: Models.OpenAI,
-  claude: Models.Claude,
-  gemini: Models.Gemini,
-  groq: Models.Groq,
-  openrouter: Models.OpenRouter,
-  deepseek: Models.DeepSeek,
-  grok: Models.Grok,
-  ollama: Models.Ollama,
-  hanzo: Models.Hanzo,
-};
 
 const AIsPage = () => {
   const { t } = useTranslation();
@@ -86,7 +59,9 @@ const AIsPage = () => {
     token: auth?.api_v2_key ?? '',
   });
 
-  const isLocalHanzoNodeIsUse = useHanzoNodeManager((state) => state.isInUse);
+  const isLocalHanzoNodeIsUse = useHanzoNodeManager(
+    (state) => state.isInUse,
+  );
 
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -125,7 +100,7 @@ const AIsPage = () => {
         {/* prettier-ignore */}
         <div className="flex flex-col gap-1 pb-6 pt-10">
           <div className="flex justify-between gap-4">
-            <h1 className="font-sans text-3xl font-medium">
+            <h1 className="font-inter text-3xl font-medium">
               {t('layout.menuItems.manageAis')}
             </h1>
             <div className="flex gap-2">
@@ -145,7 +120,6 @@ const AIsPage = () => {
         </div>
 
         <div className="flex flex-1 flex-col space-y-3 pb-10">
-          <LocalNetworkEngines />
           {!llmProviders?.length ? (
             <div className="flex grow flex-col items-center justify-center">
               <div className="mb-8 space-y-3 text-center">
@@ -194,109 +168,12 @@ const AIsPage = () => {
             </div>
           )}
         </div>
-
-        <ProviderCatalogSection />
       </div>
     </div>
   );
 };
 
 export default AIsPage;
-
-function CatalogIcon({ entry }: { entry: ProviderCatalogEntry }) {
-  const svg = providerIconSvgs[entry.id];
-  return (
-    <div
-      className="text-text-default flex size-8 shrink-0 items-center justify-center rounded-lg [&>svg]:size-5"
-      style={
-        entry.color
-          ? { backgroundColor: entry.color, color: '#fff' }
-          : undefined
-      }
-    >
-      {svg ? (
-        <span
-          className="flex size-5 items-center justify-center [&>svg]:size-full"
-          // Icons ship as trusted static assets from @hanzo/usage.
-          dangerouslySetInnerHTML={{ __html: svg }}
-        />
-      ) : (
-        <span className="text-sm font-semibold uppercase">
-          {entry.name.charAt(0)}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function ProviderCatalogSection() {
-  const navigate = useNavigate();
-
-  const connect = (entry: ProviderCatalogEntry) => {
-    const native = nativeProviderModels[entry.id];
-    if (native) {
-      void navigate(`/add-ai?aiProvider=${native}`);
-      return;
-    }
-    void open(HANZO_CLOUD_ACCOUNTS_URL);
-  };
-
-  return (
-    <div className="border-divider flex flex-col gap-3 border-t pt-6 pb-10">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-lg font-medium">All providers</h2>
-        <p className="text-text-secondary text-sm">
-          Connect any AI provider. Providers marked{' '}
-          <span className="font-medium">In-app</span> run through your node; the
-          rest are tracked via Hanzo Cloud.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {providerCatalog.map((entry) => {
-          const isNative = Boolean(nativeProviderModels[entry.id]);
-          return (
-            <div
-              className="border-divider bg-bg-secondary flex items-center justify-between gap-3 rounded-lg border p-3"
-              key={entry.id}
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <CatalogIcon entry={entry} />
-                <div className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-medium">
-                    {entry.name}
-                  </span>
-                  <Badge
-                    className={cn(
-                      'w-fit border-0 px-1.5 py-0 text-xs font-normal shadow-none',
-                      isNative
-                        ? 'bg-emerald-900/40 text-emerald-400'
-                        : 'bg-bg-quaternary text-text-secondary',
-                    )}
-                  >
-                    {isNative ? 'In-app' : 'Hanzo Cloud'}
-                  </Badge>
-                </div>
-              </div>
-              <Button
-                className="shrink-0"
-                onClick={() => connect(entry)}
-                size="xs"
-                variant="outline"
-              >
-                {isNative ? (
-                  <Plus className="size-3.5" />
-                ) : (
-                  <ExternalLink className="size-3.5" />
-                )}
-                <span>Connect</span>
-              </Button>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 function LLMProviderCard({
   llmProviderId,
@@ -328,7 +205,6 @@ function LLMProviderCard({
           <div className="flex size-6 items-center justify-center rounded-lg">
             <ProviderIcon
               className="size-full"
-              model={model}
               provider={model.split(':')[0]}
             />
           </div>
@@ -347,8 +223,8 @@ function LLMProviderCard({
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <TooltipProvider delay={0}>
-            <Tooltip placement="right">
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   onClick={() => {
@@ -362,12 +238,18 @@ function LLMProviderCard({
                 </Button>
               </TooltipTrigger>
 
-              <TooltipContent className="flex flex-col items-center gap-1">
-                Create New Chat
-              </TooltipContent>
+              <TooltipPortal>
+                <TooltipContent
+                  align="center"
+                  className="flex flex-col items-center gap-1"
+                  side="right"
+                >
+                  Create New Chat
+                </TooltipContent>
+              </TooltipPortal>
             </Tooltip>
           </TooltipProvider>
-          <DropdownMenu modal={false} placement="bottom-end">
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <div
                 className={cn(
@@ -384,10 +266,10 @@ function LLMProviderCard({
                 tabIndex={0}
               >
                 <span className="sr-only">{t('common.moreOptions')}</span>
-                <EllipsisVerticalIcon className="text-text-secondary size-4" />
+                <DotsVerticalIcon className="text-text-secondary" />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent minW={160} width={160}>
+            <DropdownMenuContent align="end" className="w-[160px] px-2.5 py-2">
               {[
                 {
                   name: t('common.edit'),
@@ -408,7 +290,7 @@ function LLMProviderCard({
                   {option.name === 'Delete' && <DropdownMenuSeparator />}
                   <DropdownMenuItem
                     key={option.name}
-                    onClick={(event: React.MouseEvent) => {
+                    onClick={(event) => {
                       event.stopPropagation();
                       option.onClick();
                     }}
@@ -653,7 +535,7 @@ const RemoveLLMProviderModal = ({
   });
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="sm:max-w-[425px]" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogTitle className="pb-0">
           {t('llmProviders.delete.label')}{' '}
           <span className="font-mono font-medium">{llmProviderId}</span>{' '}

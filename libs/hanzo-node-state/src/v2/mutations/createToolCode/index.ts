@@ -1,8 +1,8 @@
 import {
   createJob as createJobApi,
   updateChatConfig,
-} from '@hanzo/desktop-message-ts/api/jobs/index';
-import { toolImplementation as createToolCodeApi } from '@hanzo/desktop-message-ts/api/tools/index';
+} from '@hanzo_network/hanzo-message-ts/api/jobs/index';
+import { toolImplementation as createToolCodeApi } from '@hanzo_network/hanzo-message-ts/api/tools/index';
 
 import { DEFAULT_CHAT_CONFIG } from '../../constants';
 import { type CreateToolCodeInput } from './types';

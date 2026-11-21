@@ -1,5 +1,5 @@
 {
-  "productName": "Zoo Desktop",
+  "productName": "Zoo",
   "identifier": "com.zoo.desktop",
   "bundle": {
     "icon": [
@@ -19,9 +19,7 @@
     },
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "zoo"
-        ]
+        "schemes": ["zoo"]
       }
     }
   },
@@ -31,6 +29,5 @@
         "title": "Zoo AI"
       }
     ]
-  },
-  "mainBinaryName": "zoo-desktop"
+  }
 }

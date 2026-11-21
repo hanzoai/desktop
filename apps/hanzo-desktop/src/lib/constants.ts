@@ -1,4 +1,4 @@
-import { cn } from '@hanzo/desktop-ui/utils';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import {
   type TreePassThroughMethodOptions,
   type TreePassThroughOptions,

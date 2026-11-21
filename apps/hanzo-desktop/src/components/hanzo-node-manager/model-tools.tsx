@@ -8,8 +8,8 @@ import {
   Input,
   Label,
   ScrollArea,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { Loader2, Layers, Minimize2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -120,19 +120,15 @@ export const ModelTools = ({ className }: { className?: string }) => {
           {!checkingSoup && soupDisabled && (
             <p className="mt-1 text-xs text-yellow-500">
               The <code>soup</code> CLI was not found. Build it from the
-              hanzoai/ml repo (
-              <code>cargo build -p tensor-tools --bin soup</code>) and put it on
-              PATH, or set <code>HANZO_SOUP_BIN</code>.
+              hanzoai/ml repo (<code>cargo build -p tensor-tools --bin soup</code>
+              ) and put it on PATH, or set <code>HANZO_SOUP_BIN</code>.
             </p>
           )}
         </div>
 
         {/* Model soup (average) */}
         <Card>
-          <CardHeader
-            className="flex flex-row items-center gap-2 p-4 pb-2"
-            flexDirection="row"
-          >
+          <CardHeader className="flex flex-row items-center gap-2 p-4 pb-2">
             <Layers className="size-4" />
             <div className="flex flex-col">
               <CardTitle className="text-sm">Model soup (average)</CardTitle>
@@ -142,9 +138,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-2 p-4 pt-0">
-            <Label className="text-xs">
-              Checkpoints (one per line or comma-separated)
-            </Label>
+            <Label className="text-xs">Checkpoints (one per line or comma-separated)</Label>
             <textarea
               className="bg-bg-secondary min-h-16 rounded-md p-2 text-xs"
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -155,17 +149,13 @@ export const ModelTools = ({ className }: { className?: string }) => {
             />
             <Label className="text-xs">Weights (optional, e.g. 1,3,1)</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAvgWeights(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvgWeights(e.target.value)}
               placeholder="leave blank for a uniform average"
               value={avgWeights}
             />
             <Label className="text-xs">Output path</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAvgOut(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAvgOut(e.target.value)}
               placeholder="/models/merged.safetensors"
               value={avgOut}
             />
@@ -196,10 +186,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
 
         {/* Delta soup */}
         <Card>
-          <CardHeader
-            className="flex flex-row items-center gap-2 p-4 pb-2"
-            flexDirection="row"
-          >
+          <CardHeader className="flex flex-row items-center gap-2 p-4 pb-2">
             <Layers className="size-4" />
             <div className="flex flex-col">
               <CardTitle className="text-sm">Delta soup</CardTitle>
@@ -211,15 +198,11 @@ export const ModelTools = ({ className }: { className?: string }) => {
           <CardContent className="flex flex-col gap-2 p-4 pt-0">
             <Label className="text-xs">Base checkpoint</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setDeltaBase(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeltaBase(e.target.value)}
               placeholder="/models/base.safetensors"
               value={deltaBase}
             />
-            <Label className="text-xs">
-              Fine-tunes (one per line or comma-separated)
-            </Label>
+            <Label className="text-xs">Fine-tunes (one per line or comma-separated)</Label>
             <textarea
               className="bg-bg-secondary min-h-16 rounded-md p-2 text-xs"
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
@@ -230,9 +213,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
             />
             <Label className="text-xs">Output path</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setDeltaOut(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeltaOut(e.target.value)}
               placeholder="/models/merged.safetensors"
               value={deltaOut}
             />
@@ -264,10 +245,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
 
         {/* BitDelta encode */}
         <Card>
-          <CardHeader
-            className="flex flex-row items-center gap-2 p-4 pb-2"
-            flexDirection="row"
-          >
+          <CardHeader className="flex flex-row items-center gap-2 p-4 pb-2">
             <Minimize2 className="size-4" />
             <div className="flex flex-col">
               <CardTitle className="text-sm">BitDelta — compress</CardTitle>
@@ -279,25 +257,19 @@ export const ModelTools = ({ className }: { className?: string }) => {
           <CardContent className="flex flex-col gap-2 p-4 pt-0">
             <Label className="text-xs">Base checkpoint</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEncBase(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEncBase(e.target.value)}
               placeholder="/models/base.safetensors"
               value={encBase}
             />
             <Label className="text-xs">Fine-tuned checkpoint</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEncFinetuned(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEncFinetuned(e.target.value)}
               placeholder="/models/ft.safetensors"
               value={encFinetuned}
             />
             <Label className="text-xs">Output .bitdelta path</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setEncOut(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEncOut(e.target.value)}
               placeholder="/models/ft.bitdelta"
               value={encOut}
             />
@@ -329,10 +301,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
 
         {/* BitDelta apply */}
         <Card>
-          <CardHeader
-            className="flex flex-row items-center gap-2 p-4 pb-2"
-            flexDirection="row"
-          >
+          <CardHeader className="flex flex-row items-center gap-2 p-4 pb-2">
             <Minimize2 className="size-4" />
             <div className="flex flex-col">
               <CardTitle className="text-sm">BitDelta — restore</CardTitle>
@@ -344,25 +313,19 @@ export const ModelTools = ({ className }: { className?: string }) => {
           <CardContent className="flex flex-col gap-2 p-4 pt-0">
             <Label className="text-xs">Base checkpoint</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAppBase(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppBase(e.target.value)}
               placeholder="/models/base.safetensors"
               value={appBase}
             />
             <Label className="text-xs">.bitdelta file</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAppDelta(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppDelta(e.target.value)}
               placeholder="/models/ft.bitdelta"
               value={appDelta}
             />
             <Label className="text-xs">Output path</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setAppOut(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAppOut(e.target.value)}
               placeholder="/models/restored.safetensors"
               value={appOut}
             />
@@ -394,10 +357,7 @@ export const ModelTools = ({ className }: { className?: string }) => {
 
         {/* GRPO (developer preview) */}
         <Card>
-          <CardHeader
-            className="flex flex-row items-center gap-2 p-4 pb-2"
-            flexDirection="row"
-          >
+          <CardHeader className="flex flex-row items-center gap-2 p-4 pb-2">
             <Sparkles className="size-4" />
             <div className="flex flex-col">
               <CardTitle className="text-sm">
@@ -413,17 +373,13 @@ export const ModelTools = ({ className }: { className?: string }) => {
           <CardContent className="flex flex-col gap-2 p-4 pt-0">
             <Label className="text-xs">Group size (optional)</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setGrpoGroupSize(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGrpoGroupSize(e.target.value)}
               placeholder="e.g. 8"
               value={grpoGroupSize}
             />
             <Label className="text-xs">Steps (optional)</Label>
             <Input
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setGrpoSteps(e.target.value)
-              }
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setGrpoSteps(e.target.value)}
               placeholder="e.g. 50"
               value={grpoSteps}
             />

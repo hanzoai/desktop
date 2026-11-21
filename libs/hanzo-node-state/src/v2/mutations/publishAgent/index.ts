@@ -1,5 +1,5 @@
-import { publishAgent as publishAgentApi } from '@hanzo/desktop-message-ts/api/agents/index';
-import type { PublishAgentResponse } from '@hanzo/desktop-message-ts/api/agents/types';
+import { publishAgent as publishAgentApi } from '@hanzo_network/hanzo-message-ts/api/agents/index';
+import type { PublishAgentResponse } from '@hanzo_network/hanzo-message-ts/api/agents/types';
 
 export type PublishAgentInput = {
   nodeAddress: string;

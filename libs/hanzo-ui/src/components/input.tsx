@@ -4,10 +4,11 @@ import { useEffect, useImperativeHandle, useRef } from 'react';
 
 import { type RefCallBack } from 'react-hook-form';
 import { cn } from '../utils';
-import { Badge } from '@hanzo/ui';
+import { Badge } from './badge';
 import { Button } from '.';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   startAdornment?: React.ReactNode;
   endAdornment?: React.ReactNode;
   hidePasswordToggle?: boolean;

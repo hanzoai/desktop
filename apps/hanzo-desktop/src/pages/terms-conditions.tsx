@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type QuickConnectFormSchema,
   quickConnectFormSchema,
-} from '@hanzo/desktop-node-state/forms/auth/quick-connection';
-import { useInitialRegistration } from '@hanzo/desktop-node-state/v2/mutations/initialRegistration/useInitialRegistration';
-import { useGetEncryptionKeys } from '@hanzo/desktop-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
-import { Button, buttonVariants, Checkbox } from '@hanzo/desktop-ui';
-import { submitRegistrationNoCodeError } from '@hanzo/desktop-ui/helpers';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-node-state/forms/auth/quick-connection';
+import { useInitialRegistration } from '@hanzo_network/hanzo-node-state/v2/mutations/initialRegistration/useInitialRegistration';
+import { useGetEncryptionKeys } from '@hanzo_network/hanzo-node-state/v2/queries/getEncryptionKeys/useGetEncryptionKeys';
+import { Button, buttonVariants, Checkbox } from '@hanzo_network/hanzo-ui';
+import { submitRegistrationNoCodeError } from '@hanzo_network/hanzo-ui/helpers';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router';
@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { OnboardingStep } from '../components/onboarding/constants';
 import { ResetStorageBeforeConnectConfirmationPrompt } from '../components/reset-storage-before-connect-confirmation-prompt';
 import config from '../config';
-import { useIamLogin } from '../hooks/iam-auth';
+import { useHanzoLogin } from '../hooks/hanzo-auth';
 import {
   useHanzoNodeRemoveStorageMutation,
   useHanzoNodeSpawnMutation,
@@ -113,7 +113,7 @@ const TermsAndConditionsPage = () => {
     isLoading: hanzoLoginIsLoading,
     error: hanzoLoginError,
     resetState: resetHanzoLogin,
-  } = useIamLogin();
+  } = useHanzoLogin();
 
   const {
     mutateAsync: submitRegistrationNoCode,
@@ -230,7 +230,7 @@ const TermsAndConditionsPage = () => {
   return (
     <div className="flex h-full flex-col justify-between gap-10">
       <div className="space-y-5">
-        <h1 className="font-sans text-4xl font-semibold text-white">
+        <h1 className="font-inter text-4xl font-semibold text-white">
           {t('desktop.welcome')}
         </h1>
         <p className="text-base text-white">
@@ -246,7 +246,7 @@ const TermsAndConditionsPage = () => {
         <Checkbox
           checked={termsAndConditionsAccepted}
           id="terms"
-          onCheckedChange={(checked: any) =>
+          onCheckedChange={(checked) =>
             setTermsAndConditionsAccepted(checked as boolean)
           }
         />
@@ -316,18 +316,12 @@ const TermsAndConditionsPage = () => {
               variant: 'outline',
               size: 'lg',
             }),
-            'rounded-full border-white/20 bg-white/5 hover:bg-white/10',
           )}
-          disabled={isStartLocalButtonLoading}
+          disabled={!termsAndConditionsAccepted || isStartLocalButtonLoading}
           isLoading={isStartLocalButtonLoading}
-          onClick={() => {
-            if (!termsAndConditionsAccepted) {
-              setTermsAndConditionsAccepted(true);
-            }
-            hanzoNodeSpawn();
-          }}
+          onClick={() => hanzoNodeSpawn()}
         >
-          Continue without login · Local AI
+          {t('common.skip')}
         </Button>
 
         {(config.isDev || showLocalNodeOption) && (

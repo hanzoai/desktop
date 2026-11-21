@@ -1,4 +1,4 @@
-import { useGetInboxesWithPagination } from '@hanzo/desktop-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
+import { useGetInboxesWithPagination } from '@hanzo_network/hanzo-node-state/v2/queries/getInboxes/useGetInboxesWithPagination';
 import { useMemo } from 'react';
 import { useLocation } from 'react-router';
 

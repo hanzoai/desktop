@@ -1,4 +1,4 @@
-import { Button, ScrollArea } from '@hanzo/desktop-ui';
+import { Button, ScrollArea } from '@hanzo_network/hanzo-ui';
 import { runExec, type ExecHandle } from '../../machine-state';
 import { Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -84,10 +84,10 @@ export const ExecTerminal = ({ machineName }: { machineName: string }) => {
             <pre
               className={
                 l.stream === 'stderr'
-                  ? 'whitespace-pre-wrap text-red-400'
+                  ? 'text-red-400 whitespace-pre-wrap'
                   : l.stream === 'system'
-                    ? 'text-text-tertiary whitespace-pre-wrap'
-                    : 'text-text-default whitespace-pre-wrap'
+                  ? 'text-text-tertiary whitespace-pre-wrap'
+                  : 'text-text-default whitespace-pre-wrap'
               }
               key={i}
             >
@@ -106,9 +106,7 @@ export const ExecTerminal = ({ machineName }: { machineName: string }) => {
           className="text-text-default flex-1 bg-transparent font-mono text-xs focus:outline-none"
           disabled={pending}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={
-            pending ? 'running...' : 'type a command and press Enter'
-          }
+          placeholder={pending ? 'running...' : 'type a command and press Enter'}
           spellCheck={false}
           value={input}
         />

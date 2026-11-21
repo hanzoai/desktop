@@ -1,11 +1,11 @@
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@hanzo/desktop-ui';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import React from 'react';
 
 interface VideoBannerProps {
@@ -52,11 +52,7 @@ export function VideoBanner({ title, videoUrl, duration }: VideoBannerProps) {
       </div>
 
       <Dialog onOpenChange={setIsVideoDialogOpen} open={isVideoDialogOpen}>
-        <DialogContent
-          className="sm:max-w-[85vw]"
-          showCloseButton={false}
-          maxW={'85vw'}
-        >
+        <DialogContent className="sm:max-w-[85vw]">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
           </DialogHeader>

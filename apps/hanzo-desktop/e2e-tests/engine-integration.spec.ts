@@ -16,13 +16,13 @@ const TEST_MODEL_PATH = process.env.TEST_MODEL_PATH;
 
 test.describe('Zoo Node API Connectivity', () => {
   test('should connect to zoo-node health endpoint', async ({ request }) => {
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/health`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/health`);
 
     // The node HTTP server must be reachable (status < 500).
-    // Some builds return 404 on /v1/node/health; that still proves the
+    // Some builds return 404 on /v2/health; that still proves the
     // server is up and routing requests.
     expect(response.status()).toBeLessThan(500);
-    console.log(`Zoo-node /v1/node/health: HTTP ${response.status()}`);
+    console.log(`Zoo-node /v2/health: HTTP ${response.status()}`);
 
     if (response.ok()) {
       const health = await response.json();
@@ -31,10 +31,10 @@ test.describe('Zoo Node API Connectivity', () => {
   });
 
   test('should verify zoo-node is running with Hanzo engine', async ({ request }) => {
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_llm_providers`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_llm_providers`);
 
     expect(response.status()).toBeLessThan(500);
-    console.log(`Zoo-node /v1/node/available_llm_providers: HTTP ${response.status()}`);
+    console.log(`Zoo-node /v2/available_llm_providers: HTTP ${response.status()}`);
 
     if (response.ok()) {
       const providers = await response.json();
@@ -44,10 +44,10 @@ test.describe('Zoo Node API Connectivity', () => {
   });
 
   test('should check for available agents', async ({ request }) => {
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_agents`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_agents`);
 
     expect(response.status()).toBeLessThan(500);
-    console.log(`Zoo-node /v1/node/available_agents: HTTP ${response.status()}`);
+    console.log(`Zoo-node /v2/available_agents: HTTP ${response.status()}`);
 
     if (response.ok()) {
       const agents = await response.json();
@@ -59,10 +59,10 @@ test.describe('Zoo Node API Connectivity', () => {
 test.describe('Hanzo Engine Integration', () => {
   test('should verify Hanzo engine is configured', async ({ request }) => {
     // Check if HanzoEngine agent is available
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_agents`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_agents`);
 
     expect(response.status()).toBeLessThan(500);
-    console.log(`Zoo-node /v1/node/available_agents: HTTP ${response.status()}`);
+    console.log(`Zoo-node /v2/available_agents: HTTP ${response.status()}`);
 
     if (response.ok()) {
       const agents = await response.json();
@@ -99,7 +99,7 @@ test.describe('Hanzo Engine Integration', () => {
     };
 
     try {
-      const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+      const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
         data: inferencePayload,
         timeout: 30000, // 30 second timeout
       });
@@ -131,7 +131,7 @@ test.describe('Model Loading', () => {
     console.log(`Test model path: ${TEST_MODEL_PATH}`);
 
     // Check if we can query model info
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/available_models`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/available_models`);
 
     if (response.ok()) {
       const models = await response.json();
@@ -146,9 +146,9 @@ test.describe('Model Loading', () => {
   test('should handle model configuration requests', async ({ request }) => {
     // Test that model configuration endpoints are available
     const endpoints = [
-      '/v1/node/available_llm_providers',
-      '/v1/node/available_agents',
-      '/v1/node/health',
+      '/v2/available_llm_providers',
+      '/v2/available_agents',
+      '/v2/health',
     ];
 
     for (const endpoint of endpoints) {
@@ -200,7 +200,7 @@ test.describe('UI Engine Integration', () => {
 
 test.describe('Error Handling', () => {
   test('should handle invalid API endpoints gracefully', async ({ request }) => {
-    const response = await request.get(`${ZOO_NODE_URL}/v1/node/nonexistent_endpoint`);
+    const response = await request.get(`${ZOO_NODE_URL}/v2/nonexistent_endpoint`);
 
     // Should return 404 or similar, not crash
     expect(response.status()).toBeGreaterThanOrEqual(400);
@@ -208,7 +208,7 @@ test.describe('Error Handling', () => {
   });
 
   test('should handle malformed requests', async ({ request }) => {
-    const response = await request.post(`${ZOO_NODE_URL}/v1/node/text_inference`, {
+    const response = await request.post(`${ZOO_NODE_URL}/v2/text_inference`, {
       data: { invalid: 'payload' },
     });
 

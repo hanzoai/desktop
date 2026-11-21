@@ -1,4 +1,4 @@
-import { updateJobScope as updateJobScopeApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { updateJobScope as updateJobScopeApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type UpdateChatConfigInput } from './types';
 

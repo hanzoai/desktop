@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     fs,
     path::{Path, PathBuf},
     time::Duration,
@@ -11,7 +10,6 @@ use tauri::AppHandle;
 use tokio::sync::mpsc::Sender;
 
 use crate::local_hanzo_node::hanzo_node_options::HanzoNodeOptions;
-use crate::local_hanzo_node::PINNED_NODE_VERSION;
 
 use super::{
     process_handler::{ProcessHandler, ProcessHandlerEvent},
@@ -28,8 +26,6 @@ pub struct HanzoNodeProcessHandler {
 
 impl HanzoNodeProcessHandler {
     const HEALTH_REQUEST_TIMEOUT_MS: u64 = 250;
-    const HEALTH_RETRY_MS: u64 = 100;
-    const HEALTH_RETRY_CEILING_MS: u64 = 2000;
     // Cold node start (DB open + migrations + API bind) can exceed 10s under load
     // (e.g. concurrent downloads, first-run on slow disk/network); allow more headroom.
     const HEALTH_TIMEOUT_MS: u64 = 60000;
@@ -73,67 +69,58 @@ impl HanzoNodeProcessHandler {
     }
 
     async fn health(base_url: &str, timeout: Duration) -> bool {
-        // The node serves its HTTP API under `/v1/node` (v1.19.2+) or `/v2` (v1.15.x).
-        // Probe `/v1/node/health_check` first, then `/v2/health_check`; any HTTP
-        // response from the local node port (< 500) proves the HTTP server is up.
+        // The node serves its HTTP API under `/v1/node` (matching the frontend's
+        // hanzo-message-ts client). Probe the readiness endpoint there.
+        let url = format!("{}/v1/node/health_check", base_url);
         let client = reqwest::Client::new();
-        for path in ["/v1/node/health_check", "/v2/health_check"] {
-            let url = format!("{}{}", base_url, path);
-            log::info!(
-                "checking hanzo-node health of {} with timeout {:?}",
-                url,
-                timeout
-            );
-            if let Ok(response) = client.get(&url).timeout(timeout).send().await {
+        log::info!(
+            "checking hanzo-nodehealth of {} with timeout {:?}",
+            url,
+            timeout
+        );
+        match client.get(&url).timeout(timeout).send().await {
+            Ok(response) => {
                 let status = response.status();
                 let text = response.text().await;
-                log::info!("health check response ({}): {:?} {:?}", path, status, text);
-                if status.is_success() || status == reqwest::StatusCode::NOT_FOUND {
-                    return true;
-                }
+                log::info!("health check response: {:?} {:?}", status, text);
+                status == reqwest::StatusCode::OK
+            }
+            Err(e) => {
+                log::info!("health check failed {:?}", e);
+                false
             }
         }
-        false
     }
 
-    /// Poll the node's health endpoint until it answers, or give up.
-    ///
-    /// How long ONE probe may take and how long to wait before the next are
-    /// separate quantities: the request timeout is fixed, and only the gap
-    /// between attempts grows, doubling to a ceiling.
-    ///
-    /// The join handle is held rather than detached because `tokio::spawn` runs
-    /// the task independently of it — dropping a `JoinHandle` does not cancel
-    /// the task. Without the `abort()` below, losing the select to the timeout
-    /// leaves the loop probing and logging for the life of the process.
     async fn wait_hanzo_node_server(&self) -> Result<(), String> {
         let max_wait_time = Duration::from_millis(Self::HEALTH_TIMEOUT_MS);
-        let request_timeout = Duration::from_millis(Self::HEALTH_REQUEST_TIMEOUT_MS);
+        let default_timeout = Duration::from_millis(Self::HEALTH_REQUEST_TIMEOUT_MS);
+        let mut timeout = default_timeout;
+        let mut retries = 0;
         let start_time = std::time::Instant::now();
         let base_url = self.get_base_url();
-
-        let mut probe = tokio::spawn(async move {
-            let ceiling = Duration::from_millis(Self::HEALTH_RETRY_CEILING_MS);
-            let mut delay = Duration::from_millis(Self::HEALTH_RETRY_MS);
-            loop {
-                if Self::health(base_url.as_str(), request_timeout).await {
-                    break;
-                }
-                log::info!("health check failed, retrying in {:?}", delay);
-                tokio::time::sleep(delay).await;
-                delay = (delay * 2).min(ceiling);
-            }
-        });
-
         tokio::select! {
             _ = tokio::time::sleep(max_wait_time) => {
-                probe.abort();
-                Err(format!(
-                    "wait hanzo-node server timeout after {}ms",
-                    start_time.elapsed().as_millis()
-                ))
+                let elapsed = start_time.elapsed();
+                Err(format!("wait hanzo-node server timeout after {}ms", elapsed.as_millis()))
             }
-            _ = &mut probe => Ok(()),
+            _ = tokio::spawn(async move {
+                loop {
+                    match Self::health(base_url.as_str(), timeout).await {
+                        true => break,
+                        false => {
+                            retries = retries + 1;
+                            log::info!("health check failed, retrying in {:?}ms", timeout);
+                            let retry_add = default_timeout * retries;
+                            timeout = timeout.checked_add(retry_add).unwrap_or(max_wait_time);
+                            log::info!("new timeout is: {:?}", timeout);
+                            tokio::time::sleep(Duration::from_millis(50)).await
+                        }
+                    }
+                }
+            }) => {
+                Ok(())
+            }
         }
     }
 
@@ -178,37 +165,10 @@ impl HanzoNodeProcessHandler {
         Ok(())
     }
 
-    /// The env the node is spawned with: these options, plus the signed-in
-    /// `session_key` and the embeddings base and model the pinned node release
-    /// understands (hanzo-node-env). Never log its values.
-    pub fn spawn_env(&self, session_key: Option<&str>) -> HashMap<String, String> {
-        hanzo_node_env::spawn_env(
-            options_to_env(&self.options),
-            session_key,
-            PINNED_NODE_VERSION,
-        )
-    }
-
-    /// Starts the node with `env` (from [`Self::spawn_env`]), stopping any
-    /// node already running first.
-    pub async fn spawn(&self, env: HashMap<String, String>) -> Result<(), String> {
+    pub async fn spawn(&self) -> Result<(), String> {
         let _ = self.kill().await;
 
-        // Earlier builds could write the local node's HTTPS key to the log;
-        // replace that certificate once, while the node is stopped.
-        if let Some(storage) = self.options.node_storage_path.as_deref() {
-            match hanzo_node_secret::rotate_localhost_cert_once(std::path::Path::new(storage)) {
-                Ok(hanzo_node_secret::Rotation::Rotated) => {
-                    log::info!("rotated the local node's localhost HTTPS certificate")
-                }
-                Ok(_) => {}
-                Err(e) => log::warn!(
-                    "could not rotate the local node's localhost HTTPS certificate: {}",
-                    e.kind()
-                ),
-            }
-        }
-
+        let env = options_to_env(&self.options.clone());
         self.process_handler.spawn(env, [].to_vec(), None).await?;
         if let Err(e) = self.wait_hanzo_node_server().await {
             self.process_handler.kill().await;

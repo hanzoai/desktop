@@ -1,22 +1,3 @@
-/**
- * THE brand table. One and only one.
- *
- * Every brand-varying value in the desktop — IdP, chain, cloud API, docs, mark,
- * bundle identifier — is resolved from here via `getBrand()`. There is no second
- * table and no per-surface literal: a hardcoded `hanzo.id` or `<HanzoMark/>` on a
- * surface that a Zoo or Lux build also renders IS the bug this file exists to
- * prevent.
- *
- * Resolution order (see `getBrand`): `VITE_BRAND` (set at build time by
- * `apps/hanzo-desktop/scripts/brand-build.cjs`, which also swaps the Tauri
- * identifier / icons / deep-link scheme) → hostname → hanzo.
- *
- * `iam.clientId` is the desktop OAuth client declaratively provisioned in each
- * brand's IAM as `<brand>-app` — a PUBLIC client (PKCE S256, ships no secret).
- * `iam.redirectUri` must match the brand's `deep-link.desktop.schemes` entry in
- * `tauri.conf.<brand>.json`, and `iam.callbackEvent` the event that
- * `src-tauri/src/deep_links.rs` emits for that scheme's `/oauth/<brand>` path.
- */
 export type Brand = 'hanzo' | 'zoo' | 'lux';
 
 export interface BrandConfig {
@@ -44,31 +25,20 @@ export interface BrandConfig {
   // from the chain RPC: this is the user-facing inference gateway, not the
   // chain mining target.
   inferenceEndpoint: string;
-  // Cloud control-plane API (fleet + durable jobs). Where a BYO-GPU node
-  // registers (/v1/machines, /v1/gpus) and claims work (/v1/tasks gpu-jobs).
-  // Brand-scoped: a Hanzo login links the GPU into api.hanzo.ai; Lux → lux.cloud;
-  // Zoo → zoo.cloud. This is what `hanzo gpu connect` / hanzod targets.
-  cloudApi: string;
-  // Documentation site. Every "Docs" affordance in the UI reads this — a Zoo
-  // build must never deep-link a reader into Hanzo's docs.
-  docs: string;
   // OAuth IAM provider used by "Login with <Brand>" flow.
   iam: {
     baseUrl: string;
     clientId: string;
     redirectUri: string;
     callbackEvent: string;
-    // The brand site's own sign-in page, which finishes an app's authorize
-    // request (@hanzo/iam `ask`). Absent, the IAM's page does.
-    page?: string;
   };
 }
 
 const HANZO: BrandConfig = {
   brand: 'hanzo',
   name: 'Hanzo',
-  productName: 'Hanzo',
-  identifier: 'ai.hanzo.desktop',
+  productName: 'Hanzo Desktop',
+  identifier: 'com.hanzo.desktop',
   logo: {
     light: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',
     dark: 'libs/hanzo-logo/assets/hanzo/hanzo-logo.svg',
@@ -90,15 +60,12 @@ const HANZO: BrandConfig = {
     blockExplorer: 'https://explorer.hanzo.network',
   },
   overlayController: 'https://edge.web3.hanzo.ai',
-  inferenceEndpoint: 'https://api.hanzo.ai',
-  cloudApi: 'https://api.hanzo.ai',
-  docs: 'https://docs.hanzo.ai',
+  inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://hanzo.id',
-    clientId: 'hanzo-app',
+    clientId: 'hanzo-app-client-id',
     redirectUri: 'hanzo://oauth/hanzo',
     callbackEvent: 'hanzo-iam-callback',
-    page: 'https://hanzo.ai/login',
   },
 };
 
@@ -128,12 +95,10 @@ const ZOO: BrandConfig = {
     blockExplorer: 'https://explorer.zoo.network',
   },
   overlayController: 'https://edge.zoo.cloud',
-  inferenceEndpoint: 'https://api.hanzo.ai',
-  cloudApi: 'https://api.zoo.cloud',
-  docs: 'https://docs.zoo.ngo',
+  inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://zoolabs.id',
-    clientId: 'zoo-app',
+    clientId: 'zoo-app-client-id',
     redirectUri: 'zoo://oauth/zoo',
     callbackEvent: 'zoo-iam-callback',
   },
@@ -165,12 +130,10 @@ const LUX: BrandConfig = {
     blockExplorer: 'https://explorer.lux.network',
   },
   overlayController: 'https://edge.lux.cloud',
-  inferenceEndpoint: 'https://api.hanzo.ai',
-  cloudApi: 'https://api.lux.cloud',
-  docs: 'https://docs.lux.network',
+  inferenceEndpoint: 'https://gateway.hanzo.ai',
   iam: {
     baseUrl: 'https://lux.id',
-    clientId: 'lux-app',
+    clientId: 'lux-app-client-id',
     redirectUri: 'lux://oauth/lux',
     callbackEvent: 'lux-iam-callback',
   },
@@ -191,8 +154,8 @@ export function getBrandFromHostname(h: string): BrandConfig {
 /**
  * isMachinesEnabled controls whether the Machines / Containers / K8s /
  * Network pages render. Brands that ship the daemon-backed app stack —
- * Hanzo, Lux, Zoo — expose them by default. Other brands must opt in via
- * VITE_ENABLE_MACHINES=true.
+ * Hanzo, Lux, Zoo — expose them by default. Other brands (e.g. liquidity)
+ * must opt in via VITE_ENABLE_MACHINES=true.
  */
 export function isMachinesEnabled(cfg: BrandConfig = getBrand()): boolean {
   if (cfg.brand === 'hanzo' || cfg.brand === 'lux' || cfg.brand === 'zoo') return true;

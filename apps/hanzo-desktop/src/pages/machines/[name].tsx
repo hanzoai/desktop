@@ -5,7 +5,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import {
   type Machine,
   useDeleteMachine,
@@ -57,7 +57,7 @@ const Field = ({
   children: React.ReactNode;
 }) => (
   <div className="flex flex-col gap-0.5">
-    <span className="text-text-tertiary text-xs tracking-wide uppercase">
+    <span className="text-text-tertiary text-xs uppercase tracking-wide">
       {label}
     </span>
     <div className="text-text-default">{children}</div>
@@ -92,7 +92,7 @@ const MachineDetailPage = () => {
         <Button onClick={() => navigate('/machines')} variant="tertiary">
           <ArrowLeft className="mr-2 size-4" /> Back
         </Button>
-        <p className="text-sm text-red-400">
+        <p className="text-red-400 text-sm">
           {error?.message ?? 'Machine not found'}
         </p>
       </div>
@@ -135,7 +135,7 @@ const MachineDetailPage = () => {
           >
             <ArrowLeft className="size-4" />
           </Button>
-          <h1 className="font-sans text-2xl font-medium">{machine.name}</h1>
+          <h1 className="font-inter text-2xl font-medium">{machine.name}</h1>
           <MachineStateBadge state={machine.state} />
         </div>
         <div className="flex items-center gap-2">
@@ -157,7 +157,10 @@ const MachineDetailPage = () => {
         </div>
       </div>
 
-      <Tabs onValueChange={(v) => setSearchParams({ tab: v })} value={tab}>
+      <Tabs
+        onValueChange={(v) => setSearchParams({ tab: v })}
+        value={tab}
+      >
         <TabsList>
           <TabsTrigger value="info">Info</TabsTrigger>
           <TabsTrigger disabled={!isRunning} value="shell">

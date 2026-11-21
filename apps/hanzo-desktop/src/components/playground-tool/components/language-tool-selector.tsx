@@ -1,4 +1,4 @@
-import { CodeLanguage } from '@hanzo/desktop-message-ts/api/tools/types';
+import { CodeLanguage } from '@hanzo_network/hanzo-message-ts/api/tools/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,11 +7,12 @@ import {
   DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
+  TooltipPortal,
   TooltipProvider,
   TooltipTrigger,
-} from '@hanzo/desktop-ui';
-import { PythonIcon, TypeScriptIcon } from '@hanzo/desktop-ui/assets';
-import { cn } from '@hanzo/desktop-ui/utils';
+} from '@hanzo_network/hanzo-ui';
+import { PythonIcon, TypeScriptIcon } from '@hanzo_network/hanzo-ui/assets';
+import { cn } from '@hanzo_network/hanzo-ui/utils';
 import { ChevronDownIcon } from 'lucide-react';
 
 import { actionButtonClassnames } from '../../chat/conversation-footer';
@@ -37,9 +38,9 @@ export function LanguageToolSelector({
   onValueChange: (value: string) => void;
 }) {
   return (
-    <DropdownMenu placement="top-start">
-      <TooltipProvider delay={0}>
-        <Tooltip placement="top">
+    <DropdownMenu>
+      <TooltipProvider delayDuration={0}>
+        <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger
               className={cn(
@@ -60,8 +61,16 @@ export function LanguageToolSelector({
               <ChevronDownIcon className="icon h-3 w-3" />
             </DropdownMenuTrigger>
           </TooltipTrigger>
-          <TooltipContent>Switch code language</TooltipContent>
-          <DropdownMenuContent overflow="scroll">
+          <TooltipPortal>
+            <TooltipContent align="center" side="top">
+              Switch code language
+            </TooltipContent>
+          </TooltipPortal>
+          <DropdownMenuContent
+            align="start"
+            className="min-w-[200px] overflow-y-auto p-1 py-2"
+            side="top"
+          >
             <DropdownMenuRadioGroup onValueChange={onValueChange} value={value}>
               {LANGUAGE_TOOLS.map((language) => (
                 <DropdownMenuRadioItem

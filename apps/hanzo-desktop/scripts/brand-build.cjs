@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const SUPPORTED = ['hanzo', 'zoo', 'lux', 'team', 'node', 'bot', 'studio'];
+const SUPPORTED = ['hanzo', 'zoo', 'lux'];
 const brand = process.argv[2];
 if (!brand || !SUPPORTED.includes(brand)) {
   console.error('usage: brand-build.cjs <' + SUPPORTED.join('|') + '>');
@@ -82,7 +82,7 @@ process.on('SIGINT', () => { restore(); process.exit(130); });
 process.on('SIGTERM', () => { restore(); process.exit(143); });
 
 const env = { ...process.env, VITE_BRAND: brand, BRAND: brand };
-const result = spawnSync('tauri', ['build'].concat((process.env.TAURI_BUNDLES||'').split(',').filter(Boolean).length?['--bundles',process.env.TAURI_BUNDLES]:[]), { stdio: 'inherit', env });
+const result = spawnSync('tauri', ['build'], { stdio: 'inherit', env });
 
 restore();
 process.exit(result.status ?? 1);

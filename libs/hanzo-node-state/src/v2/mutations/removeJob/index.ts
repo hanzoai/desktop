@@ -1,4 +1,4 @@
-import { removeJob as removeJobApi } from '@hanzo/desktop-message-ts/api/jobs/index';
+import { removeJob as removeJobApi } from '@hanzo_network/hanzo-message-ts/api/jobs/index';
 
 import { type RemoveJobInput } from './types';
 

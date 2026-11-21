@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTranslation } from '@hanzo/desktop-i18n';
+import { useTranslation } from '@hanzo_network/hanzo-i18n';
 import {
   type McpServer,
   McpServerType,
-} from '@hanzo/desktop-message-ts/api/mcp-servers/types';
-import { type AddMcpServerInput } from '@hanzo/desktop-node-state/v2/mutations/addMcpServer/types';
-import { useAddMcpServer } from '@hanzo/desktop-node-state/v2/mutations/addMcpServer/useAddMcpServer';
-import { type ImportMCPServerFromGithubURLOutput } from '@hanzo/desktop-node-state/v2/mutations/importMCPServerFromGithubURL/types';
-import { type UpdateMcpServerInput } from '@hanzo/desktop-node-state/v2/mutations/updateMcpServer/types';
-import { useUpdateMcpServer } from '@hanzo/desktop-node-state/v2/mutations/updateMcpServer/useUpdateMcpServer';
+} from '@hanzo_network/hanzo-message-ts/api/mcp-servers/types';
+import { type AddMcpServerInput } from '@hanzo_network/hanzo-node-state/v2/mutations/addMcpServer/types';
+import { useAddMcpServer } from '@hanzo_network/hanzo-node-state/v2/mutations/addMcpServer/useAddMcpServer';
+import { type ImportMCPServerFromGithubURLOutput } from '@hanzo_network/hanzo-node-state/v2/mutations/importMCPServerFromGithubURL/types';
+import { type UpdateMcpServerInput } from '@hanzo_network/hanzo-node-state/v2/mutations/updateMcpServer/types';
+import { useUpdateMcpServer } from '@hanzo_network/hanzo-node-state/v2/mutations/updateMcpServer/useUpdateMcpServer';
 import {
   Button,
   Dialog,
@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
   TextField,
-} from '@hanzo/desktop-ui';
+} from '@hanzo_network/hanzo-ui';
 import { AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useFieldArray, useForm } from 'react-hook-form';
@@ -293,7 +293,7 @@ export const AddMcpServerModal = ({
 
   return (
     <Dialog onOpenChange={(open) => !open && onClose()} open={isOpen}>
-      <DialogContent className="max-w-xl" showCloseButton maxW={576}>
+      <DialogContent className="max-w-xl" showCloseButton>
         <DialogHeader className="flex flex-col gap-2">
           <DialogTitle>
             {mode === 'Create' ? t('mcpServers.add') : t('mcpServers.update')}
