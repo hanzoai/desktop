@@ -492,12 +492,12 @@ Four startup errors were reported from 1.1.54's log. Their causes, measured
 against the pinned node (v1.15.0, source `hanzoai/node-v1`, now archived):
 
 - **No engine binary.** Release bundles ship `hanzo-node`, `deno` and `uv`, not
-  `hanzo-server`, so spawning it failed twice per start. `src-tauri/engine-bin`
-  (crate `hanzo-engine-bin`, gate `engine-bin`) answers first whether one exists:
-  `HANZO_ENGINE_BIN` as written, then beside the app executable, then `PATH`.
-  None means both engine ports are skipped with an INFO line; the old fallback to
-  a system Ollama on :11434 still runs first. Whether bundles ship an engine is
-  an owner decision, not a code one.
+  the engine. `src-tauri/engine-bin` (crate `hanzo-engine-bin`, gate `engine-bin`)
+  answers whether one exists: `HANZO_ENGINE_BIN` as written, then `hanzo-engine`
+  (the name hanzoai/engine's release ships) or `hanzo-server` (the old name)
+  beside the app executable, then on `PATH`. Nothing starts an engine at boot any
+  more, and there is no Ollama fallback: see "Local AI" below. Whether bundles
+  ship an engine is an owner decision, not a code one.
 - **384 vs 768.** The node sizes its `vec0` tables from `DEFAULT_EMBEDDING_MODEL`
   when it CREATES its database, and seeds 130 static prompts whose embeddings are
   precomputed with `embeddinggemma:300m` (768 floats). The app passed
@@ -1225,3 +1225,24 @@ root.
 - **Single Canonical Shell (`apps/hanzo-desktop/src/host.tsx`, `src/app.css`, `index.html`)**: Desktop mounts directly on `@hanzo/app`'s canonical `<Rooms><App bar={BAR} /></Rooms>` shell (no duplicate `UnifiedDesktopShell` wrapper). `app.css` and `index.html` apply the obsidian `#050505` outer floor, `#09090b` collapsible left sidebar, and inset rounded `#0f0f12` stage pane (`1px solid rgba(255,255,255,0.08)` hairline border) directly onto `@hanzo/app`'s slots.
 - **Multi-Brand Shell Identity (`apps/hanzo-desktop/src/lib/brand-identity.ts`)**: `resolveDesktopShellBrand({ viteBrand, hostname, pathname })` resolves `'hanzo' | 'dev' | 'bot' | 'team'` across `VITE_BRAND`, hostnames (`hanzo.bot`, `hanzo.team`), and internal paths (`/bots`, `/team`, `/channels`, `/dev`), plus `DESKTOP_CROSS_APPS` for cross-surface switching (`Chat`, `Dev`, `Bot`, `Team`, `Console`, `Desktop / Mobile`).
 - **Local AI Test Stability & Zen 6 Catalog (`apps/hanzo-desktop/src/local-ai.tsx`, `src/lib/hanzo-node-manager/model-catalog.json`, `src/components/ais/constants.tsx`)**: Upgraded all active Zen model SKUs and UI badges/placeholders to **Zen 6** (`zen6`, `zen6-coder`, `zen6-flash`, `zen6-max`, `zen6-free`, `zen-vl`) mapped to `qwen3+` / `qwen3-vl` local weights with zero `zen4`, `zen5`, or `qwen2` entries in `model-catalog.json` or rendered UI; parallelized localhost probes (`Promise.all` with fast test-mode timeout), skipped eager hidden-mount probes, and windowed initial unsearched `All` catalog view (`20` models + "Show all" toggle) so `src/__tests__/local-ai.test.tsx` completes deterministically in <3s.
+
+## Local AI: models on this computer, on Hanzo's engine
+
+`src/local-ai.tsx` is the screen (the bar's Local AI button); `src/lib/local-models.ts` is its one
+seam; `src-tauri/src/local_models.rs` is the work, six commands, each `allow-` granted in
+`capabilities/main.json`:
+
+- `local_models_pull(repo)` downloads into the engine's own Hugging Face cache (`HF_HUB_CACHE`, else
+  `HF_HOME/hub`, else `~/.cache/huggingface/hub`), the layout `hanzo-engine serve -m org/name` loads and
+  `hanzo engine list` reads (checked: it lists a model written here). Progress is the
+  `local-models-progress` event, `{repo, done, total}` in bytes. `local_models_cancel` calls it off.
+- It does not shell out to `hanzo engine pull`: that CLI is not in the app, and it fetches the WHOLE
+  repository, 6.6 GB for `zenlm/zen-nano-0.6b` (eight GGUFs and an MLX copy) where the engine needs
+  1.2 GB. `wanted()` keeps top-level files and drops duplicate weight formats.
+- `local_models_serve(repo)` runs `hanzo-engine serve -m <repo> -p 36900 --host 127.0.0.1` with
+  `HF_HUB_OFFLINE=1`, only when the person presses Use (or chats with a downloaded model chosen). One
+  at a time; `local_models_stop`, Remove, and app exit (`local_models::stop_all`) stop it.
+- Which catalogue tags can be downloaded is `LOCAL_SOURCES` in `local-models.ts` (repo and measured
+  download size). Every other catalogue entry is an Ollama tag and says "Not available yet".
+- Test: `cargo test --bin hanzo-desktop local_models` (a stand-in model library on a local port),
+  `src/__tests__/local-ai.test.tsx` (mocked `invoke`).
