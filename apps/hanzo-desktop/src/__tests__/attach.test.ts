@@ -38,6 +38,34 @@ describe('attaching a file', () => {
     expect(got?.dataUrl).toMatch(/^data:image\/png;base64,/);
   });
 
+  it('signed out, says in a sentence why a PDF or a video cannot be read, and reads nothing', async () => {
+    const { json, via } = api();
+    const files = [
+      new File(['%PDF-1.7'], 'contract.pdf', { type: 'application/pdf' }),
+      new File([new Uint8Array(16)], 'clip.mp4', { type: 'video/mp4' }),
+    ];
+    await hold('signed-out-other', files, via());
+    const held = paneOf('signed-out-other').held;
+    for (const [i, h] of held.entries()) {
+      expect(await landed(h)).toBeNull();
+      expect(paneOf('signed-out-other').held[i].state).toBe('failed');
+      expect(paneOf('signed-out-other').held[i].error).toBe(
+        `Sign in to attach ${files[i].name}: without an account only pictures and text files can be read here.`,
+      );
+    }
+    expect(json).not.toHaveBeenCalled();
+  });
+
+  it('signed out, will not read a text file over 1 MB', async () => {
+    const { via } = api();
+    const big = new File([new Uint8Array(1024 * 1024 + 1)], 'dump.log', { type: 'text/plain' });
+    await hold('signed-out-big', [big], via());
+    expect(await landed(paneOf('signed-out-big').held[0])).toBeNull();
+    expect(paneOf('signed-out-big').held[0].error).toBe(
+      'dump.log is too large to attach without signing in (text files up to 1 MB).',
+    );
+  });
+
   it('signed in, sends the file to the workspace upload, and a failure is the upload’s own', async () => {
     const { json, via } = api();
     await hold('signed-in', [new File(['x'], 'report.txt', { type: 'text/plain' })], via('acme'));

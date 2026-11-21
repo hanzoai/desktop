@@ -187,10 +187,30 @@ index 082b539d1fb45c42f9b0c214851a40362c496de0..083f8894ffdb7d6dca1c75c19be5e8d1
      { does: phrase('New line'), mac: '⇧Enter', pc: 'Shift+Enter', group: 'Chat' },
      { does: phrase('Rename chat'), mac: said('rename', true), pc: said('rename', false), group: 'Chat' },
 diff --git a/dist/pane.js b/dist/pane.js
-index d0b1f5874378bf30e087641f6ef6fb80476a8ec5..17e81dd09aaeaae449c156f8b9fd67c77e10a2a8 100644
+index d0b1f5874378bf30e087641f6ef6fb80476a8ec5..50f7afc057aacfa7a879ddbc0cf474db4f942b31 100644
 --- a/dist/pane.js
 +++ b/dist/pane.js
-@@ -129,11 +129,6 @@ function watch(api, f, key, id) {
+@@ -126,14 +126,26 @@ function watch(api, f, key, id) {
+  * the index, and is followed through its stages. Nothing is refused for its
+  * size or its kind: a file the index cannot read is still kept, and says why.
+  */
++// Hanzo Desktop, signed out: what the window reads itself, and how much of it.
++// A picture goes with the turn as itself; a text file as its text; anything else
++// (a PDF, a video, an archive) is only readable through the workspace, so it says
++// so instead of reaching the model as garbage or freezing the window.
++const LOCAL_TEXT = /^(text\/|application\/(json|xml|javascript|x-yaml|yaml|x-sh|sql|toml)$)/;
++const LOCAL_TEXT_NAME = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|ya?ml|toml|ini|log|html?|css|js|jsx|ts|tsx|py|rb|go|rs|java|kt|swift|c|h|cpp|hpp|cs|php|sh|sql)$/i;
++const LOCAL_IMAGE_NAME = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
++const LOCAL_TEXT_MAX = 1024 * 1024;
++const LOCAL_IMAGE_MAX = 10 * 1024 * 1024;
++/** How the window can read `file` with no session: 'image', 'text', or a sentence saying why not. */
++export function localRead(file) {
++    if (file.type.startsWith('image/') || (!file.type && LOCAL_IMAGE_NAME.test(file.name)))
++        return file.size <= LOCAL_IMAGE_MAX ? 'image' : `${file.name} is too large to attach without signing in (pictures up to 10 MB).`;
++    if (LOCAL_TEXT.test(file.type) || LOCAL_TEXT_NAME.test(file.name))
++        return file.size <= LOCAL_TEXT_MAX ? 'text' : `${file.name} is too large to attach without signing in (text files up to 1 MB).`;
++    return `Sign in to attach ${file.name}: without an account only pictures and text files can be read here.`;
++}
  export async function hold(key, list, via) {
      if (!list.length)
          return;
@@ -202,7 +222,7 @@ index d0b1f5874378bf30e087641f6ef6fb80476a8ec5..17e81dd09aaeaae449c156f8b9fd67c7
      const taken = list.map((file) => ({
          id: mint('h'),
          name: file.name,
-@@ -152,6 +147,47 @@ export async function hold(key, list, via) {
+@@ -152,6 +164,53 @@ export async function hold(key, list, via) {
          carrying.set(h.id, { stop, done });
          return { h, file: list[i], stop, land };
      });
@@ -214,7 +234,13 @@ index d0b1f5874378bf30e087641f6ef6fb80476a8ec5..17e81dd09aaeaae449c156f8b9fd67c7
 +            try {
 +                if (stop.signal.aborted)
 +                    return land(null);
-+                const isImage = file.type.startsWith('image/') || /\.(png|jpe?g|gif|webp|avif|svg)$/i.test(file.name);
++                const how = localRead(file);
++                if (how !== 'image' && how !== 'text') {
++                    sources.delete(h.id); // nothing to retry: signing in is the way
++                    patch(key, h.id, { state: 'failed', error: how });
++                    return land(null);
++                }
++                const isImage = how === 'image';
 +                const got = {
 +                    id: `local-${h.id}`,
 +                    name: file.name,
