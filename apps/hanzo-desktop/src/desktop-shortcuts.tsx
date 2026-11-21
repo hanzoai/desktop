@@ -464,25 +464,6 @@ export function DesktopSettings({
                 />
               </Card>
             </Group>
-            <Group title="Diagnostics">
-              <Card>
-                <Row
-                  first
-                  title="Local engine benchmarks"
-                  detail="Throughput and D-LSA sparse-attention runs against the local engine."
-                  trailing={
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      data-testid="desktop-benchmarks"
-                      onPress={() => window.history.pushState(null, '', '/benchmark')}
-                    >
-                      Open benchmarks
-                    </Button>
-                  }
-                />
-              </Card>
-            </Group>
           </YStack>
         ) : null}
       </Settings>

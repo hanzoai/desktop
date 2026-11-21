@@ -223,7 +223,6 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     const advanced = screen.getByTestId('desktop-advanced');
     expect(advanced.textContent).toMatch(/127\.0\.0\.1:9630/);
     expect(advanced.textContent).toMatch(/localhost:36900/);
-    expect(screen.getByTestId('desktop-benchmarks')).toBeTruthy();
   });
 
   it('answers the window keys @hanzo/app leaves to it: ⌘N and ⌘⇧M', () => {
