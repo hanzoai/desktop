@@ -47,28 +47,16 @@ log = "0.4"
 # Scrubs key material and credentials out of every log record (and the log
 # files older builds left on disk). See log-redact/src/lib.rs.
 hanzo-log-redact = { path = "log-redact" }
-hanzo-node-secret = { path = "node-secret" }
 # Finds a local hanzo-server, or says there is none (cloud#760). See engine-bin/src/lib.rs.
 hanzo-engine-bin = { path = "engine-bin" }
 # Finds Hanzo Dev, or names the release the app fetches so a local run needs no terminal. See dev-agent/src/lib.rs.
 hanzo-dev-agent = { path = "dev-agent" }
 # The project folders Auto can pick from. See projects/src/lib.rs.
 hanzo-projects = { path = "projects" }
-# The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
-# sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
-hanzo-node-env = { path = "node-env" }
 anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
-kill_tree = { version = "0.2", features = ["tokio"] }
 semver = "1.0"
-sha2 = "0.10"
 rand = "0.8"
-# The OS keychain on every platform the app ships for: Keychain on macOS, the
-# Credential Manager on Windows, the Secret Service (libsecret, over D-Bus) on
-# Linux. keyring 3 has NO default store: with no feature it is the mock, whose
-# entries live and die with one `Entry`, so a session written at sign-in was
-# gone by the reload that follows it and the app came back signed out.
-keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
 
 # hanzo-machined client (UNIX-socket HTTP/JSON)
 hyper = { version = "1.4", features = ["client", "http1"] }

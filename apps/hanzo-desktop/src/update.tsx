@@ -118,7 +118,6 @@ export function useUpdate(): { stage: Stage; install: () => void } {
       // outlive the app and a half-downloaded one would stay on the disk.
       .then(() => cancelDownload().catch(() => undefined))
       .then(() => invoke('local_models_stop').catch(() => undefined))
-      .then(() => invoke('hanzo_node_kill').catch(() => undefined))
       .then(() => found.install())
       .then(() => (platform() === 'windows' ? undefined : relaunch()))
       .catch((err: unknown) => {

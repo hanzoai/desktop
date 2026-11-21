@@ -993,16 +993,12 @@ mod tests {
     }
 
     /// Tray Quit ends the process with process::exit, which skips RunEvent::Exit,
-    /// so it stops the model itself; the node's kill(), behind "Reset connection"
-    /// and respawn, must not.
+    /// so it stops the model itself, and so does RunEvent::Exit.
     #[test]
     fn only_the_exit_paths_stop_the_model() {
         let tray = include_str!("tray.rs");
         let quit = &tray[tray.find("\"quit\" =>").unwrap()..];
         assert!(quit[..quit.find("std::process::exit(0)").unwrap()].contains("crate::local_models::stop_all();"));
-        let node = include_str!("local_hanzo_node/hanzo_node_manager.rs");
-        let kill = &node[node.find("pub async fn kill").unwrap()..];
-        assert!(!kill[..kill.find("\n    }\n").unwrap()].contains("crate::local_models::stop_all();"));
         let main = include_str!("main.rs");
         let exit = &main[main.find("RunEvent::Exit {").unwrap()..];
         assert!(exit[..exit.find("std::process::exit(0)").unwrap()].contains("local_models::stop_all();"));

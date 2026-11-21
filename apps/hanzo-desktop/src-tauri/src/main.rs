@@ -6,48 +6,19 @@ use std::sync::Arc;
 #[cfg(unix)]
 use crate::commands::browser::{browser, browsers};
 use crate::commands::engines::{engine_probe, engines_discover};
-use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
 use crate::commands::hardware::hardware_get_summary;
 use crate::commands::knowledge_graph::{
     knowledge_graph_get_ontology, knowledge_graph_query_entity, knowledge_graph_read_local,
     knowledge_graph_sync_apple, knowledge_graph_update_convo,
 };
-use crate::commands::hanzo_node_manager_commands::{
-    hanzo_node_get_default_model, hanzo_node_get_default_embedding_model,     hanzo_node_get_options, hanzo_node_is_running,
-    hanzo_node_kill, hanzo_node_remove_storage, hanzo_node_set_default_options,
-    hanzo_node_set_options, hanzo_node_spawn, show_hanzo_node_manager_window,
-    hanzo_node_open_storage_location, hanzo_node_open_storage_location_with_path,
-    hanzo_node_open_chat_folder,
-    // @hanzo/ai SDK canonical command names (delegate to the hanzo impls above)
-    node_spawn, node_is_running, node_kill, node_get_options, node_set_options,
-    node_set_default_options, node_get_default_model, node_get_default_embedding_model,
-    node_remove_storage, show_node_manager_window,
-};
-use crate::commands::mcp_clients_install::{
-    check_claude_installed,
-    get_claude_config_help,
-    is_server_registered_in_claude,
-    register_server_in_claude,
-    check_cursor_installed,
-    get_cursor_command_config_help,
-    get_cursor_sse_config_help,
-    is_server_registered_in_cursor,
-    register_command_server_in_cursor,
-    register_sse_server_in_cursor,
-};
 use crate::commands::gpu::{
     gpu_connect_get_state, gpu_connect_start, gpu_connect_stop, GpuConnectManager,
 };
 use crate::commands::studio::{studio_get_state, studio_start, studio_stop, StudioManager};
-use crate::commands::logs::{download_logs, retrieve_logs};
 use crate::commands::mining::{
     mining_get_enabled, mining_set_enabled,
 };
-use crate::commands::secure_storage::{
-    init_secure_storage, secure_storage_delete, secure_storage_get, secure_storage_set,
-};
-use crate::commands::spotlight_commands::{hide_spotlight_window_app, show_spotlight_window_app, open_main_window_with_path_app};
 use crate::commands::local_workspace::{
     local_workspace_open_dialog, local_workspace_open_file_dialog, local_workspace_clone_repo,
     local_workspace_import_file, local_workspace_list, local_workspace_read_file,
@@ -58,27 +29,18 @@ use crate::commands::local_site::{
     local_preview_open, local_preview_start, local_preview_stop, local_site_capture, local_site_folder,
 };
 use crate::mining::MiningManager;
-use crate::model_tools::{
-    model_tools_bitdelta_apply, model_tools_bitdelta_encode, model_tools_grpo_run,
-    model_tools_soup_average, model_tools_soup_available, model_tools_soup_delta,
-};
 use deep_links::setup_deep_links;
 use global_shortcuts::global_shortcut_handler;
-use globals::HANZO_NODE_MANAGER_INSTANCE;
-use local_hanzo_node::hanzo_node_manager::HanzoNodeManager;
 use tauri::{Emitter, WindowEvent};
 use tauri::{Manager, RunEvent};
-use tokio::sync::{RwLock};
 use tray::create_tray;
 use windows::{recreate_window, Window};
 mod commands;
 mod deep_links;
 mod galxe;
 mod global_shortcuts;
-mod globals;
 mod hardware;
 mod local_dev;
-mod local_hanzo_node;
 mod local_models;
 mod identity;
 mod loopback;
@@ -86,7 +48,6 @@ mod loopback;
 mod machine;
 mod mining;
 mod report;
-mod model_tools;
 mod models;
 mod studio_proxy;
 mod tray;
@@ -215,33 +176,6 @@ fn main() {
             identity::identity_file,
             local_dev::dev_local_runtime,
             local_dev::dev_local_pairing,
-            hide_spotlight_window_app,
-            show_spotlight_window_app,
-            open_main_window_with_path_app,
-            show_hanzo_node_manager_window,
-            hanzo_node_is_running,
-            hanzo_node_get_options,
-            hanzo_node_set_options,
-            hanzo_node_spawn,
-            hanzo_node_kill,
-            hanzo_node_remove_storage,
-            hanzo_node_open_storage_location,
-            hanzo_node_open_storage_location_with_path,
-            hanzo_node_open_chat_folder,
-            hanzo_node_set_default_options,
-                        hanzo_node_get_default_model,
-            hanzo_node_get_default_embedding_model,
-            // @hanzo/ai SDK canonical command names
-            node_spawn,
-            node_is_running,
-            node_kill,
-            node_get_options,
-            node_set_options,
-            node_set_default_options,
-            node_get_default_model,
-            node_get_default_embedding_model,
-            node_remove_storage,
-            show_node_manager_window,
             hardware_get_summary,
             local_models::local_models_status,
             local_models::local_models_pull,
@@ -255,26 +189,12 @@ fn main() {
             knowledge_graph_update_convo,
             knowledge_graph_get_ontology,
             galxe_generate_proof,
-            get_request,
-            post_request,
             engines_discover,
             engine_probe,
             #[cfg(unix)]
             browser,
             #[cfg(unix)]
             browsers,
-                        retrieve_logs,
-            download_logs,
-            check_claude_installed,
-            is_server_registered_in_claude,
-            register_server_in_claude,
-            get_claude_config_help,
-            check_cursor_installed,
-            is_server_registered_in_cursor,
-            register_command_server_in_cursor,
-            register_sse_server_in_cursor,
-            get_cursor_command_config_help,
-            get_cursor_sse_config_help,
             mining_get_enabled,
             mining_set_enabled,
             gpu_connect_get_state,
@@ -283,9 +203,6 @@ fn main() {
             studio_get_state,
             studio_start,
             studio_stop,
-            secure_storage_set,
-            secure_storage_get,
-            secure_storage_delete,
             local_workspace_open_dialog,
             local_workspace_open_file_dialog,
             local_workspace_clone_repo,
@@ -337,35 +254,20 @@ fn main() {
             embedded_engine::engine_get_model_id,
             #[cfg(feature = "native-engine")]
             embedded_engine::engine_list_zen5_models,
-            // hanzo-ml Model Tools (soup / BitDelta / GRPO) IPC commands.
-            model_tools_soup_available,
-            model_tools_soup_average,
-            model_tools_soup_delta,
-            model_tools_bitdelta_encode,
-            model_tools_bitdelta_apply,
-            model_tools_grpo_run,
         ])
         .setup(|app| {
             log::info!("starting app version: {}", env!("CARGO_PKG_VERSION"));
-            let app_resource_dir = app.path().resource_dir()?;
             let app_data_dir = app.path().app_data_dir()?;
             migrate_legacy_data_dir(&app_data_dir);
 
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;
                 let gs = app.global_shortcut();
-                // No ⇧⌘J: Spotlight is not created until it can send (see below).
                 for s in ["super+shift+i", "control+shift+i"] {
                     if let Err(e) = gs.register(s) {
                         log::warn!("global shortcut '{}' not registered (already held by another app?): {}", s, e);
                     }
                 }
-            }
-
-            {
-                let _ = HANZO_NODE_MANAGER_INSTANCE.set(Arc::new(RwLock::new(
-                    HanzoNodeManager::new(app.handle().clone(), app_resource_dir, app_data_dir.clone()),
-                )));
             }
 
             // Initialize Phase 1 mining manager. Storage dir holds per-wallet
@@ -381,10 +283,6 @@ fn main() {
             // (commands/studio.rs). The frontend hook drives both together.
             app.manage(Arc::new(GpuConnectManager::new()));
             app.manage(Arc::new(StudioManager::new()));
-
-            // Initialize secure storage (OS keyring with in-memory fallback)
-            let secure_store = init_secure_storage();
-            app.manage(secure_store);
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
@@ -421,23 +319,8 @@ fn main() {
             tauri::async_runtime::spawn({
                 let app_handle = app.handle().clone();
                 async move {
-                    // Only the main window. Spotlight's quick ask still sends through the
-                    // retired hanzo-node (it showed "Unable to connect" and Send did
-                    // nothing), and the hidden Coordinator only synced that window's
-                    // legacy stores; each cost a webview process at every launch.
+                    // The main window is the app's only window.
                     let _ = recreate_window(app_handle.clone(), Window::Main, true);
-
-                    // Kill any existing process related to hanzo and/or using hanzo ports
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    hanzo_node_manager_guard.kill().await;
-                    // Cold-boot start (bug #18): the kill above only clears a stale
-                    // process — start this app's own node now so it is up without
-                    // relying on a frontend effect that cannot fire before the node runs.
-                    if let Err(e) = hanzo_node_manager_guard.spawn().await {
-                        log::error!("[hanzo-node] cold-boot spawn failed: {}", e);
-                    }
-                    drop(hanzo_node_manager_guard);
 
                     // Ensure local hanzo-site service is reachable on port 3000 (Linux systemd)
                     #[cfg(target_os = "linux")]
@@ -464,22 +347,6 @@ fn main() {
                 }
             });
 
-            tauri::async_runtime::spawn({
-                let app_handle = app.handle().clone();
-                async move {
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    let mut receiver = hanzo_node_manager_guard.subscribe_to_events();
-                    drop(hanzo_node_manager_guard);
-                    while let Ok(state_change) = receiver.recv().await {
-                        app_handle
-                            .emit("hanzo-node-state-change", state_change)
-                            .unwrap_or_else(|e| {
-                                log::error!("failed to emit global event for state change: {}", e);
-                            });
-                    }
-                }
-            });
             Ok(())
         })
         .build(context)
@@ -492,17 +359,7 @@ fn main() {
                 commands::local_site::stop_all();
                 // A model the person chose to run stops with the app.
                 local_models::stop_all();
-                tauri::async_runtime::spawn(async {
-                    log::debug!("killing hanzo-node before exit");
-
-                    // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    hanzo_node_manager_guard.kill().await;
-                    drop(hanzo_node_manager_guard);
-                    // Force exit the application
-                    std::process::exit(0);
-                });
+                std::process::exit(0);
             }
             #[cfg(target_os = "macos")]
             RunEvent::Reopen { .. } => {
@@ -515,24 +372,6 @@ fn main() {
             RunEvent::Ready => {}
             RunEvent::Resumed => {}
             RunEvent::MainEventsCleared => {}
-            RunEvent::WindowEvent {
-                label,
-                event: WindowEvent::Focused(focused),
-                ..
-            } => match label {
-                label if label == Window::Spotlight.as_str() => {
-                    if !focused {
-                        if let Some(spotlight_window) =
-                            app_handle.get_webview_window(Window::Spotlight.as_str())
-                        {
-                            if spotlight_window.is_visible().unwrap_or(false) {
-                                let _ = spotlight_window.hide();
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            },
             _ => {}
         });
 }

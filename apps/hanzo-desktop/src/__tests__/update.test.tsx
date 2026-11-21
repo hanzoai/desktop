@@ -93,7 +93,7 @@ describe('the update mark', () => {
     expect(plugin.check).toHaveBeenCalledTimes(2);
   });
 
-  it('installs on one press: progress, the model and node stopped, Hanzo opened again', async () => {
+  it('installs on one press: progress, the model stopped, Hanzo opened again', async () => {
     let step: (e: Event) => void = () => undefined;
     let finish: () => void = () => undefined;
     plugin.check.mockResolvedValue(
@@ -122,7 +122,7 @@ describe('the update mark', () => {
     });
     // The model is stopped before the installer runs, which on Windows ends
     // this process without the exit hook.
-    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'hanzo_node_kill', 'install']);
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'install']);
     expect(plugin.relaunch).toHaveBeenCalledTimes(1);
   });
 
@@ -134,7 +134,7 @@ describe('the update mark', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /is ready/ }));
     });
-    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'hanzo_node_kill', 'install']);
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'install']);
     expect(plugin.relaunch).not.toHaveBeenCalled();
   });
 
@@ -162,7 +162,6 @@ describe('the update mark', () => {
       'local_models_status',
       'local_models_status',
       'local_models_stop',
-      'hanzo_node_kill',
       'install',
     ]);
   });

@@ -11,11 +11,7 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let show_menu_item = MenuItemBuilder::with_id("show", "Hanzo AI").build(app)?;
     let team_menu_item = MenuItemBuilder::with_id("team", "Hanzo Team").build(app)?;
 
-    // No "Hanzo Node Manager" entry: hanzo-node no longer ships in this app
-    // (hanzo_node_manager.rs), so that window starts and stops nothing. Local
-    // models are managed from the main window's Local AI manager. No "Hanzo
-    // Spotlight" either: its quick ask still sends through that node, so it
-    // could only say "Unable to connect" (main.rs no longer creates it).
+    // The main window is the only window: local models are its Local AI manager.
 
     let menu = MenuBuilder::new(app)
         .items(&[

@@ -44,12 +44,6 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml
-  # One-time replacement of the local node's localhost HTTPS certificate
-  # (node_storage/.secret, kept 0600). Pure Rust, like log-redact.
-  - name: node-secret
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-secret/Cargo.toml
   # Which local hanzo-server the app may spawn, or none (cloud#760: release
   # bundles ship no engine, and spawning the bare name logged two errors on
   # every start). Pure Rust, no dependencies.
@@ -64,15 +58,6 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/dev-agent/Cargo.toml
-  # The env hanzo-node is spawned with for embeddings (cloud#760): the
-  # signed-in Hanzo key as EMBEDDINGS_SERVER_API_KEY, sent only to api.hanzo.ai
-  # and only to a node (v1.19.4+, per src-tauri/pins) that embeds over /v1;
-  # signed in, signed out, sign-in later, and when a new key restarts the node.
-  # Pure Rust.
-  - name: node-env
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/node-env/Cargo.toml
   # The project folders Auto can pick from (~/code, ~/dev, ~/src, ~/Projects, ~/work, ~/git). Pure Rust.
   - name: projects
     run: |
@@ -81,12 +66,12 @@ test:
   # Windows ships, and nothing in CI runs on a Windows host (the release lane cross-builds on Linux), so a
   # cfg(windows) mistake in these crates (the `dev.exe` name, a `.zip` unpack, a path rule) would only show at
   # release. `cargo check --tests` needs no linker and no C compiler, so it type-checks the crates and their
-  # tests for the Windows target here. node-secret is left out: its TLS dependency builds C and needs clang-cl.
+  # tests for the Windows target here.
   - name: windows-cross-check
     run: |
       set -e
       rustup target add x86_64-pc-windows-msvc
-      for crate in log-redact engine-bin dev-agent node-env projects; do
+      for crate in log-redact engine-bin dev-agent projects; do
         cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
       done
   # No secret-bearing value may be printed or logged from the Tauri crate:
