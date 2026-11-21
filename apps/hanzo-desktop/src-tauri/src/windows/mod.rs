@@ -1,4 +1,4 @@
-use tauri::{utils::config::BackgroundThrottlingPolicy, AppHandle, Manager, WebviewWindow, WebviewWindowBuilder, Emitter};
+use tauri::{AppHandle, Manager, WebviewWindow, WebviewWindowBuilder, Emitter};
 
 mod microphone;
 
@@ -7,7 +7,6 @@ pub enum Window {
     Main,
     HanzoNodeManager,
     Spotlight,
-    Coordinator,
 }
 
 impl Window {
@@ -16,7 +15,6 @@ impl Window {
             Window::Main => "main",
             Window::HanzoNodeManager => "hanzo-node-manager",
             Window::Spotlight => "spotlight",
-            Window::Coordinator => "coordinator",
         }
     }
 }
@@ -80,9 +78,6 @@ pub fn recreate_window(app_handle: AppHandle, window_name: Window, focus: bool) 
             .find(|w| w.label == label)
             .unwrap()
             .clone();
-        if window_config.label == Window::Coordinator.as_str() {
-            window_config.background_throttling = Some(BackgroundThrottlingPolicy::Disabled);
-        }
         if window_config.label == Window::Main.as_str() {
             window_config.url = main_url(
                 option_env!("DEV_START_PATH").unwrap_or("/chat"),

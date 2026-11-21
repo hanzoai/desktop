@@ -897,7 +897,7 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   `allow-hanzo-node-spawn`) and a window calls only what its capability grants.
   Without that, Tauri v2 lets every window call every command. `main.json` grants
   all of them, and the build refuses one it misses or a grant no handler serves;
-  spotlight, coordinator and node-manager grant the commands their own bundles
+  spotlight and node-manager grant the commands their own bundles
   call, measured from the build's module graph. A new command reaches only the
   main window until a capability names it. Capabilities never share a window:
   Tauri merges overlapping ones, which is how spotlight once held all of main's
@@ -924,8 +924,10 @@ VITE_BRAND=zoo PLAYWRIGHT_BASE_URL=http://localhost:14200 \
   `react-native` override's major in step with the direct
   `@hanzogui/react-native-web-lite` dependency, or you ship two copies.
 - The main window renders `@hanzo/rooms/App` (above). `src/pages/*` and
-  `src/routes/*` are dead for the main window but still live for spotlight /
-  coordinator / node-manager, so do not delete them. The wdio specs under `e2e/` other than
+  `src/routes/*` are dead for the main window but still imported by the spotlight
+  and node-manager bundles (neither created at launch any more), so do not delete
+  them while those windows are kept. The Coordinator and the never-shown
+  Artifacts window are deleted. The wdio specs under `e2e/` other than
   `login.e2e.ts` still drive those pre-convergence routes.
 - `@hanzo/ai` is now only a package.json dependency, not an import of
   `src/main.tsx`. Keep it declared regardless (it was once undeclared and an

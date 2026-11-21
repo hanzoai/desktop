@@ -194,14 +194,6 @@ export default defineConfig(() => ({
           import.meta.dirname,
           'src/windows/spotlight/index.html',
         ),
-        coordinator: pathResolve(
-          import.meta.dirname,
-          'src/windows/coordinator/index.html',
-        ),
-        hanzo_artifacts: pathResolve(
-          import.meta.dirname,
-          'src/windows/hanzo-artifacts/index.html',
-        ),
       },
     },
   },

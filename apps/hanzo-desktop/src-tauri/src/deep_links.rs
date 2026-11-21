@@ -63,11 +63,9 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                             let _ = recreate_window(app_handle.clone(), Window::Main, true);
                             let _ = app_handle.emit(&event, payload);
                         }
-                        None => {
-                            log::debug!("emitting oauth-deep-link event to all windows");
-                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                            let _ = app_handle.emit("oauth-deep-link", payload);
-                        }
+                        // Any other oauth link went to the hidden Coordinator's
+                        // legacy-node listener, which is gone; nothing else asks.
+                        None => log::debug!("ignoring oauth deep link for no brand: {:?}", url),
                     }
                 }
             }
