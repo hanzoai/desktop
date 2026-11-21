@@ -14,9 +14,20 @@ let writing: Promise<void> = Promise.resolve();
 
 function save(): void {
   const blob = JSON.stringify(Object.fromEntries(held));
-  writing = writing.then(async () => {
-    if (held.size) await secureStorage.setItem(RECORD, blob);
-    else await secureStorage.removeItem(RECORD);
+  // Each write runs after the one before it, whether that one succeeded or not:
+  // a write that failed rejects for whoever awaits it (`written`) and must not
+  // stop every write after it, which a chain that only follows success does.
+  writing = writing.catch(() => undefined).then(async () => {
+    if (held.size) {
+      await secureStorage.setItem(RECORD, blob);
+      return;
+    }
+    try {
+      await secureStorage.removeItem(RECORD);
+    } catch {
+      // Nothing held and nothing in the keychain: the record is already gone.
+      // The keychain refuses to delete an entry that does not exist.
+    }
   });
 }
 

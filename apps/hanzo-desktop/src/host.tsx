@@ -19,6 +19,7 @@ import {
   DesktopSettings,
   windowKey,
 } from './desktop-shortcuts';
+import { adopt, share } from './identity';
 import { keychain, open as openKeychain, written } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
@@ -243,52 +244,6 @@ function onward(): string {
   return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
 }
 
-/** The IAM tokens the window holds, in the keys @hanzo/iam keeps them under. */
-const SESSION = {
-  access: 'hanzo_iam_access_token',
-  refresh: 'hanzo_iam_refresh_token',
-  id: 'hanzo_iam_id_token',
-  expires: 'hanzo_iam_expires_at',
-};
-
-type Tokens = { access_token: string; refresh_token?: string; id_token?: string };
-
-/**
- * One local identity (src-tauri/src/identity.rs): a sign-in here is filed where
- * the Hanzo CLI keeps its own, and one the CLI already holds signs this window in
- * with no browser. The refresh token has one holder, that file, so the window
- * keeps the access token alone and asks for a fresh one when it runs out.
- */
-async function adopt(): Promise<boolean> {
-  const held = await safeInvoke<Tokens | null>('identity_adopt');
-  if (!held) return false;
-  keychain.setItem(SESSION.access, held.access_token);
-  if (held.id_token) keychain.setItem(SESSION.id, held.id_token);
-  try {
-    const claims = JSON.parse(atob(held.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    keychain.setItem(SESSION.expires, String(claims.exp * 1000));
-  } catch {
-    // The SDK reads the expiry from the token itself when this is absent.
-  }
-  await written();
-  return true;
-}
-
-/** Hand what this window's sign-in returned to the shared identity, and keep none of its refresh token. */
-async function share(): Promise<void> {
-  const access = keychain.getItem(SESSION.access);
-  if (!access) return;
-  await invoke('identity_file', {
-    tokens: {
-      access_token: access,
-      refresh_token: keychain.getItem(SESSION.refresh) ?? undefined,
-      id_token: keychain.getItem(SESSION.id) ?? undefined,
-    },
-  });
-  keychain.removeItem(SESSION.refresh);
-  await written();
-}
-
 /**
  * Sign-in in the system browser, as the Hanzo CLI signs in: a loopback port the
  * system picks for this attempt is the redirect (RFC 8252 §7.3), and the page
@@ -312,7 +267,7 @@ async function signIn(sdk: ReturnType<typeof useIam>['sdk']): Promise<void> {
       sdk
         .handleCallback(back.href)
         .then(() => written())
-        .then(share)
+        .then(() => share())
         .then(() => resolve(), reject);
     }).then(() => openUrl(url), reject);
   });
