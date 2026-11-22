@@ -204,15 +204,11 @@ jobs:
           scripts/release/stage.sh "$t/target/$TRIPLE/release/bundle/nsis/*-setup.exe" "dist/Hanzo_Desktop_${V}_x64-setup.exe"
           test -f "dist/Hanzo_Desktop_${V}_x64-setup.exe.sig"
 
-          # The portable build is the install tree: the app, the three sidecars
-          # beside it under the names Tauri gives them on install, and the model.
+          # The portable build is the install tree: the app and the model. The app
+          # carries no sidecars (hanzo-node left it, HIP-1330; download-binaries.sh).
           p="$RUNNER_TEMP/portable/Hanzo Desktop"
           mkdir -p "$p"
           cp "$t/target/$TRIPLE/release/hanzo-desktop.exe" "$p/Hanzo Desktop.exe"
-          n=$t/external-binaries/hanzo-node
-          cp "$n/hanzo-node-$TRIPLE.exe" "$p/hanzo-node.exe"
-          cp "$n/hanzo-tools-runner-resources/deno-$TRIPLE.exe" "$p/deno.exe"
-          cp "$n/hanzo-tools-runner-resources/uv-$TRIPLE.exe" "$p/uv.exe"
           cp -r "$t/llm-models" "$p/llm-models"
           (cd "$RUNNER_TEMP/portable" && zip -qr -X -1 "$OLDPWD/dist/Hanzo_Desktop_${V}_x64-portable.zip" "Hanzo Desktop")
           ls -l dist
