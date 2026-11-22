@@ -1,6 +1,6 @@
 /** Which Settings section each settings address opens: a section opens by name, bare /settings is General, any other address is Account. */
 import { GuiProvider } from '@hanzo/gui';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import config from '../../gui.config';
@@ -28,5 +28,16 @@ describe('settings addresses', () => {
       /profile, personalization, organization, billing, usage and API keys are on hanzo\.ai/,
     );
     expect(screen.getByRole('button', { name: 'Open on hanzo.ai' })).toBeTruthy();
+  });
+
+  it('Local AI & Engine opens the benchmarks page, the only way to it, and Settings offers no Node Manager', () => {
+    render(
+      <GuiProvider config={config} defaultTheme="dark">
+        <DesktopSettings initialSection="engine" isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
+      </GuiProvider>,
+    );
+    expect(screen.queryByText(/Node Manager|Blockchain Node|hanzod/)).toBeNull();
+    fireEvent.click(screen.getByTestId('desktop-benchmarks'));
+    expect(window.location.pathname).toBe('/benchmark');
   });
 });
