@@ -28,7 +28,7 @@ overrides:
   '@hanzo/design': '0.5.45'
   '@hanzo/iam': '0.21.42'
   '@hanzo/appearance': '0.2.15'
-  '@hanzo/studio': '0.1.21'
+  '@hanzo/studio': '0.1.24'
   '@noble/hashes': '1.8.0'
   'zod': '^4.5.2'
   react-reconciler: '^0.33.0'
@@ -76,12 +76,10 @@ overrides:
   serialize-javascript: '>=7.0.5'
   'yaml@2': '>=2.8.3'
 # Desktop patches:
-# - @hanzo/dev-core@0.1.21, @hanzo/studio@0.1.21, @hanzo/tabs@0.1.17: desktop host wiring.
+# - @hanzo/dev-core@0.1.21: desktop host wiring.
 # - @hanzogui/shell@8.4.3: ⌘K pass-through until shell bumps.
 patchedDependencies:
   '@hanzo/dev-core@0.1.21': patches/@hanzo__dev-core@0.1.21.patch
-  '@hanzo/studio@0.1.21': patches/@hanzo__studio@0.1.21.patch
-  '@hanzo/tabs@0.1.17': patches/@hanzo__tabs@0.1.17.patch
   '@hanzogui/shell@8.4.3': patches/@hanzogui__shell@8.4.3.patch
 allowBuilds:
   '@swc/core': true
@@ -93,7 +91,7 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@hanzo/build@0.2.81 || 0.2.99 || 0.2.130 || 0.2.132 || 0.2.138 || 0.2.141 || 0.2.144 || 0.2.146'
+  - '@hanzo/build@0.2.81 || 0.2.99 || 0.2.130 || 0.2.132 || 0.2.138 || 0.2.141 || 0.2.144 || 0.2.146 || 0.2.148'
   - '@hanzo/dev-core@0.1.1 || 0.1.2 || 0.1.12 || 0.1.13 || 0.1.16 || 0.1.21'
   - '@hanzo/app@0.2.20 || 0.2.21 || 0.2.63 || 0.3.107 || 0.3.109 || 0.3.115 || 0.3.117 || 0.3.124 || 0.3.133 || 0.3.137 || 0.3.149 || 0.3.157 || 0.3.160 || 0.3.169'
   - '@hanzo/personas@1.3.3'
@@ -105,7 +103,7 @@ minimumReleaseAgeExclude:
   - '@hanzo/event@0.3.69'
   - '@hanzo/i18n@0.6.1'
   - '@hanzo/iam@0.21.29 || 0.21.35 || 0.21.41 || 0.21.42'
-  - '@hanzo/studio@0.1.3 || 0.1.8 || 0.1.15 || 0.1.21'
+  - '@hanzo/studio@0.1.3 || 0.1.8 || 0.1.15 || 0.1.21 || 0.1.24'
   - '@hanzo/ui@8.29.0 || 8.29.45 || 8.33.6 || 8.33.11'
   - '@hanzo/glass@0.1.0 || 0.1.1'
   - '@hanzo/voice@0.1.19'
@@ -223,7 +221,7 @@ catalog:
   '@hanzo/ai': '0.7.0'
   '@hanzo/appearance': '0.2.15'
   '@hanzo/brand': '1.4.8'
-  '@hanzo/build': '0.2.144'
+  '@hanzo/build': '0.2.148'
   '@hanzo/composer': '0.2.1'
   '@hanzo/data': '1.2.4'
   '@hanzo/design': '0.5.45'
@@ -235,10 +233,10 @@ catalog:
   '@hanzo/personas': '1.0.5'
   '@hanzo/plans': '1.8.17'
   '@hanzo/app': '0.3.169'
-  '@hanzo/studio': '0.1.21'
-  # The commit hanzo-inc/app's lock holds (0.1.17); npm stops at 0.1.7, under
-  # @hanzo/app's floor of 0.1.8.
-  '@hanzo/tabs': 'github:hanzo-inc/tabs#26a30cbc5fac232e5b11d5d77939f9573ca0c8d8'
+  '@hanzo/studio': '0.1.24'
+  # 0.1.20, the merge commit of hanzo-inc/tabs#6; npm stops at 0.1.7, under
+  # @hanzo/app's floor of 0.1.19.
+  '@hanzo/tabs': 'github:hanzo-inc/tabs#00a6c09de87ebf627a7210061d6ef27f4c4f4132'
   '@hanzo/logo': '1.0.26'
   '@hanzo/pay': '0.1.2'
   '@hanzo/ui': '8.33.11'
