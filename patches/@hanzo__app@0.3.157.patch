@@ -1024,10 +1024,10 @@ index 2601176e14b54f2e2a4e6172fa174cf520152b07..ac1297f818efc01f0a43e05460c6d710
      const fp = fingerprint(kind, message, stack);
      const now = Date.now();
 diff --git a/dist/Chat.js b/dist/Chat.js
-index 8871da9..f77b9d4 100644
+index 121b5bd..adebaa9 100644
 --- a/dist/Chat.js
 +++ b/dist/Chat.js
-@@ -933,10 +933,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -879,10 +879,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      };
      const listed = useMemo(() => mind.models.filter(chats), [mind.models]);
      const filteredListed = useMemo(() => {
@@ -1042,7 +1042,7 @@ index 8871da9..f77b9d4 100644
      const models = filteredListed;
      // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
      // read from the catalog's own fields (`parseModels`): its class, its family.
-@@ -948,7 +950,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -894,7 +896,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const wanted = mind.model;
      // A model the catalog lists is sent as picked, whatever it answers with; only
      // a name the catalog does not list falls to one that converses (`served`).
@@ -1052,7 +1052,7 @@ index 8871da9..f77b9d4 100644
      const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
      // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
      // headers and read again whenever a send settles, below. The pane draws no
-@@ -1184,7 +1187,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1119,7 +1122,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      // identity changes on every `setMessages` — `useChat` closes over `messages` —
      // so an effect depending on it re-runs after each streamed token.
      const latest = useRef(send);
@@ -1061,7 +1061,7 @@ index 8871da9..f77b9d4 100644
      // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
      // it. `Chat` owns a draft of its own and spreads `composer` after it, so
      // passing value/onChange/onSend takes that ownership over rather than fighting
-@@ -1290,10 +1293,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1239,10 +1242,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
          anonStopped.current = true;
          anonRequest.current?.abort();
      }, []);
@@ -1080,7 +1080,7 @@ index 8871da9..f77b9d4 100644
          try {
              sessionStorage.setItem("hanzo.build.prompt", clean);
              const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
-@@ -1430,7 +1438,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1379,7 +1387,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
          if (queued === null || resolving)
              return;
          setQueued(null);
@@ -1092,7 +1092,7 @@ index 8871da9..f77b9d4 100644
      }, [queued, resolving]);
      const streaming = useRef(false);
      streaming.current = chat.streaming;
-@@ -1533,16 +1544,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1480,16 +1491,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
       * it leaves its place in the thread and is asked at the end, so it is asked
       * once and not twice.
       */
@@ -1113,7 +1113,7 @@ index 8871da9..f77b9d4 100644
          if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
              apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
              if (again)
-@@ -1550,10 +1559,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -1497,10 +1506,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      const { [again]: _gone, ...rest } = all;
                      return rest;
                  });
@@ -1126,7 +1126,7 @@ index 8871da9..f77b9d4 100644
      }, [anonymous, sendAnon]);
      // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
      // with credits turns the org's choice on and asks the last question again on
-@@ -2113,6 +2122,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2006,6 +2015,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
                      setPreparing(t("Uploading {files}", { files: names(holding, t) }));
                  const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
                  spend(at);
@@ -1155,7 +1155,7 @@ index 8871da9..f77b9d4 100644
                  const attached = landedFiles.map(refOf);
                  const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
                  const all = [...attached, ...reused];
-@@ -2175,6 +2206,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+@@ -2068,6 +2099,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
      const failure = (question) => {
          const failed = failures[question.id];
          const text = words(question.content);
@@ -1165,12 +1165,12 @@ index 8871da9..f77b9d4 100644
          const whom = addressed(text, cast);
          const wrong = failed?.error ?? null;
          const how = wrong ? refusalOf(wrong) : null;
-@@ -2207,7 +2241,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
-                                     : how?.provider
-                                         ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
-                                         : plainly(wrong, t("this conversation"), t);
--        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
-+        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, pictures), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, anonymous || how?.provider ? (_jsxs(XStack, { gap: "$2", flexWrap: "wrap", "data-slot": "failure-local-ai", children: [_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") }), anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null] })) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
+@@ -2092,7 +2126,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+                             : how?.provider
+                                 ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
+                                 : plainly(wrong, t("this conversation"), t);
+-        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
++        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, pictures), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, anonymous || how?.provider ? (_jsxs(XStack, { gap: "$2", flexWrap: "wrap", "data-slot": "failure-local-ai", children: [_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") }), anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null] })) : null, lift || (!bill && (resign || how?.wallet || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
                                  if (typeof window !== "undefined") {
                                      localStorage.removeItem("hanzo_iam_access_token");
                                      localStorage.removeItem("hanzo_iam_refresh_token");

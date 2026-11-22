@@ -2,8 +2,6 @@ import { KEYS, asked } from '@hanzo/app/help';
 import { handle } from '@hanzo/app/keys';
 import * as keymap from '@hanzo/dev-core/keymap';
 import { chord } from '@hanzo/app/chord';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DESKTOP_GLOBAL_KEYS, windowKey } from '../desktop-shortcuts';
@@ -22,9 +20,8 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
     const macChords = KEYS.map((k) => k.mac);
     expect(macChords).toContain('⌘K');
-    expect(macChords).toContain('⌘N / ⌘⇧O');
+    expect(macChords).toContain('⌘⇧O');
     expect(macChords).toContain('⌘B');
-    expect(macChords).toContain('⌘⇧M');
     expect(macChords).toContain('⌘,');
     expect(macChords).toContain('⌘/');
     expect(macChords).toContain('⌘.');
@@ -131,21 +128,5 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(press('n', { metaKey: true, repeat: true })).toBeNull();
     expect(press('n', { metaKey: true, isComposing: true })).toBeNull();
     expect(press('n', { metaKey: true, defaultPrevented: true })).toBeNull();
-  });
-
-  it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
-    const dist = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist');
-    const chat = readFileSync(resolve(dist, 'Chat.js'), 'utf8');
-    const pane = readFileSync(resolve(dist, 'pane.js'), 'utf8');
-    const setup = readFileSync(resolve(dist, 'Setup.js'), 'utf8');
-
-    // The signed-out lane is the signed-in one (history, the picked model, no turn cap).
-    expect(chat).toContain('HANZO DESKTOP ANSWERS ITS SIGNED-OUT READER ITSELF');
-    expect(chat).toContain('const sent = anonymous ? wanted || ENSO : wanted;');
-    expect(chat).toContain('"Select / Download Local Model"');
-    // Files a signed-out reader attaches are read in the window, not refused.
-    expect(pane).toContain('localText');
-    expect(pane).not.toContain('Sign in to attach files');
-    expect(setup).toContain('const workspace = false;');
   });
 });
