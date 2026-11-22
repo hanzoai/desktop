@@ -2,12 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleIdentifier</key>
-	<string>ai.hanzo.desktop</string>
-	<!-- macOS kills a process that touches the microphone without this string,
-	     before any prompt is shown. It is the sentence the system prompt reads,
-	     so it says what we listen for and when. -->
+	<!-- No CFBundleIdentifier: tauri-bundler merges this file OVER the plist it generates, so one
+	     here would replace the config's identifier in any build that does not patch it. tauri*.conf.json is
+	     the one source (src/lib/brand-identity.test.ts). -->
+	<!-- Each usage sentence is what the system prompt reads, under the app's name, for a resource
+	     the app really uses. Every brand ships this one file, so no sentence names a brand.
+	     scripts/check-macos-signing.py holds the list. -->
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Hanzo listens while you hold a voice turn, so you can talk to your agent instead of typing.</string>
+	<string>The microphone is on only while you turn on dictation or talk mode in the chat, so you can speak instead of typing.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Used only when the chat's own transcriber can't be reached: macOS then turns what you say into text, and may send it to Apple to do so.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>This is used only when you search your network for model servers or use one, or open an address on your network that you typed yourself.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Files in Documents are opened only when you choose them or a folder that holds them, such as a project to work on.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Files on the Desktop are opened only when you choose them or a folder that holds them, such as a project to work on.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Files in Downloads are opened only when you choose them or a folder that holds them, such as a project to work on.</string>
 </dict>
 </plist>

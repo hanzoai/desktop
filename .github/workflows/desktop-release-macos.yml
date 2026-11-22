@@ -82,6 +82,9 @@ jobs:
           if [ "${{ matrix.tauri_target }}" = "universal-apple-darwin" ]; then
             for s in hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv; do
               b=external-binaries/hanzo-node/$s
+              if [ ! -f "$b-aarch64-apple-darwin" ] && [ ! -f "$b-x86_64-apple-darwin" ]; then
+                continue
+              fi
               lipo -create "$b-aarch64-apple-darwin" "$b-x86_64-apple-darwin" -output "$b-universal-apple-darwin" 2>/dev/null \
                 || cp "$b-aarch64-apple-darwin" "$b-universal-apple-darwin"
               chmod +x "$b-universal-apple-darwin"
@@ -92,9 +95,15 @@ jobs:
       - name: Signing key
         run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
 
+      - name: Entitlements and usage sentences
+        run: python3 -I scripts/check-macos-signing.py
+
       - name: Build
         working-directory: apps/hanzo-desktop
         run: pnpm exec tauri build --ci --target "${{ matrix.tauri_target }}" --bundles app,dmg
+
+      - name: The app is signed with exactly those entitlements, under the hardened runtime
+        run: python3 -I scripts/check-macos-signing.py --app "apps/hanzo-desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle/macos/Hanzo.app"
 
       - name: Name the bundles
         run: |

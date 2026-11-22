@@ -1,0 +1,397 @@
+diff --git a/components/workspace.tsx b/components/workspace.tsx
+index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d368980485fc10 100644
+--- a/components/workspace.tsx
++++ b/components/workspace.tsx
+@@ -164,7 +164,7 @@ const ACTION_EVENT = 'hanzo:tabs-action';
+ const STATE_EVENT = 'hanzo:tabs-state';
+ 
+ /** One thing the host's menu asks for. */
+-type Action = { kind: 'shell' | 'desktop' | 'page' | 'cloud' | 'focus'; machine?: string; id?: string };
++type Action = { kind: 'shell' | 'desktop' | 'page' | 'cloud' | 'focus' | 'split' | 'close'; machine?: string; id?: string; dir?: Dir; res?: { handled: boolean } };
+ 
+ /** The class of cloud machine a launcher starts. */
+ type Kind = 'dev' | 'desktop' | 'browser';
+@@ -704,6 +704,24 @@ export function Workspace({
+ 
+   useEffect(() => {
+     const onMessage = (e: MessageEvent) => {
++      const data = e.data as { source?: string; split?: string; close?: boolean } | null;
++      if (data && data.source === 'hanzo-term' && data.close) {
++        for (const [id, el] of Object.entries(frames.current)) {
++          if (el && e.source === el.contentWindow) {
++            doClose(id);
++            return;
++          }
++        }
++      }
++      if (data && data.source === 'hanzo-term' && (data.split === 'row' || data.split === 'col')) {
++        for (const [id, el] of Object.entries(frames.current)) {
++          if (el && e.source === el.contentWindow) {
++            setFocus(id);
++            act.current({ kind: 'split', dir: data.split });
++            return;
++          }
++        }
++      }
+       if (!isReady(e.data)) return;
+       // The sender identifies the pane: a message is trusted only when it comes
+       // from the window of a frame this workspace actually rendered. The origin
+@@ -837,6 +855,8 @@ export function Workspace({
+   // In-flight ids are tracked outside state so a re-render mid-mint cannot start
+   // a second mint for the same pane.
+   const [minted, setMinted] = useState<Record<string, string>>({});
++  const [srcDocs, setSrcDocs] = useState<Record<string, string>>({});
++  const loadingDocs = useRef<Set<string>>(new Set());
+   const minting = useRef<Set<string>>(new Set());
+   useEffect(() => {
+     if (!mint) return;
+@@ -856,6 +876,64 @@ export function Workspace({
+     }
+   }, [rendered, bind, hostOf, mint, minted, capped]);
+ 
++  // In Desktop webviews (tauri://localhost), api.hanzo.ai's frame-ancestors header
++  // omits tauri://localhost, which blocks cross-origin framing even though CORS allows
++  // fetching the self-contained xterm.js document. Fetch the HTML, point its WebSocket
++  // directly at the minted wss:// ticket URL, match Hanzo Dev's #0a0a0a ground, and
++  // forward Cmd+D / Cmd+Shift+D pane splits to the parent workspace.
++  useEffect(() => {
++    if (typeof window === 'undefined') return;
++    const isTauriOrigin =
++      window.location.protocol === 'tauri:' ||
++      window.location.hostname === 'tauri.localhost' ||
++      window.location.hostname === 'localhost';
++    if (!isTauriOrigin) return;
++    for (const id of rendered) {
++      const url = minted[id];
++      if (!url || srcDocs[id] || loadingDocs.current.has(id)) continue;
++      if (!/\/v1\/sandbox(?:es)?\/[^/]+\/terminal\b/.test(url)) continue;
++      loadingDocs.current.add(id);
++      void (async () => {
++        try {
++          const parsed = new URL(url);
++          const wsUrl =
++            parsed.origin.replace(/^http/, 'ws') +
++            parsed.pathname.replace(/\/+$/, '') +
++            '/ws' +
++            parsed.search;
++          const res = await fetch(url, { credentials: 'include' });
++          if (!res.ok) throw new Error(`terminal html ${res.status}`);
++          let html = await res.text();
++          html = html.replace(
++            /var\s+socket\s*=\s*[\s\S]*?var\s+ws\s*=\s*new\s+WebSocket\(socket\)/,
++            `var socket = ${JSON.stringify(wsUrl)};\n  var ws = new WebSocket(socket)`,
++          );
++          html = html
++            .replace(/background:\s*'#000000'/g, "background: '#0a0a0a'")
++            .replace(/cursorAccent:\s*'#000000'/g, "cursorAccent: '#0a0a0a'")
++            .replace(/background-color:\s*#000\b/g, 'background-color: #0a0a0a')
++            .replace(/background:\s*#000\b/g, 'background: #0a0a0a');
++          const keyBridge = `(function(){window.addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key){var k=e.key.toLowerCase();if(k==='d'){e.preventDefault();e.stopPropagation();window.parent.postMessage({source:'hanzo-term',split:e.shiftKey?'col':'row'},'*');}else if(k==='w'&&!e.shiftKey){e.preventDefault();e.stopPropagation();window.parent.postMessage({source:'hanzo-term',close:true},'*');}}},true);})();`;
++          // Convert inline <script> blocks into blob: URLs so Tauri v2's runtime CSP nonce
++          // (which disables 'unsafe-inline' in WKWebView) never blocks xterm.js inside srcDoc.
++          html = html.replace(/<script>([\s\S]*?)<\/script>/gi, (_m, code: string) => {
++            const blobUrl = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
++            return `<script src="${blobUrl}"></script>`;
++          });
++          const bridgeUrl = URL.createObjectURL(new Blob([keyBridge], { type: 'application/javascript' }));
++          const bridgeTag = `<script src="${bridgeUrl}"></script>`;
++          html = html.includes('</body>') ? html.replace('</body>', `${bridgeTag}</body>`) : `${html}${bridgeTag}`;
++          const docUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
++          setSrcDocs((prev) => ({ ...prev, [id]: docUrl }));
++        } catch {
++          setWaited((w) => ({ ...w, [id]: true }));
++        } finally {
++          loadingDocs.current.delete(id);
++        }
++      })();
++    }
++  }, [rendered, minted, srcDocs]);
++
+   /** Reconnect a pane: forget the spent URL and the frame's history so the mint
+    *  effect runs again with a fresh credential and the deadline re-arms. */
+   const reconnect = useCallback((id: string) => {
+@@ -864,6 +942,7 @@ export function Workspace({
+       return rest;
+     };
+     setMinted(drop);
++    setSrcDocs(drop);
+     setAlive(drop);
+     setWaited(drop);
+   }, []);
+@@ -879,11 +958,22 @@ export function Workspace({
+   /** A shell goes on any live machine. */
+   const openShell = (at: At) => openHere(shellOn, live, at, 'dev');
+ 
+-  /** A split divides the pane it was asked of, and with a launcher what goes in
+-   *  the new half is a NEW machine, unasked: a split is for another place to
+-   *  work, and asking where it should run made every split a question. */
+-  const split = (dir: Dir, target: string) =>
+-    onLaunch ? launch('dev', { dir, target }) : openShell({ dir, target });
++  /** Split divides the target pane instantly with a fresh shell on the same live machine
++   *  (or opens/launches a shell when no live machine is attached). */
++  const split = (dir: Dir, target: string) => {
++    const cur = bind[target];
++    const m = cur ? machineOf(cur) : null;
++    if (m && live.some((h) => h.machine === m)) {
++      open(shellOn(m), { dir, target });
++      return;
++    }
++    if (live[0]) {
++      open(shellOn(live[0].machine), { dir, target });
++      return;
++    }
++    if (onLaunch) launch('dev', { dir, target });
++    else openShell({ dir, target });
++  };
+ 
+   /** A page needs no machine, so it needs no picker and no mint — the pane
+    *  opens empty and the address is the whole of what it wants. */
+@@ -928,10 +1018,57 @@ export function Workspace({
+         case 'focus':
+           if (a.id && bind[a.id]) setFocus(a.id);
+           return;
++        case 'split': {
++          const target = focus ?? rendered[0] ?? null;
++          if (target) split(a.dir === 'col' ? 'col' : 'row', target);
++          else if (live[0]) open(shellOn(live[0].machine), null);
++          else if (onLaunch) launch('dev', null);
++          return;
++        }
++        case 'close': {
++          const target = focus ?? rendered[0] ?? null;
++          if (target) {
++            doClose(target);
++            if (a.res) a.res.handled = true;
++          }
++          return;
++        }
+       }
+     };
+   });
+ 
++  // Keyboard shortcuts: Cmd+D splits vertically (side-by-side), Cmd+Shift+D splits horizontally (top/bottom),
++  // Cmd+W closes only the active pane, and Cmd+=/Cmd+-/Cmd+0 adjust terminal font size.
++  useEffect(() => {
++    const onKey = (e: KeyboardEvent) => {
++      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
++      const k = e.key.toLowerCase();
++      if (k === 'd') {
++        e.preventDefault();
++        e.stopPropagation();
++        act.current({ kind: 'split', dir: e.shiftKey ? 'col' : 'row' });
++      } else if (k === 'w' && !e.shiftKey) {
++        const res = { handled: false };
++        act.current({ kind: 'close', res });
++        if (res.handled) {
++          e.preventDefault();
++          e.stopPropagation();
++        }
++      } else if (k === '=' || k === '+') {
++        e.preventDefault();
++        setSize((n) => clampSize(n + SIZE.step));
++      } else if (k === '-') {
++        e.preventDefault();
++        setSize((n) => clampSize(n - SIZE.step));
++      } else if (k === '0') {
++        e.preventDefault();
++        setSize(SIZE.default);
++      }
++    };
++    window.addEventListener('keydown', onKey, true);
++    return () => window.removeEventListener('keydown', onKey, true);
++  }, []);
++
+   if (live.length === 0 && !tile) {
+     return (
+       <YStack
+@@ -967,118 +1104,18 @@ export function Workspace({
+   }
+ 
+   return (
+-    <YStack height="100%" width="100%" gap="$2.5" p="$3">
+-      {/* One row. Actions, not a status report. */}
+-      <XStack shrink={0} items="center" gap="$2">
+-        {start}
+-        <Act
+-          run={() => openShell(null)}
+-          icon={<SquareTerminal size={14} />}
+-          label="New shell"
+-        />
+-        {/* One button starts a desktop. A second, only while one is live, opens a
+-            pane on it again: a desktop is a machine you keep, and a pane is one
+-            way to look at it. */}
+-        {watchable.length || onLaunch ? (
+-          <Act
+-            run={() => openScreen(null)}
+-            icon={<Monitor size={14} />}
+-            label={onLaunch ? 'New desktop' : 'Desktop'}
+-          />
+-        ) : null}
+-        {onLaunch && watchable.length ? (
+-          <Act
+-            run={() => openHere(screenOn, watchable, null, 'desktop')}
+-            icon={<Monitor size={14} />}
+-            label="Open desktop"
+-          />
+-        ) : null}
+-        {/* With a launcher, a browser is a machine: Chromium on a screen you watch and
+-            an agent can drive. A framed page is what a host with none can offer. */}
+-        <Act
+-          run={() => openBrowser(null)}
+-          icon={<Globe size={14} />}
+-          label={onLaunch ? 'New browser' : 'Browse'}
+-        />
+-        {onLaunch ? (
+-          <Act
+-            run={() => launch('dev', null)}
+-            icon={<Cloud size={14} />}
+-            label="New cloud machine"
+-          />
+-        ) : null}
+-        <XStack ml="auto" shrink={0} items="center" gap="$1.5">
+-          {/* Type size. Two buttons and the number they move — a stepper IS the
+-              setting, so there is no panel to open and nothing to find. It reads
+-              its own state, which a slider or a menu would each need a second
+-              affordance to do. */}
+-          <XStack
+-            mr="$1"
+-            items="center"
+-            rounded="$2"
+-            borderWidth={1}
+-            borderColor="$borderColor"
+-          >
+-            <Button
+-              variant="ghost"
+-              size="sm"
+-              px="$2"
+-              onPress={() => setSize((n) => clampSize(n - SIZE.step))}
+-              disabled={size <= SIZE.min}
+-              title="Smaller text"
+-              aria-label="Smaller text"
+-            >
+-              <Minus size={14} />
+-            </Button>
+-            <SizableText
+-              size="$1"
+-              minW={24}
+-              text="center"
+-              select="none"
+-              style={{ fontVariantNumeric: 'tabular-nums' }}
+-              render={<span title="Terminal text size" />}
+-            >
+-              {size}
+-            </SizableText>
+-            <Button
+-              variant="ghost"
+-              size="sm"
+-              px="$2"
+-              onPress={() => setSize((n) => clampSize(n + SIZE.step))}
+-              disabled={size >= SIZE.max}
+-              title="Larger text"
+-              aria-label="Larger text"
+-            >
+-              <Plus size={14} />
+-            </Button>
+-          </XStack>
+-          <Button
+-            variant="outline"
+-            size="sm"
+-            onPress={() => focus && split('row', focus)}
+-            disabled={!focus}
+-            title="Split right"
+-          >
+-            <Columns2 size={14} />
+-            {paging ? null : <SizableText size="$1">Right</SizableText>}
+-          </Button>
+-          <Button
+-            variant="outline"
+-            size="sm"
+-            onPress={() => focus && split('col', focus)}
+-            disabled={!focus}
+-            title="Split down"
+-          >
+-            <Rows2 size={14} />
+-            {paging ? null : <SizableText size="$1">Down</SizableText>}
+-          </Button>
+-          {end}
++    <YStack height="100%" width="100%" gap={0} p={0} bg="var(--hz-ground, #000000)">
++      {/* Zero blank header above terminals: split controls live merged in the top-right window bar. */}
++      {start || end ? (
++        <XStack data-slot="tabs-strip" shrink={0} height={36} items="center" justify="flex-end" gap="$1" pl={140} pr={136}>
++          {start}
++          {end ? <XStack shrink={0} items="center" gap="$1">{end}</XStack> : null}
+         </XStack>
+-      </XStack>
++      ) : null}
+ 
+       {/* The phone's pager. One chip per PAGE, because pages are what you swipe. */}
+       {paging && pages > 1 ? (
+-        <XStack shrink={0} gap="$1" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
++        <XStack shrink={0} gap="$1" px="$2" pb="$1" style={{ overflowX: 'auto', overflowY: 'hidden' }}>
+           {Array.from({ length: pages }, (_, i) => {
+             const first = geo.rects.find((r) => Math.round(r.left / 100) === i);
+             const b = first ? bind[first.id] : undefined;
+@@ -1121,9 +1158,9 @@ export function Workspace({
+         flex={1}
+         minH={0}
+         overflow="hidden"
+-        rounded="$4"
+-        borderWidth={1}
+-        borderColor="$borderColor"
++        rounded={0}
++        borderTopWidth={1}
++        borderColor="rgba(255, 255, 255, 0.05)"
+         bg={FRAME[scheme].ground}
+       >
+         <YStack
+@@ -1182,7 +1219,9 @@ export function Workspace({
+                   items="center"
+                   gap="$1.5"
+                   px="$2"
+-                  bg={on ? 'var(--muted)' : 'var(--card)'}
++                  bg={on ? '#111111' : '#0a0a0a'}
++                  borderBottomWidth={1}
++                  borderColor="rgba(255, 255, 255, 0.045)"
+                 >
+                   {b.kind === 'page' ? (
+                     <>
+@@ -1229,24 +1268,11 @@ export function Workspace({
+                       <Bot size={14} />
+                     </Chip>
+                   ) : null}
+-                  {paging ? null : (
+-                    <XStack ml="auto" items="center" gap="$1">
+-                      <Chip run={() => split('row', id)} title="Split right">
+-                        <Columns2 size={14} />
+-                      </Chip>
+-                      <Chip run={() => split('col', id)} title="Split down">
+-                        <Rows2 size={14} />
+-                      </Chip>
+-                    </XStack>
+-                  )}
+-                  {/* ONE bare button per row on a phone: globals.css grows every
+-                      button to 44px on a coarse pointer, so neighbours at a 24px
+-                      pitch overlap and the LAST wins — close was stealing taps
+-                      from split. */}
++                  {/* Per-tab split icons hidden: focused tab splits from the merged top-right bar or ⌘D / ⌘⇧D */}
+                   <Chip
+                     run={() => doClose(id)}
+                     title="Close pane"
+-                    ml={paging ? 'auto' : 0}
++                    ml="auto"
+                   >
+                     <X size={paging ? 16 : 14} />
+                   </Chip>
+@@ -1254,10 +1280,10 @@ export function Workspace({
+ 
+                 <XStack flex={1} minH={0} flexDirection={paging ? 'column' : 'row'}>
+                 <YStack position="relative" flex={1} minH={0} bg={FRAME[scheme].ground}>
+-                  {url ? (
++                  {url && (!/\/v1\/sandbox(?:es)?\/[^/]+\/terminal\b/.test(url) || srcDocs[id] || (typeof window !== 'undefined' && window.location.protocol !== 'tauri:' && window.location.hostname !== 'tauri.localhost' && window.location.hostname !== 'localhost')) ? (
+                     <iframe
+                       data-pane={id}
+-                      src={url}
++                      src={srcDocs[id] ?? url}
+                       title={title}
+                       // Scripts (a terminal is one), and `allow-same-origin` gives
+                       // the frame ITS OWN origin — which ttyd needs for its socket

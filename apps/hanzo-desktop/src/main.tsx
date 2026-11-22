@@ -1,6 +1,7 @@
 // The main window: hanzo.ai's app (@hanzo/app App) under this window's host
 // (host.tsx). The stylesheets are the ones hanzo.ai's root layout loads, in its
 // order, so the app looks the same in both; gui writes its own sheet at run time.
+import './dpop-idb-shim';
 import '@hanzo/design/tokens/fonts.css';
 import '@hanzo/design/tokens/colors.css';
 import '@hanzo/design/tokens/typography.css';
