@@ -39,6 +39,103 @@ fn node() -> &'static zapd::Node {
     })
 }
 
+#[derive(Serialize, Debug, PartialEq)]
+pub struct DetectedTool {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub installed: bool,
+    pub logged_in: bool,
+    pub path: Option<String>,
+    pub detail: String,
+}
+
+fn find_bin(name: &str, home: Option<&std::path::Path>) -> Option<String> {
+    let mut dirs: Vec<std::path::PathBuf> = std::env::var_os("PATH")
+        .map(|p| std::env::split_paths(&p).collect())
+        .unwrap_or_default();
+    for extra in ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin"] {
+        dirs.push(std::path::PathBuf::from(extra));
+    }
+    if let Some(h) = home {
+        for rel in [".local/bin", ".bun/bin", ".cargo/bin", ".npm-global/bin", ".hanzo/bin"] {
+            dirs.push(h.join(rel));
+        }
+    }
+    for dir in dirs {
+        let cand = dir.join(name);
+        if cand.is_file() {
+            return Some(cand.to_string_lossy().into_owned());
+        }
+        #[cfg(windows)]
+        {
+            let exe = dir.join(format!("{name}.exe"));
+            if exe.is_file() {
+                return Some(exe.to_string_lossy().into_owned());
+            }
+        }
+    }
+    None
+}
+
+/// Detect installed local AI coding CLIs, logged-in account sessions (path existence
+/// only — never reads secrets), local inference engines, and ZAP-connected extensions.
+#[tauri::command]
+pub async fn detect_local_tools() -> Result<Vec<DetectedTool>, String> {
+    let home = dirs::home_dir();
+    let has_any = |rels: &[&str]| -> bool {
+        let Some(h) = home.as_deref() else {
+            return false;
+        };
+        rels.iter().any(|r| h.join(r).exists())
+    };
+
+    let specs: &[(&str, &str, &str, &[&str], &[&str], &str)] = &[
+        ("hanzo", "Hanzo CLI & Dev", "coding", &["hanzo", "dev"], &[".hanzo/auth.json", ".hanzo/config.json", ".hanzo/session.json"], "Native Hanzo CLI, MCP & Dev agent"),
+        ("claude", "Claude Code", "coding", &["claude"], &[".claude/.credentials.json", ".claude.json", ".config/claude"], "Anthropic Claude Code CLI"),
+        ("codex", "OpenAI Codex CLI", "coding", &["codex"], &[".codex/auth.json", ".codex/config.toml"], "OpenAI Codex coding agent"),
+        ("gemini", "Gemini CLI", "coding", &["gemini"], &[".gemini/oauth_creds.json", ".gemini/settings.json"], "Google Gemini CLI"),
+        ("opencode", "OpenCode", "coding", &["opencode"], &[".local/share/opencode/auth.json", ".config/opencode"], "OpenCode terminal coding agent"),
+        ("aider", "Aider", "coding", &["aider"], &[".aider.conf.yml"], "Aider AI pair programmer"),
+        ("cursor", "Cursor Agent", "coding", &["cursor", "cursor-agent"], &[".cursor/cli-config.json", ".cursor"], "Cursor editor & agent CLI"),
+        ("goose", "Goose", "coding", &["goose"], &[".config/goose/config.yaml"], "Block Goose local coding agent"),
+        ("gh", "GitHub CLI", "account", &["gh"], &[".config/gh/hosts.yml"], "GitHub account, PRs & Actions"),
+        ("ollama", "Ollama", "engine", &["ollama"], &[".ollama/models"], "Local GGUF inference on :11434"),
+    ];
+
+    let mut out = Vec::with_capacity(specs.len() + 1);
+    for (id, name, category, bins, auth_paths, detail) in specs {
+        let found_path = bins.iter().find_map(|b| find_bin(b, home.as_deref()));
+        let logged_in = has_any(auth_paths);
+        out.push(DetectedTool {
+            id: (*id).to_string(),
+            name: (*name).to_string(),
+            category: (*category).to_string(),
+            installed: found_path.is_some(),
+            logged_in,
+            path: found_path,
+            detail: (*detail).to_string(),
+        });
+    }
+
+    let ext_connected = browsers().await.map(|b| !b.is_empty()).unwrap_or(false);
+    out.push(DetectedTool {
+        id: "browser-extension".to_string(),
+        name: "Hanzo Browser Extension".to_string(),
+        category: "extension".to_string(),
+        installed: ext_connected,
+        logged_in: ext_connected,
+        path: None,
+        detail: if ext_connected {
+            "Connected over native ZAP router".to_string()
+        } else {
+            "Open Chrome / Firefox / Safari with Hanzo Extension to connect over ZAP".to_string()
+        },
+    });
+
+    Ok(out)
+}
+
 /// Every node registered on this user's native ZAP router (browsers, local/cloud
 /// terminals, dev servers, MCP nodes — zero-serialization binary ZAP frames).
 #[tauri::command]

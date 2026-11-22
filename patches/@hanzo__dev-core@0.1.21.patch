@@ -1,0 +1,624 @@
+diff --git a/dist/useSettings-CtPeGHPu.js b/dist/useSettings-CtPeGHPu.js
+new file mode 100644
+index 0000000000000000000000000000000000000000..835134ed78909d1aa5ce23cec4fe7e246c3af06d
+--- /dev/null
++++ b/dist/useSettings-CtPeGHPu.js
+@@ -0,0 +1,618 @@
++import { Gn as e, Rn as t, Wn as n, c as r, d as i, i as a, k as o, m as s, n as c, p as l, t as u } from "./session-CLmbbKof.js";
++import { Bo as d, Cf as f, In as p, Iy as ee, Zc as te, gy as ne, im as re, km as ie, ko as ae, py as oe, tr as se, wf as ce, wn as le, xn as m } from "./keybindings-DzcIfzgh.js";
++import { Ag as ue, Bn as h, Ep as g, Lg as de, Pf as fe, Pg as pe, Rn as me, Tf as he, Wm as ge, ag as _, dg as v, kf as _e, og as ve, t_ as ye, tc as y, xg as be, zf as xe, zn as Se } from "./utils-CqmbFhZy.js";
++import { H as Ce, L as we, S as Te, U as Ee, _t as De, bt as b, in as x, nn as Oe, v as ke } from "./themePalette-DQLCbeC-.js";
++import { n as S, u as C } from "./messages-CDWq3RGt.js";
++import { u as Ae } from "./network-BVePkqrK.js";
++import "./errors-DEHB-xrw.js";
++import { E as je, n as w, r as Me, s as T, t as E, w as D } from "./presentation-CAkg6mTm.js";
++import { t as O } from "./use-atom-command-8ld2Eu3I.js";
++import { p as Ne } from "./useTheme-CLKbXLaL.js";
++import { use as Pe, useRef as Fe, useSyncExternalStore as k } from "react";
++import { c as A } from "react/compiler-runtime";
++import { useSyncExternalStoreWithSelector as Ie } from "use-sync-external-store/with-selector";
++// ../../packages/client-runtime/src/state/sharedSettings.ts
++var Le = /* @__PURE__ */ new Set([
++	"continueThreadsAfterServerUpdate",
++	"sidebarAutoSettleAfterDays",
++	"sidebarAutoSettleOnMerge",
++	"autoResumeLimitedThreads",
++	"snoozeLimitedThreads",
++	"snoozePresets",
++	"newWorktreesStartFromOrigin",
++	"sourceControlWritingStyle",
++	"textGenerationModelSelection"
++]);
++function Re(e) {
++	let t = {}, n = {};
++	for (let [r, i] of Object.entries(e)) Le.has(r) ? t[r] = i : n[r] = i;
++	return {
++		sharedPatch: t,
++		localPatch: n
++	};
++}
++function ze(e, t, n = t, r = !1) {
++	let i = e.textGenerationModelSelection?.instanceId ?? n?.textGenerationModelSelection.instanceId;
++	return !r && e.textGenerationModelSelection && (!t || i !== void 0 && (n?.providerInstances[i]?.driver ?? i) !== (t.providerInstances[i]?.driver ?? i) || !me(t, {
++		...t.textGenerationModelSelection,
++		...e.textGenerationModelSelection
++	})) && (e = ce(e, ["textGenerationModelSelection"])), t ? e : ce(e, ["continueThreadsAfterServerUpdate"]);
++}
++function Be(e) {
++	return e.connection.phase === "connected" && e.serverConfig !== null;
++}
++// ../../packages/client-runtime/src/state/relayDiscovery.ts
++function Ve(t) {
++	let r = t.atom(te(e.pipe(ie((e) => ye(e.state)))), { initialValue: n });
++	return {
++		stateAtom: r,
++		stateValueAtom: v((e) => ue(e(r), () => n)).pipe(be("relay-environment-discovery-value")),
++		refresh: he(t, {
++			label: "relay-environment-discovery:refresh",
++			concurrency: {
++				mode: "singleFlight",
++				key: () => "refresh"
++			},
++			execute: (t) => e.pipe(re((e) => e.refresh))
++		}),
++		refreshAfterMutation: he(t, {
++			label: "relay-environment-discovery:refresh-after-mutation",
++			concurrency: {
++				mode: "serial",
++				key: () => "refresh-after-mutation"
++			},
++			execute: (t) => e.pipe(re((e) => e.refresh))
++		})
++	};
++}
++// src/state/relay.ts
++var He = Ve(s);
++// src/state/environments.ts
++function j(e, n) {
++	return {
++		...n,
++		environmentId: e,
++		label: n.entry.target.label,
++		displayUrl: t(n.entry),
++		relayManaged: ge(n.entry)
++	};
++}
++function M() {
++	let e = A(7), t = _(x.catalogValueAtom), n = _(x.networkStatusValueAtom), r = _(E.presentationsAtom), i;
++	e[0] === r ? i = e[1] : (i = [...r.entries()].map(Ue), e[0] = r, e[1] = i);
++	let a = i, o;
++	return e[2] !== t.isReady || e[3] !== a || e[4] !== n || e[5] !== r ? (o = {
++		isReady: t.isReady,
++		networkStatus: n,
++		environments: a,
++		presentationById: r
++	}, e[2] = t.isReady, e[3] = a, e[4] = n, e[5] = r, e[6] = o) : o = e[6], o;
++}
++function Ue(e) {
++	let [t, n] = e;
++	return j(t, n);
++}
++function We() {
++	return _(E.providersByEnvironmentAtom);
++}
++function Ge(e) {
++	return y.get(E.providersByEnvironmentAtom).get(e);
++}
++function Ke() {
++	return _(Oe);
++}
++function qe() {
++	return y.get(Oe);
++}
++function Je(e) {
++	let t = y.get(E.presentationsAtom).get(e);
++	return t ? j(e, t) : null;
++}
++function Ye(e) {
++	let t = A(3), { presentation: n } = Me(e), r;
++	return t[0] !== e || t[1] !== n ? (r = e === null || n === null ? null : j(e, n), t[0] = e, t[1] = n, t[2] = r) : r = t[2], r;
++}
++function N() {
++	return Ye(Ke());
++}
++function Xe(e) {
++	let t = A(2), n = i(e), r;
++	return t[0] === n ? r = t[1] : (r = oe(n) ? n.value.httpBaseUrl : null, t[0] = n, t[1] = r), r;
++}
++function Ze() {
++	return _(He.stateValueAtom);
++}
++function Qe() {
++	return _(w.identitiesAtom);
++}
++function $e() {
++	return _(w.pullRequestsSupportedAtom);
++}
++function et() {
++	return _(w.issuesSupportedAtom);
++}
++function tt() {
++	return _(w.machineByIdAtom);
++}
++function nt() {
++	return _(w.connectedEnvironmentIdsAtom);
++}
++// src/hooks/useSettings.ts
++var P = "[CLIENT_SETTINGS]", F = /* @__PURE__ */ new Set(), I = /* @__PURE__ */ new Set(), L = m, R = "pending", z = null, B = 0, rt = Promise.resolve(), V = 0, it = null;
++function at() {
++	for (let e of F) e();
++}
++function ot() {
++	for (let e of I) e();
++}
++function H() {
++	return L;
++}
++function U(e) {
++	L = e, at();
++}
++function W(e) {
++	R !== e && (R = e, ot());
++}
++function G(e) {
++	return F.add(e), J().catch(() => void 0), () => {
++		F.delete(e);
++	};
++}
++function K() {
++	return R === "ready";
++}
++function st() {
++	return R;
++}
++function q(e) {
++	return I.add(e), J().catch(() => void 0), () => {
++		I.delete(e);
++	};
++}
++async function J() {
++	if (R === "ready") return;
++	if (z) return z;
++	let e = B;
++	W(R === "failed" || R === "retrying" ? "retrying" : "pending");
++	let t = (async () => {
++		try {
++			let t = await D().persistence.getClientSettings();
++			if (e !== B) return;
++			t && U({
++				...m,
++				...t
++			}), it ??= je(ct), W("ready");
++		} catch (t) {
++			throw e === B && W("failed"), console.error(`${P} hydrate failed`, {
++				operation: "hydrate",
++				...g(t)
++			}), t;
++		}
++	})().finally(() => {
++		z === t && (z = null);
++	});
++	return z = t, z;
++}
++function ct() {
++	Y(async () => {
++		let e = await D().persistence.getClientSettings();
++		e && U({
++			...m,
++			...e
++		});
++	}).catch((e) => {
++		console.error(`${P} refresh failed`, {
++			operation: "refresh",
++			...g(e)
++		});
++	});
++}
++var lt = (e) => D().persistence.setClientSettings(e);
++function Y(e) {
++	let t = rt.then(e);
++	return rt = t.then(() => void 0, () => void 0), t;
++}
++function X(e, t = lt) {
++	let n = R !== "ready" || V > 0;
++	return n ? V += 1 : U({
++		...H(),
++		...e
++	}), Y(async () => {
++		if (n) try {
++			R !== "ready" && await J();
++		} finally {
++			--V;
++		}
++		let r = H();
++		Object.entries(e).every(([e, t]) => r[e] === t) || U({
++			...r,
++			...e
++		}), await t(H());
++	}).catch((e) => {
++		console.error(`${P} persist failed`, {
++			operation: "persist",
++			...g(e)
++		});
++	});
++}
++async function ut(e, t = lt) {
++	return Y(async () => {
++		for (R !== "ready" && await J();;) {
++			let n = H(), r = e(n);
++			if (await t(r), H() === n) return U(r), r;
++		}
++	});
++}
++var dt = new Set(f(p.fields));
++function ft(e) {
++	let t = {}, n = {};
++	for (let [r, i] of Object.entries(e)) dt.has(r) ? t[r] = i : n[r] = i;
++	return {
++		serverPatch: t,
++		clientPatch: n
++	};
++}
++function pt() {
++	return H();
++}
++function mt() {
++	return K();
++}
++function ht() {
++	return J();
++}
++function gt() {
++	return k(q, K, _t);
++}
++function _t() {
++	return !1;
++}
++function vt() {
++	return k(q, st, yt);
++}
++function yt() {
++	return "pending";
++}
++var bt = () => m, xt = (e) => e;
++function Z(e) {
++	return Ie(G, H, bt, e ?? xt, ee);
++}
++function St(e, t) {
++	return {
++		...t,
++		...e,
++		...h(e, t)
++	};
++}
++var Ct = (e) => ({
++	favorites: e.favorites,
++	providerModelPreferences: e.providerModelPreferences
++}), wt = /* @__PURE__ */ new Map(), Tt = v((e) => [...e(x.catalogValueAtom).entries.keys()].flatMap((t) => {
++	let n = ne(de(e(x.stateAtom(t))), {
++		onNone: () => null,
++		onSome: (e) => e.phase === "connected" ? e.generation : null
++	}), r = e(b.settingsValueAtom(t));
++	return n === null || r === null ? [] : [{
++		environmentId: t,
++		generation: n,
++		settings: r
++	}];
++})).pipe(be("web-model-preferences-migration-targets"));
++function Q() {
++	if (R === "ready") for (let { environmentId: e, generation: t, settings: n } of y.get(Tt)) {
++		if (wt.get(e) === t) continue;
++		let r = Se(n, L);
++		r && (wt.set(e, t), fe(y, b.updateSettings, {
++			environmentId: e,
++			input: { patch: r }
++		}, { reportFailure: !1 }));
++	}
++}
++function Et() {
++	let e = [
++		y.subscribe(Tt, Q),
++		G(Q),
++		q(Q)
++	];
++	return Q(), () => {
++		for (let t of e) t();
++	};
++}
++function $(e, t) {
++	let n = A(3), r;
++	return n[0] !== t || n[1] !== e ? (r = (n) => {
++		let r = St(e, n);
++		return t ? t(r) : r;
++	}, n[0] = t, n[1] = e, n[2] = r) : r = n[2], Z(r);
++}
++function Dt(e) {
++	if (!e.settingsHydrated) return "none";
++	let t = e.mode !== "pill" && e.mode !== "none";
++	return e.paletteThemeActive && !e.paletteThemeAllowsArtwork && t ? "pill" : e.mode;
++}
++function Ot() {
++	let e = A(7), t = gt(), n = Z(At), { resolvedTheme: r, theme: i, themeHalves: a } = Ne(), o = k(Ce, Te, kt), s;
++	if (e[0] !== n || e[1] !== o || e[2] !== r || e[3] !== t || e[4] !== i || e[5] !== a) {
++		let c = we(i, a, r), l = ke(c);
++		s = Dt({
++			mode: n,
++			settingsHydrated: t,
++			paletteThemeActive: o !== null || l !== null,
++			paletteThemeAllowsArtwork: o ?? Ee(c)
++		}), e[0] = n, e[1] = o, e[2] = r, e[3] = t, e[4] = i, e[5] = a, e[6] = s;
++	} else s = e[6];
++	return s;
++}
++function kt() {
++	return null;
++}
++function At(e) {
++	return e.environmentIdentificationMode;
++}
++async function jt(e, t) {
++	return (e.favorites === null || e.providerModelPreferences === null) && await ht(), {
++		...Se(e, pt()),
++		...t
++	};
++}
++function Mt(e) {
++	let t = A(6), n;
++	t[0] === e ? n = t[1] : (n = e ? b.settingsValueAtom(e) : Pt, t[0] = e, t[1] = n);
++	let r = _(n), i = O(b.updateSettings, "model preferences update"), a;
++	return t[2] !== e || t[3] !== i || t[4] !== r ? (a = async (t) => {
++		if (!e || !r) return;
++		let n;
++		try {
++			n = await jt(r, t);
++		} catch {
++			T.add({
++				type: "error",
++				title: S(C("Model preferences not saved")),
++				description: S(C("Could not load saved model preferences. Try again."))
++			});
++			return;
++		}
++		return i({
++			environmentId: e,
++			input: { patch: n }
++		});
++	}, t[2] = e, t[3] = i, t[4] = r, t[5] = a) : a = t[5], a;
++}
++var LOCAL_FAVS_KEY = "hanzo.model.favorites.v1";
++var localFavListeners = new Set();
++var localFavCache = null;
++function readLocalFavs() {
++	if (localFavCache !== null) return localFavCache;
++	try {
++		const raw = typeof window !== "undefined" ? window.localStorage.getItem(LOCAL_FAVS_KEY) : null;
++		const parsed = raw ? JSON.parse(raw) : [];
++		localFavCache = Array.isArray(parsed) ? parsed.filter((x) => x && typeof x.provider === "string" && typeof x.model === "string") : [];
++	} catch {
++		localFavCache = [];
++	}
++	return localFavCache;
++}
++function writeLocalFavs(next) {
++	localFavCache = next;
++	try {
++		if (typeof window !== "undefined") window.localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(next));
++	} catch {}
++	for (const fn of localFavListeners) fn();
++}
++function subscribeLocalFavs(fn) {
++	localFavListeners.add(fn);
++	return () => { localFavListeners.delete(fn); };
++}
++function toggleLocalFav(provider, model) {
++	const cur = readLocalFavs();
++	const exists = cur.some((x) => x.provider === provider && x.model === model);
++	const next = exists ? cur.filter((x) => !(x.provider === provider && x.model === model)) : [...cur, { provider, model }];
++	writeLocalFavs(next);
++	return !exists;
++}
++function mergeFavs(serverList, localList) {
++	const out = [];
++	const seen = new Set();
++	for (const item of [...(localList ?? []), ...(serverList ?? [])]) {
++		if (!item || !item.provider || !item.model) continue;
++		const key = `${item.provider}::${item.model}`;
++		if (seen.has(key)) continue;
++		seen.add(key);
++		out.push(item);
++	}
++	return out;
++}
++function Nt(e) {
++	let t = A(5), n = Pe(ve), r;
++	t[0] === Symbol.for("react.memo_cache_sentinel") ? (r = /* @__PURE__ */ new Map(), t[0] = r) : r = t[0];
++	let i = Fe(r), a = Mt(e), o;
++	return t[1] !== e || t[2] !== n || t[3] !== a ? (o = async (t, r) => {
++		const nextFav = toggleLocalFav(t, r);
++		if (!e) return;
++		let o = b.settingsValueAtom(e), s = n.get(o);
++		if (!s) return;
++		if (s.favorites === null) try {
++			await ht();
++		} catch {
++			return;
++		}
++		let c = n.get(o) ?? s, u = JSON.stringify([
++			e,
++			t,
++			r
++		]), d = i.current.get(u), f = {
++			favorite: nextFav,
++			settings: c,
++			pending: !0
++		};
++		i.current.set(u, f);
++		let p = await a({ setModelFavorites: [{
++			provider: t,
++			model: r,
++			favorite: f.favorite
++		}] }).catch(() => null);
++		p && pe(p) && n.get(o)?.favorites === c.favorites && (f.pending = !1), f.pending && i.current.get(u) === f && (d && !d.pending && n.get(o)?.favorites === d.settings.favorites ? i.current.set(u, d) : i.current.delete(u));
++	}, t[1] = e, t[2] = n, t[3] = a, t[4] = o) : o = t[4], o;
++}
++var Pt = v(null);
++function Ft(e) {
++	let t = A(5), n;
++	t[0] === e ? n = t[1] : (n = e ? b.settingsValueAtom(e) : Pt, t[0] = e, t[1] = n);
++	let r = _(n), i = Z(Ct), localFavs = k(subscribeLocalFavs, readLocalFavs, readLocalFavs), a = r ?? le;
++	let merged = h(a, i);
++	return { ...merged, favorites: mergeFavs(merged.favorites, localFavs) };
++}
++function It(e, t) {
++	let n = A(2), r;
++	return n[0] === e ? r = n[1] : (r = b.settingsValueAtom(e), n[0] = e, n[1] = r), $(_(r) ?? le, t);
++}
++function Lt(e) {
++	let t = A(4), n;
++	t[0] === Symbol.for("react.memo_cache_sentinel") ? (n = { reportFailure: !1 }, t[0] = n) : n = t[0];
++	let r = O(b.mutateProviderInstance, n), i;
++	return t[1] !== e || t[2] !== r ? (i = (t, n) => r({
++		environmentId: e,
++		input: {
++			patch: n === void 0 ? {} : n,
++			providerInstanceMutation: t
++		}
++	}), t[1] = e, t[2] = r, t[3] = i) : i = t[3], i;
++}
++function Rt(e) {
++	return $(_(De), e);
++}
++var zt = C("This setting is saved on a server, and the hosted app is not anchored to one. Change it from the desktop app or from the server's own address.");
++function Bt() {
++	let e = A(2), t = N(), n;
++	return e[0] === t ? n = e[1] : (n = t !== null || !o(), e[0] = t, e[1] = n), n;
++}
++function Vt(e) {
++	let t = A(3), n = e !== void 0 && e, { environments: r } = M(), i = r.filter(Be).map(Ut), a = _(c(l(i))), o;
++	return t[0] !== n || t[1] !== a ? (o = (e, t) => {
++		let r = a[t];
++		if (n && r._tag === "Initial") return [e];
++		let i = r._tag === "Failure" ? null : ue(r, Ht);
++		return i !== null && d(i, "settings:write") ? [e] : [];
++	}, t[0] = n, t[1] = a, t[2] = o) : o = t[2], i.flatMap(o);
++}
++function Ht() {
++	return null;
++}
++function Ut(e) {
++	let { environmentId: t } = e;
++	return t;
++}
++function Wt(e) {
++	return S(e == null ? C("This connection lacks permission to change settings on the selected environment.") : C("This connection lacks permission to change settings on {environments}.", { environments: e }));
++}
++function Gt(e) {
++	let t = A(10);
++	r(e, ae);
++	let n;
++	t[0] === Symbol.for("react.memo_cache_sentinel") ? (n = {
++		label: "server settings update",
++		reportFailure: !1
++	}, t[0] = n) : n = t[0];
++	let i = O(b.updateSettings, n), { environments: o } = M(), s;
++	t[1] !== o || t[2] !== i ? (s = async (e, t) => {
++		let n = await i(e);
++		if (n._tag === "Failure" && t?.(), n._tag === "Failure" && !_e(n)) {
++			let t = o.find((t) => t.environmentId === e.environmentId)?.label ?? e.environmentId, r = xe(n);
++			T.add({
++				type: "error",
++				title: S(C("Setting not saved")),
++				description: S(C("Could not save on {label}: {error}", {
++					label: t,
++					error: (r instanceof Error ? Ae(r, S) : null) ?? S(C("The save failed. Try reconnecting and saving again."))
++				}))
++			});
++		}
++		return n;
++	}, t[1] = o, t[2] = i, t[3] = s) : s = t[3];
++	let c = s, l = Vt(!0), d;
++	return t[4] !== e || t[5] !== o || t[6] !== i || t[7] !== c || t[8] !== l ? (d = (t, n) => {
++		let { serverPatch: r, clientPatch: s } = ft(t), d = e === null || se(r).every((t) => a(e, t));
++		if (Object.keys(r).length > 0 && !d && (n?.onFailed?.(), T.add({
++			type: "warning",
++			title: S(C("Setting not saved")),
++			description: Wt(o.find((t) => t.environmentId === e)?.label)
++		})), Object.keys(r).length > 0 && d) {
++			let { sharedPatch: t, localPatch: s } = Re(r), d = (e) => {
++				let t = e === void 0 ? S(zt) : e;
++				return n?.onFailed?.(), T.add({
++					type: "warning",
++					title: S(C("Setting not saved")),
++					description: t
++				});
++			};
++			if (Object.keys(s).length > 0 && (e ? c({
++				environmentId: e,
++				input: { patch: s }
++			}, n?.onFailed).then((e) => {
++				e._tag === "Success" && n?.onSaved?.();
++			}) : d()), Object.keys(t).length > 0) {
++				let r = o.find((t) => t.environmentId === e)?.serverConfig?.settings, s = new Set(l);
++				e && s.add(e);
++				let c = [], f = [];
++				for (let n of s) {
++					let i = o.find((e) => e.environmentId === n), s = ze(t, i?.serverConfig?.settings, r, n === e);
++					Object.keys(s).length !== 0 && (y.get(u.sessionStateAtom(n))._tag !== "Initial" && !se(t).every((e) => a(n, e)) ? f.push(i?.label ?? n) : c.push({
++						environmentId: n,
++						input: { patch: s }
++					}));
++				}
++				c.length === 0 ? d(f.length > 0 ? S(C("This connection lacks permission to change settings on {environments}.", { environments: f.join(", ") })) : s.size > 0 ? S(C("Update older servers to save this setting.")) : void 0) : Promise.all(c.map(async (e) => ({
++					label: o.find((t) => t.environmentId === e.environmentId)?.label ?? e.environmentId,
++					result: await i(e)
++				}))).then((e) => {
++					(f.length > 0 || e.some(Xt)) && n?.onFailed?.();
++					let t = e.flatMap(Yt);
++					if (f.length === 0 && e.every(Jt) && n?.onSaved?.(), t.length === 0) return;
++					let r = e.filter(qt).map(Kt);
++					T.add({
++						type: "error",
++						title: r.length > 0 ? S(C("Setting saved on some environments")) : S(C("Setting not saved")),
++						description: [...t, ...r.length > 0 ? [S(C("Saved on {environments}.", { environments: r.join(", ") }))] : []].join("\n")
++					});
++				});
++			}
++		}
++		Object.keys(s).length > 0 && X(s);
++	}, t[4] = e, t[5] = o, t[6] = i, t[7] = c, t[8] = l, t[9] = d) : d = t[9], d;
++}
++function Kt(e) {
++	let { label: t } = e;
++	return t;
++}
++function qt(e) {
++	let { result: t } = e;
++	return t._tag === "Success";
++}
++function Jt(e) {
++	let { result: t } = e;
++	return t._tag === "Success";
++}
++function Yt(e) {
++	let { label: t, result: n } = e;
++	if (n._tag !== "Failure" || _e(n)) return [];
++	let r = xe(n);
++	return [S(C("Could not save on {label}: {error}", {
++		label: t,
++		error: (r instanceof Error ? Ae(r, S) : null) ?? S(C("The save failed. Try reconnecting and saving again."))
++	}))];
++}
++function Xt(e) {
++	let { result: t } = e;
++	return t._tag === "Failure";
++}
++function Zt(e) {
++	return Gt(e);
++}
++function Qt() {
++	return Gt(N()?.environmentId ?? null);
++}
++function $t(e) {
++	return X(e);
++}
++export { nt as A, $e as B, Nt as C, Je as D, Qt as E, We as F, He as H, M as I, et as L, Xe as M, Qe as N, Ge as O, tt as P, N as R, Bt as S, Zt as T, Ze as V, Ft as _, mt as a, Lt as b, ut as c, q as d, $t as f, Ot as g, vt as h, K as i, Ye as j, qe as k, Et as l, gt as m, ht as n, St as o, Z as p, pt as r, X as s, zt as t, G as u, It as v, Mt as w, Rt as x, $ as y, Ke as z };

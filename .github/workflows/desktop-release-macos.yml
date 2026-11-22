@@ -82,6 +82,9 @@ jobs:
           if [ "${{ matrix.tauri_target }}" = "universal-apple-darwin" ]; then
             for s in hanzo-node hanzo-tools-runner-resources/deno hanzo-tools-runner-resources/uv; do
               b=external-binaries/hanzo-node/$s
+              if [ ! -f "$b-aarch64-apple-darwin" ] && [ ! -f "$b-x86_64-apple-darwin" ]; then
+                continue
+              fi
               lipo -create "$b-aarch64-apple-darwin" "$b-x86_64-apple-darwin" -output "$b-universal-apple-darwin" 2>/dev/null \
                 || cp "$b-aarch64-apple-darwin" "$b-universal-apple-darwin"
               chmod +x "$b-universal-apple-darwin"
