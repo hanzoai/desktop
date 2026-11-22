@@ -28,6 +28,22 @@ struct Published {
 pub struct LocalDev {
     pub id: String,
     pub origin: String,
+    pub hostname: Option<String>,
+}
+
+fn local_short_hostname() -> Option<String> {
+    if let Ok(out) = Command::new("hostname").arg("-s").output() {
+        if out.status.success() {
+            let s = String::from_utf8_lossy(&out.stdout).trim().to_string();
+            if !s.is_empty() {
+                return Some(s);
+            }
+        }
+    }
+    std::env::var("HOSTNAME")
+        .ok()
+        .map(|s| s.split('.').next().unwrap_or(&s).trim().to_string())
+        .filter(|s| !s.is_empty())
 }
 
 fn hanzod_bin() -> Option<PathBuf> {
@@ -118,10 +134,12 @@ fn server_cli() -> Option<PathBuf> {
 /// falling back to a legacy local Dev server only if `hanzod` is absent.
 #[tauri::command]
 pub fn dev_local_runtime() -> Option<LocalDev> {
+    let hostname = local_short_hostname();
     if ensure_hanzod_running() {
         return Some(LocalDev {
             id: "hanzod".to_string(),
             origin: format!("http://{HANZOD_ADDR}"),
+            hostname,
         });
     }
 
@@ -135,7 +153,7 @@ pub fn dev_local_runtime() -> Option<LocalDev> {
         .ok()?
         .trim()
         .to_string();
-    Some(LocalDev { id, origin: published.origin })
+    Some(LocalDev { id, origin: published.origin, hostname })
 }
 
 /// Pairing credential for the local runtime (`hanzod` uses shared IAM identity;

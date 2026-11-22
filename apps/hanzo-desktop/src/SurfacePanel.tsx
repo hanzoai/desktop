@@ -163,6 +163,12 @@ export function selectSurfaceTab(id: string) {
   emit({ ...state, activeTabId: id });
 }
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('hanzo:open-local-terminal', () => {
+    openSurface('terminal');
+  });
+}
+
 export function closeSurfaceTab(id: string) {
   const remaining = state.tabs.filter((t) => t.id !== id);
   const nextActive =
