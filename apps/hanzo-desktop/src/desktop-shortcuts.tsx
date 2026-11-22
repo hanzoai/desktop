@@ -788,7 +788,14 @@ export function DesktopSettings({
                   }
                   trailing={
                     isAuthenticated ? (
-                      <Button size="sm" variant="outline" onPress={() => void openUrl(`${siteUrl}/billing`)}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => {
+                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
+                          void openUrl(`${siteUrl}/pay${q}`);
+                        }}
+                      >
                         Manage billing
                       </Button>
                     ) : (
@@ -809,11 +816,30 @@ export function DesktopSettings({
                 />
                 <Row
                   title="Upgrade or add credits"
-                  detail="Top up pre-paid compute credits, configure auto-reload, or compare Pro / Dev / Max plans."
+                  detail="Upgrade to Pro / Dev / Max or top up pre-paid compute credits on hanzo.ai/pay."
                   trailing={
-                    <Button size="sm" variant="outline" onPress={() => void openUrl(`${siteUrl}/pricing`)}>
-                      View plans
-                    </Button>
+                    <XStack gap="$2">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onPress={() => {
+                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
+                          void openUrl(`${siteUrl}/pay/cart${q}`);
+                        }}
+                      >
+                        Upgrade plan
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => {
+                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
+                          void openUrl(`${siteUrl}/pay/amount/card${q}`);
+                        }}
+                      >
+                        Add credits
+                      </Button>
+                    </XStack>
                   }
                 />
               </Card>
