@@ -6,7 +6,6 @@ use keyboard_types::{Code, Modifiers};
 #[derive(Debug, PartialEq)]
 pub enum Action {
     CreateChat,
-    ToggleSpotlight,
 }
 
 /// main.rs registers each key under both Super and Control, and the shortcuts
@@ -18,7 +17,6 @@ pub fn action(mods: Modifiers, key: Code) -> Option<Action> {
     }
     match key {
         Code::KeyI => Some(Action::CreateChat),
-        Code::KeyJ => Some(Action::ToggleSpotlight),
         _ => None,
     }
 }
@@ -37,9 +35,9 @@ mod tests {
     }
 
     #[test]
-    fn j_toggles_spotlight_under_super_or_control() {
-        assert_eq!(action(SUPER, Code::KeyJ), Some(Action::ToggleSpotlight));
-        assert_eq!(action(CTRL, Code::KeyJ), Some(Action::ToggleSpotlight));
+    fn j_is_no_shortcut() {
+        assert_eq!(action(SUPER, Code::KeyJ), None);
+        assert_eq!(action(CTRL, Code::KeyJ), None);
     }
 
     #[test]

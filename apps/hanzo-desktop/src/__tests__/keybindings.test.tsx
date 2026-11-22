@@ -57,7 +57,7 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(macChords).toContain('⌘[');
     expect(macChords).toContain('⌘]');
 
-    // main.rs registers ⇧⌘I system-wide (⇧⌘J waits until Spotlight can send);
+    // main.rs registers ⇧⌘I system-wide;
     // Fn never reaches a window on Windows or Linux and is the Globe key on a
     // Mac, so it is not listed.
     const all = shortcutGroups('mac').flatMap((g) => g.rows.flatMap((r) => r.keys));

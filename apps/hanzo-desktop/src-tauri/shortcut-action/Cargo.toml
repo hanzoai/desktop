@@ -3,7 +3,7 @@ name = "hanzo-shortcut-action"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Which app action a global shortcut (Ctrl/Super + Shift + I or J) runs"
+description = "Which app action a global shortcut (Ctrl/Super + Shift + I) runs"
 license = "Apache-2.0"
 
 [dependencies]
