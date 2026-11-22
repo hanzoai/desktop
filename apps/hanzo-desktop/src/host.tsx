@@ -173,7 +173,14 @@ const WEB = /^\/(billing|usage|keys|pricing)(\/|$)|^\/settings\/organization(\/|
 export function onTheWeb(href: string): string | null {
   try {
     const url = new URL(href, window.location.href);
-    return url.origin === window.location.origin && WEB.test(url.pathname) ? `${SITE}${url.pathname}${url.search}` : null;
+    if (url.origin !== window.location.origin || !WEB.test(url.pathname)) return null;
+    // /billing on hanzo.ai is the Billing product marketing page; real checkout &
+    // billing management live at /pay.
+    if (url.pathname === '/billing' || url.pathname.startsWith('/billing/')) {
+      const rest = url.pathname.slice('/billing'.length);
+      return `${SITE}/pay${rest}${url.search}`;
+    }
+    return `${SITE}${url.pathname}${url.search}`;
   } catch {
     return null;
   }
