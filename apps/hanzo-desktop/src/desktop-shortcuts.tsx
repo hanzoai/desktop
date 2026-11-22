@@ -478,10 +478,22 @@ export function DesktopSettings({
 
     fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
       .then((r) => {
-        if (!cancelled) setEngineUp(r.ok);
+        if (r.ok) {
+          if (!cancelled) setEngineUp(true);
+          return;
+        }
+        return fetch(`${localEngineUrl}/health`, { signal: ctrl.signal }).then((r2) => {
+          if (!cancelled) setEngineUp(r2.ok);
+        });
       })
       .catch(() => {
-        if (!cancelled) setEngineUp(false);
+        fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
+          .then((r2) => {
+            if (!cancelled) setEngineUp(r2.ok);
+          })
+          .catch(() => {
+            if (!cancelled) setEngineUp(false);
+          });
       });
 
     fetch('http://127.0.0.1:11434/api/tags', { signal: ctrl.signal })

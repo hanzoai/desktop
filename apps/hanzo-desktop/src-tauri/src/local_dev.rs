@@ -1,15 +1,21 @@
-//! The Dev server on this computer, as a runtime for the shell's Dev (`@hanzo/app`'s
-//! `configure({ runtime })`). Hanzo Dev's server publishes where it listens in its data
-//! directory (`userdata/server-runtime.json`) and issues one-time pairing credentials through
-//! its own CLI; this reads the first and asks the second, so the window never holds a secret
-//! longer than one pairing. The server is Hanzo Dev's: this app supervises none of its own.
+//! Local backend discovery for Hanzo Desktop (`@hanzo/app`'s `configure({ runtime })`).
+//!
+//! Primary path (HIP-1330): connects directly to the unified single-binary Rust
+//! daemon `hanzod` on `127.0.0.1:3690` (`~/.hanzo/bin/hanzod`, auto-started if
+//! installed and not yet listening) — zero Node.js dependency.
+//!
+//! Legacy fallback: if `hanzod` is not installed, discovers a running Hanzo Dev
+//! server via `~/.hanzo-dev/userdata/server-runtime.json`.
 
+use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
-use std::process::Command;
+use std::process::{Command, Stdio};
 use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
+
+const HANZOD_ADDR: &str = "127.0.0.1:3690";
 
 #[derive(Deserialize)]
 struct Published {
@@ -22,6 +28,63 @@ struct Published {
 pub struct LocalDev {
     pub id: String,
     pub origin: String,
+}
+
+fn hanzod_bin() -> Option<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Ok(explicit) = std::env::var("HANZOD_BIN") {
+        if !explicit.trim().is_empty() {
+            candidates.push(PathBuf::from(explicit.trim()));
+        }
+    }
+    if let Some(home) = dirs::home_dir() {
+        candidates.push(home.join(".hanzo").join("bin").join("hanzod"));
+    }
+    candidates.push(PathBuf::from("/usr/local/bin/hanzod"));
+    candidates.push(PathBuf::from("/opt/homebrew/bin/hanzod"));
+    candidates.into_iter().find(|p| p.is_file())
+}
+
+fn probe_hanzod() -> bool {
+    let Ok(addr) = HANZOD_ADDR.parse::<SocketAddr>() else {
+        return false;
+    };
+    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(250)) else {
+        return false;
+    };
+    let _ = stream.set_read_timeout(Some(Duration::from_millis(400)));
+    let _ = stream.set_write_timeout(Some(Duration::from_millis(400)));
+    let req = format!("GET /v1/dev/health HTTP/1.1\r\nHost: {HANZOD_ADDR}\r\nConnection: close\r\n\r\n");
+    if stream.write_all(req.as_bytes()).is_err() {
+        return false;
+    }
+    let mut buf = [0u8; 256];
+    matches!(stream.read(&mut buf), Ok(n) if n > 0 && std::str::from_utf8(&buf[..n]).unwrap_or("").contains("200 OK"))
+}
+
+fn ensure_hanzod_running() -> bool {
+    if probe_hanzod() {
+        return true;
+    }
+    let Some(bin) = hanzod_bin() else {
+        return false;
+    };
+    let spawn_ok = Command::new(&bin)
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .is_ok();
+    if !spawn_ok {
+        return false;
+    }
+    for _ in 0..10 {
+        std::thread::sleep(Duration::from_millis(120));
+        if probe_hanzod() {
+            return true;
+        }
+    }
+    false
 }
 
 fn home() -> PathBuf {
@@ -51,9 +114,17 @@ fn server_cli() -> Option<PathBuf> {
     explicit.into_iter().chain([bundled]).find(|p| p.is_file())
 }
 
-/// The running local Dev server, or none: its published address, answering on its port.
+/// The running local backend: prefers unified Rust `hanzod` (`127.0.0.1:3690`),
+/// falling back to a legacy local Dev server only if `hanzod` is absent.
 #[tauri::command]
 pub fn dev_local_runtime() -> Option<LocalDev> {
+    if ensure_hanzod_running() {
+        return Some(LocalDev {
+            id: "hanzod".to_string(),
+            origin: format!("http://{HANZOD_ADDR}"),
+        });
+    }
+
     let userdata = home().join("userdata");
     let published: Published =
         serde_json::from_slice(&std::fs::read(userdata.join("server-runtime.json")).ok()?).ok()?;
@@ -67,10 +138,14 @@ pub fn dev_local_runtime() -> Option<LocalDev> {
     Some(LocalDev { id, origin: published.origin })
 }
 
-/// One one-time pairing credential for the local Dev server (its CLI issues it).
+/// Pairing credential for the local runtime (`hanzod` uses shared IAM identity;
+/// legacy Hanzo Dev uses its CLI one-time token).
 #[tauri::command]
 pub fn dev_local_pairing() -> Result<String, String> {
-    let cli = server_cli().ok_or("Hanzo Dev is not installed on this computer.")?;
+    if probe_hanzod() {
+        return Ok("hanzod-native".to_string());
+    }
+    let cli = server_cli().ok_or("hanzod is not running and Hanzo Dev is not installed on this computer.")?;
     let out = Command::new(node())
         .arg(cli)
         .args(["auth", "pairing", "create", "--json", "--ttl", "5m", "--label", "Hanzo"])

@@ -1,6 +1,6 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.67"
+version = "1.1.68"
 description = "A first class Desktop application to interact with Hanzo Node"
 authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
 license = "Apache-2.0"
@@ -42,6 +42,8 @@ hanzo-engine-bin = { path = "engine-bin" }
 hanzo-dev-agent = { path = "dev-agent" }
 # The project folders Auto can pick from. See projects/src/lib.rs.
 hanzo-projects = { path = "projects" }
+# Which action a global shortcut runs. See shortcut-action/src/lib.rs.
+hanzo-shortcut-action = { path = "shortcut-action" }
 uuid = { version = "1.10.0", features = ["v4"] }
 rand = "0.8"
 # OS keychain intentionally not linked: session lives in `~/.hanzo/` (identity.rs) and secrets in Cloud KMS.

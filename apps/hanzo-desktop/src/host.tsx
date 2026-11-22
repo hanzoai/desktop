@@ -15,7 +15,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import config from '../gui.config';
 import { Crash } from './crash';
 import { DesktopSettings, sectionOf, windowKey } from './desktop-shortcuts';
-import { adopt, share } from './identity';
+import { adopt } from './identity';
 import { keychain } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
@@ -31,9 +31,10 @@ import {
   useWorkspacePanels,
   WorkspaceDetailsPopover,
 } from './SurfacePanel';
+import { onward, signIn } from './sign-in';
 import { Update } from './update';
 import { Welcome } from './Welcome';
-import { awaitCallback, type Callback, finishAttempt, SignInCancelled } from './lib/sign-in-attempt';
+import { SignInCancelled } from './lib/sign-in-attempt';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -296,61 +297,6 @@ function stayGuest(): void {
   } catch {
     // The choice is a convenience: without storage the next launch asks again.
   }
-}
-
-/** Where a sign-in started from /login?next= goes on to, on this origin only. */
-function onward(): string {
-  const next = new URLSearchParams(window.location.search).get('next');
-  return next && next.startsWith('/') && !next.startsWith('//') ? next : '/chat';
-}
-
-/** How long the loopback port waits for the browser: `PATIENCE` in loopback.rs. */
-const SIGN_IN_WINDOW = 15 * 60 * 1000;
-
-/**
- * Sign-in in the system browser, as the Hanzo CLI signs in: a loopback port the
- * system picks for this attempt is the redirect (RFC 8252 §7.3), and the page
- * the browser opens is the brand's own (hanzo.ai/login), which finishes this
- * app's authorize request. PKCE's verifier and the state stay in this window's
- * storage, where the callback is read.
- *
- * `signal` is the Welcome screen's Cancel; `ready` hands it "Open the sign-in
- * page again" once the page has been opened. The wait itself (the callback that
- * matches this attempt's state, the deadline, Cancel) is sign-in-attempt.ts.
- */
-async function signIn(
-  sdk: ReturnType<typeof useIam>['sdk'],
-  { signal, ready }: { signal: AbortSignal; ready?: (reopen: () => void) => void },
-): Promise<void> {
-  // The browser's hand-back is emitted as the event this brand's window listens on.
-  const port = await invoke<number>('iam_loopback', { event: brand.iam.callbackEvent });
-  if (signal.aborted) throw new SignInCancelled();
-  const redirect = `http://127.0.0.1:${port}/callback`;
-  // The SDK sends the redirect its configuration names at the code exchange, so
-  // it names this attempt's before the authorize request is built.
-  (sdk as unknown as { config: { redirectUri: string } }).config.redirectUri = redirect;
-  const issuer = new URL(await sdk.getSigninUrl());
-  const url = brand.iam.page ? `${brand.iam.page}${issuer.search}` : issuer.href;
-  const open = () => openUrl(url);
-  const back = await awaitCallback({
-    state: issuer.searchParams.get('state') ?? '',
-    listen: (on) => safeListen<Callback>(brand.iam.callbackEvent, (event) => on(event.payload)),
-    open: async () => {
-      await open();
-      ready?.(() => void open().catch(() => undefined));
-    },
-    windowMs: SIGN_IN_WINDOW,
-    signal,
-  });
-  // The browser came back with this attempt's state: the exchange decides now.
-  const callback = new URL(redirect);
-  callback.searchParams.set('code', back.code);
-  callback.searchParams.set('state', back.state);
-  await finishAttempt(signal, {
-    exchange: () => sdk.handleCallback(callback.href),
-    forget: () => sdk.clearTokens(),
-    then: [share, () => window.location.replace(onward())],
-  });
 }
 
 function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
