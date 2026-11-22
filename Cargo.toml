@@ -1,0 +1,11 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/engine-bin",
+  "crates/log-redact",
+  "crates/projects",
+  "crates/shortcut-action",
+]
+exclude = [
+  "examples/minimal-chat-desktop/src-tauri",
+]

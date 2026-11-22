@@ -1,0 +1,18 @@
+[package]
+name = "hanzo-desktop-starter"
+version = "0.1.0"
+description = "Minimal Tauri v2 starter built on Hanzo Desktop OSS crates and SDK"
+license = "Apache-2.0"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+dirs = "6.0"
+hanzo-engine-bin = { path = "../../../crates/engine-bin" }
+hanzo-log-redact = { path = "../../../crates/log-redact" }
+hanzo-projects = { path = "../../../crates/projects" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2", features = [] }

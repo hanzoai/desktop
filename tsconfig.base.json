@@ -5,9 +5,6 @@
     "sourceMap": true,
     "declaration": false,
     "moduleResolution": "bundler",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
     "target": "es2022",
     "module": "esnext",
     "lib": ["es2022", "dom", "WebWorker"],
@@ -15,8 +12,9 @@
     "skipDefaultLibCheck": true,
     "paths": {
       "@hanzo/desktop-brand-config": ["./libs/brand-config/src/index.ts"],
-      "@hanzo/desktop-logo": ["./libs/hanzo-logo/src/index.ts"]
+      "@hanzo/desktop-logo": ["./libs/hanzo-logo/src/index.ts"],
+      "@hanzo/desktop-sdk": ["./libs/desktop-sdk/src/index.ts"]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": ["node_modules", "tmp", "dist"]
 }

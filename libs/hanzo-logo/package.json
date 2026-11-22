@@ -1,13 +1,21 @@
 {
   "name": "@hanzo/desktop-logo",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "Theme-adaptive inline SVG brand marks and icon asset paths for Hanzo Desktop SDK apps",
+  "license": "Apache-2.0",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
     ".": {
-      "import": "./src/index.ts",
-      "types": "./src/index.ts"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     }
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.lib.json"
   }
 }

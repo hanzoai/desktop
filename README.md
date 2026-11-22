@@ -1,89 +1,101 @@
-<p align="center"><img src=".github/hero.svg" alt="Hanzo Desktop" width="880"></p>
+<p align="center"><img src=".github/hero.svg" alt="Hanzo Desktop SDK" width="880"></p>
 
 <h1 align="center">
-  <img width="36" height="36" src="assets/icon.png" alt="Hanzo icon" />
-  Hanzo Desktop
+  <img width="36" height="36" src="assets/icon.png" alt="Hanzo" />
+  Hanzo Desktop SDK
 </h1>
 
 <p align="center">
-  <strong>Native desktop workspace for AI chat, coding agents, design studio, and local or cloud models.</strong>
+  <strong>Open-source SDK, reusable React + Tauri v2 components, Rust desktop crates, and starter templates for building local-first AI desktop apps.</strong>
 </p>
 
 <p align="center">
-  <a href="https://hanzo.ai/download">Download</a> ·
-  <a href="https://github.com/hanzoai/desktop/releases/latest">Releases</a> ·
-  <a href="https://docs.hanzo.ai">Documentation</a> ·
-  <a href="https://hanzo.ai/security">Security</a> ·
-  <a href="https://github.com/hanzoai/.github/blob/main/SECURITY.md">Security Policy</a>
+  <a href="https://github.com/hanzoai/desktop/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="Apache 2.0 License"></a>
+  <img src="https://img.shields.io/badge/Tauri-v2-24C8DB?logo=tauri&logoColor=white" alt="Tauri v2">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19">
+  <img src="https://img.shields.io/badge/Rust-2021-000000?logo=rust&logoColor=white" alt="Rust">
 </p>
 
 ---
 
 ## Overview
 
-Hanzo Desktop packages the Hanzo workspace (`@hanzo/app` + `@hanzo/gui`) into a cross-platform native **Tauri (Rust)** desktop application for macOS, Windows, and Linux.
+`hanzoai/desktop` provides the open-source building blocks for creating cross-platform macOS, Windows, and Linux AI desktop applications with **Tauri v2**, **React**, and **Rust**:
 
-- **Unified Workspace** — Chat, coding agents (`Hanzo Dev`), visual design studio, and integrated terminals in one desktop window.
-- **Local-First or Cloud** — Run models locally via [`hanzoai/engine`](https://github.com/hanzoai/engine) / `hanzod` for full privacy and air-gapped workflows, or connect to your Hanzo Cloud account and BYOK providers.
-- **Model Context Protocol (MCP)** — First-class MCP tool integration across local repositories, terminals, and external services.
-- **Verifiable & Open Source** — Built from public source in GitHub Actions with hardware-backed code signing (Windows EV RSA-4096 via Cloud KMS OIDC; signed macOS builds) and reproducible source builds.
+### TypeScript / React Packages (`libs/*`)
 
-## Demo
+| Package | Path | Description |
+|---|---|---|
+| `@hanzo/desktop-sdk` | `libs/desktop-sdk` | Tauri v2 runtime detection (`isTauriAvailable`, `safeInvoke`, `safeListen`), macOS traffic-light overlay titlebar geometry (`WindowTitlebar`), RFC 8252 PKCE loopback sign-in state machine (`awaitCallback`, `finishAttempt`), and OpenAI-compatible local inference engine client (`probeEngineHealth`, `sendChatCompletion`, `EngineStatusBadge`). |
+| `@hanzo/desktop-brand-config` | `libs/brand-config` | Typed multi-brand configuration schema, hostname/environment brand resolution, and public OAuth 2.0 PKCE client metadata. |
+| `@hanzo/desktop-logo` | `libs/hanzo-logo` | `<BrandMark />` `currentColor` inline SVG React component and vector brand assets. |
 
-[![Hanzo Desktop — 31s demo](assets/hero-poster.png)](https://github.com/hanzoai/desktop/raw/main/assets/hero.mp4)
+### Rust Desktop Utility Crates (`crates/*`)
 
-_Click to play — 31s walkthrough recorded directly from this repository's frontend: onboarding, workspace, Zen models, light/dark themes, and core surfaces._
+| Crate | Path | Description |
+|---|---|---|
+| `hanzo-log-redact` | `crates/log-redact` | Scrubs PEM private keys, BIP-39 mnemonics, Bearer/Basic auth headers, OAuth/PKCE parameters, and hex/base58 secrets from desktop logs and existing log files on disk. |
+| `hanzo-engine-bin` | `crates/engine-bin` | Locates a local OpenAI-compatible inference engine binary (`HANZO_ENGINE_BIN`, bundled sidecar, or `PATH`). |
+| `hanzo-projects` | `crates/projects` | Fast, bounded discovery of developer project directories (`~/work`, `~/code`, `~/dev`, `~/src`, `~/Projects`, `~/git`) without reading file contents. |
+| `hanzo-shortcut-action` | `crates/shortcut-action` | Pure-Rust mapping from cross-platform `Super`/`Control` global shortcut chords to desktop actions. |
 
-## Install
+### Starter Example (`examples/*`)
 
-Download the latest signed installer for macOS, Windows, or Linux from [hanzo.ai/download](https://hanzo.ai/download) or [GitHub Releases](https://github.com/hanzoai/desktop/releases/latest).
+- **`examples/minimal-chat-desktop`**: Minimal, runnable Tauri v2 + React + Vite desktop chat starter wired to `@hanzo/desktop-sdk`, `@hanzo/desktop-brand-config`, `@hanzo/desktop-logo`, and `crates/{log-redact,engine-bin,projects}`. Connects to any local OpenAI-compatible inference server (`hanzo-engine`, Ollama, `llama.cpp`, vLLM) out of the box.
 
-Or use Hanzo in the browser with no install at [hanzo.app](https://hanzo.app).
+---
 
-### System Requirements
-
-- **OS**: macOS 12+, Windows 10+, or Linux (Ubuntu 20.04+ / modern glibc)
-- **Memory**: 4 GB RAM minimum (8 GB+ recommended for local model inference)
-- **Storage**: 2 GB free space
-
-## Build from Source
-
-Requires Node.js 22+, `pnpm` (11+), and a Rust toolchain (for Tauri).
+## Quick Start
 
 ```bash
 git clone https://github.com/hanzoai/desktop.git
 cd desktop
 pnpm install
 
-# Run the desktop app in development
+# Run typechecks, unit tests, and build the starter frontend
+pnpm typecheck
+pnpm test
+pnpm build
+
+# Run the starter frontend in browser preview mode (http://localhost:1420)
 pnpm dev
 
-# Typecheck, lint, and test
-pnpm typecheck
-pnpm lint
-pnpm test
-
-# Production build
-pnpm build
+# Run all pure-Rust crate unit tests
+cargo test --workspace
 ```
 
-## Project Structure
+To launch the native Tauri v2 starter window (requires platform Tauri prerequisites; see [Tauri v2 Prerequisites](https://v2.tauri.app/start/prerequisites/)):
 
-```text
-desktop/
-├── apps/
-│   └── hanzo-desktop/   # Tauri (Rust) host and @hanzo/app frontend
-├── libs/
-│   ├── brand-config/    # Brand identifiers, OIDC client, callback configuration
-│   └── hanzo-logo/      # Shared brand mark component
-└── ci-scripts/          # Release and signing automation
+```bash
+pnpm --filter @hanzo/desktop-example-minimal tauri:dev
 ```
 
-## Security
+---
 
-- **Architecture & Controls**: [hanzo.ai/security](https://hanzo.ai/security)
-- **Vulnerability Disclosure**: See [SECURITY.md](https://github.com/hanzoai/.github/blob/main/SECURITY.md) or email [security@hanzo.ai](mailto:security@hanzo.ai)
+## Using `@hanzo/desktop-sdk`
+
+```tsx
+import { BrandMark } from '@hanzo/desktop-logo';
+import {
+  EngineStatusBadge,
+  probeEngineHealth,
+  sendChatCompletion,
+  WindowTitlebar,
+} from '@hanzo/desktop-sdk';
+
+export function DesktopHeader({ online, models }: { online: boolean; models: number }) {
+  return (
+    <WindowTitlebar
+      icon={<BrandMark brand="hanzo" size={18} />}
+      status={<EngineStatusBadge modelCount={models} online={online} />}
+      title="My AI Desktop"
+    />
+  );
+}
+```
+
+---
 
 ## License
 
-See [LICENSE](./LICENSE) and [NOTICE](./NOTICE).
+Licensed under the [Apache License, Version 2.0](LICENSE). See [NOTICE](NOTICE) for attribution details.
