@@ -129,10 +129,54 @@ html:root:not(.t_light):not(.light) [data-slot='terminals'] {
   border-radius: 0 !important;
 }
 
+/* The Tabs workspace (@hanzo/tabs) in this window: edge to edge on the shell's
+   ground, its controls in the title bar (TopRightControls) and the window menu.
+   Styled through its data-slots only. */
+[data-slot='tabs-root'] {
+  gap: 0;
+  padding: 0;
+  background: var(--hz-ground, #000);
+}
+
+[data-slot='tabs-strip'] {
+  height: 36px;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 136px 0 140px;
+}
+
+[data-slot='tabs-actions'],
+[data-slot='tabs-size'],
+[data-slot='tabs-strip'] [data-slot='pane-split'],
+[data-slot='terminal-pane'] [data-slot='pane-split'] {
+  display: none;
+}
+
 /* Smooth horizontal scrolling for split terminal panes */
 [data-slot='tabs-scroll-container'] {
+  border-radius: 0;
+  border-width: 1px 0 0;
+  border-color: rgba(255, 255, 255, 0.05);
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+[data-slot='terminal-pane'] {
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+[data-slot='pane-name'] {
+  background: #0a0a0a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+}
+
+[data-slot='pane-name'][data-focused='true'] {
+  background: #111;
+}
+
+[data-slot='pane-close'] {
+  margin-left: auto;
 }
 
 /* Smooth hover-peek sidebar drawer when collapsed */
