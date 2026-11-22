@@ -1,98 +1,26 @@
-# hanzoai/desktop — the Hanzo Desktop app (Tauri shell + React front end, pnpm
-# workspace: apps/hanzo-desktop plus the libs/ packages it composes).
-#
-# Gate only. The shipped artifact here is a signed per-platform desktop bundle
-# cut by the release lane, not a container, so there is no `images:` and nothing
-# to deploy.
-#
-# `pnpm typecheck` (tsc --noEmit against the app's own tsconfig.app.json) is the
-# real gate for this tree: the app is TypeScript end to end and its two libs
-# (libs/brand-config, libs/hanzo-logo) are consumed as source through the
-# workspace, so a break in either surfaces here.
-# The install runs its scripts on purpose — postinstall applies the
-# vite-plugin-wasm patch and the libsodium-sumo symlink, and a tree without them
-# is not the tree that gets built.
+# hanzoai/desktop: Open-source Hanzo Desktop SDK, reusable React + Tauri
+# components, pure-Rust desktop utility crates, and starter examples.
 test:
-  # ONE number, ONE place, never behind what shipped.
-  #
-  # This repo declares its version by hand — there is no image and no builder to
-  # derive it from, so the human writes it and the tag must then match. That gate
-  # existed: `.github/workflows/release-prod.yml` failed a release whose tag and
-  # package.json disagreed. It was deleted with the rest of GitHub CI on
-  # 2026-07-27 and never re-homed, so since then nothing has asserted it.
-  #
-  # It also holds the file to being the ONLY declaration: tauri.conf.json must
-  # keep POINTING at it rather than restating a number, Cargo.toml must repeat
-  # it exactly (src-tauri/build.rs refuses a build where they differ), and
-  # apps/hanzo-desktop/package.json must declare none (it carried a second copy
-  # that agreed only by luck). Each is a place a bundle could come to report a
-  # version this repo never released.
-  - name: version-drift
-    run: |
-      set -e
-      git fetch --tags --force --quiet || true
-      scripts/version.sh check
-  - name: typecheck
+  - name: typecheck-test-and-build
     run: |
       set -e
       pnpm install --frozen-lockfile
       pnpm typecheck
-  # The log sink's redaction (Cargo.toml-guarded Rust provision in the
-  # reusable workflow puts cargo on the runner). Pure Rust, no Tauri or system
-  # libraries, so it runs on any runner in seconds.
-  - name: log-redact
+      pnpm test
+      pnpm build
+  - name: rust-crates
     run: |
       set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/log-redact/Cargo.toml
-  # Which local hanzo-server the app may spawn, or none (cloud#760: release
-  # bundles ship no engine, and spawning the bare name logged two errors on
-  # every start). Pure Rust, no dependencies.
-  - name: engine-bin
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/engine-bin/Cargo.toml
-  # Hanzo Dev on this computer: where the app finds it, the release it fetches
-  # when there is none, the checksum it checks, the binary it unpacks, and how a
-  # run's answer is told from its log. Pure Rust, no Tauri or system libraries.
-  - name: dev-agent
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/dev-agent/Cargo.toml
-  # The project folders Auto can pick from (~/code, ~/dev, ~/src, ~/Projects, ~/work, ~/git). Pure Rust.
-  - name: projects
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/projects/Cargo.toml
-  # Which action Ctrl/Super+Shift+I and J run. Pure Rust (the app crate itself needs Tauri's system libraries, so CI does not build it).
-  - name: shortcut-action
-    run: |
-      set -e
-      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/shortcut-action/Cargo.toml
-  # Windows ships, and nothing in CI runs on a Windows host (the release lane cross-builds on Linux), so a
-  # cfg(windows) mistake in these crates (the `dev.exe` name, a `.zip` unpack, a path rule) would only show at
-  # release. `cargo check --tests` needs no linker and no C compiler, so it type-checks the crates and their
-  # tests for the Windows target here.
+      cargo test --workspace --locked
   - name: windows-cross-check
     run: |
       set -e
       rustup target add x86_64-pc-windows-msvc
-      for crate in log-redact engine-bin dev-agent projects shortcut-action; do
-        cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
+      for crate in log-redact engine-bin projects shortcut-action; do
+        cargo check --manifest-path crates/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
       done
-  # The macOS bundle is signed under the hardened runtime with entitlements.plist
-  # alone, holding only what the app uses: get-task-allow (which the notary
-  # service rejects) or any dropped entitlement coming back fails here, as does a
-  # usage sentence for a resource the app does not use. Stdlib Python, any runner.
-  - name: macos-signing
-    run: |
-      set -e
-      python3 -I scripts/test_check_macos_signing.py
-      python3 -I scripts/check-macos-signing.py
-  # No secret-bearing value may be printed or logged from the Tauri crate:
-  # whole-call (multiline) scan plus Debug-format of credential-like values.
-  # The self-test proves the scanner still catches the shapes it must.
   - name: no-secret-logging
     run: |
       set -e
       python3 scripts/test_check_secret_logging.py
-      python3 scripts/check-secret-logging.py apps/hanzo-desktop/src-tauri
+      python3 scripts/check-secret-logging.py crates examples/minimal-chat-desktop/src-tauri
