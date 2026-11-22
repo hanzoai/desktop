@@ -3,8 +3,6 @@
 
 use std::sync::Arc;
 
-#[cfg(unix)]
-use crate::commands::browser::{browser, browsers, detect_local_tools, zap_call, zap_nodes};
 use crate::commands::engines::engines_discover;
 use crate::commands::hardware::hardware_get_summary;
 use crate::commands::mining::{
@@ -172,15 +170,15 @@ fn main() {
             local_models::local_models_stop,
             engines_discover,
             #[cfg(unix)]
-            browser,
+            commands::browser::browser,
             #[cfg(unix)]
-            browsers,
+            commands::browser::browsers,
             #[cfg(unix)]
-            zap_nodes,
+            commands::browser::zap_nodes,
             #[cfg(unix)]
-            zap_call,
+            commands::browser::zap_call,
             #[cfg(unix)]
-            detect_local_tools,
+            commands::browser::detect_local_tools,
             mining_get_enabled,
             mining_set_enabled,
             local_workspace_open_dialog,
