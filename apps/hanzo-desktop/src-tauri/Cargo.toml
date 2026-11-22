@@ -54,6 +54,8 @@ hanzo-engine-bin = { path = "engine-bin" }
 hanzo-dev-agent = { path = "dev-agent" }
 # The project folders Auto can pick from. See projects/src/lib.rs.
 hanzo-projects = { path = "projects" }
+# Which action a global shortcut runs. See shortcut-action/src/lib.rs.
+hanzo-shortcut-action = { path = "shortcut-action" }
 # The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
 # sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
 hanzo-node-env = { path = "node-env" }

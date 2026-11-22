@@ -3603,6 +3603,7 @@ dependencies = [
  "hanzo-node-secret",
  "hanzo-projects",
  "hanzo-server-core",
+ "hanzo-shortcut-action",
  "hex",
  "http-body-util",
  "hyper 1.10.1",
@@ -4072,6 +4073,13 @@ dependencies = [
  "url",
  "utoipa",
  "uuid 1.23.3",
+]
+
+[[package]]
+name = "hanzo-shortcut-action"
+version = "0.1.0"
+dependencies = [
+ "keyboard-types",
 ]
 
 [[package]]

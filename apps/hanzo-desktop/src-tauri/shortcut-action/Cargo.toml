@@ -1,0 +1,11 @@
+[package]
+name = "hanzo-shortcut-action"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Which app action a global shortcut (Ctrl/Super + Shift + I or J) runs"
+license = "Apache-2.0"
+
+[dependencies]
+# The same crate (and version) global-hotkey re-exports as Code and Modifiers.
+keyboard-types = { version = "0.7", default-features = false }

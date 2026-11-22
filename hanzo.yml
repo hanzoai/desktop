@@ -78,6 +78,11 @@ test:
     run: |
       set -e
       cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/projects/Cargo.toml
+  # Which action Ctrl/Super+Shift+I and J run. Pure Rust (the app crate itself needs Tauri's system libraries, so CI does not build it).
+  - name: shortcut-action
+    run: |
+      set -e
+      cargo test --locked --manifest-path apps/hanzo-desktop/src-tauri/shortcut-action/Cargo.toml
   # Windows ships, and nothing in CI runs on a Windows host (the release lane cross-builds on Linux), so a
   # cfg(windows) mistake in these crates (the `dev.exe` name, a `.zip` unpack, a path rule) would only show at
   # release. `cargo check --tests` needs no linker and no C compiler, so it type-checks the crates and their
@@ -86,7 +91,7 @@ test:
     run: |
       set -e
       rustup target add x86_64-pc-windows-msvc
-      for crate in log-redact engine-bin dev-agent node-env projects; do
+      for crate in log-redact engine-bin dev-agent node-env projects shortcut-action; do
         cargo check --locked --manifest-path apps/hanzo-desktop/src-tauri/$crate/Cargo.toml --target x86_64-pc-windows-msvc --tests
       done
   # The macOS bundle is signed under the hardened runtime with entitlements.plist
