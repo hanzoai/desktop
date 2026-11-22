@@ -87,9 +87,12 @@ configure({
 
 // Expose native ZAP router bridge directly over Tauri IPC (zero WebSocket serialization).
 (window as unknown as Record<string, unknown>).__hanzoZap = {
-  nodes: () => safeInvoke<Array<{ id: string; caps: string[]; attrs: Record<string, string> }>>('zap_nodes', undefined, []),
+  nodes: () =>
+    safeInvoke<Array<{ id: string; caps: string[]; attrs: Record<string, string> }>>('zap_nodes').then(
+      (res) => res ?? [],
+    ),
   call: (target: string, method: string, params: Record<string, string> = {}) =>
-    safeInvoke<unknown>('zap_call', { target, method, params }, null),
+    safeInvoke<unknown>('zap_call', { target, method, params }),
 };
 
 // A release window has no native context menu: Hanzo's own (the app's row menu) is the only one.

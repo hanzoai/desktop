@@ -1,17 +1,40 @@
 diff --git a/dist/Account.js b/dist/Account.js
-index f6e6bc63693e417897e66817888c204d5b839ca8..3934e7c41a4cd8bfe1766004c68e33b1e128059e 100644
+index f6e6bc63693e417897e66817888c204d5b839ca8..3ff0a5298c95bbb264ae99cc4cb0c328af10fb22 100644
 --- a/dist/Account.js
 +++ b/dist/Account.js
-@@ -281,7 +281,7 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
+@@ -147,13 +147,14 @@ export const upgrade = (family) => family === 'Enterprise'
+             : phrase('Upgrade plan');
+ /** The keys a row prints, in this platform's spelling. */
+ const mac = () => typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+-export function Account({ host, narrow = false, above = false, onOrg, defaultAccountOpen = false, }) {
++export function Account({ host, narrow = false, above = false, onOrg, defaultAccountOpen = false, moreEntries = [], }) {
+     const { t, dir, locale, setLocale } = useI18n();
+     const rtl = dir === 'rtl';
+     const [devMode, setDevMode] = useDevMode();
+     const [hoverOpen, setHoverOpen] = useState(false);
+     const [menuOpen, setMenuOpen] = useState(false);
+     const [workspacesOpen, setWorkspacesOpen] = useState(false);
++    const [moreOpen, setMoreOpen] = useState(false);
+     const [account, setAccount] = useState(defaultAccountOpen ?? false);
+     const [orgsOpen, setOrgsOpen] = useState(false);
+     const [lang, setLang] = useState(false);
+@@ -277,11 +278,13 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
+                     if (!next && menuOpen)
+                         return;
+                     setHoverOpen(next);
+-                    if (!next)
++                    if (!next) {
                          setWorkspacesOpen(false);
++                        setMoreOpen(false);
++                    }
                  }, openDelay: 120, closeDelay: 180, children: [_jsx(HoverCardTrigger, { asChild: true, children: _jsxs(XStack, { ref: (el) => {
                                  row.current = el instanceof HTMLElement ? el : null;
 -                            }, render: _jsx("button", { type: "button" }), "data-slot": "me", "aria-label": t('Account: {name}', { name: [who, currentOrg].filter(Boolean).join(' · ') }), width: narrow ? (above ? 44 : MARK) : '100%', height: narrow ? (above ? 44 : MARK) : undefined, minH: narrow ? (above ? 44 : MARK) : 42, $touchable: narrow ? { width: 44, height: 44, minH: 44 } : { minH: 44 }, px: narrow ? 0 : '$2', py: narrow ? 0 : '$1', gap: "$2", rounded: narrow ? 12 : '$3', borderWidth: narrow && above ? 1 : 0, borderColor: narrow && above ? STRONG : undefined, bg: narrow && above ? '$panel' : narrow && hoverOpen ? '$hover' : 'transparent', items: "center", justify: narrow ? 'center' : 'flex-start', hoverStyle: { bg: '$hover' }, pressStyle: { bg: '$raised' }, focusVisibleStyle: FOCUS_RING, cursor: "pointer", onClick: () => goSettings('account'), children: [_jsx(Face, { host: host, size: narrow ? (above ? 32 : 26) : 28 }), narrow ? null : (_jsx(_Fragment, { children: _jsx(YStack, { flex: 1, minW: 0, children: _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, text: "start", children: who }) }) }))] }) }), _jsx(HoverCardContent, { "data-slot": "me-hover-card", side: narrow && !above ? (rtl ? 'left' : 'right') : 'top', align: narrow && !above ? 'end' : 'start', sideOffset: 8, bg: "var(--popover)", borderWidth: 1, borderColor: STRONG, rounded: "$5", p: "$4", width: 284, maxW: "calc(100vw - 24px)", z: "var(--z-popover)", boxShadow: "var(--shadow-floating)", children: _jsxs(YStack, { gap: "$3", width: "100%", children: [_jsxs(XStack, { items: "flex-start", justify: "space-between", gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$2.5", flex: 1, minW: 0, children: [_jsx(Face, { host: host, size: 34 }), _jsxs(YStack, { flex: 1, minW: 0, gap: 2, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", numberOfLines: 1, children: who }), tierPill] }), host.person.email ? (_jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$aside", numberOfLines: 1, children: host.person.email })) : null] })] }), _jsxs(DropdownMenu, { open: menuOpen, onOpenChange: (next) => {
-+                            }, render: _jsx("button", { type: "button" }), "data-slot": "me", "aria-label": t('Account: {name}', { name: [who, currentOrg].filter(Boolean).join(' · ') }), width: narrow ? (above ? 44 : MARK) : '100%', height: narrow ? (above ? 44 : MARK) : undefined, minH: narrow ? (above ? 44 : MARK) : 42, $touchable: narrow ? { width: 44, height: 44, minH: 44 } : { minH: 44 }, px: narrow ? 0 : '$2', py: narrow ? 0 : '$1', gap: "$2", rounded: narrow ? 12 : '$3', borderWidth: narrow && above ? 1 : 0, borderColor: narrow && above ? STRONG : undefined, bg: narrow && above ? '$panel' : narrow && hoverOpen ? '$hover' : 'transparent', items: "center", justify: narrow ? 'center' : 'flex-start', hoverStyle: { bg: '$hover' }, pressStyle: { bg: '$raised' }, focusVisibleStyle: FOCUS_RING, cursor: "pointer", onClick: () => goSettings('account'), children: [_jsx(Face, { host: host, size: narrow ? (above ? 32 : 26) : 28 }), narrow ? null : (_jsx(_Fragment, { children: _jsx(YStack, { flex: 1, minW: 0, children: _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, text: "start", children: who }) }) }))] }) }), _jsx(HoverCardContent, { "data-slot": "me-hover-card", side: narrow && !above ? (rtl ? 'left' : 'right') : 'top', align: narrow && !above ? 'end' : 'start', sideOffset: 8, bg: "var(--popover)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", rounded: "$5", p: "$4", width: 284, maxW: "calc(100vw - 24px)", z: "var(--z-popover)", boxShadow: "var(--shadow-floating)", children: _jsxs(YStack, { gap: "$3", width: "100%", children: [_jsxs(XStack, { items: "flex-start", justify: "space-between", gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$2.5", flex: 1, minW: 0, children: [_jsx(Face, { host: host, size: 34 }), _jsxs(YStack, { flex: 1, minW: 0, gap: 2, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", numberOfLines: 1, children: who }), tierPill] }), host.person.email ? (_jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$aside", numberOfLines: 1, children: host.person.email })) : null] })] }), _jsxs(DropdownMenu, { open: menuOpen, onOpenChange: (next) => {
++                            }, render: _jsx("button", { type: "button" }), "data-slot": "me", "aria-label": t('Account: {name}', { name: [who, currentOrg].filter(Boolean).join(' · ') }), width: narrow ? (above ? 44 : MARK) : '100%', height: narrow ? (above ? 44 : MARK) : undefined, minH: narrow ? (above ? 44 : MARK) : 36, $touchable: narrow ? { width: 44, height: 44, minH: 44 } : { minH: 44 }, px: narrow ? 0 : '$2', py: narrow ? 0 : 4, gap: "$2", rounded: narrow ? 12 : '$3', borderWidth: narrow && above ? 1 : 0, borderColor: narrow && above ? STRONG : undefined, bg: narrow && above ? '$panel' : narrow && hoverOpen ? '$hover' : 'transparent', items: "center", justify: narrow ? 'center' : 'flex-start', hoverStyle: { bg: '$hover' }, pressStyle: { bg: '$raised' }, focusVisibleStyle: FOCUS_RING, cursor: "pointer", onClick: () => goSettings('account'), children: [_jsx(Face, { host: host, size: narrow ? (above ? 32 : 24) : 24 }), narrow ? null : (_jsx(_Fragment, { children: _jsx(YStack, { flex: 1, minW: 0, children: _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, text: "start", children: who }) }) }))] }) }), _jsx(HoverCardContent, { "data-slot": "me-hover-card", side: narrow && !above ? (rtl ? 'left' : 'right') : 'top', align: narrow && !above ? 'end' : 'start', sideOffset: 6, bg: "var(--popover)", borderWidth: 1, borderColor: "rgba(255,255,255,0.08)", rounded: "$4", p: "$2.5", width: 256, maxW: "calc(100vw - 24px)", z: "var(--z-popover)", boxShadow: "var(--shadow-floating)", children: _jsxs(YStack, { gap: "$2", width: "100%", children: [_jsxs(XStack, { items: "center", justify: "space-between", gap: "$2", children: [_jsxs(XStack, { items: "center", gap: "$2", flex: 1, minW: 0, children: [_jsx(Face, { host: host, size: 28 }), _jsxs(YStack, { flex: 1, minW: 0, gap: 1, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", numberOfLines: 1, children: who }), tierPill] }), host.person.email ? (_jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$aside", numberOfLines: 1, children: host.person.email })) : null] })] }), _jsxs(DropdownMenu, { open: menuOpen, onOpenChange: (next) => {
                                                  setMenuOpen(next);
                                                  if (next)
                                                      return;
-@@ -289,7 +289,7 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
+@@ -289,7 +292,7 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
                                                  setOrgsOpen(false);
                                                  setLang(false);
                                                  setHelp(false);
@@ -20,7 +43,7 @@ index f6e6bc63693e417897e66817888c204d5b839ca8..3934e7c41a4cd8bfe1766004c68e33b1
                                                              const { title, line } = accountLabel(a);
                                                              return (_jsx(DropdownMenuItem, { "data-slot": "me-switch", onSelect: () => void signedIn.switchTo(a), children: _jsx(Line, { icon: _jsx(CircleUserRound, { size: 16, "aria-hidden": true }), sub: line || undefined, children: title }) }, a.sub));
                                                          }), _jsx(DropdownMenuItem, { "data-slot": "me-add", onSelect: () => void signedIn.add(), children: _jsx(Line, { icon: _jsx(UserPlus, { size: 16, "aria-hidden": true }), children: t('Add account') }) }), _jsx(DropdownMenuSeparator, {}), _jsxs(DropdownMenuSub, { open: orgsOpen, onOpenChange: setOrgsOpen, children: [_jsx(DropdownMenuSubTrigger, { "data-slot": "me-orgs", children: _jsx(Line, { icon: _jsx(Mark, { org: here ?? all[0] }), trail: _jsx(Check, { size: 16, "aria-label": t('Current') }), children: t('{org} · {plan}', { org: (here ? (here.personal ? t('Personal') : here.display) : currentOrg), plan: planName || t('No plan') }) }) }), orgsOpen ? (_jsxs(DropdownMenuSubContent, { minW: 250, maxW: "calc(100vw - 24px)", bg: "var(--popover)", borderWidth: 1, borderColor: STRONG, pointerEvents: "auto", children: [_jsx(DropdownMenuLabel, { children: t('Organizations') }), all.map((o) => (_jsx(DropdownMenuItem, { onSelect: () => o.name !== currentOrg && onOrg(o.name), children: _jsx(Line, { icon: _jsx(Mark, { org: o }), sub: [o.personal ? t('Personal') : said(o.role, t), planFor(o) || (isFree && o.personal ? t('Free') : '')].filter(Boolean).join(' - '), trail: o.name === currentOrg ? _jsx(Check, { size: 16, "aria-label": t('Current') }) : null, children: o.display }) }, o.name))), _jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Plus, { size: 16, "aria-hidden": true }), children: t('Create organization') }) }), _jsx(DropdownMenuItem, { onSelect: () => out(site(settings('organization'))), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), children: t('Organization settings') }) }), where().team ? null : here && !here.personal ? (_jsx(DropdownMenuItem, { onSelect: () => out(`${ENTRY}&org=${encodeURIComponent(here.name)}`), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), trail: _jsx(ArrowUpRight, { size: 14, color: "var(--text-tertiary)", "aria-hidden": true }), children: t('Open in Hanzo Team') }) })) : (_jsx(DropdownMenuItem, { onSelect: () => setCreating(true), children: _jsx(Line, { icon: _jsx(Users, { size: 16, "aria-hidden": true }), children: t('Create a team') }) })), superAdmin() ? (_jsx(DropdownMenuItem, { onSelect: choose, children: _jsx(Line, { icon: _jsx(Building2, { size: 16, "aria-hidden": true }), children: t('All organizations') }) })) : null] })) : null] }), _jsx(DropdownMenuItem, { onSelect: () => goSettings('usage'), children: _jsx(Line, { icon: _jsx(Activity, { size: 16, "aria-hidden": true }), children: t('Usage') }) }), _jsx(DropdownMenuItem, { "aria-keyshortcuts": "Control+, Meta+,", onSelect: () => goSettings('account'), children: _jsx(Line, { icon: _jsx(Settings, { size: 16, "aria-hidden": true }), trail: _jsx(DropdownMenuShortcut, { "aria-hidden": true, children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) }), children: t('Settings') }) }), _jsx(DropdownMenuItem, { onSelect: triggerUpgrade, children: _jsx(Line, { icon: _jsx(Sparkles, { size: 16, "aria-hidden": true }), children: t(plans) }) }), _jsx(DropdownMenuSeparator, {}), _jsxs(DropdownMenuSub, { open: lang, onOpenChange: (next) => {
-@@ -306,12 +306,12 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
+@@ -306,20 +309,24 @@ export function Account({ host, narrow = false, above = false, onOrg, defaultAcc
                                                                                      l.englishName.toLowerCase().includes(q) ||
                                                                                      l.code.toLowerCase().includes(q));
                                                                              })
@@ -31,12 +54,26 @@ index f6e6bc63693e417897e66817888c204d5b839ca8..3934e7c41a4cd8bfe1766004c68e33b1
                                              goSettings('usage');
                                          }
 -                                    }, children: _jsx(Meter, { read: liveRead, onPlans: triggerUpgrade, onBilling: () => goSettings('billing') }) }), _jsxs(XStack, { "data-slot": "me-dev-row", items: "center", justify: "space-between", gap: "$2", minH: 40, "$max-sm": { minH: 44 }, px: "$2.5", py: "$2", rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "$edge", children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode') }), _jsx(InfoHint, { text: t('Shows the process: the terminal, the commands Hanzo runs and each step. Off, Hanzo shows the result.') })] }), _jsx(Switch, { size: "sm", checked: devMode, onCheckedChange: setDevMode, "aria-label": t('Developer mode'), "data-slot": "me-dev-mode" })] }), _jsx(XStack, { height: 1, bg: "$edge", width: "100%" }), _jsxs(YStack, { gap: "$0.5", children: [isFree ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-upgrade", onClick: triggerUpgrade, items: "center", gap: "$2", minH: 36, "$max-sm": { minH: 44 }, px: "$2.5", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "$raised", borderWidth: 1, borderColor: STRONG, hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Sparkles, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", flex: 1, text: "start", children: t('Upgrade plan') })] })) : null, _jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-settings", onClick: () => goSettings('account'), items: "center", gap: "$2", minH: 34, "$max-sm": { minH: 44 }, px: "$2", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Settings, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", children: t('Open settings') }), _jsx(Text, { fontFamily: "$mono", fontSize: "$1", color: "$aside", children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) })] }), all.length > 1 ? (_jsxs(YStack, { gap: "$0.5", children: [_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-workspaces", "aria-expanded": workspacesOpen, onClick: () => setWorkspacesOpen((v) => !v), items: "center", gap: "$2", minH: 34, "$max-sm": { minH: 44 }, px: "$2", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Building2, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: t('Switch workspace') }), workspacesOpen ? (_jsx(ChevronDown, { size: 13, color: SOFT, "aria-hidden": true })) : (_jsx(ChevronRight, { size: 13, color: SOFT, "aria-hidden": true }))] }), workspacesOpen ? (_jsx(YStack, { pl: "$4", gap: "$0.5", children: all.map((o) => (_jsxs(XStack, { render: _jsx("button", { type: "button" }), onClick: () => {
-+                                    }, children: _jsx(Meter, { read: liveRead, onPlans: triggerUpgrade, onBilling: () => goSettings('billing') }) }), _jsxs(XStack, { "data-slot": "me-dev-row", items: "center", justify: "space-between", gap: "$2", minH: 38, "$max-sm": { minH: 44 }, px: "$2.5", py: "$1.5", rounded: "$3", bg: "rgba(255,255,255,0.03)", borderWidth: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode') }), _jsx(InfoHint, { text: t('Shows the process: the terminal, the commands Hanzo runs and each step. Off, Hanzo shows the result.') })] }), _jsx(Switch, { size: "sm", checked: devMode, onCheckedChange: setDevMode, "aria-label": t('Developer mode'), "data-slot": "me-dev-mode" })] }), _jsx(XStack, { height: 1, bg: "$edge", width: "100%" }), _jsxs(YStack, { gap: "$0.5", children: [isFree ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-upgrade", onClick: triggerUpgrade, items: "center", gap: "$2", minH: 36, "$max-sm": { minH: 44 }, px: "$2.5", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "$raised", borderWidth: 1, borderColor: STRONG, hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Sparkles, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", flex: 1, text: "start", children: t('Upgrade plan') })] })) : null, _jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-settings", onClick: () => goSettings('account'), items: "center", gap: "$2", minH: 34, "$max-sm": { minH: 44 }, px: "$2", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Settings, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", children: t('Open settings') }), _jsx(Text, { fontFamily: "$mono", fontSize: "$1", color: "$aside", children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) })] }), all.length > 1 ? (_jsxs(YStack, { gap: "$0.5", children: [_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-workspaces", "aria-expanded": workspacesOpen, onClick: () => setWorkspacesOpen((v) => !v), items: "center", gap: "$2", minH: 34, "$max-sm": { minH: 44 }, px: "$2", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Building2, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: t('Switch workspace') }), workspacesOpen ? (_jsx(ChevronDown, { size: 13, color: SOFT, "aria-hidden": true })) : (_jsx(ChevronRight, { size: 13, color: SOFT, "aria-hidden": true }))] }), workspacesOpen ? (_jsx(YStack, { pl: "$4", gap: "$0.5", children: all.map((o) => (_jsxs(XStack, { render: _jsx("button", { type: "button" }), onClick: () => {
++                                    }, children: _jsx(Meter, { read: liveRead, onPlans: triggerUpgrade, onBilling: () => goSettings('billing') }) }), _jsxs(XStack, { "data-slot": "me-dev-row", items: "center", justify: "space-between", gap: "$2", minH: 32, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", bg: "rgba(255,255,255,0.03)", borderWidth: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode') }), _jsx(InfoHint, { text: t('Shows the process: the terminal, the commands Hanzo runs and each step. Off, Hanzo shows the result.') })] }), _jsx(Switch, { size: "sm", checked: devMode, onCheckedChange: setDevMode, "aria-label": t('Developer mode'), "data-slot": "me-dev-mode" })] }), _jsx(XStack, { height: 1, bg: "$edge", width: "100%" }), _jsxs(YStack, { gap: 1, children: [isFree ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-upgrade", onClick: triggerUpgrade, items: "center", gap: "$2", minH: 30, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", cursor: "pointer", bg: "$raised", borderWidth: 1, borderColor: STRONG, hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Sparkles, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", fontWeight: "600", color: "$ink", flex: 1, text: "start", children: t('Upgrade plan') })] })) : null, moreEntries.length > 0 ? (_jsxs(YStack, { gap: 1, children: [_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-more", "aria-expanded": moreOpen, onClick: () => setMoreOpen((v) => !v), items: "center", gap: "$2", minH: 30, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(MoreHorizontal, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: t('More') }), moreOpen ? (_jsx(ChevronDown, { size: 13, color: SOFT, "aria-hidden": true })) : (_jsx(ChevronRight, { size: 13, color: SOFT, "aria-hidden": true }))] }), moreOpen ? (_jsx(YStack, { pl: "$3", gap: 1, maxH: 200, overflowY: "auto", children: moreEntries.map((item) => (_jsxs(XStack, { render: _jsx("button", { type: "button" }), onClick: () => {
++                                                        setHoverOpen(false);
++                                                        setMoreOpen(false);
++                                                        item.onPress?.();
++                                                    }, items: "center", gap: "$2", minH: 28, "$max-sm": { minH: 40 }, px: "$2", py: 3, rounded: "$2", cursor: "pointer", bg: item.on ? '$hover' : 'transparent', hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(XStack, { width: 16, height: 16, items: "center", justify: "center", opacity: 0.78, children: item.icon }), _jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: item.label })] }, item.id))) })) : null] })) : null, _jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-settings", onClick: () => goSettings('account'), items: "center", gap: "$2", minH: 30, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Settings, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", children: t('Open settings') }), _jsx(Text, { fontFamily: "$mono", fontSize: "$1", color: "$aside", children: _jsx("bdi", { dir: "ltr", children: apple ? '⌘,' : 'Ctrl+,' }) })] }), all.length > 1 ? (_jsxs(YStack, { gap: 1, children: [_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-workspaces", "aria-expanded": workspacesOpen, onClick: () => setWorkspacesOpen((v) => !v), items: "center", gap: "$2", minH: 30, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Building2, { size: 14, color: INK, "aria-hidden": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: t('Switch workspace') }), workspacesOpen ? (_jsx(ChevronDown, { size: 13, color: SOFT, "aria-hidden": true })) : (_jsx(ChevronRight, { size: 13, color: SOFT, "aria-hidden": true }))] }), workspacesOpen ? (_jsx(YStack, { pl: "$3", gap: 1, children: all.map((o) => (_jsxs(XStack, { render: _jsx("button", { type: "button" }), onClick: () => {
                                                              if (o.name !== currentOrg) {
                                                                  setHoverOpen(false);
                                                                  onOrg(o.name);
+                                                             }
+-                                                        }, items: "center", gap: "$2", minH: 32, "$max-sm": { minH: 44 }, px: "$2", py: "$1", rounded: "$2", cursor: "pointer", bg: o.name === currentOrg ? '$hover' : 'transparent', hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Mark, { org: o }), _jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: o.personal ? t('Personal') : o.display }), o.name === currentOrg ? _jsx(Check, { size: 12, color: INK, "aria-hidden": true }) : null] }, o.name))) })) : null] })) : null, host.signOut ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-logout", onClick: () => {
++                                                        }, items: "center", gap: "$2", minH: 28, "$max-sm": { minH: 40 }, px: "$2", py: 3, rounded: "$2", cursor: "pointer", bg: o.name === currentOrg ? '$hover' : 'transparent', hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(Mark, { org: o }), _jsx(Text, { fontFamily: "$body", fontSize: "$1", color: "$ink", flex: 1, text: "start", numberOfLines: 1, children: o.personal ? t('Personal') : o.display }), o.name === currentOrg ? _jsx(Check, { size: 12, color: INK, "aria-hidden": true }) : null] }, o.name))) })) : null] })) : null, host.signOut ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "me-hover-logout", onClick: () => {
+                                                 setHoverOpen(false);
+                                                 host.signOut?.();
+-                                            }, items: "center", gap: "$2", minH: 34, "$max-sm": { minH: 44 }, px: "$2", py: "$1.5", rounded: "$3", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(LogOut, { size: 14, color: SOFT, "aria-hidden": true, "data-i18n-mirror": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$aside", flex: 1, text: "start", children: t('Log out') })] })) : null] })] }) })] }), _jsx(Create, { open: creating, onOpenChange: setCreating }), _jsx(Shortcuts, { open: keys, onOpenChange: setKeys, apple: apple })] }));
++                                            }, items: "center", gap: "$2", minH: 30, "$max-sm": { minH: 44 }, px: "$2", py: 4, rounded: "$2.5", cursor: "pointer", bg: "transparent", hoverStyle: { bg: '$hover' }, focusVisibleStyle: FOCUS_RING, children: [_jsx(LogOut, { size: 14, color: SOFT, "aria-hidden": true, "data-i18n-mirror": true }), _jsx(Text, { fontFamily: "$body", fontSize: "$2", color: "$aside", flex: 1, text: "start", children: t('Log out') })] })) : null] })] }) })] }), _jsx(Create, { open: creating, onOpenChange: setCreating }), _jsx(Shortcuts, { open: keys, onOpenChange: setKeys, apple: apple })] }));
+ }
+ /** Split a printed shortcut into discrete keycap tokens: `⌘⇧O` → `['⌘','⇧','O']`, `Ctrl+Shift+O` → `['Ctrl','Shift','O']`. */
+ function splitShortcut(combo) {
 diff --git a/dist/App.js b/dist/App.js
-index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a65974d103 100644
+index e096dfbb61275f12da381910448c4ce1eeab0e7b..631058c6618a9f8496b8b680a7157e3cbe391e2d 100644
 --- a/dist/App.js
 +++ b/dist/App.js
 @@ -79,6 +79,7 @@ import { useHost } from './host.js';
@@ -47,7 +84,7 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
  import { Layer, Lift, useDrawer } from './Drawer.js';
  import { empty, openThread, showSettings, useOpen } from './open.js';
  import { SkipLink } from './SkipLink.js';
-@@ -132,17 +133,63 @@ function Window({ bar, betas }) {
+@@ -132,17 +133,66 @@ function Window({ bar, betas }) {
          view(node);
          hold(node);
      }, [view, hold]);
@@ -58,7 +95,9 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
 +    //   'orgs'     -> Discord-style Org & Machine Switcher + App Rail + Sidebar
      const [closed, setClosed] = useKept('hanzo.build.rail', false);
 +    const [sidebarMode, setSidebarModeRaw] = useKept('hanzo.sidebar.mode', closed ? 'compact' : 'standard');
-+    const [sidebarStyle, setSidebarStyle] = useKept('hanzo.sidebar.style', 'nested');
++    // Default expanded sidebar opens cleanly to unified `<icon> Chat / <icon> Dev` (`flat`);
++    // wide/orgs mode or explicit nested toggle enables the dual-rail layout.
++    const [sidebarStyle, setSidebarStyle] = useKept('hanzo.sidebar.style', 'flat');
 +    const [peeking, setPeeking] = useState(false);
 +    const peekTimer = useRef(null);
 +    const leaveTimer = useRef(null);
@@ -71,8 +110,8 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
 +    const effectiveMode = closed && sidebarMode !== 'compact' ? 'compact' : sidebarMode;
 +    const isCompact = effectiveMode === 'compact';
 +    const isOrgs = effectiveMode === 'orgs';
-+    const isNested = sidebarStyle !== 'flat';
-+    const showFixedRail = isCompact || isNested || isOrgs;
++    const isNested = sidebarStyle === 'nested';
++    const showFixedRail = isCompact || isNested;
 +    const enterPeek = useCallback(() => {
 +        if (!isCompact)
 +            return;
@@ -110,12 +149,13 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
 +    modeRef.current = effectiveMode;
 +    const flip = useCallback(() => {
 +        const cur = modeRef.current;
-+        setSidebarMode(cur === 'compact' ? 'standard' : 'compact');
++        // 3-mode cycle: Compact (hover-peek) -> Standard (<icon> Label) -> Workspaces (Org & Machine Switcher) -> Compact
++        setSidebarMode(cur === 'compact' ? 'standard' : cur === 'standard' ? 'orgs' : 'compact');
 +    }, [setSidebarMode]);
      const pins = usePinnedNav();
      const dev = useDevHost();
      useEffect(() => {
-@@ -336,7 +383,9 @@ function Window({ bar, betas }) {
+@@ -336,7 +386,9 @@ function Window({ bar, betas }) {
          shut();
          setFinding(true);
      };
@@ -126,7 +166,7 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
                                                              if (mode === 'dev')
                                                                  move(app(''));
                                                              else if (mode === 'design')
-@@ -351,12 +400,12 @@ function Window({ bar, betas }) {
+@@ -351,12 +403,12 @@ function Window({ bar, betas }) {
                                                                  empty();
                                                                  move(talk());
                                                              }
@@ -141,7 +181,7 @@ index e096dfbb61275f12da381910448c4ce1eeab0e7b..c2652ed3b7dcfd28e199d41f484fa7a6
                                                                      window.removeEventListener('mousemove', onMove);
                                                                      window.removeEventListener('mouseup', onUp);
                                                                  }
-@@ -367,14 +416,14 @@ function Window({ bar, betas }) {
+@@ -367,14 +419,14 @@ function Window({ bar, betas }) {
                                                              };
                                                              window.addEventListener('mousemove', onMove);
                                                              window.addEventListener('mouseup', onUp);
@@ -388,7 +428,7 @@ index 0000000000000000000000000000000000000000..0270f5667fdfbe274c0ee1b2ed3e7248
 +    }));
 +}
 diff --git a/dist/Rail.js b/dist/Rail.js
-index 98a9f06f7ca720c93730587324d77ee4a04e96d3..a652d386cafb0bc55e468ddd1fc47191ed11d065 100644
+index 98a9f06f7ca720c93730587324d77ee4a04e96d3..642c921dc98a5e30bc20ed49af5838a1a5eb234e 100644
 --- a/dist/Rail.js
 +++ b/dist/Rail.js
 @@ -9,7 +9,7 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
@@ -458,7 +498,31 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..a652d386cafb0bc55e468ddd1fc47191
          ...(anon
              ? []
              : [
-@@ -339,11 +348,11 @@ export function Mark({ label, on = false, tooltip = false, onPress, onClick, chi
+@@ -293,18 +302,15 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
+         ]
+         : [];
+     const combinedById = new Map([...allEntries, ...externalEntries].map((item) => [item.id, item]));
+-    // Anonymous visitors see the public trio (Chat, Dev, Library), and pin nothing.
+-    // The reader's pins lead, in their order; the default apps follow in theirs; the rest is More.
+-    const pinnedEntries = anon
+-        ? []
+-        : pinnedIds.map((id) => combinedById.get(id)).filter((item) => Boolean(item));
+-    const pinnedShown = new Set(pinnedEntries.map((item) => item.id));
++    // Canonical fixed app order starting directly with Chat (no + button above it, no pin-reordering shifting Chat down).
++    const canonicalIds = DEFAULT_NAV;
++    const pinnedEntries = [];
+     const defaultEntries = anon
+         ? allEntries
+-        : DEFAULT_NAV.filter((id) => !pinnedShown.has(id))
++        : canonicalIds
+             .map((id) => combinedById.get(id))
+             .filter((item) => Boolean(item));
+-    const shownInPrimary = new Set([...pinnedEntries, ...defaultEntries].map((item) => item.id));
++    const shownInPrimary = new Set(defaultEntries.map((item) => item.id));
+     const moreEntries = anon
+         ? []
+         : [
+@@ -339,11 +345,11 @@ export function Mark({ label, on = false, tooltip = false, onPress, onClick, chi
      return (_jsxs(Tooltip, { placement: "right", offset: 8, children: [_jsx(TooltipTrigger, { asChild: true, children: button }), _jsx(TooltipContent, { maxW: 240, px: "$2.5", py: "$1.5", rounded: "$3", bg: "var(--popover)", borderWidth: 1, borderColor: "$edge", z: "var(--z-tooltip)", children: _jsx(Text, { fontFamily: "$body", fontSize: "$1", fontWeight: "500", color: "$ink", children: label }) })] }));
  }
  /**
@@ -473,7 +537,7 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..a652d386cafb0bc55e468ddd1fc47191
  }
  export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = false, inside = null, onChat, onDev, onDesign, onStudio, onTabs, go, onOrg, pins, }) {
      const { t, dir } = useI18n();
-@@ -373,7 +382,7 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
+@@ -373,7 +379,7 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
      const overflowExternal = externalEntries.filter((item) => !shownInPrimary.has(item.id));
      const foldedEntries = [...overflowBuiltIn, ...overflowExternal];
      const expandHandler = onOpen ?? toggle;
@@ -482,21 +546,30 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..a652d386cafb0bc55e468ddd1fc47191
      const handleNew = onNew ??
          (() => {
              if (mode === 'dev')
-@@ -427,7 +436,7 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
+@@ -385,7 +391,7 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
+             else
+                 go(talk());
+         });
+-    return (_jsx(TooltipProvider, { delay: 90, children: _jsxs(YStack, { "data-slot": "rail", "data-expanded": "false", render: "nav", "aria-label": t('Products'), width: RAIL_FOLDED, flex: 1, minH: 0, pt: (HEAD - MARK) / 2 + 2, pb: 0, gap: 4, shrink: 0, items: "center", $touchable: { pt: (TOUCH_HEAD - TOUCH) / 2, pb: 0 }, children: [!compact && expandHandler ? (_jsx(Toggle, { open: false, tooltip: true, onPress: expandHandler })) : null, !compact && mode !== 'beta' && mode !== 'hosted' ? (_jsx(Mark, { label: newLabel, "data-slot": "rail-new", tooltip: true, onClick: handleNew, children: _jsx(Plus, { size: 18, "aria-hidden": true }) })) : null, _jsxs(YStack, { flex: 1, minH: 0, overflowY: "auto", overflowX: "hidden", items: "center", gap: 4, width: "100%", "$platform-web": { scrollbarWidth: 'none' }, children: [visibleMarks.map((item, i) => {
++    return (_jsx(TooltipProvider, { delay: 90, children: _jsxs(YStack, { "data-slot": "rail", "data-expanded": "false", render: "nav", "aria-label": t('Products'), width: RAIL_FOLDED, flex: 1, minH: 0, pt: 6, pb: 6, gap: 2, shrink: 0, items: "center", $touchable: { pt: 6, pb: 6 }, children: [!compact && expandHandler ? (_jsx(Toggle, { open: false, tooltip: true, onPress: expandHandler })) : null, _jsxs(YStack, { flex: 1, minH: 0, overflowY: "auto", overflowX: "hidden", items: "center", gap: 2, width: "100%", "$platform-web": { scrollbarWidth: 'none' }, children: [visibleMarks.map((item, i) => {
+                             const isDragging = dragId === item.id;
+                             // A pin is where a drag lands: dropped on one, the dragged app is pinned there (or moved there among the pins).
+                             const droppable = pinnedSet.has(item.id);
+@@ -427,7 +433,7 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
                                          setDropId(null);
                                      },
                                  }, children: [afterPins ? _jsx(YStack, { "data-slot": "rail-pins-end", width: 20, height: 1, bg: "$edge", mb: 4, "aria-hidden": true }) : null, _jsx(RailMark, { label: item.label, on: item.on, onClick: item.onPress, "data-slot": item.slot, "data-nav-id": item.id, "data-pinned": pinnedSet.has(item.id) ? '' : undefined, children: item.icon })] }, item.id));
 -                        }), !anon && foldedEntries.length > 0 ? (_jsx(MoreMenu, { placement: dir === 'rtl' ? 'left-start' : 'right-start', minWidth: 220, maxHeight: 420, entries: foldedEntries, onPin: nav.togglePin, t: t, trigger: _jsxs(YStack, { render: "button", "aria-label": t('More'), ...{ title: t('More') }, "data-slot": "rail-more", width: RAIL_FOLDED - 6, minH: MARK + 6, px: 2, py: 5, gap: 3, rounded: 12, items: "center", justify: "center", cursor: "pointer", hoverStyle: { bg: '$hover' }, pressStyle: { bg: '$raised' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: '$outlineColor' }, $touchable: { minH: TOUCH + 8 }, children: [_jsx(XStack, { width: 20, height: 20, items: "center", justify: "center", opacity: 0.68, children: _jsx(Ellipsis, { size: 18, "aria-hidden": true }) }), _jsx(Text, { "data-slot": "rail-caption", "aria-hidden": true, maxW: "100%", fontSize: 10, lineHeight: 12, color: "$aside", numberOfLines: 1, text: "center", children: t('More') })] }) })) : null, betasDialog] }), anon ? (_jsxs(YStack, { gap: 4, items: "center", pb: "$1", children: [_jsx(Mark, { label: t('See plans and pricing'), "data-slot": "anon-pricing", tooltip: true, onClick: () => {
-+                        }), !anon && foldedEntries.length > 0 ? (_jsx(MoreMenu, { placement: dir === 'rtl' ? 'left-start' : 'right-start', minWidth: 220, maxHeight: 420, entries: foldedEntries, onPin: nav.togglePin, t: t, trigger: _jsx(XStack, { render: "button", "aria-label": t('More'), ...{ title: t('More') }, "data-slot": "rail-more", width: MARK, height: MARK, rounded: 12, items: "center", justify: "center", shrink: 0, cursor: "pointer", opacity: 0.72, hoverStyle: { bg: '$hover', opacity: 1 }, pressStyle: { bg: '$raised' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: '$outlineColor' }, $touchable: { width: TOUCH, height: TOUCH }, children: _jsx(Ellipsis, { size: 18, "aria-hidden": true }) }) })) : null, betasDialog] }), anon ? (_jsxs(YStack, { gap: 4, items: "center", pb: "$1", children: [_jsx(Mark, { label: t('See plans and pricing'), "data-slot": "anon-pricing", tooltip: true, onClick: () => {
++                        }), betasDialog] }), anon ? (_jsxs(YStack, { gap: 4, items: "center", pb: "$1", children: [_jsx(Mark, { label: t('See plans and pricing'), "data-slot": "anon-pricing", tooltip: true, onClick: () => {
                                  if (typeof window !== 'undefined')
                                      window.location.assign('/pricing');
                              }, children: _jsx(Sparkles, { size: 18, "aria-hidden": true }) }), _jsx(Mark, { label: t('Help'), "data-slot": "anon-help", tooltip: true, onClick: () => {
-@@ -437,5 +446,5 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
+@@ -437,5 +443,5 @@ export function Rail({ host, mode, at, open, toggle, onOpen, onNew, compact = fa
                                  if (typeof window !== 'undefined') {
                                      window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: true } }));
                                  }
 -                            }, children: _jsx(Settings, { size: 18, "aria-hidden": true }) })] })) : (_jsx(YStack, { width: "100%", items: "center", pt: "$1", children: _jsx(Account, { host: host, narrow: true, onOrg: onOrg }) }))] }) }));
-+                            }, children: _jsx(Settings, { size: 18, "aria-hidden": true }) })] })) : open ? null : (_jsx(YStack, { width: "100%", items: "center", pt: "$1", children: _jsx(Account, { host: host, narrow: true, onOrg: onOrg }) }))] }) }));
++                            }, children: _jsx(Settings, { size: 18, "aria-hidden": true }) })] })) : open ? null : (_jsx(YStack, { width: "100%", items: "center", pt: "$1", children: _jsx(Account, { host: host, narrow: true, onOrg: onOrg, moreEntries: nav.moreEntries }) }))] }) }));
  }
 diff --git a/dist/Report.js b/dist/Report.js
 index db06be0ecd03512b0277a1cba10f283d59360bec..844b54c106afaca96e6a67aa92fef1a39c5b8592 100644
@@ -518,7 +591,7 @@ index db06be0ecd03512b0277a1cba10f283d59360bec..844b54c106afaca96e6a67aa92fef1a3
 +    return (_jsxs(Catch, { children: [probe ? _jsx(Probe, { kind: probe }) : null, children, caught && !open ? (_jsxs(XStack, { role: "status", "data-slot": "report-toast", position: "fixed", b: 16, r: 16, z: 2147483000, items: "center", gap: "$2", px: "$3", py: "$2", rounded: "$4", borderWidth: 1, borderColor: "rgba(255,255,255,0.1)", bg: "#121212", boxShadow: "0 12px 32px rgba(0,0,0,0.55)", children: [_jsx(AlertCircle, { size: 14, color: "rgba(245,245,245,0.65)", "aria-hidden": true }), _jsx(SizableText, { size: "$2", color: "$quiet", children: t('Something went wrong') }), _jsx(Button, { size: "sm", variant: "ghost", borderWidth: 0, onPress: () => begin(caught), children: t('Report') }), _jsx(Button, { size: "sm", variant: "ghost", borderWidth: 0, px: "$1.5", "aria-label": t('Dismiss'), onPress: () => setCaught(null), children: _jsx(X, { size: 13, "aria-hidden": true }) })] })) : null, _jsx(Dialog, { open: open, onOpenChange: close, children: _jsxs(DialogContent, { "data-slot": "report-sheet", width: 520, maxW: "calc(100vw - 24px)", maxH: "88dvh", bg: "var(--popover)", borderWidth: 1, borderColor: "var(--border-strong)", rounded: "$6", gap: "$3", overflow: "hidden", children: [_jsx(DialogTitle, { children: t('Report a problem') }), state === 'done' && filed ? (_jsxs(YStack, { gap: "$3", children: [_jsx(Text, { "data-slot": "report-done", children: filed.again ? t('Added to {id}, already open. Thank you.', { id: filed.identifier }) : t('Filed as {id}. Thank you.', { id: filed.identifier }) }), _jsx(Button, { onPress: () => close(false), children: t('Close') })] })) : caught ? (_jsxs(YStack, { gap: "$3", overflowY: "auto", minH: 0, children: [_jsx(Input, { "aria-label": t('Title'), value: title, onChangeText: setTitle }), _jsx(Textarea, { "aria-label": t('What happened?'), placeholder: t('What were you doing? (optional)'), value: note, onChangeText: setNote, rows: 3 }), shot ? (_jsxs(YStack, { gap: "$2", children: [keep ? _jsx(View, { "data-slot": "report-shot", render: _jsx("img", { alt: t('Screenshot of the page'), src: shot }), width: "100%", rounded: "$3", borderWidth: 1, borderColor: "var(--border)" }) : null, _jsx(Button, { size: "sm", variant: "ghost", self: "flex-start", onPress: () => setKeep(!keep), children: keep ? t('Remove screenshot') : t('Include screenshot') })] })) : null, _jsx(SizableText, { size: "$1", color: "$quiet", children: t('Nothing is sent until you press Send. Sent to {repo}: the error, the page path, the app version, your browser, the last console lines with tokens, keys, cookies and emails removed, and the screenshot if kept.', { repo: repo() }) }), _jsxs(View, { render: _jsx("details", {}), children: [_jsx(Text, { render: "summary", fontSize: "$1", cursor: "pointer", children: t('See exactly what will be sent') }), _jsx(Text, { render: "pre", fontSize: "$1", whiteSpace: "pre-wrap", maxH: 180, overflowY: "auto", children: body({ caught, title, description: note, shot: keep ? shot : null }, keep && shot ? '(screenshot)' : undefined) })] }), state === 'failed' ? _jsx(SizableText, { size: "$2", color: "$red10", role: "alert", children: t('Could not send. Check your connection and try again.') }) : null, _jsxs(XStack, { gap: "$2", justify: "flex-end", children: [_jsx(Button, { variant: "ghost", onPress: () => close(false), children: t('Cancel') }), _jsx(Button, { "data-slot": "report-send", disabled: state === 'sending', onPress: go, children: state === 'sending' ? t('Sending…') : t('Send') })] })] })) : null] }) })] }));
  }
 diff --git a/dist/Sidebar.js b/dist/Sidebar.js
-index 372cd580829f5482d74a90b964d6aeccfeae2217..39f1c40b76e22d0f38ad305021df3ce8301aa35e 100644
+index 372cd580829f5482d74a90b964d6aeccfeae2217..57498c9b731330fb8a750cfac84868bc1d0d6ea7 100644
 --- a/dist/Sidebar.js
 +++ b/dist/Sidebar.js
 @@ -17,7 +17,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
@@ -562,6 +635,15 @@ index 372cd580829f5482d74a90b964d6aeccfeae2217..39f1c40b76e22d0f38ad305021df3ce8
          else
              create();
      };
+@@ -567,7 +572,7 @@ export function Sidebar({ pins, host, mode, thread, go, onShut, onSeek, onBack,
+     // The reader's pins lead (under Pinned), the default apps follow in their places, and an app that lives in More draws
+     // its own row (and sub-links) after them while the reader is in it.
+     const rest = [...nav.defaultEntries, ...nav.moreEntries.filter((item) => item.on)];
+-    const showMore = !at && !anon && nav.moreEntries.length > 0;
++    const showMore = false;
+     const subGroupsFor = (entryId) => {
+         if (at)
+             return [];
 @@ -646,10 +651,13 @@ export function Sidebar({ pins, host, mode, thread, go, onShut, onSeek, onBack,
              if (typeof window !== 'undefined')
                  window.location.reload();
@@ -624,6 +706,15 @@ index 372cd580829f5482d74a90b964d6aeccfeae2217..39f1c40b76e22d0f38ad305021df3ce8
                                                          if (typeof window !== 'undefined')
                                                              window.location.assign('/login?next=%2Fchat');
                                                      }, children: t('Log in') }), _jsx(Button, { size: "sm", flex: 1, rounded: 9999, "data-slot": "column-signup", onPress: () => {
+@@ -715,7 +703,7 @@ export function Sidebar({ pins, host, mode, thread, go, onShut, onSeek, onBack,
+                                             if (typeof window !== 'undefined') {
+                                                 window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: true } }));
+                                             }
+-                                        }, items: "center", gap: "$1", px: "$1.5", py: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$2", borderWidth: 0, bg: "transparent", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, children: _jsx(Settings, { size: 16, "aria-hidden": true }) }) })) : null] })) : at || mode === 'beta' || mode === 'hosted' ? null : devMode ? (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, minW: 0, maxW: "100%", children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })) : (_jsx(Made, {})), _jsx(UpdatePill, {}), !anon && devMode ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "dev-mode-indicator", "aria-label": t('Turn off developer mode'), ...{ title: t('Click to turn off developer mode') }, onClick: () => setDevMode(false), items: "center", justify: "space-between", gap: "$2", px: "$2.5", py: "$1", mx: "$0.5", mt: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "var(--border-strong)", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, shrink: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(XStack, { width: 6, height: 6, rounded: 999, bg: "var(--state-online)", shrink: 0, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode · On') })] }), _jsx(Text, { fontSize: "$1", color: "$soft", shrink: 0, children: t('Off') })] })) : null, !anon && !drawer ? (_jsx(YStack, { "data-slot": "sidebar-account", pt: "$2", mt: "$1.5", borderTopWidth: 1, borderColor: "$edge", shrink: 0, children: _jsx(Account, { host: host, onOrg: handleOrg }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') })), _jsx(Rename, { open: renaming !== null, onOpenChange: (o) => !o && setRenaming(null), title: t('Rename'), name: renaming?.name ?? '', 
++                                        }, items: "center", gap: "$1", px: "$1.5", py: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$2", borderWidth: 0, bg: "transparent", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, children: _jsx(Settings, { size: 16, "aria-hidden": true }) }) })) : null] })) : at || mode === 'beta' || mode === 'hosted' ? null : devMode ? (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, minW: 0, maxW: "100%", children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })) : (_jsx(Made, {})), _jsx(UpdatePill, {}), !anon && devMode ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "dev-mode-indicator", "aria-label": t('Turn off developer mode'), ...{ title: t('Click to turn off developer mode') }, onClick: () => setDevMode(false), items: "center", justify: "space-between", gap: "$2", px: "$2.5", py: "$1", mx: "$0.5", mt: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "var(--border-strong)", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, shrink: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(XStack, { width: 6, height: 6, rounded: 999, bg: "var(--state-online)", shrink: 0, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode · On') })] }), _jsx(Text, { fontSize: "$1", color: "$soft", shrink: 0, children: t('Off') })] })) : null, !anon && !drawer ? (_jsx(YStack, { "data-slot": "sidebar-account", pt: "$1.5", mt: "$1", borderTopWidth: 1, borderColor: "$edge", shrink: 0, children: _jsx(Account, { host: host, onOrg: handleOrg, moreEntries: nav.moreEntries }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') })), _jsx(Rename, { open: renaming !== null, onOpenChange: (o) => !o && setRenaming(null), title: t('Rename'), name: renaming?.name ?? '', 
+                     // The name is the person's, kept on their account; typed back to its own name, it keeps none. A save the account
+                     // refuses still keeps it in this browser.
+                     run: async (next) => {
 diff --git a/dist/fault.js b/dist/fault.js
 index 2601176e14b54f2e2a4e6172fa174cf520152b07..ac1297f818efc01f0a43e05460c6d71080cfbe61 100644
 --- a/dist/fault.js

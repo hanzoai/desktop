@@ -36,9 +36,10 @@ html:root:not(.t_light):not(.light) {
   background: transparent;
 }
 
-/* Strip harsh borders and white focus outlines on Account popover cards & controls */
+/* Strip harsh borders and white focus outlines on Account popover cards & controls — tightened Linear density */
 [data-slot='me-hover-card'] {
   border-color: rgba(255, 255, 255, 0.08) !important;
+  padding: 10px !important;
 }
 
 [data-slot='me-more'],
@@ -76,12 +77,12 @@ html:root:not(.t_light):not(.light) [data-slot='app-column'] {
 }
 
 html:root:not(.t_light):not(.light) [data-slot='rail'] {
-  border-inline-end: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-inline-end: none !important;
 }
 
 html:root:not(.t_light):not(.light) [data-slot='app-column'] {
   border-width: 0 !important;
-  border-inline-end: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-inline-end: none !important;
 }
 
 /* Smooth hover-peek sidebar drawer when collapsed */
@@ -187,42 +188,10 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   display: none !important;
 }
 
-/* Sidebar order: + New chat -> Chat -> <> Dev -> Library -> Design -> Plugins */
-[data-slot='app-rail'] > [data-slot='app-head'] {
-  order: 1;
-}
-
-[data-slot='app-rail'] > div[role='list']:has([data-slot='app-new']) {
-  display: contents !important;
-}
-
-[data-slot='app-rail'] > div[role='list']:has([data-slot='app-new']) > div[role='listitem']:has([data-slot='app-new']) {
-  order: 2;
-  margin-top: 2px;
-  margin-bottom: 4px;
-}
-
+/* Keep sidebar nav compact and let React own the exact canonical element order (no CSS order hacks) */
 [data-slot='app-rail'] > [data-slot='sidebar-nav'] {
-  order: 3;
   flex-shrink: 0 !important;
-  padding-top: 0 !important;
-}
-
-[data-slot='app-rail'] > div[role='list']:has([data-slot='app-new']) > div[role='listitem']:has([data-slot='app-images']) {
-  order: 4;
-}
-
-[data-slot='app-rail'] > div[role='list']:has([data-slot='app-new']) > div[role='listitem']:has([data-slot='app-plugins']) {
-  order: 5;
-}
-
-[data-slot='app-rail'] > [data-slot='recents'],
-[data-slot='app-rail'] > [data-slot='anon-foot'],
-[data-slot='app-rail'] > [data-slot='rail-unpinned'],
-[data-slot='app-rail'] > [data-slot='sidebar-get-mobile'],
-[data-slot='app-rail'] > [data-slot='sidebar-account'],
-[data-slot='app-rail'] > div:not([data-slot]):not([role='list']) {
-  order: 10;
+  padding-top: 2px !important;
 }
 
 /* Keep Library / Plugins active highlight synced when desktop overlay pane is open */

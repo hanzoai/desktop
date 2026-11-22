@@ -1,10 +1,27 @@
 import { KEYS } from '@hanzo/app/help';
 import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
+import { Text, XStack, YStack } from '@hanzo/gui';
+import { Button, Kbd, Switch } from '@hanzo/ui';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { useEffect, useState } from 'react';
+import {
+  ArrowLeft,
+  Cpu,
+  Globe,
+  Keyboard,
+  Mic,
+  Palette,
+  Radio,
+  RefreshCw,
+  Server,
+  Sliders,
+  Sparkles,
+  User,
+} from 'lucide-react';
+import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { ProvidersListSection } from './LibraryPane';
 import { openLocalAiManager } from './local-ai';
+import { safeInvoke } from './utils/tauri-check';
 
 export interface FnVoiceHooks {
   isListening: () => boolean;
@@ -182,6 +199,146 @@ export function windowKey(
   return null;
 }
 
+type SettingsSectionId =
+  | 'general'
+  | 'appearance'
+  | 'providers'
+  | 'voice'
+  | 'engine'
+  | 'zap'
+  | 'node'
+  | 'extension'
+  | 'account'
+  | 'shortcuts';
+
+type SidebarStylePref = 'flat' | 'nested';
+
+interface ZapNodeRow {
+  id?: string;
+  name?: string;
+  url?: string;
+  kind?: string;
+  protocol?: string;
+  status?: string;
+  tools?: unknown[];
+}
+
+function readLocalPref<T>(key: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeLocalPref(key: string, value: unknown) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
+}
+
+function SettingsRow({
+  title,
+  description,
+  control,
+  last = false,
+  testId,
+}: {
+  title: string;
+  description?: string;
+  control: ReactNode;
+  last?: boolean;
+  testId?: string;
+}) {
+  return (
+    <XStack
+      data-testid={testId}
+      alignItems="center"
+      justifyContent="space-between"
+      gap="$4"
+      paddingVertical="$3"
+      paddingHorizontal="$4"
+      borderBottomWidth={last ? 0 : 1}
+      borderBottomColor="rgba(255,255,255,0.06)"
+    >
+      <YStack flex={1} minWidth={0} gap="$1">
+        <Text fontSize={13} fontWeight="500" color="$color">
+          {title}
+        </Text>
+        {description ? (
+          <Text fontSize={12} color="$colorMuted" lineHeight={17}>
+            {description}
+          </Text>
+        ) : null}
+      </YStack>
+      <XStack alignItems="center" gap="$2" flexShrink={0}>
+        {control}
+      </XStack>
+    </XStack>
+  );
+}
+
+function SettingsGroup({
+  title,
+  subtitle,
+  children,
+}: {
+  title?: string;
+  subtitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <YStack gap="$2">
+      {title ? (
+        <YStack gap="$0.5" paddingHorizontal="$1">
+          <Text fontSize={12} fontWeight="600" color="$colorMuted">
+            {title}
+          </Text>
+          {subtitle ? (
+            <Text fontSize={12} color="$colorMuted" opacity={0.75}>
+              {subtitle}
+            </Text>
+          ) : null}
+        </YStack>
+      ) : null}
+      <YStack
+        borderRadius={10}
+        borderWidth={1}
+        borderColor="rgba(255,255,255,0.08)"
+        backgroundColor="rgba(255,255,255,0.025)"
+        overflow="hidden"
+      >
+        {children}
+      </YStack>
+    </YStack>
+  );
+}
+
+function StatusPill({ online, loading }: { online: boolean | null; loading?: boolean }) {
+  const isChecking = loading || online === null;
+  const dot = isChecking ? '#71717a' : online ? '#22c55e' : '#71717a';
+  const label = isChecking ? 'checking…' : online ? 'online' : 'not running';
+  return (
+    <XStack
+      alignItems="center"
+      gap="$1.5"
+      paddingHorizontal="$2.5"
+      paddingVertical="$1"
+      borderRadius={999}
+      borderWidth={1}
+      borderColor="rgba(255,255,255,0.1)"
+      backgroundColor="rgba(255,255,255,0.03)"
+    >
+      <YStack width={6} height={6} borderRadius={999} style={{ backgroundColor: dot }} />
+      <Text fontSize={11} fontWeight="500" color="$colorMuted">
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
 export function DesktopSettings({
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',
@@ -201,12 +358,43 @@ export function DesktopSettings({
   const [theme, setTheme] = useState<'dark' | 'light'>(() =>
     document.documentElement.classList.contains('light') ? 'light' : 'dark',
   );
+  const [sidebarStyle, setSidebarStyle] = useState<SidebarStylePref>(() => {
+    try {
+      return window.localStorage.getItem('hanzo.sidebar.style') === 'nested' ? 'nested' : 'flat';
+    } catch {
+      return 'flat';
+    }
+  });
+  const [privateByDefault, setPrivateByDefault] = useState<boolean>(() =>
+    readLocalPref<boolean>('hanzo.pref.privateByDefault', false),
+  );
+  const [memoryEnabled, setMemoryEnabled] = useState<boolean>(() =>
+    readLocalPref<boolean>('hanzo.pref.memoryEnabled', true),
+  );
+  const [ensoAutoRoute, setEnsoAutoRoute] = useState<boolean>(() =>
+    readLocalPref<boolean>('hanzo.pref.ensoAutoRoute', true),
+  );
+  const [fnVoiceEnabled, setFnVoiceEnabled] = useState<boolean>(() =>
+    readLocalPref<boolean>('hanzo.pref.fnVoice', true),
+  );
+  const [autoLinkMachines, setAutoLinkMachines] = useState<boolean>(() =>
+    readLocalPref<boolean>('hanzo.pref.autoLinkMachines', true),
+  );
   const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
+  const [ollamaUp, setOllamaUp] = useState<boolean | null>(null);
+  const [zapNodes, setZapNodes] = useState<ZapNodeRow[]>([]);
+  const [zapLoading, setZapLoading] = useState<boolean>(false);
   const [devMode, setDevMode] = useDevMode();
-  const [section, setSection] = useState<
-    'general' | 'providers' | 'engine' | 'node' | 'extension' | 'account'
-  >('general');
+  const [section, setSection] = useState<SettingsSectionId>('general');
+
+  const refreshZap = useCallback(() => {
+    setZapLoading(true);
+    safeInvoke<ZapNodeRow[]>('zap_nodes')
+      .then((nodes) => setZapNodes(Array.isArray(nodes) ? nodes : []))
+      .catch(() => setZapNodes([]))
+      .finally(() => setZapLoading(false));
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -222,7 +410,7 @@ export function DesktopSettings({
   useEffect(() => {
     let cancelled = false;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 1200);
+    const timer = setTimeout(() => ctrl.abort(), 1400);
 
     fetch('http://127.0.0.1:9630/v1/chain/hanzo/rpc', {
       method: 'POST',
@@ -245,449 +433,675 @@ export function DesktopSettings({
         if (!cancelled) setEngineUp(false);
       });
 
+    fetch('http://127.0.0.1:11434/api/tags', { signal: ctrl.signal })
+      .then((r) => {
+        if (!cancelled) setOllamaUp(r.ok);
+      })
+      .catch(() => {
+        if (!cancelled) setOllamaUp(false);
+      });
+
+    refreshZap();
+
     return () => {
       cancelled = true;
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [localEngineUrl]);
+  }, [localEngineUrl, refreshZap]);
 
   const applyTheme = (next: 'dark' | 'light') => {
     setTheme(next);
-    try {
-      window.localStorage.setItem('hanzo.appearance', JSON.stringify({ theme: next }));
-    } catch {}
+    writeLocalPref('hanzo.appearance', { theme: next });
     document.documentElement.classList.remove('dark', 'light', 't_dark', 't_light');
     document.documentElement.classList.add(next, `t_${next}`);
   };
 
+  const applySidebarStyle = (next: SidebarStylePref) => {
+    setSidebarStyle(next);
+    try {
+      window.localStorage.setItem('hanzo.sidebar.style', next);
+      window.dispatchEvent(new CustomEvent('hanzo:sidebar-style', { detail: next }));
+    } catch {}
+  };
+
+  const navGroups: Array<{
+    group: string;
+    items: Array<{ id: SettingsSectionId; label: string; icon: ReactNode }>;
+  }> = [
+    {
+      group: 'Workspace',
+      items: [
+        { id: 'general', label: 'General', icon: <Sliders size={14} strokeWidth={1.6} /> },
+        { id: 'appearance', label: 'Appearance & Sidebar', icon: <Palette size={14} strokeWidth={1.6} /> },
+        { id: 'voice', label: 'Voice & Commands', icon: <Mic size={14} strokeWidth={1.6} /> },
+        { id: 'shortcuts', label: 'Keyboard Shortcuts', icon: <Keyboard size={14} strokeWidth={1.6} /> },
+      ],
+    },
+    {
+      group: 'Intelligence',
+      items: [
+        { id: 'providers', label: 'Providers & Models', icon: <Sparkles size={14} strokeWidth={1.6} /> },
+        { id: 'engine', label: 'Local AI & Engine', icon: <Cpu size={14} strokeWidth={1.6} /> },
+      ],
+    },
+    {
+      group: 'Transport & Runtime',
+      items: [
+        { id: 'zap', label: 'Native ZAP Router', icon: <Radio size={14} strokeWidth={1.6} /> },
+        { id: 'node', label: 'Blockchain Node', icon: <Server size={14} strokeWidth={1.6} /> },
+        { id: 'extension', label: 'Browser Extension', icon: <Globe size={14} strokeWidth={1.6} /> },
+      ],
+    },
+    {
+      group: 'Account',
+      items: [
+        { id: 'account', label: 'Account & Cloud KMS', icon: <User size={14} strokeWidth={1.6} /> },
+      ],
+    },
+  ];
+
+  const isLight = theme === 'light';
+
   return (
-    <div
+    <YStack
       data-testid="desktop-settings-page"
-      style={{
-        height: '100vh',
-        width: '100vw',
-        display: 'flex',
-        flexDirection: 'column',
-        background: theme === 'light' ? '#fafafa' : '#09090b',
-        color: theme === 'light' ? '#09090b' : '#f4f4f5',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}
+      height="100vh"
+      width="100vw"
+      backgroundColor={isLight ? '#fafafa' : '#0a0a0a'}
+      color={isLight ? '#0a0a0a' : '#fafafa'}
     >
-      <div
+      {/* Top bar — Linear-density header */}
+      <XStack
         data-tauri-drag-region
-        style={{
-          height: 44,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          paddingLeft: barInset + 12,
-          paddingRight: 16,
-          borderBottom: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-          flexShrink: 0,
-        }}
+        height={40}
+        alignItems="center"
+        justifyContent="space-between"
+        paddingLeft={barInset + 10}
+        paddingRight={14}
+        borderBottomWidth={1}
+        borderBottomColor={isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}
+        flexShrink={0}
       >
-        <button
-          type="button"
+        <Button
+          size="xs"
+          variant="ghost"
           data-testid="desktop-settings-back"
-          onClick={onBack}
-          style={{
-            background: 'transparent',
-            border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
-            color: 'inherit',
-            borderRadius: 8,
-            padding: '4px 12px',
-            fontSize: 13,
-            fontWeight: 500,
-            cursor: 'pointer',
-          }}
+          onPress={onBack}
+          icon={<ArrowLeft size={13} strokeWidth={1.7} />}
         >
-          ← Back to Hanzo
-        </button>
-        <div style={{ fontSize: 13, fontWeight: 600, opacity: 0.8 }}>Hanzo Desktop Settings</div>
-        <div style={{ width: 96 }} />
-      </div>
+          Back to Hanzo
+        </Button>
+        <Text fontSize={12} fontWeight="500" color="$colorMuted">
+          Settings
+        </Text>
+        <XStack width={92} justifyContent="flex-end">
+          <Kbd>Esc</Kbd>
+        </XStack>
+      </XStack>
 
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
-        <nav
+      <XStack flex={1} minHeight={0} overflow="hidden">
+        {/* Left Linear-style grouped navigation */}
+        <YStack
+          tag="nav"
           aria-label="Settings sections"
-          style={{
-            width: 210,
-            flexShrink: 0,
-            padding: '16px 10px',
-            borderRight: `1px solid ${theme === 'light' ? '#e4e4e7' : 'rgba(255,255,255,0.06)'}`,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-          }}
+          width={216}
+          flexShrink={0}
+          paddingVertical="$3"
+          paddingHorizontal="$2"
+          gap="$3"
+          borderRightWidth={1}
+          borderRightColor={isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.06)'}
+          overflow="scroll"
         >
-          {(
-            [
-              ['general', 'General'],
-              ['providers', 'Providers'],
-              ['engine', 'Inference Engine'],
-              ['node', 'Blockchain Node'],
-              ['extension', 'Browser Extension'],
-              ['account', 'Account & KMS'],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSection(id)}
-              style={{
-                textAlign: 'left',
-                height: 34,
-                padding: '0 12px',
-                borderRadius: 8,
-                border: 'none',
-                background:
-                  section === id
-                    ? theme === 'light'
-                      ? '#e4e4e7'
-                      : '#161616'
-                    : 'transparent',
-                color: 'inherit',
-                opacity: section === id ? 1 : 0.68,
-                fontSize: 13,
-                fontWeight: section === id ? 500 : 400,
-                cursor: 'pointer',
-              }}
-            >
-              {label}
-            </button>
+          {navGroups.map(({ group, items }) => (
+            <YStack key={group} gap="$0.5">
+              <Text
+                fontSize={11}
+                fontWeight="500"
+                color="$colorMuted"
+                paddingHorizontal="$2.5"
+                paddingBottom="$1"
+                opacity={0.7}
+              >
+                {group}
+              </Text>
+              {items.map((item) => {
+                const active = section === item.id;
+                return (
+                  <Button
+                    key={item.id}
+                    size="sm"
+                    variant="ghost"
+                    justifyContent="flex-start"
+                    gap="$2"
+                    height={30}
+                    paddingHorizontal="$2.5"
+                    borderRadius={7}
+                    backgroundColor={
+                      active
+                        ? isLight
+                          ? 'rgba(0,0,0,0.06)'
+                          : 'rgba(255,255,255,0.07)'
+                        : 'transparent'
+                    }
+                    color={active ? '$color' : '$colorMuted'}
+                    fontWeight={active ? '500' : '400'}
+                    fontSize={13}
+                    onPress={() => setSection(item.id)}
+                  >
+                    {item.icon}
+                    <Text fontSize={13} fontWeight={active ? '500' : '400'} color="inherit">
+                      {item.label}
+                    </Text>
+                  </Button>
+                );
+              })}
+            </YStack>
           ))}
-        </nav>
+        </YStack>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 48px' }}>
-          <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Right detail pane */}
+        <YStack flex={1} overflow="scroll" paddingVertical="$6" paddingHorizontal="$7">
+          <YStack maxWidth={660} width="100%" marginHorizontal="auto" gap="$5" paddingBottom="$10">
             {section === 'general' ? (
               <>
-                <section
-                  data-testid="desktop-dev-mode"
-                  style={{
-                    padding: 20,
-                    borderRadius: 14,
-                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                    background: theme === 'light' ? '#ffffff' : '#111114',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                  }}
-                >
-                  <div>
-                    <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Developer mode</h2>
-                    <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>{DEV_MODE_NOTE}</p>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={devMode}
-                    aria-label="Developer mode"
-                    data-testid="desktop-dev-mode-switch"
-                    onClick={() => setDevMode(!devMode)}
-                    style={{
-                      flexShrink: 0,
-                      width: 44,
-                      height: 26,
-                      borderRadius: 999,
-                      border: 'none',
-                      padding: 3,
-                      display: 'flex',
-                      justifyContent: devMode ? 'flex-end' : 'flex-start',
-                      background: devMode ? (theme === 'light' ? '#18181b' : '#fafafa') : theme === 'light' ? '#d4d4d8' : '#3f3f46',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 999,
-                        background: devMode ? (theme === 'light' ? '#fafafa' : '#09090b') : theme === 'light' ? '#ffffff' : '#a1a1aa',
-                      }}
-                    />
-                  </button>
-                </section>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    General
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Core behavior across Hanzo Chat, Dev, Library, Design, and Plugins.
+                  </Text>
+                </YStack>
 
-                <section
-                  style={{
-                    padding: 20,
-                    borderRadius: 14,
-                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                    background: theme === 'light' ? '#ffffff' : '#111114',
-                  }}
-                >
-                  <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Appearance</h2>
-                  <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-                    Choose the workspace appearance for Hanzo Desktop.
-                  </p>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    {(['dark', 'light'] as const).map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        data-testid={`desktop-theme-${opt}`}
-                        onClick={() => applyTheme(opt)}
-                        style={{
-                          padding: '7px 16px',
-                          borderRadius: 999,
-                          border: `1px solid ${theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : '#3f3f46'}`,
-                          background: theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : 'transparent',
-                          color: theme === opt ? (theme === 'light' ? '#fafafa' : '#09090b') : 'inherit',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          textTransform: 'capitalize',
+                <SettingsGroup title="Execution & Intelligence">
+                  <SettingsRow
+                    testId="desktop-dev-mode"
+                    title="Developer mode"
+                    description={DEV_MODE_NOTE}
+                    control={
+                      <Switch
+                        data-testid="desktop-dev-mode-switch"
+                        aria-label="Developer mode"
+                        checked={devMode}
+                        onCheckedChange={(v: boolean) => setDevMode(Boolean(v))}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    title="Enso automatic model routing"
+                    description="Automatically pick the fastest frontier or local Zen model for each turn."
+                    control={
+                      <Switch
+                        aria-label="Enso automatic routing"
+                        checked={ensoAutoRoute}
+                        onCheckedChange={(v: boolean) => {
+                          const next = Boolean(v);
+                          setEnsoAutoRoute(next);
+                          writeLocalPref('hanzo.pref.ensoAutoRoute', next);
                         }}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                </section>
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    title="Workspace memory"
+                    description="Remember preferences, coding conventions, and project context across chats."
+                    control={
+                      <Switch
+                        aria-label="Workspace memory"
+                        checked={memoryEnabled}
+                        onCheckedChange={(v: boolean) => {
+                          const next = Boolean(v);
+                          setMemoryEnabled(next);
+                          writeLocalPref('hanzo.pref.memoryEnabled', next);
+                        }}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    title="Private mode by default"
+                    description="Start new chats with /private enabled (zero cloud retention, local Zen inference preferred)."
+                    last
+                    control={
+                      <Switch
+                        aria-label="Private mode by default"
+                        checked={privateByDefault}
+                        onCheckedChange={(v: boolean) => {
+                          const next = Boolean(v);
+                          setPrivateByDefault(next);
+                          writeLocalPref('hanzo.pref.privateByDefault', next);
+                        }}
+                      />
+                    }
+                  />
+                </SettingsGroup>
 
-                <section
-                  style={{
-                    padding: 20,
-                    borderRadius: 14,
-                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                    background: theme === 'light' ? '#ffffff' : '#111114',
-                  }}
-                >
-                  <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600 }}>Keyboard Shortcuts</h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {[...KEYS.map((k) => ({ does: String(k.does), mac: k.mac, pc: k.pc })), ...DESKTOP_GLOBAL_KEYS].map(
-                      (item) => (
-                        <div
-                          key={item.does}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            padding: '6px 0',
-                            borderBottom: `1px solid ${theme === 'light' ? '#f4f4f5' : '#18181b'}`,
-                            fontSize: 13,
-                          }}
-                        >
-                          <span>{item.does}</span>
-                          <kbd
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: 6,
-                              border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
-                              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                              fontSize: 12,
-                            }}
+                <SettingsGroup title="Linked Machines & Environments">
+                  <SettingsRow
+                    title="Auto-connect linked machines"
+                    description="Discover your local Macs, Linux workstations, and cloud sandboxes over native ZAP."
+                    control={
+                      <Switch
+                        aria-label="Auto-connect linked machines"
+                        checked={autoLinkMachines}
+                        onCheckedChange={(v: boolean) => {
+                          const next = Boolean(v);
+                          setAutoLinkMachines(next);
+                          writeLocalPref('hanzo.pref.autoLinkMachines', next);
+                        }}
+                      />
+                    }
+                  />
+                  <SettingsRow
+                    title="Cloud workspaces & teams"
+                    description="Manage organizations, billing, API keys, and shared environments on hanzo.ai."
+                    last
+                    control={
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onPress={() => void openUrl(`${siteUrl}/settings`)}
+                      >
+                        Open Cloud Settings ↗
+                      </Button>
+                    }
+                  />
+                </SettingsGroup>
+              </>
+            ) : null}
+
+            {section === 'appearance' ? (
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Appearance & Sidebar
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Customize theme and navigation density across Hanzo.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Theme">
+                  <SettingsRow
+                    title="Interface theme"
+                    description="Obsidian monochrome dark mode or crisp daylight light mode."
+                    last
+                    control={
+                      <XStack gap="$1.5">
+                        {(['dark', 'light'] as const).map((opt) => (
+                          <Button
+                            key={opt}
+                            size="xs"
+                            data-testid={`desktop-theme-${opt}`}
+                            variant={theme === opt ? 'primary' : 'outline'}
+                            onPress={() => applyTheme(opt)}
                           >
-                            {apple ? item.mac : item.pc}
-                          </kbd>
-                        </div>
-                      ),
-                    )}
-                  </div>
-                </section>
+                            {opt === 'dark' ? 'Dark' : 'Light'}
+                          </Button>
+                        ))}
+                      </XStack>
+                    }
+                  />
+                </SettingsGroup>
+
+                <SettingsGroup title="Sidebar Navigation">
+                  <SettingsRow
+                    title="Expanded sidebar layout"
+                    description="Flat lists apps (<icon> Chat, <icon> Dev) in one clean column. Nested pairs the fixed icon rail with per-app options."
+                    control={
+                      <XStack gap="$1.5">
+                        {(
+                          [
+                            ['flat', 'Flat'],
+                            ['nested', 'Nested'],
+                          ] as const
+                        ).map(([opt, label]) => (
+                          <Button
+                            key={opt}
+                            size="xs"
+                            variant={sidebarStyle === opt ? 'primary' : 'outline'}
+                            onPress={() => applySidebarStyle(opt)}
+                          >
+                            {label}
+                          </Button>
+                        ))}
+                      </XStack>
+                    }
+                  />
+                  <SettingsRow
+                    title="3-mode sidebar switcher"
+                    description="Click the top-left sidebar toggle (or ⌘B) to cycle Compact (hover-peek) → Standard → Workspaces (Org & Machine Switcher)."
+                    last
+                    control={<Kbd>{apple ? '⌘B' : 'Ctrl+B'}</Kbd>}
+                  />
+                </SettingsGroup>
               </>
             ) : null}
 
             {section === 'providers' ? (
-              <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 600 }}>AI Providers</h2>
-                  <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Providers & Models
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
                     Connect frontier and local providers directly on this machine or route through Hanzo Cloud.
-                  </p>
-                </div>
+                  </Text>
+                </YStack>
                 <ProvidersListSection />
-              </section>
+              </>
+            ) : null}
+
+            {section === 'voice' ? (
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Voice & Composer Commands
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    System-wide voice dictation and slash commands shared across Chat and Dev.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Voice Input">
+                  <SettingsRow
+                    title="Fn push-to-talk & double-tap hands-free"
+                    description="Hold Fn to dictate, or double-tap Fn to toggle continuous hands-free voice with multi-window mic lease arbitration."
+                    last
+                    control={
+                      <Switch
+                        aria-label="Fn voice shortcuts"
+                        checked={fnVoiceEnabled}
+                        onCheckedChange={(v: boolean) => {
+                          const next = Boolean(v);
+                          setFnVoiceEnabled(next);
+                          writeLocalPref('hanzo.pref.fnVoice', next);
+                        }}
+                      />
+                    }
+                  />
+                </SettingsGroup>
+
+                <SettingsGroup title="Built-in Slash Commands">
+                  {[
+                    ['/private', 'Toggle zero-retention local/private chat for this session'],
+                    ['/persona', 'Switch agent persona, tone, and system instructions'],
+                    ['/model', 'Switch active provider or model inline'],
+                    ['@ files', 'Attach files, folders, or code symbols directly from workspace'],
+                    ['$ skills', 'Invoke installed skills, connectors, or MCP workflows'],
+                  ].map(([cmd, desc], idx, arr) => (
+                    <SettingsRow
+                      key={cmd}
+                      title={cmd}
+                      description={desc}
+                      last={idx === arr.length - 1}
+                      control={<Kbd>{cmd}</Kbd>}
+                    />
+                  ))}
+                </SettingsGroup>
+              </>
             ) : null}
 
             {section === 'engine' ? (
-              <section
-                style={{
-                  padding: 20,
-                  borderRadius: 14,
-                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                  background: theme === 'light' ? '#ffffff' : '#111114',
-                }}
-              >
-                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Native Inference Engine</h2>
-                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-                  Manage local Zen 6 / Qwen3+ weights, GPU acceleration, and the embedded Hanzo Engine (127.0.0.1:36900) alongside Ollama (127.0.0.1:11434).
-                </p>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
-                  <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                    Hanzo Engine (127.0.0.1:36900):{' '}
-                    <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'not running'}</strong>
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => openLocalAiManager('models')}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 8,
-                      border: '1px solid #3f3f46',
-                      background: 'transparent',
-                      color: 'inherit',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Local AI & Inference Engine
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Run private Zen weights locally with Metal/CUDA GPU acceleration via Hanzo Engine or Ollama.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Local Runtimes">
+                  <SettingsRow
+                    title="Hanzo Engine"
+                    description={`Embedded local inference server (${localEngineUrl})`}
+                    control={<StatusPill online={engineUp} />}
+                  />
+                  <SettingsRow
+                    title="Ollama"
+                    description="Local GGUF runner on 127.0.0.1:11434"
+                    control={<StatusPill online={ollamaUp} />}
+                  />
+                  <SettingsRow
+                    title="Manage local weights & diagnostics"
+                    description="Download Zen models, inspect GPU VRAM allocation, and benchmark tokens/sec."
+                    last
+                    control={
+                      <XStack gap="$2">
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onPress={() => openLocalAiManager('models')}
+                        >
+                          Manage Models
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onPress={() => openLocalAiManager('engine')}
+                        >
+                          Diagnostics
+                        </Button>
+                      </XStack>
+                    }
+                  />
+                </SettingsGroup>
+              </>
+            ) : null}
+
+            {section === 'zap' ? (
+              <>
+                <XStack alignItems="center" justifyContent="space-between">
+                  <YStack gap="$1">
+                    <Text fontSize={18} fontWeight="600" color="$color">
+                      Native ZAP Router
+                    </Text>
+                    <Text fontSize={13} color="$colorMuted">
+                      Zero-Copy Agent Protocol (zap-proto.io) — binary O(1) framing & post-quantum X25519+ML-KEM-768 transport.
+                    </Text>
+                  </YStack>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    icon={<RefreshCw size={12} />}
+                    onPress={refreshZap}
                   >
-                    Manage Local Models
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openLocalAiManager('engine')}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 8,
-                      border: '1px solid #3f3f46',
-                      background: 'transparent',
-                      color: 'inherit',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Engine Diagnostics
-                  </button>
-                </div>
-              </section>
+                    Refresh
+                  </Button>
+                </XStack>
+
+                <SettingsGroup title="Embedded Router">
+                  <SettingsRow
+                    title="zapd local router"
+                    description="Replaces WebSocket/JSON overhead for MCP tools, browser tabs, CLI agents, and linked machines."
+                    control={<StatusPill online={true} loading={zapLoading} />}
+                  />
+                  <SettingsRow
+                    title="Active sub-protocols"
+                    description="zap-mcp · zap-acp · zap-rns · zap-fix over UDS, TCP, WebTransport, and stdio"
+                    last
+                    control={<Kbd>{zapNodes.length} nodes</Kbd>}
+                  />
+                </SettingsGroup>
+
+                <SettingsGroup
+                  title="Connected ZAP Nodes"
+                  subtitle="Live endpoints discovered by the embedded Hanzo ZAP router."
+                >
+                  {zapNodes.length === 0 ? (
+                    <SettingsRow
+                      title="No external ZAP peers connected yet"
+                      description="Start hanzo-mcp, connect the Hanzo Browser Extension, or pair a linked machine to appear here."
+                      last
+                      control={
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onPress={() => void openUrl('https://zap-proto.io')}
+                        >
+                          zap-proto.io ↗
+                        </Button>
+                      }
+                    />
+                  ) : (
+                    zapNodes.map((node, idx) => (
+                      <SettingsRow
+                        key={node.id ?? node.url ?? String(idx)}
+                        title={node.name || node.id || 'ZAP Node'}
+                        description={
+                          [node.protocol || 'zap', node.url, node.kind]
+                            .filter(Boolean)
+                            .join(' · ') || 'Connected peer'
+                        }
+                        last={idx === zapNodes.length - 1}
+                        control={<StatusPill online={node.status !== 'offline'} />}
+                      />
+                    ))
+                  )}
+                </SettingsGroup>
+              </>
             ) : null}
 
             {section === 'node' ? (
-              <section
-                style={{
-                  padding: 20,
-                  borderRadius: 14,
-                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                  background: theme === 'light' ? '#ffffff' : '#111114',
-                }}
-              >
-                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Blockchain Node (hanzod)</h2>
-                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-                  Local Hanzo validator & RPC daemon for verifiable compute receipts, staking, and peer discovery.
-                </p>
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
-                  <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                    hanzod RPC (127.0.0.1:9630):{' '}
-                    <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'not running'}</strong>
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => openLocalAiManager('node')}
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: 8,
-                    border: '1px solid #3f3f46',
-                    background: 'transparent',
-                    color: 'inherit',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Open Node Manager
-                </button>
-              </section>
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Blockchain Node (hanzod)
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Local Hanzo validator & RPC daemon for verifiable compute receipts, staking, and peer discovery.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Validator RPC">
+                  <SettingsRow
+                    title="hanzod RPC"
+                    description="Local JSON-RPC & ZAP endpoint at 127.0.0.1:9630"
+                    control={<StatusPill online={hanzodUp} />}
+                  />
+                  <SettingsRow
+                    title="Node Manager"
+                    description="Inspect sync height, peer count, and validator keys."
+                    last
+                    control={
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onPress={() => openLocalAiManager('node')}
+                      >
+                        Open Node Manager
+                      </Button>
+                    }
+                  />
+                </SettingsGroup>
+              </>
             ) : null}
 
             {section === 'extension' ? (
-              <section
-                style={{
-                  padding: 20,
-                  borderRadius: 14,
-                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                  background: theme === 'light' ? '#ffffff' : '#111114',
-                }}
-              >
-                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Browser Extension</h2>
-                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-                  Connect Chrome, Firefox, or Safari via ZAP & CDP so Hanzo can inspect tabs, run Zen 6 in-browser, and register this browser as a linked machine in hanzo.app.
-                </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    onClick={() => void openUrl(`${siteUrl}/download`)}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 8,
-                      border: '1px solid #3f3f46',
-                      background: 'transparent',
-                      color: 'inherit',
-                      fontSize: 13,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Install Browser Extension ↗
-                  </button>
-                </div>
-              </section>
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Browser Extension
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Connect Chrome, Firefox, or Safari over native ZAP & CDP so Hanzo can inspect live tabs and register your browser as a linked machine.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Control Browser">
+                  <SettingsRow
+                    title="Hanzo Browser Extension"
+                    description="DOM automation, live tab capture, and local WebGPU inference inside your browser."
+                    last
+                    control={
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        onPress={() => void openUrl(`${siteUrl}/download`)}
+                      >
+                        Install Extension ↗
+                      </Button>
+                    }
+                  />
+                </SettingsGroup>
+              </>
             ) : null}
 
             {section === 'account' ? (
-              <section
-                style={{
-                  padding: 20,
-                  borderRadius: 14,
-                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-                  background: theme === 'light' ? '#ffffff' : '#111114',
-                }}
-              >
-                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Account & Cloud KMS</h2>
-                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-                  {isAuthenticated
-                    ? 'Signed in via Hanzo IAM. Secrets and provider keys sync through Hanzo Cloud KMS (never macOS Keychain).'
-                    : 'Running locally without login. Sign in via Hanzo IAM to sync threads, devices, and Cloud KMS secrets.'}
-                </p>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  {isAuthenticated ? (
-                    <button
-                      type="button"
-                      onClick={() => void openUrl(`${siteUrl}/settings`)}
-                      style={{
-                        padding: '8px 14px',
-                        borderRadius: 8,
-                        border: '1px solid #3f3f46',
-                        background: 'transparent',
-                        color: 'inherit',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Open Cloud Settings ↗
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={onSignIn}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: 999,
-                        border: 'none',
-                        background: theme === 'light' ? '#18181b' : '#fafafa',
-                        color: theme === 'light' ? '#fafafa' : '#09090b',
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Sign in to Hanzo Cloud
-                    </button>
-                  )}
-                </div>
-              </section>
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Account & Cloud KMS
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Identity, organization workspaces, and end-to-end encrypted secrets via Hanzo KMS.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Hanzo IAM & Secrets">
+                  <SettingsRow
+                    title={isAuthenticated ? 'Signed in to Hanzo Cloud' : 'Local-only session'}
+                    description={
+                      isAuthenticated
+                        ? 'Provider keys and workspace secrets sync securely via Hanzo Cloud KMS (never macOS Keychain).'
+                        : 'Running locally without login. Sign in via Hanzo IAM to sync threads, machines, and KMS secrets.'
+                    }
+                    last
+                    control={
+                      isAuthenticated ? (
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          onPress={() => void openUrl(`${siteUrl}/settings`)}
+                        >
+                          Manage Account ↗
+                        </Button>
+                      ) : (
+                        <Button size="xs" variant="primary" onPress={onSignIn}>
+                          Sign in to Hanzo
+                        </Button>
+                      )
+                    }
+                  />
+                </SettingsGroup>
+              </>
             ) : null}
-          </div>
-        </div>
-      </div>
-    </div>
+
+            {section === 'shortcuts' ? (
+              <>
+                <YStack gap="$1">
+                  <Text fontSize={18} fontWeight="600" color="$color">
+                    Keyboard Shortcuts
+                  </Text>
+                  <Text fontSize={13} color="$colorMuted">
+                    Global and workspace shortcuts active across Hanzo.
+                  </Text>
+                </YStack>
+
+                <SettingsGroup title="Navigation & Actions">
+                  {[
+                    ...KEYS.map((k) => ({ does: String(k.does), mac: k.mac, pc: k.pc })),
+                    ...DESKTOP_GLOBAL_KEYS,
+                    { does: 'Split terminal pane vertically', mac: '⌘D', pc: 'Ctrl+D' },
+                    { does: 'Split terminal pane horizontally', mac: '⇧⌘D', pc: 'Ctrl+Shift+D' },
+                    { does: 'Close active terminal tab', mac: '⌘W', pc: 'Ctrl+W' },
+                  ].map((item, idx, arr) => (
+                    <SettingsRow
+                      key={item.does}
+                      title={item.does}
+                      last={idx === arr.length - 1}
+                      control={<Kbd>{apple ? item.mac : item.pc}</Kbd>}
+                    />
+                  ))}
+                </SettingsGroup>
+              </>
+            ) : null}
+          </YStack>
+        </YStack>
+      </XStack>
+    </YStack>
   );
 }
