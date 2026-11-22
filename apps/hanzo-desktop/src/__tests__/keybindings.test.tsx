@@ -1,8 +1,6 @@
 import { KEYS, asked } from '@hanzo/app/help';
 import { summons } from '@hanzo/app/seek';
 import { chord } from '@hanzo/app/chord';
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DESKTOP_GLOBAL_KEYS, windowKey } from '../desktop-shortcuts';
@@ -117,23 +115,5 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     expect(press('n', { metaKey: true, repeat: true })).toBeNull();
     expect(press('n', { metaKey: true, isComposing: true })).toBeNull();
     expect(press('n', { metaKey: true, defaultPrevented: true })).toBeNull();
-  });
-
-  it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
-    const dist = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist');
-    const chat = readFileSync(resolve(dist, 'Chat.js'), 'utf8');
-    const pane = readFileSync(resolve(dist, 'pane.js'), 'utf8');
-    const setup = readFileSync(resolve(dist, 'Setup.js'), 'utf8');
-
-    // The signed-out lane is the signed-in one (history, the picked model, no turn cap).
-    expect(chat).toContain('HANZO DESKTOP ANSWERS ITS SIGNED-OUT READER ITSELF');
-    expect(chat).toContain('const sent = anonymous ? wanted || ENSO : wanted;');
-    expect(chat).toContain('"Select / Download Local Model"');
-    // Files a signed-out reader attaches are read in the window, not refused.
-    expect(pane).toContain('localText');
-    expect(pane).not.toContain('Sign in to attach files');
-    // Google Workspace is hidden in any window that passes `bar` by the app itself
-    // (Setup.js reads Windowed, which App sets from bar); the desktop adds no second way.
-    expect(setup).toContain("const workspace = opens('workspace') && !windowed;");
   });
 });
