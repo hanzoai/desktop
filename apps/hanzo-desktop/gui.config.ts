@@ -1,6 +1,5 @@
-// One gui config for every window: @hanzo/ui's monochrome, the one hanzo.ai
-// renders with, so the main window (hanzo.ai's app) and the small windows
-// (spotlight, node manager) share its tokens, themes and media.
+// The one gui config: @hanzo/ui's monochrome, the one hanzo.ai renders with, so
+// the main window (hanzo.ai's app) shares its tokens, themes and media.
 import { monochrome } from '@hanzo/ui/gui-config';
 
 export const config = monochrome;

@@ -9,6 +9,6 @@ pub fn global_shortcut_handler(app: &tauri::AppHandle, shortcut: Shortcut, event
     }
     match action(shortcut.mods, shortcut.key) {
         Some(Action::CreateChat) => create_chat::create_chat(app, shortcut, event),
-        Some(Action::ToggleSpotlight) | None => log::warn!("unhandled shortcut: {:?}", shortcut),
+        None => log::warn!("unhandled shortcut: {:?}", shortcut),
     }
 }

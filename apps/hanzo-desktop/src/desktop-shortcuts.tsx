@@ -24,8 +24,7 @@ export const platformOf = (ua: string): Platform => (/Mac|iPhone|iPad/.test(ua) 
  * (host.tsx, `windowKey`) or by main.rs, and merged into the app's row of the
  * same name below: one row per action, never a second "New chat". ⇧⌘I is the
  * system-wide key main.rs registers (`super+shift+i` and `control+shift+i`,
- * both on every platform); ⇧⌘J (Spotlight) is not registered until Spotlight
- * can send. Hold / double-tap Fn is not here: Windows and Linux keyboards
+ * both on every platform). Hold / double-tap Fn is not here: Windows and Linux keyboards
  * resolve Fn in firmware, so no key event ever reaches the window, and macOS
  * gives a Fn (Globe) press to Dictation or the emoji picker by default. ⌘⇧M is
  * the voice key.
