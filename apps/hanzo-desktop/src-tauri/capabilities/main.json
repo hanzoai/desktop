@@ -185,6 +185,8 @@
     "allow-local-preview-open",
     "allow-browser",
     "allow-browsers",
+    "allow-zap-call",
+    "allow-zap-nodes",
     "allow-check-claude-installed",
     "allow-check-cursor-installed",
     "allow-download-logs",

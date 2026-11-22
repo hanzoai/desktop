@@ -3,6 +3,7 @@ import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect, useState } from 'react';
 
+import { ProvidersListSection } from './LibraryPane';
 import { openLocalAiManager } from './local-ai';
 
 export interface FnVoiceHooks {
@@ -203,6 +204,9 @@ export function DesktopSettings({
   const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
   const [devMode, setDevMode] = useDevMode();
+  const [section, setSection] = useState<
+    'general' | 'providers' | 'engine' | 'node' | 'extension' | 'account'
+  >('general');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -304,186 +308,279 @@ export function DesktopSettings({
         <div style={{ width: 96 }} />
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 24px 48px' }}>
-        <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <section
-            data-testid="desktop-dev-mode"
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 16,
-            }}
-          >
-            <div>
-              <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Developer mode</h2>
-              <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>{DEV_MODE_NOTE}</p>
-            </div>
+      <div style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+        <nav
+          aria-label="Settings sections"
+          style={{
+            width: 210,
+            flexShrink: 0,
+            padding: '16px 10px',
+            borderRight: `1px solid ${theme === 'light' ? '#e4e4e7' : 'rgba(255,255,255,0.06)'}`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+          }}
+        >
+          {(
+            [
+              ['general', 'General'],
+              ['providers', 'Providers'],
+              ['engine', 'Inference Engine'],
+              ['node', 'Blockchain Node'],
+              ['extension', 'Browser Extension'],
+              ['account', 'Account & KMS'],
+            ] as const
+          ).map(([id, label]) => (
             <button
+              key={id}
               type="button"
-              role="switch"
-              aria-checked={devMode}
-              aria-label="Developer mode"
-              data-testid="desktop-dev-mode-switch"
-              onClick={() => setDevMode(!devMode)}
+              onClick={() => setSection(id)}
               style={{
-                flexShrink: 0,
-                width: 44,
-                height: 26,
-                borderRadius: 999,
+                textAlign: 'left',
+                height: 34,
+                padding: '0 12px',
+                borderRadius: 8,
                 border: 'none',
-                padding: 3,
-                display: 'flex',
-                justifyContent: devMode ? 'flex-end' : 'flex-start',
-                background: devMode ? (theme === 'light' ? '#18181b' : '#fafafa') : theme === 'light' ? '#d4d4d8' : '#3f3f46',
+                background:
+                  section === id
+                    ? theme === 'light'
+                      ? '#e4e4e7'
+                      : '#161616'
+                    : 'transparent',
+                color: 'inherit',
+                opacity: section === id ? 1 : 0.68,
+                fontSize: 13,
+                fontWeight: section === id ? 500 : 400,
                 cursor: 'pointer',
               }}
             >
-              <span
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: 999,
-                  background: devMode ? (theme === 'light' ? '#fafafa' : '#09090b') : theme === 'light' ? '#ffffff' : '#a1a1aa',
-                }}
-              />
+              {label}
             </button>
-          </section>
+          ))}
+        </nav>
 
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Appearance</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              Choose the workspace appearance for Hanzo Desktop.
-            </p>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {(['dark', 'light'] as const).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  data-testid={`desktop-theme-${opt}`}
-                  onClick={() => applyTheme(opt)}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '28px 28px 48px' }}>
+          <div style={{ maxWidth: 680, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {section === 'general' ? (
+              <>
+                <section
+                  data-testid="desktop-dev-mode"
                   style={{
-                    padding: '7px 16px',
-                    borderRadius: 999,
-                    border: `1px solid ${theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : '#3f3f46'}`,
-                    background: theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : 'transparent',
-                    color: theme === opt ? (theme === 'light' ? '#fafafa' : '#09090b') : 'inherit',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
+                    padding: 20,
+                    borderRadius: 14,
+                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                    background: theme === 'light' ? '#ffffff' : '#111114',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
                   }}
                 >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </section>
+                  <div>
+                    <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Developer mode</h2>
+                    <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>{DEV_MODE_NOTE}</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={devMode}
+                    aria-label="Developer mode"
+                    data-testid="desktop-dev-mode-switch"
+                    onClick={() => setDevMode(!devMode)}
+                    style={{
+                      flexShrink: 0,
+                      width: 44,
+                      height: 26,
+                      borderRadius: 999,
+                      border: 'none',
+                      padding: 3,
+                      display: 'flex',
+                      justifyContent: devMode ? 'flex-end' : 'flex-start',
+                      background: devMode ? (theme === 'light' ? '#18181b' : '#fafafa') : theme === 'light' ? '#d4d4d8' : '#3f3f46',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 999,
+                        background: devMode ? (theme === 'light' ? '#fafafa' : '#09090b') : theme === 'light' ? '#ffffff' : '#a1a1aa',
+                      }}
+                    />
+                  </button>
+                </section>
 
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Local AI, Node & Engine</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              Manage local Zen / Qwen3+ weights, your embedded Hanzo Engine (:36900), and local hanzod validator (:9630).
-            </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
-              <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                hanzod (127.0.0.1:9630):{' '}
-                <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'not running'}</strong>
-              </span>
-              <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
-                Hanzo Engine (127.0.0.1:36900):{' '}
-                <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'not running'}</strong>
-              </span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('models')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Local Models
-              </button>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('node')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Local Node
-              </button>
-              <button
-                type="button"
-                onClick={() => openLocalAiManager('engine')}
-                style={{
-                  padding: '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid #3f3f46',
-                  background: 'transparent',
-                  color: 'inherit',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                }}
-              >
-                Embedded Engine
-              </button>
-            </div>
-          </section>
+                <section
+                  style={{
+                    padding: 20,
+                    borderRadius: 14,
+                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                    background: theme === 'light' ? '#ffffff' : '#111114',
+                  }}
+                >
+                  <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Appearance</h2>
+                  <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+                    Choose the workspace appearance for Hanzo Desktop.
+                  </p>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['dark', 'light'] as const).map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        data-testid={`desktop-theme-${opt}`}
+                        onClick={() => applyTheme(opt)}
+                        style={{
+                          padding: '7px 16px',
+                          borderRadius: 999,
+                          border: `1px solid ${theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : '#3f3f46'}`,
+                          background: theme === opt ? (theme === 'light' ? '#18181b' : '#fafafa') : 'transparent',
+                          color: theme === opt ? (theme === 'light' ? '#fafafa' : '#09090b') : 'inherit',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </section>
 
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Account & Cloud Organization</h2>
-            <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
-              {isAuthenticated
-                ? 'Signed in to Hanzo Cloud. Manage billing, members, and API keys in your organization settings.'
-                : 'Running in Local AI guest mode. Sign in anytime to sync cloud projects, sandboxes, and frontier models.'}
-            </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {isAuthenticated ? (
+                <section
+                  style={{
+                    padding: 20,
+                    borderRadius: 14,
+                    border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                    background: theme === 'light' ? '#ffffff' : '#111114',
+                  }}
+                >
+                  <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600 }}>Keyboard Shortcuts</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {[...KEYS.map((k) => ({ does: String(k.does), mac: k.mac, pc: k.pc })), ...DESKTOP_GLOBAL_KEYS].map(
+                      (item) => (
+                        <div
+                          key={item.does}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '6px 0',
+                            borderBottom: `1px solid ${theme === 'light' ? '#f4f4f5' : '#18181b'}`,
+                            fontSize: 13,
+                          }}
+                        >
+                          <span>{item.does}</span>
+                          <kbd
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                              border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
+                              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                              fontSize: 12,
+                            }}
+                          >
+                            {apple ? item.mac : item.pc}
+                          </kbd>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </section>
+              </>
+            ) : null}
+
+            {section === 'providers' ? (
+              <section style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 600 }}>AI Providers</h2>
+                  <p style={{ margin: 0, fontSize: 13, opacity: 0.7 }}>
+                    Connect frontier and local providers directly on this machine or route through Hanzo Cloud.
+                  </p>
+                </div>
+                <ProvidersListSection />
+              </section>
+            ) : null}
+
+            {section === 'engine' ? (
+              <section
+                style={{
+                  padding: 20,
+                  borderRadius: 14,
+                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                  background: theme === 'light' ? '#ffffff' : '#111114',
+                }}
+              >
+                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Native Inference Engine</h2>
+                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+                  Manage local Zen 6 / Qwen3+ weights, GPU acceleration, and the embedded Hanzo Engine (127.0.0.1:36900) alongside Ollama (127.0.0.1:11434).
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
+                    Hanzo Engine (127.0.0.1:36900):{' '}
+                    <strong>{engineUp === null ? 'checking…' : engineUp ? 'online' : 'not running'}</strong>
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => openLocalAiManager('models')}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #3f3f46',
+                      background: 'transparent',
+                      color: 'inherit',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Manage Local Models
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openLocalAiManager('engine')}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #3f3f46',
+                      background: 'transparent',
+                      color: 'inherit',
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Engine Diagnostics
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {section === 'node' ? (
+              <section
+                style={{
+                  padding: 20,
+                  borderRadius: 14,
+                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                  background: theme === 'light' ? '#ffffff' : '#111114',
+                }}
+              >
+                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Blockchain Node (hanzod)</h2>
+                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+                  Local Hanzo validator & RPC daemon for verifiable compute receipts, staking, and peer discovery.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 14, fontSize: 12 }}>
+                  <span style={{ padding: '4px 10px', borderRadius: 999, border: '1px solid #3f3f46' }}>
+                    hanzod RPC (127.0.0.1:9630):{' '}
+                    <strong>{hanzodUp === null ? 'checking…' : hanzodUp ? 'online' : 'not running'}</strong>
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => void openUrl(`${siteUrl}/settings`)}
+                  onClick={() => openLocalAiManager('node')}
                   style={{
                     padding: '8px 14px',
                     borderRadius: 8,
@@ -495,69 +592,100 @@ export function DesktopSettings({
                     cursor: 'pointer',
                   }}
                 >
-                  Open Cloud Settings ↗
+                  Open Node Manager
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onSignIn}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: 999,
-                    border: 'none',
-                    background: theme === 'light' ? '#18181b' : '#fafafa',
-                    color: theme === 'light' ? '#fafafa' : '#09090b',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Sign in to Hanzo Cloud
-                </button>
-              )}
-            </div>
-          </section>
+              </section>
+            ) : null}
 
-          <section
-            style={{
-              padding: 20,
-              borderRadius: 14,
-              border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
-              background: theme === 'light' ? '#ffffff' : '#111114',
-            }}
-          >
-            <h2 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600 }}>Keyboard Shortcuts</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[...KEYS.map((k) => ({ does: String(k.does), mac: k.mac, pc: k.pc })), ...DESKTOP_GLOBAL_KEYS].map(
-                (item) => (
-                  <div
-                    key={item.does}
+            {section === 'extension' ? (
+              <section
+                style={{
+                  padding: 20,
+                  borderRadius: 14,
+                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                  background: theme === 'light' ? '#ffffff' : '#111114',
+                }}
+              >
+                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Browser Extension</h2>
+                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+                  Connect Chrome, Firefox, or Safari via ZAP & CDP so Hanzo can inspect tabs, run Zen 6 in-browser, and register this browser as a linked machine in hanzo.app.
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => void openUrl(`${siteUrl}/download`)}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '6px 0',
-                      borderBottom: `1px solid ${theme === 'light' ? '#f4f4f5' : '#18181b'}`,
+                      padding: '8px 14px',
+                      borderRadius: 8,
+                      border: '1px solid #3f3f46',
+                      background: 'transparent',
+                      color: 'inherit',
                       fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
                     }}
                   >
-                    <span>{item.does}</span>
-                    <kbd
+                    Install Browser Extension ↗
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {section === 'account' ? (
+              <section
+                style={{
+                  padding: 20,
+                  borderRadius: 14,
+                  border: `1px solid ${theme === 'light' ? '#e4e4e7' : '#27272a'}`,
+                  background: theme === 'light' ? '#ffffff' : '#111114',
+                }}
+              >
+                <h2 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 600 }}>Account & Cloud KMS</h2>
+                <p style={{ margin: '0 0 14px', fontSize: 13, opacity: 0.7 }}>
+                  {isAuthenticated
+                    ? 'Signed in via Hanzo IAM. Secrets and provider keys sync through Hanzo Cloud KMS (never macOS Keychain).'
+                    : 'Running locally without login. Sign in via Hanzo IAM to sync threads, devices, and Cloud KMS secrets.'}
+                </p>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {isAuthenticated ? (
+                    <button
+                      type="button"
+                      onClick={() => void openUrl(`${siteUrl}/settings`)}
                       style={{
-                        padding: '2px 8px',
-                        borderRadius: 6,
-                        border: `1px solid ${theme === 'light' ? '#d4d4d8' : '#3f3f46'}`,
-                        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                        fontSize: 12,
+                        padding: '8px 14px',
+                        borderRadius: 8,
+                        border: '1px solid #3f3f46',
+                        background: 'transparent',
+                        color: 'inherit',
+                        fontSize: 13,
+                        fontWeight: 500,
+                        cursor: 'pointer',
                       }}
                     >
-                      {apple ? item.mac : item.pc}
-                    </kbd>
-                  </div>
-                ),
-              )}
-            </div>
-          </section>
+                      Open Cloud Settings ↗
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={onSignIn}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: theme === 'light' ? '#18181b' : '#fafafa',
+                        color: theme === 'light' ? '#fafafa' : '#09090b',
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Sign in to Hanzo Cloud
+                    </button>
+                  )}
+                </div>
+              </section>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 #[cfg(unix)]
-use crate::commands::browser::{browser, browsers};
+use crate::commands::browser::{browser, browsers, zap_call, zap_nodes};
 use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
@@ -197,8 +197,19 @@ fn main() {
         .plugin(
             tauri::plugin::Builder::<tauri::Wry>::new("away")
                 .on_navigation(|_, url| {
+                    let host = url.host_str().unwrap_or("");
+                    let path = url.path();
+                    let embedded_frame =
+                        ((host == "api.hanzo.ai" || host == "api-dev.hanzo.ai")
+                            && (path.starts_with("/v1/sandboxes/") || path.starts_with("/v1/sandbox/")))
+                        || host.ends_with(".share.hanzo.ai")
+                        || host.ends_with(".zt.hanzo.ai")
+                        || host.ends_with(".hanzo.app")
+                        || host == "tabs.hanzo.ai"
+                        || host == "hanzo-studio.localhost";
                     let local = matches!(url.scheme(), "tauri" | "asset" | "ipc" | "data" | "blob" | "about")
-                        || matches!(url.host_str(), Some("tauri.localhost" | "ipc.localhost" | "localhost" | "127.0.0.1"));
+                        || matches!(host, "tauri.localhost" | "ipc.localhost" | "localhost" | "127.0.0.1")
+                        || embedded_frame;
                     if !local {
                         let _ = tauri_plugin_opener::open_url(url.as_str(), None::<&str>);
                     }
@@ -255,6 +266,10 @@ fn main() {
             browser,
             #[cfg(unix)]
             browsers,
+            #[cfg(unix)]
+            zap_nodes,
+            #[cfg(unix)]
+            zap_call,
                         retrieve_logs,
             download_logs,
             check_claude_installed,
@@ -390,6 +405,101 @@ fn main() {
 
             create_tray(app.handle())?;
             setup_deep_links(app.handle())?;
+
+            // Native app & File menu so Settings… (⌘,) and New Chat (⌘N) live in the
+            // macOS menu bar instead of a bottom-left sidebar cog.
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
+                let settings_app = MenuItemBuilder::with_id("open_settings", "Settings…")
+                    .accelerator("CmdOrCtrl+,")
+                    .build(app)?;
+                let new_chat = MenuItemBuilder::with_id("new_chat", "New Chat")
+                    .accelerator("CmdOrCtrl+N")
+                    .build(app)?;
+                let settings_file = MenuItemBuilder::with_id("open_settings_file", "Settings…")
+                    .build(app)?;
+
+                let app_sub = SubmenuBuilder::new(app, "Hanzo")
+                    .about(None)
+                    .separator()
+                    .item(&settings_app)
+                    .separator()
+                    .services()
+                    .separator()
+                    .hide()
+                    .hide_others()
+                    .show_all()
+                    .separator()
+                    .quit()
+                    .build()?;
+                let close_tab_or_window = MenuItemBuilder::with_id("close_tab_or_window", "Close Tab / Window")
+                    .accelerator("CmdOrCtrl+W")
+                    .build(app)?;
+                let file_sub = SubmenuBuilder::new(app, "File")
+                    .item(&new_chat)
+                    .separator()
+                    .item(&settings_file)
+                    .separator()
+                    .item(&close_tab_or_window)
+                    .build()?;
+                let edit_sub = SubmenuBuilder::new(app, "Edit")
+                    .undo()
+                    .redo()
+                    .separator()
+                    .cut()
+                    .copy()
+                    .paste()
+                    .select_all()
+                    .build()?;
+                let split_vertical = MenuItemBuilder::with_id("tabs_split_vertical", "Split Pane Vertically")
+                    .accelerator("CmdOrCtrl+D")
+                    .build(app)?;
+                let split_horizontal = MenuItemBuilder::with_id("tabs_split_horizontal", "Split Pane Horizontally")
+                    .accelerator("CmdOrCtrl+Shift+D")
+                    .build(app)?;
+                let view_sub = SubmenuBuilder::new(app, "View")
+                    .item(&split_vertical)
+                    .item(&split_horizontal)
+                    .separator()
+                    .fullscreen()
+                    .build()?;
+                let window_sub = SubmenuBuilder::new(app, "Window")
+                    .minimize()
+                    .item(&PredefinedMenuItem::maximize(app, None)?)
+                    .build()?;
+
+                let menubar = MenuBuilder::new(app)
+                    .item(&app_sub)
+                    .item(&file_sub)
+                    .item(&edit_sub)
+                    .item(&view_sub)
+                    .item(&window_sub)
+                    .build()?;
+                app.set_menu(menubar)?;
+                app.on_menu_event(|app_handle, event| {
+                    match event.id().as_ref() {
+                        "open_settings" | "open_settings_file" => {
+                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                            let _ = app_handle.emit("navigate-to-path", "/settings");
+                        }
+                        "new_chat" => {
+                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                            let _ = app_handle.emit("create-chat", ());
+                        }
+                        "tabs_split_vertical" => {
+                            let _ = app_handle.emit("tabs-split", "row");
+                        }
+                        "tabs_split_horizontal" => {
+                            let _ = app_handle.emit("tabs-split", "col");
+                        }
+                        "close_tab_or_window" => {
+                            let _ = app_handle.emit("close-active-tab", ());
+                        }
+                        _ => {}
+                    }
+                });
+            }
 
             // Native Hanzo Engine: manage the one shared orchestrator for both
             // the Tauri IPC commands and the `/v1/engine/*` HTTP management

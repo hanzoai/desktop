@@ -272,24 +272,40 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
     data.push(entry);
   };
 
-  // First: add default router aliases so `enso-free` and `enso` always resolve cleanly
+  // First: flagship multi-provider catalog so Desktop's model picker always shows
+  // Hanzo/Enso/Zen6, Anthropic, OpenAI, Google, xAI, DeepSeek, and Local models even signed out.
   const firstInstalledChat = installed.find(
     (m) => !m.id.includes('embed') && !m.id.includes('minilm') && m.id !== 'default',
   );
   const activeLabel = firstInstalledChat
     ? `Local AI (${firstInstalledChat.id})`
-    : 'Zen Nano 0.6B (Local AI)';
+    : 'Zen 6 Flash (Local)';
 
-  for (const routerId of ['enso-auto', 'enso-free', 'enso']) {
+  const multiProviderCatalog: Array<Record<string, unknown>> = [
+    { id: 'enso-auto', name: 'Enso Auto', owned_by: 'hanzo', family: 'enso', class: 'free' },
+    { id: 'enso-flash', name: 'enso-flash', owned_by: 'hanzo', family: 'enso', class: 'free' },
+    { id: 'enso', name: 'enso', owned_by: 'hanzo', family: 'enso', class: 'free' },
+    { id: 'zen6', name: 'Zen 6', owned_by: 'hanzo', family: 'zen', class: 'free' },
+    { id: 'zen6-flash', name: 'Zen 6 Flash', owned_by: 'hanzo', family: 'zen', class: 'free' },
+    { id: 'zen6-coder', name: 'Zen 6 Coder', owned_by: 'hanzo', family: 'zen', class: 'free' },
+    { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', owned_by: 'anthropic', class: 'pro' },
+    { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', owned_by: 'anthropic', class: 'pro' },
+    { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', owned_by: 'anthropic', class: 'pro' },
+    { id: 'gpt-5.4', name: 'GPT-5.4', owned_by: 'openai', class: 'pro' },
+    { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', owned_by: 'openai', class: 'pro' },
+    { id: 'o3', name: 'o3', owned_by: 'openai', class: 'pro' },
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', owned_by: 'google', class: 'pro' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', owned_by: 'google', class: 'pro' },
+    { id: 'grok-4', name: 'Grok 4', owned_by: 'xai', class: 'pro' },
+    { id: 'deepseek-r1', name: 'DeepSeek R1', owned_by: 'deepseek', class: 'pro' },
+    { id: 'enso-free', name: activeLabel, owned_by: 'ollama', family: 'enso', class: 'free' },
+  ];
+
+  for (const entry of multiProviderCatalog) {
     pushModel({
-      id: routerId,
-      name: activeLabel,
-      description: 'Default local AI model routed through your local Hanzo Node / Engine.',
+      ...entry,
       object: 'model',
       created: 1793775303,
-      owned_by: 'hanzo-local',
-      family: 'enso',
-      class: 'free',
       context_window: 131072,
       supports_vision: true,
       supports_tools: true,
