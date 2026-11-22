@@ -92,7 +92,7 @@ test('hides Google Workspace setup, aligns top controls with traffic lights, and
   expect(Math.abs(toggleCenterY - 16.5)).toBeLessThanOrEqual(2.5);
   expect(Math.abs(localAiCenterY - 16.5)).toBeLessThanOrEqual(2.5);
 
-  // Clicking "Local AI" opens the Local AI Models & Hanzo Node Manager modal
+  // Clicking "Local AI" opens the Local AI Models modal
   await localAiBtn.click();
   const modal = page.getByTestId('local-ai-manager-modal');
   await expect(modal).toBeVisible();

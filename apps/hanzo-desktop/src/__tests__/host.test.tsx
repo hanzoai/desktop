@@ -48,6 +48,7 @@ vi.mock('../local-ai', () => ({
 }));
 vi.mock('../desktop-shortcuts', () => ({
   windowKey: () => null,
+  sectionOf: () => 'general',
   DesktopSettings: ({ onBack }: { onBack: () => void }) => (
     <button type="button" onClick={onBack}>
       Settings back

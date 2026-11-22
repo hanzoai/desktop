@@ -1,29 +1,36 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type MouseEvent } from 'react';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
-import { GuiProvider, XStack } from '@hanzo/gui';
+import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Titlebar } from '@hanzo/app/App';
 import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
-import { Button, Text } from '@hanzo/ui';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
 import { Crash } from './crash';
-import { DesktopSettings, windowKey } from './desktop-shortcuts';
+import { DesktopSettings, sectionOf, windowKey } from './desktop-shortcuts';
 import { adopt, share } from './identity';
 import { keychain } from './keychain';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
-  openLocalAiManager,
 } from './local-ai';
 import BenchmarkPage from './pages/benchmark';
+import { LibraryOverlay, ProvidersPluginsOverlay } from './LibraryPane';
+import {
+  BottomTerminalDrawer,
+  SurfacePanel,
+  TopRightControls,
+  useWorkspacePanels,
+  WorkspaceDetailsPopover,
+} from './SurfacePanel';
 import { Update } from './update';
 import { Welcome } from './Welcome';
 import { awaitCallback, type Callback, finishAttempt, SignInCancelled } from './lib/sign-in-attempt';
@@ -76,6 +83,16 @@ configure({
   },
 });
 
+// Expose native ZAP router bridge directly over Tauri IPC (zero WebSocket serialization).
+(window as unknown as Record<string, unknown>).__hanzoZap = {
+  nodes: () =>
+    safeInvoke<Array<{ id: string; caps: string[]; attrs: Record<string, string> }>>('zap_nodes').then(
+      (res) => res ?? [],
+    ),
+  call: (target: string, method: string, params: Record<string, string> = {}) =>
+    safeInvoke<unknown>('zap_call', { target, method, params }),
+};
+
 // A release window has no native context menu: Hanzo's own (the app's row menu) is the only one.
 // Text fields keep cut, copy and paste; Inspect Element is a dev build's alone.
 if (!import.meta.env.DEV) {
@@ -100,26 +117,6 @@ if (window.location.pathname === '/' || window.location.pathname === '/index.htm
   window.history.replaceState(null, '', `/chat${window.location.search}${window.location.hash}`);
 }
 
-/** The bar's own control: the local models and node (local-ai.tsx), from any page. */
-function LocalAi() {
-  return (
-    <Button
-      size="xs"
-      variant="outline"
-      data-slot="header-local-ai"
-      aria-label="Local AI & Node"
-      height={24}
-      px="$2.5"
-      rounded="$3"
-      onPress={() => openLocalAiManager('models')}
-    >
-      <Text fontSize="$1" fontWeight="600" color="$ink">
-        Local AI
-      </Text>
-    </Button>
-  );
-}
-
 // THE WINDOW'S BAR IS THE APP'S. There is no browser around this window, so
 // the app draws the bar a browser would: the sidebar toggle, Back and Forward
 // through the router below. macOS paints its traffic lights over the page's
@@ -137,12 +134,7 @@ if (MAC) document.documentElement.dataset.mac = '';
 const BAR: Titlebar = {
   inset: MAC ? 78 : 0,
   drag: { 'data-tauri-drag-region': true },
-  controls: (
-    <XStack items="center" gap="$2">
-      <Update />
-      <LocalAi />
-    </XStack>
-  ),
+  controls: <TopRightControls />,
 };
 
 /** The composer's microphone, on whatever page draws it. */
@@ -602,9 +594,10 @@ if (typeof window !== 'undefined') {
 }
 
 function Gate() {
-  const { isLoading: iamLoading, isAuthenticated, sdk } = useIam();
+  const { isLoading: iamLoading, isAuthenticated, user, sdk } = useIam();
   const [loadingTimedOut, setLoadingTimedOut] = useState(false);
   const here = useSyncExternalStore(subscribe, address);
+  const { maximized, rightOpen } = useWorkspacePanels();
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
   const [visiting, setVisiting] = useState(guest);
@@ -641,6 +634,87 @@ function Gate() {
     setBusy(false);
     setReopen(null);
   };
+  const [providersPane, setProvidersPane] = useState<'providers' | 'plugins' | null>(null);
+
+  useEffect(() => {
+    const raw = user as Record<string, unknown> | null | undefined;
+    const displayName =
+      (typeof raw?.displayName === 'string' && raw.displayName) ||
+      (typeof raw?.given_name === 'string' && raw.given_name) ||
+      (typeof raw?.name === 'string' && raw.name) ||
+      (typeof raw?.preferred_username === 'string' && raw.preferred_username) ||
+      '';
+    (window as unknown as { __hanzoUserName?: string }).__hanzoUserName = isAuthenticated ? displayName : '';
+    window.dispatchEvent(new Event('hanzo:user-updated'));
+  }, [isAuthenticated, user]);
+
+  useEffect(() => {
+    const onResizeObserverNoise = (event: ErrorEvent) => {
+      if (typeof event.message === 'string' && /ResizeObserver loop/i.test(event.message)) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('error', onResizeObserverNoise, true);
+    return () => window.removeEventListener('error', onResizeObserverNoise, true);
+  }, []);
+
+  useEffect(() => {
+    const onOpenProviders = () => {
+      setProvidersPane(null);
+      window.history.pushState(null, '', '/settings/providers');
+    };
+    const onOpenPlugins = () => setProvidersPane('plugins');
+    const onClickCapture = (e: globalThis.MouseEvent) => {
+      const target = e.target as Element | null;
+      if (target?.closest('[data-slot="app-new"], [data-slot="rail-new"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        empty();
+        window.dispatchEvent(new CustomEvent('hanzo:new-chat'));
+        const cur = window.location.pathname;
+        const inDev = cur === '/dev' || (cur.startsWith('/dev/') && cur !== '/dev/-/artifacts');
+        window.history.pushState(null, '', inDev ? '/dev' : '/chat');
+        requestAnimationFrame(() => {
+          const field = document.querySelector('[data-slot="composer-field"], textarea, [contenteditable="true"]') as HTMLElement | null;
+          field?.focus?.();
+        });
+        return;
+      }
+      if (target?.closest('[data-slot="rail-plugins"], [data-slot="app-plugins"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane('plugins');
+        return;
+      }
+      if (target?.closest('[data-slot="app-images"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/design');
+        return;
+      }
+      if (target?.closest('[data-slot="rail-library"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/library');
+        return;
+      }
+      if (target?.closest('[data-slot="rail-chat"], [data-slot="rail-dev"], [data-slot="rail-design"], [data-slot="rail-tabs"], [data-slot="rail-studio"], [data-slot="rail-flow"]')) {
+        setProvidersPane(null);
+      }
+    };
+    window.addEventListener('hanzo:open-providers', onOpenProviders);
+    window.addEventListener('hanzo:anon-plugins', onOpenPlugins);
+    document.addEventListener('click', onClickCapture, true);
+    return () => {
+      window.removeEventListener('hanzo:open-providers', onOpenProviders);
+      window.removeEventListener('hanzo:anon-plugins', onOpenPlugins);
+      document.removeEventListener('click', onClickCapture, true);
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoadingTimedOut(true), 1500);
@@ -698,13 +772,50 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // The system-wide ⇧⌘I (src-tauri global_shortcuts) arrives as 'create-chat'.
+  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I, 'navigate-to-path', and 'tabs-split' on ⌘D / ⌘⇧D)
   useEffect(() => {
-    let unlisten: (() => void) | undefined;
+    let unlistenCreate: (() => void) | undefined;
+    let unlistenNavigate: (() => void) | undefined;
+    let unlistenSplit: (() => void) | undefined;
+    let unlistenCloseTab: (() => void) | undefined;
+
     void safeListen('create-chat', () => started.current()).then((fn) => {
       unlisten = fn ?? undefined;
     });
-    return () => unlisten?.();
+
+    void safeListen<string>('navigate-to-path', (event) => {
+      const target = typeof event.payload === 'string' && event.payload.startsWith('/') ? event.payload : '/chat';
+      visit();
+      window.history.pushState(null, '', target);
+    }).then((fn) => {
+      unlistenNavigate = fn ?? undefined;
+    });
+
+    void safeListen<string>('tabs-split', (event) => {
+      const dir = event.payload === 'col' ? 'col' : 'row';
+      window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
+    }).then((fn) => {
+      unlistenSplit = fn ?? undefined;
+    });
+
+    void safeListen('close-active-tab', () => {
+      const p = window.location.pathname;
+      if (p === '/tabs' || p.startsWith('/tabs/')) {
+        const res = { handled: false };
+        window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', res } }));
+        if (res.handled) return;
+      }
+      void getCurrentWindow().close();
+    }).then((fn) => {
+      unlistenCloseTab = fn ?? undefined;
+    });
+
+    return () => {
+      unlistenCreate?.();
+      unlistenNavigate?.();
+      unlistenSplit?.();
+      unlistenCloseTab?.();
+    };
   }, []);
 
   const isLoading = iamLoading && !loadingTimedOut;
@@ -738,12 +849,13 @@ function Gate() {
     return null;
   }
   if (path === '/benchmark' || path === '/lsa') {
-    // Benchmarks open from Settings > Advanced, so Back returns there.
-    return <BenchmarkPage onBack={() => window.history.pushState(null, '', '/settings/advanced')} />;
+    // Benchmarks open from Settings > Local AI & Engine, so Back returns there.
+    return <BenchmarkPage onBack={() => window.history.pushState(null, '', '/settings/engine')} />;
   }
   if (isSettings) {
     return (
       <DesktopSettings
+        initialSection={sectionOf(path)}
         isAuthenticated={isAuthenticated}
         siteUrl={SITE}
         localEngineUrl={LOCAL_ENGINE_URL}
@@ -761,10 +873,47 @@ function Gate() {
     );
   }
 
+  const isLibraryPath = path === '/library' || path === '/dev/-/artifacts';
+  const appPath = isLibraryPath ? '/chat' : path;
+  const activeSection = providersPane === 'plugins' ? 'plugins' : isLibraryPath ? 'library' : undefined;
+
   return (
-    <Rooms router={router} path={path} route={path} Link={Anchor}>
-      <App bar={BAR} />
-    </Rooms>
+    <div
+      className="hz-desktop-shell"
+      data-surface-maximized={maximized ? 'true' : undefined}
+      data-right-open={rightOpen ? 'true' : undefined}
+      data-active-section={activeSection}
+    >
+      <div className="hz-desktop-row">
+        <div className="hz-desktop-main">
+          <div className="hz-desktop-app">
+            <Rooms router={router} path={appPath} route={appPath} Link={Anchor}>
+              <App bar={BAR} />
+            </Rooms>
+            {isLibraryPath ? (
+              <LibraryOverlay
+                onClose={() => window.history.pushState(null, '', '/chat')}
+              />
+            ) : null}
+            {providersPane ? (
+              <ProvidersPluginsOverlay
+                initialTab={providersPane}
+                onSignIn={() => {
+                  setProvidersPane(null);
+                  startSignIn();
+                }}
+                onClose={() => setProvidersPane(null)}
+              />
+            ) : null}
+          </div>
+        </div>
+        <SurfacePanel />
+      </div>
+      <BottomTerminalDrawer />
+      <WorkspaceDetailsPopover
+        onOpenSettings={() => window.history.pushState(null, '', '/settings')}
+      />
+    </div>
   );
 }
 
@@ -772,21 +921,39 @@ export function Host() {
   const rawScheme = useScheme();
   const [ready, setReady] = useState(false);
 
-  // Default to dark theme unless the user explicitly chose light in appearance preferences
-  const scheme = (() => {
+  // Appearance profile: 'zen' (default pure Vercel/Hanzo Dev black), 'lelouch' (obsidian grey), or 'light'.
+  const [profile, setProfile] = useState<'zen' | 'lelouch' | 'light'>(() => {
     try {
-      const saved = localStorage.getItem('hanzo.appearance');
-      if (saved && saved.includes('"light"')) return 'light';
+      const raw = localStorage.getItem('hanzo.appearance');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { profile?: string; theme?: string };
+        if (parsed.profile === 'lelouch') return 'lelouch';
+        if (parsed.profile === 'light' || parsed.theme === 'light') return 'light';
+        if (parsed.profile === 'zen') return 'zen';
+      }
     } catch {}
-    return rawScheme || 'dark';
-  })();
+    return rawScheme === 'light' ? 'light' : 'zen';
+  });
 
   useEffect(() => {
-    if (scheme === 'dark') {
-      document.documentElement.classList.remove('light', 't_light');
-      document.documentElement.classList.add('dark', 't_dark');
-    }
-  }, [scheme]);
+    const onAppearance = (e: Event) => {
+      const next = (e as CustomEvent<{ profile?: string }>).detail?.profile;
+      if (next === 'zen' || next === 'lelouch' || next === 'light') {
+        setProfile(next);
+      }
+    };
+    window.addEventListener('hanzo:appearance-change', onAppearance);
+    return () => window.removeEventListener('hanzo:appearance-change', onAppearance);
+  }, []);
+
+  const scheme = profile === 'light' ? 'light' : 'dark';
+
+  // Keep Tailwind/dev-core `.dark` class and `data-theme-profile` in sync.
+  useEffect(() => {
+    document.documentElement.dataset.themeProfile = profile;
+    document.documentElement.classList.remove('dark', 'light', 't_dark', 't_light');
+    document.documentElement.classList.add(scheme, `t_${scheme}`);
+  }, [profile, scheme]);
 
   useEffect(() => {
     const fallback = setTimeout(() => setReady(true), 1200);

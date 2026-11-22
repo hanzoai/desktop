@@ -72,9 +72,15 @@ jobs:
       - name: Signing key
         run: scripts/release/signing.sh ${{ needs.meta.outputs.mode }}
 
+      - name: Entitlements and usage sentences
+        run: python3 -I scripts/check-macos-signing.py
+
       - name: Build
         working-directory: apps/hanzo-desktop
         run: pnpm exec tauri build --ci --target "${{ matrix.tauri_target }}" --bundles app,dmg
+
+      - name: The app is signed with exactly those entitlements, under the hardened runtime
+        run: python3 -I scripts/check-macos-signing.py --app "apps/hanzo-desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle/macos/Hanzo.app"
 
       - name: Name the bundles
         run: |

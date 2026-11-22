@@ -1,0 +1,15 @@
+diff --git a/lib/live.js b/lib/live.js
+index bb797a65c9285db573817d7613e8f5308304ce46..e69a902599991e531214be0b1559251ae7768d92 100644
+--- a/lib/live.js
++++ b/lib/live.js
+@@ -8,7 +8,9 @@ import { ENGINE, gpus, libraryLive, makers, sync } from './wire.js';
+ export function engineFrom(hostname) {
+     if (hostname === 'studio.hanzo.ai')
+         return '';
+-    if (hostname === 'localhost' || hostname === '127.0.0.1')
++    if ((hostname === 'localhost' || hostname === '127.0.0.1') &&
++        typeof window !== 'undefined' &&
++        (window.location.port === '1420' || window.location.port === '3000'))
+         return '/engine';
+     return ENGINE;
+ }

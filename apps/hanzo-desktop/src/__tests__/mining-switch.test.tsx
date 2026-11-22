@@ -1,4 +1,4 @@
-/** Mining's switch under Settings > Advanced: off unless the person turned it on, and their press is what changes it. */
+/** Mining's switch under Settings > General: off unless the person turned it on, and their press is what changes it. */
 import { GuiProvider } from '@hanzo/gui';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -14,7 +14,6 @@ const NAME = "Earn rewards by sharing this computer's power";
 function page(enabled: boolean) {
   (window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__ = {};
   invoke.mockImplementation(async (cmd: string) => (cmd === 'mining_get_enabled' ? enabled : undefined));
-  window.history.replaceState(null, '', '/settings/advanced');
   render(
     <GuiProvider config={config} defaultTheme="dark">
       <DesktopSettings isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
@@ -49,8 +48,7 @@ describe('the mining switch', () => {
   });
 
   it('is not drawn outside the desktop app', () => {
-    window.history.replaceState(null, '', '/settings/advanced');
-    render(
+      render(
       <GuiProvider config={config} defaultTheme="dark">
         <DesktopSettings isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
       </GuiProvider>,

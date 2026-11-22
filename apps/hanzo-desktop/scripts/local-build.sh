@@ -19,12 +19,14 @@ fi
 export APPLE_SIGNING_IDENTITY
 echo "Signing as: $APPLE_SIGNING_IDENTITY"
 
+python3 -I ../../scripts/check-macos-signing.py
 nice -n 19 pnpm run build:ci
 nice -n 19 pnpm exec tauri build --bundles app --config '{"build":{"beforeBuildCommand":""}}' -- -j4 || true
 
 BUNDLE="${CARGO_TARGET_DIR:-../../target}/release/bundle/macos/Hanzo.app"
 [ -d "$BUNDLE" ] || { echo "No bundle at $BUNDLE" >&2; exit 1; }
 codesign --verify --strict "$BUNDLE"
+python3 -I ../../scripts/check-macos-signing.py --app "$BUNDLE"
 [ "${1:-}" = "--no-install" ] && exit 0
 
 osascript -e 'tell application id "ai.hanzo.desktop" to quit' 2>/dev/null || true

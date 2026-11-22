@@ -3,7 +3,8 @@ import { BrandMark } from '@hanzo/desktop-logo';
 import { Text, XStack, YStack } from '@hanzo/gui';
 import { Button } from '@hanzo/ui';
 import { PrimaryButton } from '@hanzo/ui/product';
-import { ArrowRight, CircleAlert, ExternalLink } from '@hanzogui/lucide-icons-2';
+import { ArrowRight, CircleAlert, ExternalLink, Smartphone } from '@hanzogui/lucide-icons-2';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { useEffect } from 'react';
 
 /** An error as a sentence a reader can act on, whatever shape it arrived in. */
@@ -112,6 +113,18 @@ export function Welcome({
             </Button>
           </YStack>
         )}
+
+        <XStack justify="center">
+          <Button
+            size="xs"
+            rounded={8}
+            variant="ghost"
+            icon={<Smartphone size={13} />}
+            onPress={() => void openUrl('https://hanzo.ai/download')}
+          >
+            Get Hanzo Mobile
+          </Button>
+        </XStack>
 
         {error && !busy ? (
           <XStack

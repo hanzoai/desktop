@@ -3,6 +3,8 @@
 
 use std::sync::Arc;
 
+#[cfg(unix)]
+use crate::commands::browser::{browser, browsers, detect_local_tools, zap_call, zap_nodes};
 use crate::commands::engines::engines_discover;
 use crate::commands::hardware::hardware_get_summary;
 use crate::commands::mining::{
@@ -169,6 +171,16 @@ fn main() {
             local_models::local_models_serve,
             local_models::local_models_stop,
             engines_discover,
+            #[cfg(unix)]
+            browser,
+            #[cfg(unix)]
+            browsers,
+            #[cfg(unix)]
+            zap_nodes,
+            #[cfg(unix)]
+            zap_call,
+            #[cfg(unix)]
+            detect_local_tools,
             mining_get_enabled,
             mining_set_enabled,
             local_workspace_open_dialog,
@@ -219,6 +231,97 @@ fn main() {
             // force quit) left: a served engine holding the port, and a cut-off
             // download no screen lists.
             local_models::at_start(app_data_dir.clone());
+
+            // Native app & File menu so Settings… (⌘,) and New Chat (⌘N) live in the
+            // macOS menu bar instead of a bottom-left sidebar cog.
+            #[cfg(target_os = "macos")]
+            {
+                use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem, SubmenuBuilder};
+                let settings_app = MenuItemBuilder::with_id("open_settings", "Settings…")
+                    .accelerator("CmdOrCtrl+,")
+                    .build(app)?;
+                let new_chat = MenuItemBuilder::with_id("new_chat", "New Chat")
+                    .accelerator("CmdOrCtrl+N")
+                    .build(app)?;
+
+                let app_sub = SubmenuBuilder::new(app, "Hanzo")
+                    .about(None)
+                    .separator()
+                    .item(&settings_app)
+                    .separator()
+                    .services()
+                    .separator()
+                    .hide()
+                    .hide_others()
+                    .show_all()
+                    .separator()
+                    .quit()
+                    .build()?;
+                let close_tab_or_window = MenuItemBuilder::with_id("close_tab_or_window", "Close Tab / Window")
+                    .accelerator("CmdOrCtrl+W")
+                    .build(app)?;
+                let file_sub = SubmenuBuilder::new(app, "File")
+                    .item(&new_chat)
+                    .separator()
+                    .item(&close_tab_or_window)
+                    .build()?;
+                let edit_sub = SubmenuBuilder::new(app, "Edit")
+                    .undo()
+                    .redo()
+                    .separator()
+                    .cut()
+                    .copy()
+                    .paste()
+                    .select_all()
+                    .build()?;
+                let split_vertical = MenuItemBuilder::with_id("tabs_split_vertical", "Split Pane Vertically")
+                    .accelerator("CmdOrCtrl+D")
+                    .build(app)?;
+                let split_horizontal = MenuItemBuilder::with_id("tabs_split_horizontal", "Split Pane Horizontally")
+                    .accelerator("CmdOrCtrl+Shift+D")
+                    .build(app)?;
+                let view_sub = SubmenuBuilder::new(app, "View")
+                    .item(&split_vertical)
+                    .item(&split_horizontal)
+                    .separator()
+                    .fullscreen()
+                    .build()?;
+                let window_sub = SubmenuBuilder::new(app, "Window")
+                    .minimize()
+                    .item(&PredefinedMenuItem::maximize(app, None)?)
+                    .build()?;
+
+                let menubar = MenuBuilder::new(app)
+                    .item(&app_sub)
+                    .item(&file_sub)
+                    .item(&edit_sub)
+                    .item(&view_sub)
+                    .item(&window_sub)
+                    .build()?;
+                app.set_menu(menubar)?;
+                app.on_menu_event(|app_handle, event| {
+                    match event.id().as_ref() {
+                        "open_settings" => {
+                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                            let _ = app_handle.emit("navigate-to-path", "/settings");
+                        }
+                        "new_chat" => {
+                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
+                            let _ = app_handle.emit("create-chat", ());
+                        }
+                        "tabs_split_vertical" => {
+                            let _ = app_handle.emit("tabs-split", "row");
+                        }
+                        "tabs_split_horizontal" => {
+                            let _ = app_handle.emit("tabs-split", "col");
+                        }
+                        "close_tab_or_window" => {
+                            let _ = app_handle.emit("close-active-tab", ());
+                        }
+                        _ => {}
+                    }
+                });
+            }
 
             /*
                 This is the initialization pipeline

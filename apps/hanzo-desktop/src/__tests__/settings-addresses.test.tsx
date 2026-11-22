@@ -1,4 +1,4 @@
-/** Which Settings section each settings address opens: none lands on Appearance unless it names it. */
+/** Which Settings section each settings address opens: a section opens by name, bare /settings is General, any other address is Account. */
 import { GuiProvider } from '@hanzo/gui';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
@@ -8,26 +8,25 @@ import { DesktopSettings, sectionOf } from '../desktop-shortcuts';
 
 describe('settings addresses', () => {
   it.each([
-    ['/settings', 'account'],
+    ['/settings', 'general'],
     ['/settings/profile', 'account'],
     ['/settings/personalization', 'account'],
     ['/settings/appearance', 'appearance'],
-    ['/settings/advanced', 'advanced'],
+    ['/settings/engine', 'engine'],
+    ['/settings/node', 'account'],
   ])('%s opens %s', (address, section) => {
     expect(sectionOf(address)).toBe(section);
   });
 
-  it('the app’s Profile, Personalization and Account (/settings) open Account, which names where those pages are', () => {
-    window.history.replaceState(null, '', '/settings');
+  it('the app’s Profile, Personalization and Account (/settings/profile) open Account, which names where those pages are', () => {
     render(
       <GuiProvider config={config} defaultTheme="dark">
-        <DesktopSettings isAuthenticated siteUrl="https://hanzo.ai" onSignIn={() => undefined} onBack={() => undefined} />
+        <DesktopSettings initialSection={sectionOf('/settings/profile')} isAuthenticated siteUrl="https://hanzo.ai" onSignIn={() => undefined} onBack={() => undefined} />
       </GuiProvider>,
     );
     expect(screen.getByTestId('desktop-account').textContent).toMatch(
       /profile, personalization, organization, billing, usage and API keys are on hanzo\.ai/,
     );
     expect(screen.getByRole('button', { name: 'Open on hanzo.ai' })).toBeTruthy();
-    expect(screen.queryByTestId('desktop-appearance')).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.63"
+version = "1.1.67"
 description = "A first class Desktop application to interact with Hanzo Node"
 authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
 license = "Apache-2.0"
@@ -44,6 +44,7 @@ hanzo-dev-agent = { path = "dev-agent" }
 hanzo-projects = { path = "projects" }
 uuid = { version = "1.10.0", features = ["v4"] }
 rand = "0.8"
+# OS keychain intentionally not linked: session lives in `~/.hanzo/` (identity.rs) and secrets in Cloud KMS.
 
 bytes = "1"
 thiserror = "1.0"

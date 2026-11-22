@@ -12,15 +12,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import config from '../../gui.config';
 import { DesktopSettings } from '../desktop-shortcuts';
 
-// Developer mode lives under Advanced, the section this address opens.
-const page = () => {
-  window.history.replaceState(null, '', '/settings/advanced');
-  return render(
+// Developer mode is on the General section, the one Settings opens on.
+const page = () =>
+  render(
     <GuiProvider config={config} defaultTheme="dark">
       <DesktopSettings isAuthenticated onSignIn={() => undefined} onBack={() => undefined} />
     </GuiProvider>,
   );
-};
 
 describe('Developer mode in Settings', () => {
   beforeEach(() => window.localStorage.clear());
