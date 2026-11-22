@@ -1,15 +1,18 @@
 //! Local backend discovery for Hanzo Desktop (`@hanzo/app`'s `configure({ runtime })`).
 //!
-//! Primary path (HIP-1330): connects directly to the unified single-binary Rust
-//! daemon `hanzod` on `127.0.0.1:3690` (`~/.hanzo/bin/hanzod`, auto-started if
-//! installed and not yet listening) — zero Node.js dependency.
+//! Primary path (HIP-1330 & HIP-1400..1404): connects directly to the unified
+//! single-binary Rust daemon `hanzod` on `127.0.0.1:3690` — resolved from the
+//! bundled Desktop sidecar directory first, then `~/.hanzo/bin/hanzod` /
+//! `~/.local/bin/hanzod`, and auto-started if installed and not yet listening.
+//! Also probes `/v1/research/health` so Desktop surfaces native Hanzo Dō
+//! research + `hanzo-vm` sandbox execution.
 //!
 //! Legacy fallback: if `hanzod` is not installed, discovers a running Hanzo Dev
 //! server via `~/.hanzo-dev/userdata/server-runtime.json`.
 
 use std::io::{Read, Write};
 use std::net::{SocketAddr, TcpStream};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Duration;
 
@@ -24,11 +27,13 @@ struct Published {
     origin: String,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 pub struct LocalDev {
     pub id: String,
     pub origin: String,
     pub hostname: Option<String>,
+    pub research: bool,
+    pub sandbox: Option<String>,
 }
 
 fn local_short_hostname() -> Option<String> {
@@ -41,9 +46,33 @@ fn local_short_hostname() -> Option<String> {
         }
     }
     std::env::var("HOSTNAME")
+        .or_else(|_| std::env::var("COMPUTERNAME"))
         .ok()
         .map(|s| s.split('.').next().unwrap_or(&s).trim().to_string())
         .filter(|s| !s.is_empty())
+}
+
+pub(crate) fn sidecar_candidates_for_exe(exe: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    let names: &[&str] = if cfg!(windows) {
+        &["hanzod.exe", "hanzod"]
+    } else {
+        &["hanzod"]
+    };
+    if let Some(dir) = exe.parent() {
+        for name in names {
+            out.push(dir.join(name));
+            out.push(dir.join("binaries").join(name));
+        }
+        if let Some(parent) = dir.parent() {
+            for name in names {
+                out.push(parent.join("Resources").join(name));
+                out.push(parent.join("Resources").join("binaries").join(name));
+                out.push(parent.join("lib").join("hanzo-desktop").join(name));
+            }
+        }
+    }
+    out
 }
 
 fn hanzod_bin() -> Option<PathBuf> {
@@ -53,29 +82,72 @@ fn hanzod_bin() -> Option<PathBuf> {
             candidates.push(PathBuf::from(explicit.trim()));
         }
     }
+    if let Ok(exe) = std::env::current_exe() {
+        candidates.extend(sidecar_candidates_for_exe(&exe));
+    }
+    let names: &[&str] = if cfg!(windows) {
+        &["hanzod.exe", "hanzod"]
+    } else {
+        &["hanzod"]
+    };
     if let Some(home) = dirs::home_dir() {
-        candidates.push(home.join(".hanzo").join("bin").join("hanzod"));
+        for name in names {
+            candidates.push(home.join(".hanzo").join("bin").join(name));
+            candidates.push(home.join(".local").join("bin").join(name));
+        }
     }
     candidates.push(PathBuf::from("/usr/local/bin/hanzod"));
     candidates.push(PathBuf::from("/opt/homebrew/bin/hanzod"));
+    if let Ok(path_var) = std::env::var("PATH") {
+        for entry in std::env::split_paths(&path_var) {
+            for name in names {
+                candidates.push(entry.join(name));
+            }
+        }
+    }
     candidates.into_iter().find(|p| p.is_file())
 }
 
-fn probe_hanzod() -> bool {
-    let Ok(addr) = HANZOD_ADDR.parse::<SocketAddr>() else {
-        return false;
-    };
-    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(250)) else {
-        return false;
-    };
+fn http_get_addr(addr_str: &str, path: &str) -> Option<(u16, String)> {
+    let addr: SocketAddr = addr_str.parse().ok()?;
+    let mut stream = TcpStream::connect_timeout(&addr, Duration::from_millis(250)).ok()?;
     let _ = stream.set_read_timeout(Some(Duration::from_millis(400)));
     let _ = stream.set_write_timeout(Some(Duration::from_millis(400)));
-    let req = format!("GET /v1/dev/health HTTP/1.1\r\nHost: {HANZOD_ADDR}\r\nConnection: close\r\n\r\n");
-    if stream.write_all(req.as_bytes()).is_err() {
-        return false;
-    }
-    let mut buf = [0u8; 256];
-    matches!(stream.read(&mut buf), Ok(n) if n > 0 && std::str::from_utf8(&buf[..n]).unwrap_or("").contains("200 OK"))
+    let req = format!("GET {path} HTTP/1.1\r\nHost: {addr_str}\r\nConnection: close\r\n\r\n");
+    stream.write_all(req.as_bytes()).ok()?;
+    let mut buf = Vec::with_capacity(1024);
+    let _ = stream.read_to_end(&mut buf);
+    let raw = String::from_utf8_lossy(&buf);
+    let (head, body) = raw.split_once("\r\n\r\n")?;
+    let code: u16 = head
+        .lines()
+        .next()?
+        .split_whitespace()
+        .nth(1)?
+        .parse()
+        .ok()?;
+    Some((code, body.to_string()))
+}
+
+fn probe_hanzod_at(addr: &str) -> bool {
+    matches!(http_get_addr(addr, "/v1/dev/health"), Some((200, _)))
+}
+
+fn probe_research_at(addr: &str) -> (bool, Option<String>) {
+    let Some((200, body)) = http_get_addr(addr, "/v1/research/health") else {
+        return (false, None);
+    };
+    let parsed: serde_json::Value = serde_json::from_str(&body).unwrap_or_default();
+    let ok = parsed.get("ok").and_then(|v| v.as_bool()).unwrap_or(true);
+    let sandbox = parsed
+        .get("sandbox")
+        .and_then(|v| v.as_str())
+        .map(str::to_string);
+    (ok, sandbox)
+}
+
+fn probe_hanzod() -> bool {
+    probe_hanzod_at(HANZOD_ADDR)
 }
 
 fn ensure_hanzod_running() -> bool {
@@ -136,10 +208,13 @@ fn server_cli() -> Option<PathBuf> {
 pub fn dev_local_runtime() -> Option<LocalDev> {
     let hostname = local_short_hostname();
     if ensure_hanzod_running() {
+        let (research, sandbox) = probe_research_at(HANZOD_ADDR);
         return Some(LocalDev {
             id: "hanzod".to_string(),
             origin: format!("http://{HANZOD_ADDR}"),
             hostname,
+            research,
+            sandbox,
         });
     }
 
@@ -153,7 +228,13 @@ pub fn dev_local_runtime() -> Option<LocalDev> {
         .ok()?
         .trim()
         .to_string();
-    Some(LocalDev { id, origin: published.origin, hostname })
+    Some(LocalDev {
+        id,
+        origin: published.origin,
+        hostname,
+        research: false,
+        sandbox: None,
+    })
 }
 
 /// Pairing credential for the local runtime (`hanzod` uses shared IAM identity;
@@ -179,4 +260,49 @@ pub fn dev_local_pairing() -> Result<String, String> {
         .as_str()
         .map(str::to_string)
         .ok_or_else(|| "Hanzo Dev issued no credential.".to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::TcpListener;
+
+    #[test]
+    fn sidecar_candidates_cover_macos_linux_and_adjacent_layouts() {
+        let exe = PathBuf::from("/Applications/Hanzo.app/Contents/MacOS/hanzo-desktop");
+        let paths = sidecar_candidates_for_exe(&exe);
+        assert!(paths.iter().any(|p| p.ends_with("MacOS/hanzod") || p.ends_with("MacOS\\hanzod.exe")));
+        assert!(paths.iter().any(|p| p.to_string_lossy().contains("Resources")));
+    }
+
+    #[test]
+    fn probe_detects_dev_and_research_health_over_loopback() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let addr = listener.local_addr().unwrap().to_string();
+        let handle = std::thread::spawn(move || {
+            for _ in 0..2 {
+                let (mut sock, _) = listener.accept().unwrap();
+                let mut req = [0u8; 512];
+                let n = sock.read(&mut req).unwrap();
+                let line = String::from_utf8_lossy(&req[..n]);
+                let body = if line.contains("/v1/research/health") {
+                    r#"{"ok":true,"sandbox":"hanzo-vm"}"#
+                } else {
+                    r#"{"ok":true}"#
+                };
+                let resp = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                    body.len(),
+                    body
+                );
+                sock.write_all(resp.as_bytes()).unwrap();
+            }
+        });
+
+        assert!(probe_hanzod_at(&addr));
+        let (research_ok, sandbox) = probe_research_at(&addr);
+        assert!(research_ok);
+        assert_eq!(sandbox.as_deref(), Some("hanzo-vm"));
+        handle.join().unwrap();
+    }
 }

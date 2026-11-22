@@ -98,20 +98,26 @@ configure({
     safeInvoke<unknown>('zap_call', { target, method, params }),
 };
 
-// Advertise this computer's local hostname & live hanzod status so Tabs / Environments
+// Advertise this computer's local hostname & live hanzod status so Tabs / Environments / Research
 // never mark the machine we are actively running on as Offline.
-void safeInvoke<{ id: string; origin: string; hostname?: string | null } | null>('dev_local_runtime').then(
-  (here) => {
-    if (here?.hostname) {
-      (window as unknown as Record<string, unknown>).__hanzoLocalHost = {
-        hostname: here.hostname,
-        origin: here.origin,
-        online: true,
-      };
-      window.dispatchEvent(new Event('hanzo:local-host-ready'));
-    }
-  },
-);
+void safeInvoke<{
+  id: string;
+  origin: string;
+  hostname?: string | null;
+  research?: boolean;
+  sandbox?: string | null;
+} | null>('dev_local_runtime').then((here) => {
+  if (here?.hostname || here?.origin) {
+    (window as unknown as Record<string, unknown>).__hanzoLocalHost = {
+      hostname: here.hostname ?? 'localhost',
+      origin: here.origin,
+      research: Boolean(here.research),
+      sandbox: here.sandbox ?? null,
+      online: true,
+    };
+    window.dispatchEvent(new Event('hanzo:local-host-ready'));
+  }
+});
 
 // A release window has no native context menu: Hanzo's own (the app's row menu) is the only one.
 // Text fields keep cut, copy and paste; Inspect Element is a dev build's alone.

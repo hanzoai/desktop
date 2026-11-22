@@ -50,3 +50,19 @@ elif ! command -v pnpm >/dev/null; then
   npm install -g --prefix "$HOME/.local" pnpm
 fi
 pnpm install --frozen-lockfile
+
+# Stage pinned hanzod v0.3.1+ binary when published for this host architecture so
+# Desktop bundles/discovers native Dev + Research (/v1/research) out of the box.
+HANZOD_VERSION="${HANZOD_VERSION:-v0.3.1}"
+os_tag=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch_tag=$(uname -m)
+case "$arch_tag" in
+  x86_64|amd64) arch_tag="amd64" ;;
+  arm64|aarch64) arch_tag="arm64" ;;
+esac
+mkdir -p "$HOME/.hanzo/bin" "$root/apps/hanzo-desktop/src-tauri/binaries"
+if curl -fsSL --retry 2 -o "$HOME/.hanzo/bin/hanzod" \
+  "https://github.com/hanzoai/node/releases/download/${HANZOD_VERSION}/hanzod-${os_tag}-${arch_tag}" 2>/dev/null; then
+  chmod +x "$HOME/.hanzo/bin/hanzod"
+  cp "$HOME/.hanzo/bin/hanzod" "$root/apps/hanzo-desktop/src-tauri/binaries/hanzod"
+fi
