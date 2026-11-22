@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Rows2,
   Send,
+  Settings,
   Smartphone,
   SquareMenu,
   SquareTerminal,
@@ -277,6 +278,19 @@ export function TopRightControls() {
         onClick={toggleBottomDrawer}
       >
         <PanelBottom size={16} strokeWidth={1.85} />
+      </button>
+      <button
+        type="button"
+        data-slot="desktop-settings-button"
+        className="hz-chrome-btn"
+        aria-label="Settings (⌘,)"
+        title="Settings (⌘,)"
+        onClick={() => {
+          closeDetailsPopover();
+          window.history.pushState(null, '', '/settings');
+        }}
+      >
+        <Settings size={15} strokeWidth={1.85} />
       </button>
       <button
         type="button"

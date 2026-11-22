@@ -222,10 +222,7 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   margin-inline-start: 66px !important;
 }
 
-/* Settings lives in macOS app/File menu (⌘,) & logged-in account menu — hide bottom cog */
-[data-slot='anon-settings'],
-[data-slot='anon-foot'] > div:has(> [data-slot='anon-settings']),
-[data-slot='rail'] [data-slot='anon-settings'],
+/* Keep guest sidebar Settings button visible; hide only web-only marketing chrome */
 [data-slot='opening-mark'],
 [data-slot='header-local-ai'],
 [data-slot='setup-workspace'] {
