@@ -623,16 +623,22 @@ function Gate() {
         window.history.pushState(null, '', '/design');
         return;
       }
-      if (target?.closest('[data-slot="rail-library"]')) {
+      if (
+        target?.closest(
+          '[data-slot="rail-library"], [data-nav-id="library"], [data-place-id="artifacts"], [data-place-id="library"], [data-slot="rail"] button[aria-label="Library"], [data-slot="app-rail"] button[aria-label="Library"]',
+        )
+      ) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setProvidersPane(null);
         window.history.pushState(null, '', '/library');
         return;
       }
-      if (target?.closest('[data-slot="rail-chat"]')) {
+      if (target?.closest('[data-slot="rail-chat"], [data-nav-id="chat"]')) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setProvidersPane(null);
         window.history.pushState(null, '', '/chat');
         requestAnimationFrame(() => {
@@ -641,23 +647,26 @@ function Gate() {
         });
         return;
       }
-      if (target?.closest('[data-slot="rail-dev"]')) {
+      if (target?.closest('[data-slot="rail-dev"], [data-nav-id="dev"]')) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setProvidersPane(null);
         window.history.pushState(null, '', '/dev');
         return;
       }
-      if (target?.closest('[data-slot="rail-design"]')) {
+      if (target?.closest('[data-slot="rail-design"], [data-nav-id="design"]')) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setProvidersPane(null);
         window.history.pushState(null, '', '/design');
         return;
       }
-      if (target?.closest('[data-slot="rail-tabs"]')) {
+      if (target?.closest('[data-slot="rail-tabs"], [data-nav-id="tabs"]')) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
         setProvidersPane(null);
         window.history.pushState(null, '', '/tabs');
         return;
@@ -812,9 +821,31 @@ function Gate() {
     return null;
   }
   if (isSettings) {
+    const rawUser = user as Record<string, unknown> | null | undefined;
+    const settingsUser = isAuthenticated
+      ? {
+          name:
+            (typeof rawUser?.displayName === 'string' && rawUser.displayName) ||
+            (typeof rawUser?.name === 'string' && rawUser.name) ||
+            (typeof rawUser?.preferred_username === 'string' && rawUser.preferred_username) ||
+            '',
+          email: typeof rawUser?.email === 'string' ? rawUser.email : '',
+          id:
+            (typeof rawUser?.sub === 'string' && rawUser.sub) ||
+            (typeof rawUser?.id === 'string' && rawUser.id) ||
+            '',
+          avatar: typeof rawUser?.avatar === 'string' ? rawUser.avatar : '',
+          org:
+            (typeof rawUser?.owner === 'string' && rawUser.owner) ||
+            (typeof rawUser?.org === 'string' && rawUser.org) ||
+            '',
+        }
+      : null;
     return (
       <DesktopSettings
         isAuthenticated={isAuthenticated}
+        user={settingsUser}
+        apiUrl={API}
         siteUrl={SITE}
         barInset={BAR.inset ?? 0}
         onSignIn={() => {
@@ -822,12 +853,25 @@ function Gate() {
           window.history.pushState(null, '', '/login?next=/settings');
           startSignIn();
         }}
+        onSignOut={async () => {
+          await forget();
+          keychain.removeItem('hanzo_iam_access_token');
+          keychain.removeItem('hanzo_iam_refresh_token');
+          window.location.assign('/chat');
+        }}
         onBack={() => window.history.pushState(null, '', '/chat')}
       />
     );
   }
 
-  const isLibraryPath = path === '/library' || path === '/dev/-/artifacts';
+  const normalizedPath = path.length > 1 ? path.replace(/\/+$/, '') : path;
+  const isLibraryPath =
+    normalizedPath === '/library' ||
+    normalizedPath.startsWith('/library/') ||
+    normalizedPath === '/dev/-/artifacts' ||
+    normalizedPath.startsWith('/dev/-/artifacts/') ||
+    normalizedPath === '/dev/artifacts' ||
+    normalizedPath.startsWith('/dev/artifacts/');
   const appPath = isLibraryPath ? '/chat' : path;
   const activeSection = providersPane === 'plugins' ? 'plugins' : isLibraryPath ? 'library' : undefined;
 
@@ -838,6 +882,7 @@ function Gate() {
       data-right-open={rightOpen ? 'true' : undefined}
       data-active-section={activeSection}
     >
+      <div className="hz-titlebar-band" data-tauri-drag-region="true" />
       <div className="hz-desktop-row">
         <div className="hz-desktop-main">
           <div className="hz-desktop-app">

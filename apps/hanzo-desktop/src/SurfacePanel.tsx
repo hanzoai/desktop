@@ -196,10 +196,94 @@ export const SURFACES: readonly SurfaceDef[] = [
   { kind: 'chat', label: 'Side chat', shortcut: 'S', available: true, icon: MessageSquareMore },
 ];
 
+interface TopTabItem {
+  id: string;
+  title: string;
+  status: string;
+  active: boolean;
+}
+
+/**
+ * Scrollable middle tab strip for `/tabs` that lives strictly in its own
+ * non-overlapping flex slot between left window chrome (traffic lights +
+ * sidebar toggle + `< >`) and right toolbar controls (`TopRightControls`).
+ */
+function TabsTopStrip() {
+  const [items, setItems] = useState<TopTabItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const cached = (window as unknown as { __hanzoTabsState?: { items?: TopTabItem[] } }).__hanzoTabsState;
+    return Array.isArray(cached?.items) ? cached.items : [];
+  });
+
+  useEffect(() => {
+    const sync = (e: Event) => {
+      const detail = (e as CustomEvent<{ items?: TopTabItem[] }>).detail;
+      if (Array.isArray(detail?.items)) {
+        setItems(detail.items);
+      }
+    };
+    window.addEventListener('hanzo:tabs-state', sync);
+    return () => window.removeEventListener('hanzo:tabs-state', sync);
+  }, []);
+
+  return (
+    <div data-slot="tabs-top-strip" className="hz-tabs-strip">
+      <div className="hz-tabs-scroll" role="tablist" aria-label="Open terminals">
+        {items.map((tab) => (
+          <div
+            key={tab.id}
+            role="tab"
+            aria-selected={tab.active}
+            className={`hz-tab-pill ${tab.active ? 'is-active' : ''}`}
+            onClick={() =>
+              window.dispatchEvent(
+                new CustomEvent('hanzo:tabs-action', { detail: { kind: 'focus', id: tab.id } }),
+              )
+            }
+          >
+            <span className={`hz-dot ${tab.status !== 'offline' ? 'is-online' : ''}`} />
+            <span className="hz-tab-pill-title">{tab.title}</span>
+            <button
+              type="button"
+              className="hz-tab-pill-close"
+              aria-label={`Close ${tab.title}`}
+              title={`Close ${tab.title}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                window.dispatchEvent(
+                  new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', id: tab.id } }),
+                );
+              }}
+            >
+              <X size={11} />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        data-slot="tabs-new-tab"
+        className="hz-chrome-btn hz-tabs-add-btn"
+        aria-label="New terminal tab"
+        title="New terminal tab"
+        onClick={() =>
+          window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'shell' } }))
+        }
+      >
+        <Plus size={14} strokeWidth={2} />
+      </button>
+      <div className="hz-tabs-drag-fill" data-tauri-drag-region="true" />
+    </div>
+  );
+}
+
 /**
  * Stationary top-right controls pinned inside the fixed title-bar.
  * Because these live in the window's fixed top-right slot, opening, closing,
  * resizing, or maximizing the right panel NEVER shifts a single icon.
+ * On `/tabs`, renders a strictly bounded middle `TabsTopStrip` flex slot before
+ * the right toolbar controls so tabs never collide with traffic lights, `< >`,
+ * or right icons.
  */
 export function TopRightControls() {
   const { rightOpen, maximized, bottomOpen, detailsOpen } = useWorkspacePanels();
@@ -226,78 +310,81 @@ export function TopRightControls() {
   };
 
   return (
-    <div data-slot="desktop-top-controls" className="hz-top-controls">
-      <Update />
-      {onTabs ? (
-        <>
-          <button
-            type="button"
-            data-slot="tabs-split-vertical"
-            className="hz-chrome-btn"
-            aria-label="Split vertical (⌘D)"
-            title="Split vertical (⌘D)"
-            onClick={() => triggerSplit('row')}
-          >
-            <Columns2 size={15} strokeWidth={1.85} />
-          </button>
-          <button
-            type="button"
-            data-slot="tabs-split-horizontal"
-            className="hz-chrome-btn"
-            aria-label="Split horizontal (⌘⇧D)"
-            title="Split horizontal (⌘⇧D)"
-            onClick={() => triggerSplit('col')}
-          >
-            <Rows2 size={15} strokeWidth={1.85} />
-          </button>
-        </>
-      ) : null}
-      <button
-        type="button"
-        data-slot="surface-maximize"
-        className={`hz-chrome-btn ${rightOpen ? 'hz-chrome-btn-visible' : 'hz-chrome-btn-hidden'} ${maximized ? 'is-active' : ''}`}
-        aria-label={maximized ? 'Restore panel size' : 'Maximize panel'}
-        title={maximized ? 'Restore panel size' : 'Maximize panel'}
-        tabIndex={rightOpen ? 0 : -1}
-        aria-hidden={!rightOpen}
-        onClick={toggleMaximized}
-      >
-        {maximized ? <Minimize2 size={15} strokeWidth={1.85} /> : <Maximize2 size={15} strokeWidth={1.85} />}
-      </button>
-      <button
-        type="button"
-        data-slot="thread-details-toggle"
-        className={`hz-chrome-btn ${detailsOpen ? 'is-active' : ''}`}
-        aria-label="Toggle workspace details"
-        aria-pressed={detailsOpen}
-        title="Workspace details"
-        onClick={toggleDetailsPopover}
-      >
-        <SquareMenu size={16} strokeWidth={1.85} />
-      </button>
-      <button
-        type="button"
-        data-slot="terminal-drawer-toggle"
-        className={`hz-chrome-btn ${bottomOpen ? 'is-active' : ''}`}
-        aria-label="Toggle terminal drawer"
-        aria-pressed={bottomOpen}
-        title="Toggle terminal drawer"
-        onClick={toggleBottomDrawer}
-      >
-        <PanelBottom size={16} strokeWidth={1.85} />
-      </button>
-      <button
-        type="button"
-        data-slot="right-surface-toggle"
-        className={`hz-chrome-btn ${rightOpen ? 'is-active' : ''}`}
-        aria-label="Toggle right panel"
-        aria-pressed={rightOpen}
-        title="Toggle right panel"
-        onClick={toggleRightPanel}
-      >
-        <PanelRight size={16} strokeWidth={1.85} />
-      </button>
-    </div>
+    <>
+      {onTabs ? <TabsTopStrip /> : <div className="hz-titlebar-spacer" data-tauri-drag-region="true" />}
+      <div data-slot="desktop-top-controls" data-tauri-drag-region="false" className="hz-top-controls">
+        <Update />
+        {onTabs ? (
+          <>
+            <button
+              type="button"
+              data-slot="tabs-split-vertical"
+              className="hz-chrome-btn"
+              aria-label="Split vertical (⌘D)"
+              title="Split vertical (⌘D)"
+              onClick={() => triggerSplit('row')}
+            >
+              <Columns2 size={15} strokeWidth={1.85} />
+            </button>
+            <button
+              type="button"
+              data-slot="tabs-split-horizontal"
+              className="hz-chrome-btn"
+              aria-label="Split horizontal (⌘⇧D)"
+              title="Split horizontal (⌘⇧D)"
+              onClick={() => triggerSplit('col')}
+            >
+              <Rows2 size={15} strokeWidth={1.85} />
+            </button>
+          </>
+        ) : null}
+        <button
+          type="button"
+          data-slot="surface-maximize"
+          className={`hz-chrome-btn ${rightOpen ? 'hz-chrome-btn-visible' : 'hz-chrome-btn-hidden'} ${maximized ? 'is-active' : ''}`}
+          aria-label={maximized ? 'Restore panel size' : 'Maximize panel'}
+          title={maximized ? 'Restore panel size' : 'Maximize panel'}
+          tabIndex={rightOpen ? 0 : -1}
+          aria-hidden={!rightOpen}
+          onClick={toggleMaximized}
+        >
+          {maximized ? <Minimize2 size={15} strokeWidth={1.85} /> : <Maximize2 size={15} strokeWidth={1.85} />}
+        </button>
+        <button
+          type="button"
+          data-slot="thread-details-toggle"
+          className={`hz-chrome-btn ${detailsOpen ? 'is-active' : ''}`}
+          aria-label="Toggle workspace details"
+          aria-pressed={detailsOpen}
+          title="Workspace details"
+          onClick={toggleDetailsPopover}
+        >
+          <SquareMenu size={16} strokeWidth={1.85} />
+        </button>
+        <button
+          type="button"
+          data-slot="terminal-drawer-toggle"
+          className={`hz-chrome-btn ${bottomOpen ? 'is-active' : ''}`}
+          aria-label="Toggle terminal drawer"
+          aria-pressed={bottomOpen}
+          title="Toggle terminal drawer"
+          onClick={toggleBottomDrawer}
+        >
+          <PanelBottom size={16} strokeWidth={1.85} />
+        </button>
+        <button
+          type="button"
+          data-slot="right-surface-toggle"
+          className={`hz-chrome-btn ${rightOpen ? 'is-active' : ''}`}
+          aria-label="Toggle right panel"
+          aria-pressed={rightOpen}
+          title="Toggle right panel"
+          onClick={toggleRightPanel}
+        >
+          <PanelRight size={16} strokeWidth={1.85} />
+        </button>
+      </div>
+    </>
   );
 }
 
