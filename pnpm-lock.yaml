@@ -10,8 +10,8 @@ catalogs:
       specifier: 0.7.0
       version: 0.7.0
     '@hanzo/app':
-      specifier: 0.3.169
-      version: 0.3.169
+      specifier: 0.3.171
+      version: 0.3.171
     '@hanzo/brand':
       specifier: 1.4.8
       version: 1.4.8
@@ -431,7 +431,7 @@ importers:
         version: 0.7.0(react@19.2.8)
       '@hanzo/app':
         specifier: 'catalog:'
-        version: 0.3.169(aa9dba4be9917971e74ceca47ee02fbf)
+        version: 0.3.171(aa9dba4be9917971e74ceca47ee02fbf)
       '@hanzo/appearance':
         specifier: 0.2.15
         version: 0.2.15(react@19.2.8)
@@ -1504,8 +1504,8 @@ packages:
       react:
         optional: true
 
-  '@hanzo/app@0.3.169':
-    resolution: {integrity: sha512-f9h3evvzSbbqdkTlttW+/0KVfoKJvWBHQb3DNxs8doZKbKS7EvcvIP4iSBN3QIqFDWWSuPMQA5sKUyDlH7f/aw==}
+  '@hanzo/app@0.3.171':
+    resolution: {integrity: sha512-kW+ijqpLnek0uUNPymtok3iUIAdSJKMSjyYKTfA09q/Mw/ssFc0UpLB7/BHvYXDcYKGc0BKbNXQu+QDqbZ4DkA==}
     engines: {node: '>=22.18'}
     peerDependencies:
       '@hanzo/ai': '>=0.7.0'
@@ -1519,7 +1519,7 @@ packages:
       '@hanzo/iam': 0.21.42
       '@hanzo/logo': '>=1.0.26'
       '@hanzo/studio': 0.1.24
-      '@hanzo/tabs': '>=0.1.19'
+      '@hanzo/tabs': '>=0.1.20'
       '@hanzo/ui': 8.33.11
       '@hanzo/usage': '>=0.1.18'
       '@hanzo/voice': '>=0.1.16'
@@ -9505,7 +9505,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/app@0.3.169(aa9dba4be9917971e74ceca47ee02fbf)':
+  '@hanzo/app@0.3.171(aa9dba4be9917971e74ceca47ee02fbf)':
     dependencies:
       '@hanzo/ai': 0.7.0(react@19.2.8)
       '@hanzo/appearance': 0.2.15(react@19.2.8)
