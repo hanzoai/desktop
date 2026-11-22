@@ -418,6 +418,11 @@ export function DesktopSettings({
     readLocalPref<boolean>('hanzo.pref.autoLinkMachines', true),
   );
   const [hanzodUp, setHanzodUp] = useState<boolean | null>(null);
+  const [hanzodInfo, setHanzodInfo] = useState<{
+    version?: string;
+    capabilities?: { dev?: string; chain?: string; engine?: string };
+  } | null>(null);
+  const [chainRpcUp, setChainRpcUp] = useState<boolean | null>(null);
   const [engineUp, setEngineUp] = useState<boolean | null>(null);
   const [ollamaUp, setOllamaUp] = useState<boolean | null>(null);
   const [zapNodes, setZapNodes] = useState<ZapNodeRow[]>([]);
@@ -462,6 +467,31 @@ export function DesktopSettings({
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 1400);
 
+    fetch('http://127.0.0.1:3690/v1/hanzod', { signal: ctrl.signal })
+      .then(async (r) => {
+        if (!r.ok) {
+          if (!cancelled) {
+            setHanzodUp(false);
+            setHanzodInfo(null);
+          }
+          return;
+        }
+        const info = (await r.json().catch(() => null)) as {
+          version?: string;
+          capabilities?: { dev?: string; chain?: string; engine?: string };
+        } | null;
+        if (!cancelled) {
+          setHanzodUp(true);
+          setHanzodInfo(info);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHanzodUp(false);
+          setHanzodInfo(null);
+        }
+      });
+
     fetch('http://127.0.0.1:9630/v1/chain/hanzo/rpc', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -469,18 +499,30 @@ export function DesktopSettings({
       signal: ctrl.signal,
     })
       .then((r) => {
-        if (!cancelled) setHanzodUp(r.ok);
+        if (!cancelled) setChainRpcUp(r.ok);
       })
       .catch(() => {
-        if (!cancelled) setHanzodUp(false);
+        if (!cancelled) setChainRpcUp(false);
       });
 
-    fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
+    fetch('http://127.0.0.1:3690/v1/engine/catalog', { signal: ctrl.signal })
       .then((r) => {
-        if (!cancelled) setEngineUp(r.ok);
+        if (r.ok) {
+          if (!cancelled) setEngineUp(true);
+          return;
+        }
+        return fetch(`${localEngineUrl}/health`, { signal: ctrl.signal }).then((r2) => {
+          if (!cancelled) setEngineUp(r2.ok);
+        });
       })
       .catch(() => {
-        if (!cancelled) setEngineUp(false);
+        fetch(`${localEngineUrl}/health`, { signal: ctrl.signal })
+          .then((r2) => {
+            if (!cancelled) setEngineUp(r2.ok);
+          })
+          .catch(() => {
+            if (!cancelled) setEngineUp(false);
+          });
       });
 
     fetch('http://127.0.0.1:11434/api/tags', { signal: ctrl.signal })
@@ -1080,18 +1122,27 @@ export function DesktopSettings({
               <>
                 <YStack gap="$1">
                   <Text fontSize={18} fontWeight="600" color="$color">
-                    Blockchain Node (hanzod)
+                    Unified Backend &amp; Blockchain Node (hanzod)
                   </Text>
                   <Text fontSize={13} color="$colorMuted">
-                    Local Hanzo validator & RPC daemon for verifiable compute receipts, staking, and peer discovery.
+                    Single-binary Rust daemon hosting local Dev sessions, Metal inference (/v1/engine), ZAP relay, and opt-in blockchain validator (/v1/chain).
                   </Text>
                 </YStack>
 
-                <SettingsGroup title="Validator RPC">
+                <SettingsGroup title="Unified Daemon (127.0.0.1:3690)">
                   <SettingsRow
-                    title="hanzod RPC"
-                    description="Local JSON-RPC & ZAP endpoint at 127.0.0.1:9630"
+                    title={hanzodInfo?.version ? `hanzod v${hanzodInfo.version}` : 'hanzod daemon'}
+                    description={
+                      hanzodInfo?.capabilities
+                        ? `dev=${hanzodInfo.capabilities.dev ?? 'rust-native'} · chain=${hanzodInfo.capabilities.chain ?? 'steward'} · engine=${hanzodInfo.capabilities.engine ?? 'managed'}`
+                        : 'Local ZAP socket & loopback HTTP router at 127.0.0.1:3690'
+                    }
                     control={<StatusPill online={hanzodUp} />}
+                  />
+                  <SettingsRow
+                    title="Blockchain Validator RPC"
+                    description="Opt-in Hanzo validator JSON-RPC at 127.0.0.1:9630 (enabled via PUT /v1/chain or `hanzo chain up`)"
+                    control={<StatusPill online={chainRpcUp} />}
                   />
                   <SettingsRow
                     title="Node Manager"
