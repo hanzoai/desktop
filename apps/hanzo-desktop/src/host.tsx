@@ -34,7 +34,6 @@ import {
 } from './SurfacePanel';
 import { Welcome } from './Welcome';
 import { SignInCancelled } from './lib/sign-in-attempt';
-import { pressTabs } from './tabs-keys';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -73,6 +72,9 @@ configure({
   // that expired: this window's identity is revoked and forgotten in the shared
   // store, or the next launch would sign the person straight back in.
   signOut: forget,
+  // Hanzo Desktop has no browser around it: the workspace claims ⌘D, ⌘W and ⌘= / ⌘-,
+  // and keeps a readable width for every pane (the row scrolls sideways past it).
+  tabs: { shortcuts: true, minPane: 420 },
   // A signed-out turn is answered by the engine on this computer (local-ai.tsx), with
   // the model the reader picked from the catalog the bridge below serves.
   local: { chat: localChat },
@@ -774,7 +776,6 @@ function Gate() {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
     let unlistenSplit: (() => void) | undefined;
-    let unlistenSize: (() => void) | undefined;
     let unlistenCloseTab: (() => void) | undefined;
 
     void safeListen('create-chat', () => started.current()).then((fn) => {
@@ -789,20 +790,19 @@ function Gate() {
     });
 
     void safeListen<string>('tabs-split', (event) => {
-      pressTabs(event.payload === 'col' ? 'split-down' : 'split-right');
+      const dir = event.payload === 'col' ? 'col' : 'row';
+      window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
     }).then((fn) => {
       unlistenSplit = fn ?? undefined;
     });
 
-    void safeListen<string>('tabs-size', (event) => {
-      pressTabs(event.payload === 'down' ? 'smaller' : 'larger');
-    }).then((fn) => {
-      unlistenSize = fn ?? undefined;
-    });
-
     void safeListen('close-active-tab', () => {
       const p = window.location.pathname;
-      if ((p === '/tabs' || p.startsWith('/tabs/')) && pressTabs('close')) return;
+      if (p === '/tabs' || p.startsWith('/tabs/')) {
+        const res = { handled: false };
+        window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', res } }));
+        if (res.handled) return;
+      }
       void getCurrentWindow().close();
     }).then((fn) => {
       unlistenCloseTab = fn ?? undefined;
@@ -812,7 +812,6 @@ function Gate() {
       unlistenCreate?.();
       unlistenNavigate?.();
       unlistenSplit?.();
-      unlistenSize?.();
       unlistenCloseTab?.();
     };
   }, []);

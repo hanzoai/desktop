@@ -13,6 +13,17 @@ vi.hoisted(() => {
   }) as typeof window.fetch;
 });
 
+// The window menu's events (main.rs), captured so a test can send one.
+const menu = vi.hoisted(() => ({ on: new Map<string, (e: { payload: unknown }) => void>() }));
+vi.mock('../utils/tauri-check', () => ({
+  isTauriAvailable: () => false,
+  safeInvoke: vi.fn(async () => null),
+  safeListen: vi.fn(async (name: string, fn: (e: { payload: unknown }) => void) => {
+    menu.on.set(name, fn);
+    return () => menu.on.delete(name);
+  }),
+}));
+
 vi.mock('@hanzo/app', () => ({
   configure: vi.fn(),
   Look: () => null,
@@ -121,6 +132,24 @@ describe('Host', () => {
   it('answers a signed-out turn through the app’s one seam: configure({ local }) is the engine on this computer', () => {
     const stated = vi.mocked(configure).mock.calls.map(([given]) => given);
     expect(stated.filter((g) => 'local' in g).map((g) => g.local)).toEqual([{ chat: localChat }]);
+  });
+
+  it('states the Tabs workspace through the app’s one seam: configure({ tabs }) turns on shortcuts and a minimum pane', () => {
+    const stated = vi.mocked(configure).mock.calls.map(([given]) => given);
+    expect(stated.filter((g) => 'tabs' in g).map((g) => g.tabs)).toEqual([{ shortcuts: true, minPane: 420 }]);
+  });
+
+  it('gives one split per ⌘D: the menu sends one action, and the webview’s own key press sends none', async () => {
+    await open('/tabs');
+    const actions: unknown[] = [];
+    const seen = (e: Event) => actions.push((e as CustomEvent).detail);
+    window.addEventListener('hanzo:tabs-action', seen);
+    // ⌘D on macOS is the menu's accelerator (main.rs), which the webview never sees; the workspace claims the key itself only where it does.
+    fireEvent.keyDown(window, { key: 'd', metaKey: true });
+    expect(actions).toEqual([]);
+    act(() => menu.on.get('tabs-split')!({ payload: 'row' }));
+    window.removeEventListener('hanzo:tabs-action', seen);
+    expect(actions).toEqual([{ kind: 'split', dir: 'row' }]);
   });
 
   it('owns sign-out through the app’s one seam: configure({ signOut }) is forget, and nothing else is stated', () => {

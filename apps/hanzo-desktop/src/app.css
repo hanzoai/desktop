@@ -138,16 +138,9 @@ html:root:not(.t_light):not(.light) [data-slot='terminals'] {
   background: var(--hz-ground, #000);
 }
 
-[data-slot='tabs-strip'] {
-  height: 36px;
-  justify-content: flex-end;
-  gap: 4px;
-  padding: 0 136px 0 140px;
-}
-
-[data-slot='tabs-actions'],
-[data-slot='tabs-size'],
-[data-slot='tabs-strip'] [data-slot='pane-split'],
+/* Everything the strip holds is the title bar's or the window menu's here, and @hanzo/app
+   passes it no start or end, so it would draw an empty bar: it is not drawn. */
+[data-slot='tabs-strip'],
 [data-slot='terminal-pane'] [data-slot='pane-split'] {
   display: none;
 }
