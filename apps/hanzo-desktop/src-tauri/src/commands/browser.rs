@@ -173,6 +173,7 @@ pub async fn zap_call(
 }
 
 /// The browsers registered on this user's router.
+#[tauri::command]
 pub async fn browsers() -> Result<Vec<Browser>, String> {
     let nodes = node()
         .nodes(Duration::from_secs(2))

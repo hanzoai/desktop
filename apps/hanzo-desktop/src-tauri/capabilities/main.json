@@ -168,6 +168,7 @@
     "allow-local-preview-start",
     "allow-local-preview-stop",
     "allow-local-preview-open",
+    "allow-browsers",
     "allow-zap-call",
     "allow-zap-nodes",
     "allow-detect-local-tools",

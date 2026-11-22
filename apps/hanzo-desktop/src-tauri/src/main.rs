@@ -170,6 +170,8 @@ fn main() {
             local_models::local_models_stop,
             engines_discover,
             #[cfg(unix)]
+            commands::browser::browsers,
+            #[cfg(unix)]
             commands::browser::zap_nodes,
             #[cfg(unix)]
             commands::browser::zap_call,
