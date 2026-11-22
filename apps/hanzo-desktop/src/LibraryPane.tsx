@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { HanzoMark } from '@hanzogui/shell';
 import { keychain } from './keychain';
+import { getFileVisual } from './lib/file-style';
 import { safeInvoke } from './utils/tauri-check';
 import {
   SiAnthropic,
@@ -236,7 +237,7 @@ const IMAGE_RE = /\.(png|jpe?g|gif|webp|svg|avif)$/i;
 /**
  * Working Library surface for Hanzo Desktop (`/library` and `/dev/-/artifacts`).
  */
-export function LibraryOverlay({ onClose }: { onClose: () => void }) {
+export function LibraryOverlay({ onClose: _onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<'all' | 'images' | 'files'>('all');
   const [folders, setFolders] = useState<LocalFolder[]>([]);
   const [cwd, setCwd] = useState<string | null>(null);
@@ -303,11 +304,11 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div data-slot="desktop-library-pane" className="hz-stage-overlay">
-      <div className="hz-overlay-header">
+    <div data-slot="desktop-library-pane" className="hz-library-room">
+      <div className="hz-overlay-header hz-library-header">
         <div className="hz-overlay-title-row">
-          <Layers size={16} />
           <h2>Library</h2>
+          <Layers size={15} style={{ color: '#38bdf8' }} />
         </div>
         <div className="hz-overlay-tabs">
           {(['all', 'files', 'images'] as const).map((t) => (
@@ -325,9 +326,6 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
           <button type="button" className="hz-pill-btn" onClick={() => void pickFolder()}>
             <FolderOpen size={13} />
             Open folder
-          </button>
-          <button type="button" className="hz-icon-mini" onClick={onClose} aria-label="Close Library">
-            <X size={15} />
           </button>
         </div>
       </div>
@@ -347,14 +345,16 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
               <button
                 key={f.path}
                 type="button"
-                className={`hz-list-row ${cwd === f.path ? 'is-selected' : ''}`}
+                className={`hz-list-row hz-file-row ${cwd === f.path ? 'is-selected' : ''}`}
                 onClick={() => {
                   setCwd(f.path);
                   setSelectedFile(null);
                 }}
               >
-                <Folder size={14} />
-                <span>{f.name}</span>
+                <Folder size={14} style={{ color: '#38bdf8', flexShrink: 0 }} />
+                <span className="hz-file-name" style={{ color: cwd === f.path ? '#ffffff' : '#bae6fd' }}>
+                  {f.name}
+                </span>
               </button>
             ))
           )}
@@ -398,7 +398,7 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
             <div className="hz-library-grid">
               {filtered.map((entry) => {
                 const isDir = Boolean(entry.is_dir ?? entry.isDir);
-                const isImg = !isDir && IMAGE_RE.test(entry.name);
+                const { Icon, color, nameColor } = getFileVisual(entry.name, isDir);
                 return (
                   <button
                     key={entry.path}
@@ -406,14 +406,11 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
                     className="hz-library-card"
                     onClick={() => void openEntry(entry)}
                   >
-                    {isDir ? (
-                      <Folder size={18} className="hz-surface-item-icon" />
-                    ) : isImg ? (
-                      <ImageIcon size={18} className="hz-surface-item-icon" />
-                    ) : (
-                      <FileText size={18} className="hz-surface-item-icon" />
-                    )}
-                    <span className="hz-library-card-name">{entry.name}</span>
+                    <Icon size={17} strokeWidth={1.85} style={{ color, flexShrink: 0 }} />
+                    <span className="hz-library-card-name" style={{ color: nameColor }}>
+                      {entry.name}
+                      {isDir ? '/' : ''}
+                    </span>
                   </button>
                 );
               })}

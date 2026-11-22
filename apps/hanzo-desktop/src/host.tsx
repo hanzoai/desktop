@@ -615,7 +615,39 @@ function Gate() {
         window.history.pushState(null, '', '/library');
         return;
       }
-      if (target?.closest('[data-slot="rail-chat"], [data-slot="rail-dev"], [data-slot="rail-design"], [data-slot="rail-tabs"], [data-slot="rail-studio"], [data-slot="rail-flow"]')) {
+      if (target?.closest('[data-slot="rail-chat"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/chat');
+        requestAnimationFrame(() => {
+          const field = document.querySelector('[data-slot="composer-field"], textarea, [contenteditable="true"]') as HTMLElement | null;
+          field?.focus?.();
+        });
+        return;
+      }
+      if (target?.closest('[data-slot="rail-dev"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/dev');
+        return;
+      }
+      if (target?.closest('[data-slot="rail-design"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/design');
+        return;
+      }
+      if (target?.closest('[data-slot="rail-tabs"]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        setProvidersPane(null);
+        window.history.pushState(null, '', '/tabs');
+        return;
+      }
+      if (target?.closest('[data-slot="rail-studio"], [data-slot="rail-flow"]')) {
         setProvidersPane(null);
       }
     };

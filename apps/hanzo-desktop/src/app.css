@@ -222,7 +222,11 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   margin-inline-start: 66px !important;
 }
 
-/* Keep guest sidebar Settings button visible; hide only web-only marketing chrome */
+/* Keep guest sidebar Settings button visible; hide web-only chrome, sidebar Dev Mode pill, and sidebar More trigger */
+[data-slot='dev-mode-indicator'],
+[data-slot='rail-unpinned'],
+[data-slot='place-more'],
+[data-slot='rail-more'],
 [data-slot='opening-mark'],
 [data-slot='header-local-ai'],
 [data-slot='setup-workspace'] {
@@ -1138,15 +1142,48 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Stage overlay panes (Library & Connect Providers / Plugins) aligned beside sidebar */
+/* Library: first-class full-width app room below the native title bar (never an overlay over Chat) */
+.hz-library-room {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  bottom: 0;
+  left: var(--app-sidebar-span, 256px);
+  z-index: 25;
+  background-color: #050505;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* When sidebar is folded to the 52px icon rail, expand Library flush against the rail */
+.hz-desktop-app:has([data-slot='frame'] > :first-child[style*='display: flex']) .hz-library-room,
+.hz-desktop-app:has([data-slot='rail-chat'][data-folded]) .hz-library-room,
+.hz-desktop-app:has([data-slot='title-bar-start'][style*='width: 52px']) .hz-library-room {
+  left: 52px;
+}
+
+/* Hide underlying chat canvas while Library is the active app so nothing bleeds through */
+.hz-desktop-shell[data-active-section='library'] [data-slot='frame'] > [data-slot='stage'],
+.hz-desktop-shell[data-active-section='library'] [data-slot='chat-view'],
+.hz-desktop-shell[data-active-section='library'] [data-slot='composer'] {
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Stage overlay panes (Connect Providers / Plugins) aligned beside sidebar */
 .hz-stage-overlay {
   position: absolute;
-  top: 0;
+  top: 40px;
   right: 0;
   bottom: 0;
   left: var(--app-sidebar-span, 256px);
   z-index: 30;
   background-color: #0a0a0a;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   border-left: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   flex-direction: column;
@@ -1155,13 +1192,34 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
 }
 
 .hz-overlay-header {
-  height: 48px;
-  padding: 0 144px 0 18px;
+  height: 44px;
+  padding: 0 16px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+}
+
+/* Unix shell LS_COLORS file rows in right panel and Library */
+.hz-unix-files {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  gap: 1px;
+}
+
+.hz-file-row {
+  gap: 8px !important;
+  padding: 5px 8px !important;
+  border-radius: 6px;
+}
+
+.hz-file-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hz-overlay-title-row {
@@ -1222,14 +1280,14 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
 }
 
 .hz-library-folders {
-  width: 220px;
+  width: 184px;
   flex-shrink: 0;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
-  padding: 12px 8px;
+  padding: 10px 6px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .hz-list-row.is-selected {

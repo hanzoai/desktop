@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 
 import { Update } from './update';
+import { getFileVisual } from './lib/file-style';
 
 export type SurfaceKind =
   | 'browser'
@@ -543,26 +544,44 @@ function FilesSurface() {
           <pre className="hz-file-code">{fileContent.slice(0, 40000)}</pre>
         </div>
       ) : (
-        <div className="hz-surface-list">
+        <div className="hz-surface-list hz-unix-files">
+          {cwd && cwd.includes('/') && cwd !== '/' ? (
+            <button
+              type="button"
+              className="hz-list-row hz-file-row hz-file-parent"
+              onClick={() => {
+                const parent = cwd.slice(0, cwd.lastIndexOf('/')) || '/';
+                setCwd(parent);
+                setFilePath(null);
+              }}
+            >
+              <Folder size={14} style={{ color: '#38bdf8', flexShrink: 0 }} />
+              <span className="hz-file-name" style={{ color: '#7dd3fc' }}>../</span>
+            </button>
+          ) : null}
           {!cwd && folders.length > 0
             ? folders.map((f) => (
-                <button key={f.path} type="button" className="hz-list-row" onClick={() => setCwd(f.path)}>
-                  <Folder size={14} />
-                  <span>{f.name}</span>
+                <button key={f.path} type="button" className="hz-list-row hz-file-row" onClick={() => setCwd(f.path)}>
+                  <Folder size={14} style={{ color: '#38bdf8', flexShrink: 0 }} />
+                  <span className="hz-file-name" style={{ color: '#e0f2fe' }}>{f.name}/</span>
                 </button>
               ))
             : null}
           {entries.map((entry) => {
             const isDir = Boolean(entry.is_dir ?? entry.isDir);
+            const { Icon, color, nameColor } = getFileVisual(entry.name, isDir);
             return (
               <button
                 key={entry.path}
                 type="button"
-                className="hz-list-row"
+                className="hz-list-row hz-file-row"
                 onClick={() => void openEntry(entry)}
               >
-                {isDir ? <Folder size={14} /> : <FileText size={14} />}
-                <span>{entry.name}</span>
+                <Icon size={14} strokeWidth={1.85} style={{ color, flexShrink: 0 }} />
+                <span className="hz-file-name" style={{ color: nameColor }}>
+                  {entry.name}
+                  {isDir ? '/' : ''}
+                </span>
               </button>
             );
           })}
