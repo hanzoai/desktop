@@ -28,6 +28,7 @@ import {
   X,
 } from 'lucide-react';
 
+import { pressTabs } from './tabs-keys';
 import { Update } from './update';
 import { CodeFileViewer } from './lib/CodeFileViewer';
 import { getFileVisual } from './lib/file-style';
@@ -250,9 +251,7 @@ function TabsTopStrip() {
               title={`Close ${tab.title}`}
               onClick={(e) => {
                 e.stopPropagation();
-                window.dispatchEvent(
-                  new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', id: tab.id } }),
-                );
+                pressTabs('close', tab.id);
               }}
             >
               <X size={11} />
@@ -305,9 +304,7 @@ export function TopRightControls() {
     };
   }, []);
 
-  const triggerSplit = (dir: 'row' | 'col') => {
-    window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
-  };
+  const triggerSplit = (dir: 'row' | 'col') => pressTabs(dir === 'col' ? 'split-down' : 'split-right');
 
   return (
     <>

@@ -276,9 +276,18 @@ fn main() {
                 let split_horizontal = MenuItemBuilder::with_id("tabs_split_horizontal", "Split Pane Horizontally")
                     .accelerator("CmdOrCtrl+Shift+D")
                     .build(app)?;
+                let text_larger = MenuItemBuilder::with_id("tabs_text_larger", "Larger Terminal Text")
+                    .accelerator("CmdOrCtrl+=")
+                    .build(app)?;
+                let text_smaller = MenuItemBuilder::with_id("tabs_text_smaller", "Smaller Terminal Text")
+                    .accelerator("CmdOrCtrl+-")
+                    .build(app)?;
                 let view_sub = SubmenuBuilder::new(app, "View")
                     .item(&split_vertical)
                     .item(&split_horizontal)
+                    .separator()
+                    .item(&text_larger)
+                    .item(&text_smaller)
                     .separator()
                     .fullscreen()
                     .build()?;
@@ -310,6 +319,12 @@ fn main() {
                         }
                         "tabs_split_horizontal" => {
                             let _ = app_handle.emit("tabs-split", "col");
+                        }
+                        "tabs_text_larger" => {
+                            let _ = app_handle.emit("tabs-size", "up");
+                        }
+                        "tabs_text_smaller" => {
+                            let _ = app_handle.emit("tabs-size", "down");
                         }
                         "close_tab_or_window" => {
                             let _ = app_handle.emit("close-active-tab", ());

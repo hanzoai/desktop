@@ -34,6 +34,7 @@ import {
 } from './SurfacePanel';
 import { Welcome } from './Welcome';
 import { SignInCancelled } from './lib/sign-in-attempt';
+import { pressTabs } from './tabs-keys';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -773,6 +774,7 @@ function Gate() {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
     let unlistenSplit: (() => void) | undefined;
+    let unlistenSize: (() => void) | undefined;
     let unlistenCloseTab: (() => void) | undefined;
 
     void safeListen('create-chat', () => started.current()).then((fn) => {
@@ -787,19 +789,20 @@ function Gate() {
     });
 
     void safeListen<string>('tabs-split', (event) => {
-      const dir = event.payload === 'col' ? 'col' : 'row';
-      window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
+      pressTabs(event.payload === 'col' ? 'split-down' : 'split-right');
     }).then((fn) => {
       unlistenSplit = fn ?? undefined;
     });
 
+    void safeListen<string>('tabs-size', (event) => {
+      pressTabs(event.payload === 'down' ? 'smaller' : 'larger');
+    }).then((fn) => {
+      unlistenSize = fn ?? undefined;
+    });
+
     void safeListen('close-active-tab', () => {
       const p = window.location.pathname;
-      if (p === '/tabs' || p.startsWith('/tabs/')) {
-        const res = { handled: false };
-        window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', res } }));
-        if (res.handled) return;
-      }
+      if ((p === '/tabs' || p.startsWith('/tabs/')) && pressTabs('close')) return;
       void getCurrentWindow().close();
     }).then((fn) => {
       unlistenCloseTab = fn ?? undefined;
@@ -809,6 +812,7 @@ function Gate() {
       unlistenCreate?.();
       unlistenNavigate?.();
       unlistenSplit?.();
+      unlistenSize?.();
       unlistenCloseTab?.();
     };
   }, []);
