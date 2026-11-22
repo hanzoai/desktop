@@ -4,9 +4,7 @@ import * as keymap from '@hanzo/dev-core/keymap';
 import { chord } from '@hanzo/app/chord';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { GuiProvider } from '@hanzo/gui';
-import { readFileSync } from 'fs';
 import type { ReactNode } from 'react';
-import { resolve } from 'path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -286,19 +284,5 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
       expect(k.pc).not.toMatch(/ \/ /);
     }
     expect(KEYS.some((k) => k.mac === '⌘N' || k.mac === '⌘⇧M')).toBe(false);
-  });
-
-  it('runs the patched @hanzo/app: a signed-out window chats with the local engine', () => {
-    const dist = resolve(__dirname, '../../../../node_modules/@hanzo/app/dist');
-    const chat = readFileSync(resolve(dist, 'Chat.js'), 'utf8');
-    const pane = readFileSync(resolve(dist, 'pane.js'), 'utf8');
-
-    // The signed-out lane is the signed-in one (history, the picked model, no turn cap).
-    expect(chat).toContain('HANZO DESKTOP ANSWERS ITS SIGNED-OUT READER ITSELF');
-    expect(chat).toContain('const sent = anonymous ? wanted || ENSO : wanted;');
-    expect(chat).toContain('"Select / Download Local Model"');
-    // Files a signed-out reader attaches are read in the window, not refused.
-    expect(pane).toContain('localText');
-    expect(pane).not.toContain('Sign in to attach files');
   });
 });

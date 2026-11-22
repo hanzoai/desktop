@@ -22,6 +22,7 @@ import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
+  localChat,
   openLocalAiManager,
 } from '../local-ai';
 import {
@@ -358,5 +359,33 @@ describe('local chat', () => {
     const res = await handleLocalChatCompletion(fetch, { body: JSON.stringify({ model: 'enso-free' }) });
     expect(res.status).toBe(503);
     expect((await res.json()).error.message).toMatch(/engine is not installed/);
+  });
+
+  it('is the app’s configured engine: the reply is the text, a refusal is a thrown sentence (no more settings pop-up)', async () => {
+    const opened = vi.fn();
+    window.addEventListener('hanzo:open-local-ai', opened);
+    desktop(() => ({ ...base, engine: null }));
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: 'Hi there' } }] })),
+    );
+    await expect(localChat({ messages: [], signal: new AbortController().signal })).rejects.toThrow(
+      /engine is not installed/,
+    );
+    window.removeEventListener('hanzo:open-local-ai', opened);
+    expect(opened).not.toHaveBeenCalled();
+  });
+
+  it('returns the engine’s answer as text, asking for the model the reader picked', async () => {
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }], serving: NANO }));
+    const asked: string[] = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith('/v1/models')) return new Response(JSON.stringify({ data: [{ id: NANO }] }));
+      asked.push(JSON.parse(String(init?.body)).model);
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'Hi there' } }] }));
+    });
+    const reply = await localChat({ messages: [{ role: 'user', content: 'hi' }], model: NANO, signal: new AbortController().signal });
+    expect(reply).toBe('Hi there');
+    expect(asked).toEqual([NANO]);
   });
 });

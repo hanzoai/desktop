@@ -825,7 +825,7 @@ root.
 ## Desktop Architecture, Build & Keybindings (2026-11-19)
 - **Tauri Workspace Isolation (`apps/hanzo-desktop/src-tauri/Cargo.toml`)**: Includes `[workspace]` at the manifest root so Cargo never walks up to parent workspace manifests (`~/work/hanzo/Cargo.toml`) during `tauri build` or `tauri dev`.
 - **Dock Reopen (`apps/hanzo-desktop/src-tauri/src/main.rs`)**: `RunEvent::Reopen` delegates to `recreate_window(app_handle.clone(), Window::Main, true)` so reopening from the macOS Dock after closing (`⌘W`) mounts `index.html` (`main_url("/chat")`) with microphone permissions enabled rather than raw `localhost:3000`.
-- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`, `patches/@hanzo__app@0.3.160.patch`)**:
+- **Desktop Settings & Shortcuts (`apps/hanzo-desktop/src/desktop-shortcuts.tsx`, `host.tsx`)**:
   - `⌘K` / `Ctrl+K`: Toggle Search / Command Palette (`Palette.js`).
   - `⌘N` / `Ctrl+N` (Desktop) & `⇧⌘O` / `Ctrl+Shift+O` (Web + Desktop): New Chat (`empty(); move(talk())`).
   - `⌘B` / `Ctrl+B`: Toggle left sidebar (`closed` / mobile `drawer`).
@@ -843,9 +843,10 @@ root.
 
 ## Local AI: models on this computer, on Hanzo's engine
 
-`src/local-ai.tsx` is the screen, opened from Settings > Local models (Manage local models) and by a
-signed-out answer that needs a model (the app's "Select / Download Local Model", and `needsModel`);
-the bar has no button for it. Signed out, every Settings door of the app (the rail's mark, ⌘,, the
+`src/local-ai.tsx` is the screen, opened from Settings > Local models (Manage local models); the bar
+has no button for it. A signed-out turn is answered by `localChat`, stated once as
+`configure({ local: { chat: localChat } })` in `host.tsx`; one that needs a model fails with a sentence,
+and the app's own "Open settings" button on it raises `hanzo:anon-settings`. Signed out, every Settings door of the app (the rail's mark, ⌘,, the
 palette, a row's menu) raises `hanzo:anon-settings` for its own small pane, which has no Local models;
 `host.tsx` answers it with the window's Settings on Local models instead, so a guest can always reach,
 and remove, what they downloaded. `src/lib/local-models.ts` is its one

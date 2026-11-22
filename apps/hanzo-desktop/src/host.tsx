@@ -21,8 +21,8 @@ import { keychain } from './keychain';
 import { LibraryOverlay, ProvidersPluginsOverlay } from './LibraryPane';
 import {
   buildLocalModelsCatalogResponse,
-  handleLocalChatCompletion,
   LocalAiManager,
+  localChat,
 } from './local-ai';
 import { onward, signIn } from './sign-in';
 import {
@@ -72,6 +72,9 @@ configure({
   // that expired: this window's identity is revoked and forgotten in the shared
   // store, or the next launch would sign the person straight back in.
   signOut: forget,
+  // A signed-out turn is answered by the engine on this computer (local-ai.tsx), with
+  // the model the reader picked from the catalog the bridge below serves.
+  local: { chat: localChat },
   // Dev's runtime is the Dev server on this computer (src-tauri local_dev.rs): the address it
   // published, and a one-time pairing credential its CLI issues for each session.
   runtime: async () => {
@@ -400,7 +403,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 // Install local-first fetch bridge for unauthenticated / guest desktop sessions
 // so "Continue without login · Local AI" works with zero "Failed to fetch" errors
-// and routes chat completions to Hanzo's engine on this computer (local-ai.tsx).
+// and lists the models on this computer (local-ai.tsx); the chat itself is `configure({ local })`.
 if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTALLED__) {
   (window as any).__HANZO_LOCAL_FETCH_INSTALLED__ = true;
   const nativeFetch = window.fetch.bind(window);
@@ -427,18 +430,13 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
       const path = parsed.pathname;
       const method = (init?.method ?? (input instanceof Request ? input.method : 'GET')).toUpperCase();
 
-      // 1. Local AI chat completions when continuing without login
-      if (!hasToken && (path === '/v1/chat/public' || path === '/v1/chat/completions') && method === 'POST') {
-        return await handleLocalChatCompletion(nativeFetch, init);
-      }
-
-      // 2. Local model catalog when continuing without login
+      // 1. Local model catalog when continuing without login
       if (!hasToken && path === '/v1/models' && method === 'GET') {
         const catalog = await buildLocalModelsCatalogResponse();
         return jsonResponse(catalog);
       }
 
-      // 3. Local conversation history store when continuing without login
+      // 2. Local conversation history store when continuing without login
       if (!hasToken && path.startsWith('/v1/agents/chat/conversations')) {
         const list = readLocalConversations();
         const subId = path.slice('/v1/agents/chat/conversations'.length).replace(/^\/+/, '');
@@ -503,7 +501,7 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
         }
       }
 
-      // 4. Cloud-only account/org endpoints when continuing without login
+      // 3. Cloud-only account/org endpoints when continuing without login
       if (!hasToken) {
         if (path === '/v1/agent/sessions/stream' || path === '/v1/agents/sessions/stream') {
           // A guest has no runs to hear about, so the stream stays open and quiet

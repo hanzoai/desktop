@@ -47,8 +47,8 @@ vi.mock('../Welcome', () => ({
 }));
 vi.mock('../local-ai', () => ({
   buildLocalModelsCatalogResponse: vi.fn(async () => ({ data: [] })),
-  handleLocalChatCompletion: vi.fn(),
   LocalAiManager: () => null,
+  localChat: vi.fn(),
   openLocalAiManager: vi.fn(),
 }));
 vi.mock('../desktop-shortcuts', () => ({
@@ -65,6 +65,7 @@ import { empty } from '@hanzo/app/open';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
 import { forget } from '../identity';
+import { localChat } from '../local-ai';
 import { keychain } from '../keychain';
 
 // What host.tsx did with that page load, before any test clears the mock.
@@ -115,6 +116,11 @@ describe('Host', () => {
       window.dispatchEvent(new CustomEvent('hanzo:anon-settings'));
     });
     expect(window.location.pathname).toBe('/settings/local-models');
+  });
+
+  it('answers a signed-out turn through the app’s one seam: configure({ local }) is the engine on this computer', () => {
+    const stated = vi.mocked(configure).mock.calls.map(([given]) => given);
+    expect(stated.filter((g) => 'local' in g).map((g) => g.local)).toEqual([{ chat: localChat }]);
   });
 
   it('owns sign-out through the app’s one seam: configure({ signOut }) is forget, and nothing else is stated', () => {

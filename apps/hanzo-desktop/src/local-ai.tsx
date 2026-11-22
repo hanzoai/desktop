@@ -253,8 +253,9 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
 
 const ROUTER_ALIASES = new Set(['enso', 'enso-free', 'enso-auto', 'zen6-free', 'zen-free', 'free', 'default']);
 
-function needsModel(model: string, code: string, message: string): Response {
-  window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: { model, tab: 'models' } }));
+// The turn fails with this message; the app's "Open settings" button on that failed turn
+// raises `hanzo:anon-settings`, which host.tsx answers with Settings on Local models.
+function needsModel(code: string, message: string): Response {
   return new Response(JSON.stringify({ error: { message, code } }), {
     status: 503,
     headers: { 'Content-Type': 'application/json' },
@@ -301,7 +302,6 @@ export async function handleLocalChatCompletion(
   const askedSource = sourceForTag(asked);
   if (!ROUTER_ALIASES.has(requestedModel) && !(askedSource && installedRepos.has(askedSource.repo)) && status) {
     return needsModel(
-      requestedModel,
       'local_model_not_installed',
       `${askedSource?.title ?? requestedModel} is not downloaded yet. Download it on the Local AI screen, or pick a downloaded model.`,
     );
@@ -339,12 +339,30 @@ export async function handleLocalChatCompletion(
   }
 
   return needsModel(
-    requestedModel !== 'enso-free' ? requestedModel : 'zen-nano:0.6b',
     'local_model_required',
     status && !status.engine
       ? 'Local models are not set up: Hanzo’s engine is not installed on this computer. The Local AI screen shows how to get it.'
       : 'No local model is running yet. Download one on the Local AI screen, then choose Use.',
   );
+}
+
+/**
+ * `configure({ local }).chat`: the app's signed-out turn, answered here. The reply is the text of
+ * the engine's answer; a refusal (no model, no engine) is a thrown error carrying the sentence
+ * `handleLocalChatCompletion` gave, which the failed turn shows.
+ */
+export async function localChat(turn: {
+  messages: unknown[];
+  model?: string;
+  signal: AbortSignal;
+}): Promise<string> {
+  const res = await handleLocalChatCompletion(window.fetch.bind(window), {
+    body: JSON.stringify({ model: turn.model ?? 'enso-free', messages: turn.messages }),
+    signal: turn.signal,
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error?.message ?? `The local engine answered ${res.status}.`);
+  return String(body?.choices?.[0]?.message?.content ?? '');
 }
 
 export function openLocalAiManager(
