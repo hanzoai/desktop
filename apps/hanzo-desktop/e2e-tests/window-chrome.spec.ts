@@ -10,7 +10,7 @@ const SHOTS = process.env.SHOT_DIR ?? 'test-results';
 async function enter(page: Page, width = 1280, height = 900) {
   await page.setViewportSize({ width, height });
   await page.goto('/');
-  await page.getByRole('button', { name: /Not now|Continue without login/ }).click();
+  await page.getByRole('button', { name: 'Continue without signing in' }).click();
   await expect(page.locator('[data-slot="title-bar"]')).toBeVisible({ timeout: 30_000 });
 }
 
