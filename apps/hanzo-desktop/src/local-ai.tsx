@@ -208,7 +208,7 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
       family: 'enso',
       class: 'free',
       context_window: 131072,
-      // The alias answers with the model chosen on this computer (handleLocalChatCompletion).
+      // The alias answers with the model chosen on this computer (localChat).
       ...abilities(kept().model),
     });
   }
@@ -253,33 +253,29 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
 
 const ROUTER_ALIASES = new Set(['enso', 'enso-free', 'enso-auto', 'zen6-free', 'zen-free', 'free', 'default']);
 
-// The turn fails with this message; the app's "Open settings" button on that failed turn
-// raises `hanzo:anon-settings`, which host.tsx answers with Settings on Local models.
-function needsModel(code: string, message: string): Response {
-  return new Response(JSON.stringify({ error: { message, code } }), {
-    status: 503,
-    headers: { 'Content-Type': 'application/json' },
-  });
+/** What an engine that refused a turn said, with its status: its own words, never ours. */
+async function refusal(res: Response): Promise<Error> {
+  const body = await res.json().catch(() => null);
+  const said = body?.error?.message ?? body?.error ?? body?.detail;
+  return new Error(`${typeof said === 'string' && said ? said : 'The local engine refused the turn.'} (${res.status})`);
 }
 
+const textOf = (body: any): string => String(body?.choices?.[0]?.message?.content ?? '');
+
 /**
- * Answers a chat turn on this computer: a custom endpoint when one is set,
- * otherwise the model Hanzo's engine serves (LOCAL_ENGINE_URL). A downloaded model
- * that is not running yet is started for the turn (the person picked it).
- * With nothing to answer, the Local AI screen opens so one can be downloaded.
+ * `configure({ local }).chat`: the app's signed-out turn, answered on this computer: by a custom
+ * endpoint when one is set, otherwise by the model Hanzo's engine serves (LOCAL_ENGINE_URL). A
+ * downloaded model that is not running yet is started for the turn (the person picked it). Anything
+ * that cannot answer is a thrown error carrying the reason (the engine's own words when it gave
+ * them); the failed turn shows it, and its "Open settings" button reaches Settings on Local models
+ * (`hanzo:anon-settings`, host.tsx). Stop is `signal`.
  */
-export async function handleLocalChatCompletion(
-  nativeFetch: typeof window.fetch,
-  init?: RequestInit,
-): Promise<Response> {
-  const bodyText = typeof init?.body === 'string' ? init.body : '{}';
-  let payload: Record<string, any> = {};
-  try {
-    payload = JSON.parse(bodyText || '{}');
-  } catch {
-    payload = {};
-  }
-  const requestedModel = String(payload.model || 'enso-free').trim();
+export async function localChat(
+  turn: { messages: unknown[]; model?: string; signal: AbortSignal },
+  nativeFetch: typeof window.fetch = window.fetch.bind(window),
+): Promise<string> {
+  const requestedModel = (turn.model || 'enso-free').trim();
+  const payload = { model: requestedModel, messages: turn.messages };
 
   const customUrl = getCustomEngineUrl();
   if (customUrl) {
@@ -288,11 +284,14 @@ export async function handleLocalChatCompletion(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-        signal: init?.signal,
+        signal: turn.signal,
       });
-      if (res.ok) return res;
-    } catch {
-      // fall through to this computer's engine
+      if (res.ok) return textOf(await res.json());
+      throw await refusal(res);
+    } catch (e) {
+      // An unreachable custom endpoint falls through to this computer's engine; one that
+      // answered and refused, or a Stop, is the turn's answer.
+      if (turn.signal.aborted || !(e instanceof TypeError)) throw e;
     }
   }
 
@@ -301,10 +300,7 @@ export async function handleLocalChatCompletion(
   const asked = ROUTER_ALIASES.has(requestedModel) ? kept().model : requestedModel;
   const askedSource = sourceForTag(asked);
   if (!ROUTER_ALIASES.has(requestedModel) && !(askedSource && installedRepos.has(askedSource.repo)) && status) {
-    return needsModel(
-      'local_model_not_installed',
-      `${askedSource?.title ?? requestedModel} is not downloaded yet. Download it on the Local AI screen, or pick a downloaded model.`,
-    );
+    throw new Error(`${askedSource?.title ?? requestedModel} is not downloaded yet. Download it in Settings, or pick a downloaded model.`);
   }
 
   // Outside the app (a plain browser) nothing can say who serves the port, so
@@ -325,48 +321,25 @@ export async function handleLocalChatCompletion(
 
   const served = ours ? await servedIds(`${LOCAL_ENGINE_URL}/v1`, nativeFetch) : [];
   if (served.length > 0) {
-    try {
-      const res = await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, model: served[0] }),
-        signal: init?.signal,
-      });
-      if (res.ok) return res;
-    } catch {
-      // fall through
-    }
+    const res = await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, model: served[0] }),
+      signal: turn.signal,
+    });
+    if (!res.ok) throw await refusal(res);
+    return textOf(await res.json());
   }
 
-  return needsModel(
-    'local_model_required',
+  throw new Error(
     status && !status.engine
-      ? 'Local models are not set up: Hanzo’s engine is not installed on this computer. The Local AI screen shows how to get it.'
-      : 'No local model is running yet. Download one on the Local AI screen, then choose Use.',
+      ? 'Local models are not set up: Hanzo’s engine is not installed on this computer. Settings shows how to get it.'
+      : 'No local model is running yet. Download one in Settings, then choose Use.',
   );
 }
 
-/**
- * `configure({ local }).chat`: the app's signed-out turn, answered here. The reply is the text of
- * the engine's answer; a refusal (no model, no engine) is a thrown error carrying the sentence
- * `handleLocalChatCompletion` gave, which the failed turn shows.
- */
-export async function localChat(turn: {
-  messages: unknown[];
-  model?: string;
-  signal: AbortSignal;
-}): Promise<string> {
-  const res = await handleLocalChatCompletion(window.fetch.bind(window), {
-    body: JSON.stringify({ model: turn.model ?? 'enso-free', messages: turn.messages }),
-    signal: turn.signal,
-  });
-  const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error(body?.error?.message ?? `The local engine answered ${res.status}.`);
-  return String(body?.choices?.[0]?.message?.content ?? '');
-}
-
 export function openLocalAiManager(
-  detail?: 'models' | 'node' | 'engine' | { tab?: 'models' | 'node' | 'engine'; model?: string },
+  detail?: 'models' | 'node' | 'engine' | { tab?: 'models' | 'node' | 'engine' },
 ) {
   const normalized = typeof detail === 'string' ? { tab: detail } : detail;
   window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: normalized }));
@@ -408,7 +381,7 @@ export function LocalAiManager() {
 
   useEffect(() => {
     const onOpen = (e: Event) => {
-      const detail = (e as CustomEvent<{ tab?: 'models' | 'node' | 'engine'; model?: string }>).detail;
+      const detail = (e as CustomEvent<{ tab?: 'models' | 'node' | 'engine' }>).detail;
       if (detail?.tab === 'node' || detail?.tab === 'engine') setAdvanced(true);
       setOpen(true);
       void refresh();
@@ -417,20 +390,6 @@ export function LocalAiManager() {
     window.addEventListener(OPEN_LOCAL_AI_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_LOCAL_AI_EVENT, onOpen);
   }, [refresh]);
-
-  // A signed-out pick of a model that is not downloaded opens this screen on it.
-  useEffect(() => {
-    const onMindChange = async () => {
-      const current = kept().model;
-      setSelected(current);
-      if (!current || ROUTER_ALIASES.has(current)) return;
-      if (keychain.getItem('hanzo_iam_access_token')) return;
-      const models = await probeInstalledLocalModels();
-      if (sourceForTag(current) && !models.some((m) => m.id === current)) setOpen(true);
-    };
-    window.addEventListener(MIND_CHANGE_EVENT, onMindChange);
-    return () => window.removeEventListener(MIND_CHANGE_EVENT, onMindChange);
-  }, []);
 
   useEffect(() => {
     if (!open) return;

@@ -20,7 +20,6 @@ vi.mock('@tauri-apps/plugin-opener', () => ({ openUrl: (u: string) => openUrl(u)
 
 import {
   buildLocalModelsCatalogResponse,
-  handleLocalChatCompletion,
   LocalAiManager,
   localChat,
   openLocalAiManager,
@@ -157,30 +156,19 @@ describe('the Local AI screen', () => {
     }
   });
 
-  it('opens on a signed-out pick of a model not on this computer, and never for a signed-in person', async () => {
+  it('does not open itself on a pick of a model not on this computer: Open settings is the one door', async () => {
     desktop(() => base);
     render(
       <GuiProvider config={config} defaultTheme="dark">
         <LocalAiManager />
       </GuiProvider>,
     );
-    const pick = async () => {
-      window.localStorage.setItem('hanzo.mind', JSON.stringify({ model: 'zen-nano:0.6b' }));
-      await act(async () => {
-        window.dispatchEvent(new Event('hanzo:mind'));
-        await new Promise((r) => setTimeout(r, 0));
-      });
-    };
-    // The token lives in the in-memory keychain, not localStorage.
-    keychain.setItem('hanzo_iam_access_token', 'held');
-    try {
-      await pick();
-      expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
-    } finally {
-      keychain.removeItem('hanzo_iam_access_token');
-    }
-    await pick();
-    await waitFor(() => expect(screen.getByTestId('local-ai-manager-modal')).toBeTruthy());
+    window.localStorage.setItem('hanzo.mind', JSON.stringify({ model: 'zen-nano:0.6b' }));
+    await act(async () => {
+      window.dispatchEvent(new Event('hanzo:mind'));
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    expect(screen.queryByTestId('local-ai-manager-modal')).toBeNull();
   });
 
   it('says nothing about signing in to a guest', async () => {
@@ -315,28 +303,32 @@ describe('the Local AI screen', () => {
 });
 
 describe('local chat', () => {
+  const ask = (model?: string, messages: unknown[] = [{ role: 'user', content: 'hi' }], signal = new AbortController().signal) =>
+    localChat({ messages, model, signal });
+  /** The engine on this computer: started and serving NANO; `chat` answers each turn it is asked. */
+  const serving = (chat: (init?: RequestInit) => Response | Promise<Response>) => {
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }], serving: NANO }));
+    return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) =>
+      String(input).endsWith('/v1/models') ? new Response(JSON.stringify({ data: [{ id: NANO }] })) : chat(init),
+    );
+  };
+  const said = (content: string) => new Response(JSON.stringify({ choices: [{ message: { content } }] }));
+
   it('starts the downloaded model and answers from the engine on this computer', async () => {
-    let serving: string | null = null;
-    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }], serving }), {
+    let running: string | null = null;
+    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }], serving: running }), {
       local_models_serve: ({ repo }) => {
-        serving = repo;
+        running = repo;
       },
     });
     const native = vi.fn(async (url: string, init?: RequestInit) => {
       if (url.endsWith('/v1/models')) return new Response(JSON.stringify({ data: [{ id: NANO }] }));
-      if (url.endsWith('/v1/chat/completions')) {
-        expect(JSON.parse(String(init?.body)).model).toBe(NANO);
-        return new Response(JSON.stringify({ choices: [{ message: { content: 'Hello!' } }] }));
-      }
-      return new Response('ok');
+      expect(JSON.parse(String(init?.body)).model).toBe(NANO);
+      return said('Hello!');
     });
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
-    const res = await handleLocalChatCompletion(native as unknown as typeof fetch, {
-      body: JSON.stringify({ model: 'enso-free', messages: [{ role: 'user', content: 'hi' }] }),
-    });
+    const reply = await localChat({ messages: [], signal: new AbortController().signal }, native as unknown as typeof fetch);
     expect(invoke).toHaveBeenCalledWith('local_models_serve', { repo: NANO });
-    expect(res.status).toBe(200);
-    expect((await res.json()).choices[0].message.content).toBe('Hello!');
+    expect(reply).toBe('Hello!');
   });
 
   it('does not chat with a server on the port that this app did not start', async () => {
@@ -346,46 +338,58 @@ describe('local chat', () => {
     const native = vi.fn(async (url: string) =>
       url.endsWith('/v1/models') ? new Response(JSON.stringify({ data: [{ id: 'someone-elses-model' }] })) : new Response('{}'),
     );
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('ok', { status: 200 }));
-    const res = await handleLocalChatCompletion(native as unknown as typeof fetch, {
-      body: JSON.stringify({ model: 'enso-free', messages: [{ role: 'user', content: 'hi' }] }),
-    });
-    expect(res.status).toBe(503);
+    await expect(localChat({ messages: [], signal: new AbortController().signal }, native as unknown as typeof fetch)).rejects.toThrow(
+      /No local model is running yet/,
+    );
     expect(native).not.toHaveBeenCalledWith(expect.stringMatching(/chat\/completions/), expect.anything());
   });
 
   it('with no engine says what is missing instead of failing silently', async () => {
     desktop(() => ({ ...base, engine: null }));
-    const res = await handleLocalChatCompletion(fetch, { body: JSON.stringify({ model: 'enso-free' }) });
-    expect(res.status).toBe(503);
-    expect((await res.json()).error.message).toMatch(/engine is not installed/);
+    await expect(ask()).rejects.toThrow(/engine is not installed/);
   });
 
-  it('is the app’s configured engine: the reply is the text, a refusal is a thrown sentence (no more settings pop-up)', async () => {
-    const opened = vi.fn();
-    window.addEventListener('hanzo:open-local-ai', opened);
-    desktop(() => ({ ...base, engine: null }));
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ choices: [{ message: { content: 'Hi there' } }] })),
-    );
-    await expect(localChat({ messages: [], signal: new AbortController().signal })).rejects.toThrow(
-      /engine is not installed/,
-    );
-    window.removeEventListener('hanzo:open-local-ai', opened);
-    expect(opened).not.toHaveBeenCalled();
-  });
-
-  it('returns the engine’s answer as text, asking for the model the reader picked', async () => {
-    desktop(() => ({ ...base, installed: [{ repo: NANO, bytes: 1 }], serving: NANO }));
+  it('asks for the model the reader picked and returns the engine’s text', async () => {
     const asked: string[] = [];
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
-      const url = String(input);
-      if (url.endsWith('/v1/models')) return new Response(JSON.stringify({ data: [{ id: NANO }] }));
+    serving((init) => {
       asked.push(JSON.parse(String(init?.body)).model);
-      return new Response(JSON.stringify({ choices: [{ message: { content: 'Hi there' } }] }));
+      return said('Hi there');
     });
-    const reply = await localChat({ messages: [{ role: 'user', content: 'hi' }], model: NANO, signal: new AbortController().signal });
-    expect(reply).toBe('Hi there');
+    expect(await ask(NANO)).toBe('Hi there');
     expect(asked).toEqual([NANO]);
+  });
+
+  it('throws the engine’s own error text and status, never "No local model is running yet"', async () => {
+    serving(() => new Response(JSON.stringify({ error: { message: 'context length exceeded' } }), { status: 400 }));
+    const failure = await ask().catch((e: Error) => e);
+    expect((failure as Error).message).toBe('context length exceeded (400)');
+  });
+
+  it('honours Stop: an aborted turn rejects and is not answered', async () => {
+    const stop = new AbortController();
+    serving(
+      (init) =>
+        new Promise<Response>((_, reject) =>
+          init?.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError'))),
+        ),
+    );
+    const turn = ask(undefined, [], stop.signal);
+    await new Promise((r) => setTimeout(r, 0));
+    stop.abort();
+    await expect(turn).rejects.toThrow(/Abort/);
+  });
+
+  it('sends a picture to the engine as the turn’s image part', async () => {
+    let body: { messages: Array<{ content: unknown }> } | undefined;
+    serving((init) => {
+      body = JSON.parse(String(init?.body));
+      return said('A cat.');
+    });
+    const parts = [
+      { type: 'text', text: 'What is this?' },
+      { type: 'image_url', image_url: { url: 'data:image/png;base64,AAAA' } },
+    ];
+    await ask(undefined, [{ role: 'user', content: parts }]);
+    expect(body?.messages[0].content).toEqual(parts);
   });
 });
