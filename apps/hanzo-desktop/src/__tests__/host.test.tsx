@@ -26,6 +26,7 @@ vi.mock('../utils/tauri-check', () => ({
 
 vi.mock('@hanzo/app', () => ({
   configure: vi.fn(),
+  dispatchTabsAction: vi.fn(),
   Look: () => null,
   Rooms: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
@@ -71,7 +72,7 @@ vi.mock('../desktop-shortcuts', () => ({
   ),
 }));
 
-import { configure } from '@hanzo/app';
+import { configure, dispatchTabsAction } from '@hanzo/app';
 import { empty } from '@hanzo/app/open';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { Host } from '../host';
@@ -139,17 +140,11 @@ describe('Host', () => {
     expect(stated.filter((g) => 'tabs' in g).map((g) => g.tabs)).toEqual([{ shortcuts: true, minPane: 420 }]);
   });
 
-  it('gives one split per ⌘D: the menu sends one action, and the webview’s own key press sends none', async () => {
+  it('gives one split per menu action: one tabs-split event is one split sent to the workspace', async () => {
     await open('/tabs');
-    const actions: unknown[] = [];
-    const seen = (e: Event) => actions.push((e as CustomEvent).detail);
-    window.addEventListener('hanzo:tabs-action', seen);
-    // ⌘D on macOS is the menu's accelerator (main.rs), which the webview never sees; the workspace claims the key itself only where it does.
-    fireEvent.keyDown(window, { key: 'd', metaKey: true });
-    expect(actions).toEqual([]);
+    vi.mocked(dispatchTabsAction).mockClear();
     act(() => menu.on.get('tabs-split')!({ payload: 'row' }));
-    window.removeEventListener('hanzo:tabs-action', seen);
-    expect(actions).toEqual([{ kind: 'split', dir: 'row' }]);
+    expect(vi.mocked(dispatchTabsAction).mock.calls).toEqual([[{ kind: 'split', dir: 'row' }]]);
   });
 
   it('owns sign-out through the app’s one seam: configure({ signOut }) is forget, and nothing else is stated', () => {

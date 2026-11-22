@@ -3,7 +3,7 @@ import { getBrand } from '@hanzo/desktop-brand-config';
 import { ORG_KEY } from '@hanzo/event';
 import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
-import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
+import { configure, dispatchTabsAction, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Titlebar } from '@hanzo/app/App';
 import { org as sessionOrg } from '@hanzo/app/lib/session';
 import { empty } from '@hanzo/app/open';
@@ -791,7 +791,7 @@ function Gate() {
 
     void safeListen<string>('tabs-split', (event) => {
       const dir = event.payload === 'col' ? 'col' : 'row';
-      window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
+      dispatchTabsAction({ kind: 'split', dir });
     }).then((fn) => {
       unlistenSplit = fn ?? undefined;
     });
@@ -800,7 +800,7 @@ function Gate() {
       const p = window.location.pathname;
       if (p === '/tabs' || p.startsWith('/tabs/')) {
         const res = { handled: false };
-        window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', res } }));
+        dispatchTabsAction({ kind: 'close', res });
         if (res.handled) return;
       }
       void getCurrentWindow().close();

@@ -1,3 +1,4 @@
+import { dispatchTabsAction } from '@hanzo/app';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
@@ -235,11 +236,7 @@ function TabsTopStrip() {
             role="tab"
             aria-selected={tab.active}
             className={`hz-tab-pill ${tab.active ? 'is-active' : ''}`}
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent('hanzo:tabs-action', { detail: { kind: 'focus', id: tab.id } }),
-              )
-            }
+            onClick={() => dispatchTabsAction({ kind: 'focus', id: tab.id })}
           >
             <span className={`hz-dot ${tab.status !== 'offline' ? 'is-online' : ''}`} />
             <span className="hz-tab-pill-title">{tab.title}</span>
@@ -250,9 +247,7 @@ function TabsTopStrip() {
               title={`Close ${tab.title}`}
               onClick={(e) => {
                 e.stopPropagation();
-                window.dispatchEvent(
-                  new CustomEvent('hanzo:tabs-action', { detail: { kind: 'close', id: tab.id } }),
-                );
+                dispatchTabsAction({ kind: 'close', id: tab.id });
               }}
             >
               <X size={11} />
@@ -267,7 +262,7 @@ function TabsTopStrip() {
         aria-label="New terminal tab"
         title="New terminal tab"
         onClick={() =>
-          window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'shell' } }))
+          dispatchTabsAction({ kind: 'shell' })
         }
       >
         <Plus size={14} strokeWidth={2} />
@@ -306,7 +301,7 @@ export function TopRightControls() {
   }, []);
 
   const triggerSplit = (dir: 'row' | 'col') => {
-    window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
+    dispatchTabsAction({ kind: 'split', dir });
   };
 
   return (
