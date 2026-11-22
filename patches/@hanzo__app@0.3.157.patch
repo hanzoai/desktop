@@ -425,7 +425,7 @@ index 0000000000000000000000000000000000000000..0270f5667fdfbe274c0ee1b2ed3e7248
 +    }));
 +}
 diff --git a/dist/Rail.js b/dist/Rail.js
-index 98a9f06f7ca720c93730587324d77ee4a04e96d3..0bf7e7e50ee9bdb394d49b4c4698ba6026b2a5ab 100644
+index 98a9f06f7ca720c93730587324d77ee4a04e96d3..b30965b348c79691111e799797e646f8a53d19c0 100644
 --- a/dist/Rail.js
 +++ b/dist/Rail.js
 @@ -9,8 +9,8 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
@@ -458,11 +458,11 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..0bf7e7e50ee9bdb394d49b4c4698ba60
  export const NAV_PINS_KEY = 'hanzo.nav.pins';
  /** The menu as it stands when nothing is pinned, in its order: each app's default place. */
 -export const DEFAULT_NAV = ['chat', 'dev', 'design', 'library', 'tabs'];
-+export const DEFAULT_NAV = ['chat', 'dev', 'library', 'design', 'plugins'];
++export const DEFAULT_NAV = ['chat', 'dev', 'tabs', 'library', 'design', 'plugins'];
  /** The old name of `DEFAULT_NAV`, for importers that still read it. */
  export const DEFAULT_PINNED_NAV = DEFAULT_NAV;
  const CORE_NAV_SET = new Set(DEFAULT_NAV);
-@@ -150,19 +155,6 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
+@@ -150,19 +155,15 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
              icon: _jsx(MARKS.dev.icon, { "aria-hidden": true }),
              onPress: onDev,
          },
@@ -479,10 +479,19 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..0bf7e7e50ee9bdb394d49b4c4698ba60
 -                    onPress: () => onDesign?.(),
 -                },
 -            ]),
++        {
++            id: 'tabs',
++            slot: 'rail-tabs',
++            label: 'Tabs',
++            href: TERMINALS,
++            on: mode === 'tabs',
++            icon: _jsx(MARKS.tabs.icon, { "aria-hidden": true }),
++            onPress: onTabs,
++        },
          {
              id: 'library',
              slot: 'rail-library',
-@@ -172,6 +164,28 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
+@@ -172,6 +173,28 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
              icon: _jsx(MARKS.library.icon, { "aria-hidden": true }),
              onPress: to(RAISED.library),
          },
@@ -511,6 +520,22 @@ index 98a9f06f7ca720c93730587324d77ee4a04e96d3..0bf7e7e50ee9bdb394d49b4c4698ba60
          ...(anon
              ? []
              : [
+@@ -219,15 +242,6 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
+                         },
+                     ]
+                     : []),
+-                {
+-                    id: 'tabs',
+-                    slot: 'rail-tabs',
+-                    label: 'Tabs',
+-                    href: TERMINALS,
+-                    on: mode === 'tabs',
+-                    icon: _jsx(MARKS.tabs.icon, { "aria-hidden": true }),
+-                    onPress: onTabs,
+-                },
+                 {
+                     id: 'betas',
+                     slot: 'rail-betas',
 @@ -293,18 +307,15 @@ export function useNavEntries({ host, mode, at, inside = null, onChat, onDev, on
          ]
          : [];
@@ -861,7 +886,7 @@ index db06be0ecd03512b0277a1cba10f283d59360bec..6522774e528be6c8ae661bb740906b04
 +    ] }));
  }
 diff --git a/dist/Sidebar.js b/dist/Sidebar.js
-index 372cd580829f5482d74a90b964d6aeccfeae2217..4ac8742c85839f11e11233ff4ee09388f829e3dc 100644
+index 372cd580829f5482d74a90b964d6aeccfeae2217..2173c0f90cac4bc05cb9cae4fbac4b3fa0cff9d7 100644
 --- a/dist/Sidebar.js
 +++ b/dist/Sidebar.js
 @@ -17,7 +17,7 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
@@ -981,7 +1006,7 @@ index 372cd580829f5482d74a90b964d6aeccfeae2217..4ac8742c85839f11e11233ff4ee09388
                                                  window.dispatchEvent(new CustomEvent('hanzo:anon-settings', { detail: { open: true } }));
                                              }
 -                                        }, items: "center", gap: "$1", px: "$1.5", py: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$2", borderWidth: 0, bg: "transparent", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, children: _jsx(Settings, { size: 16, "aria-hidden": true }) }) })) : null] })) : at || mode === 'beta' || mode === 'hosted' ? null : devMode ? (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, minW: 0, maxW: "100%", children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })) : (_jsx(Made, {})), _jsx(UpdatePill, {}), !anon && devMode ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "dev-mode-indicator", "aria-label": t('Turn off developer mode'), ...{ title: t('Click to turn off developer mode') }, onClick: () => setDevMode(false), items: "center", justify: "space-between", gap: "$2", px: "$2.5", py: "$1", mx: "$0.5", mt: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "var(--border-strong)", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, shrink: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(XStack, { width: 6, height: 6, rounded: 999, bg: "var(--state-online)", shrink: 0, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode · On') })] }), _jsx(Text, { fontSize: "$1", color: "$soft", shrink: 0, children: t('Off') })] })) : null, !anon && !drawer ? (_jsx(YStack, { "data-slot": "sidebar-account", pt: "$2", mt: "$1.5", borderTopWidth: 1, borderColor: "$edge", shrink: 0, children: _jsx(Account, { host: host, onOrg: handleOrg }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') })), _jsx(Rename, { open: renaming !== null, onOpenChange: (o) => !o && setRenaming(null), title: t('Rename'), name: renaming?.name ?? '', 
-+                                        }, items: "center", gap: "$1", px: "$1.5", py: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$2", borderWidth: 0, bg: "transparent", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, children: _jsx(Settings, { size: 16, "aria-hidden": true }) }) })) : null] })) : at || mode === 'beta' || mode === 'hosted' ? null : devMode ? (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, minW: 0, maxW: "100%", children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })) : (_jsx(Made, {})), _jsx(UpdatePill, {}), !anon && devMode ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "dev-mode-indicator", "aria-label": t('Turn off developer mode'), ...{ title: t('Click to turn off developer mode') }, onClick: () => setDevMode(false), items: "center", justify: "space-between", gap: "$2", px: "$2.5", py: "$1", mx: "$0.5", mt: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "var(--border-strong)", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, shrink: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(XStack, { width: 6, height: 6, rounded: 999, bg: "var(--state-online)", shrink: 0, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode · On') })] }), _jsx(Text, { fontSize: "$1", color: "$soft", shrink: 0, children: t('Off') })] })) : null, !anon && !drawer && !isNestedActive ? (_jsx(YStack, { "data-slot": "sidebar-account", pt: "$1.5", mt: "$1", shrink: 0, children: _jsx(Account, { host: host, onOrg: handleOrg, moreEntries: nav.moreEntries }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') })), _jsx(Rename, { open: renaming !== null, onOpenChange: (o) => !o && setRenaming(null), title: t('Rename'), name: renaming?.name ?? '', 
++                                        }, items: "center", gap: "$1", px: "$1.5", py: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$2", borderWidth: 0, bg: "transparent", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, children: _jsx(Settings, { size: 16, "aria-hidden": true }) }) })) : null] })) : at || mode === 'beta' || mode === 'hosted' ? null : devMode ? (_jsxs(YStack, { gap: "$2", pt: "$2", shrink: 0, minW: 0, maxW: "100%", children: [_jsx(Made, {}), _jsx(Setup, { go: go })] })) : (_jsx(Made, {})), _jsx(UpdatePill, {}), !anon && devMode ? (_jsxs(XStack, { render: _jsx("button", { type: "button" }), "data-slot": "dev-mode-indicator", "aria-label": t('Turn off developer mode'), ...{ title: t('Click to turn off developer mode') }, onClick: () => setDevMode(false), items: "center", justify: "space-between", gap: "$2", px: "$2.5", py: "$1", mx: "$0.5", mt: "$1", minH: 28, $touchable: { minH: TOUCH }, "$max-sm": { minH: TOUCH }, rounded: "$3", bg: "$panel", borderWidth: 1, borderColor: "var(--border-strong)", cursor: "pointer", hoverStyle: { bg: '$hover' }, focusVisibleStyle: { outlineWidth: 2, outlineStyle: 'solid', outlineColor: 'var(--ring)' }, shrink: 0, children: [_jsxs(XStack, { items: "center", gap: "$1.5", minW: 0, flex: 1, children: [_jsx(XStack, { width: 6, height: 6, rounded: 999, bg: "var(--state-online)", shrink: 0, "aria-hidden": true }), _jsx(Text, { fontSize: "$1", fontWeight: "500", color: "$ink", numberOfLines: 1, children: t('Developer mode · On') })] }), _jsx(Text, { fontSize: "$1", color: "$soft", shrink: 0, children: t('Off') })] })) : null, !anon && !drawer && !isNestedActive && !peeking ? (_jsx(YStack, { "data-slot": "sidebar-account", pt: "$1.5", mt: "$1", shrink: 0, children: _jsx(Account, { host: host, onOrg: handleOrg, moreEntries: nav.moreEntries }) })) : null, foot] }), drawer ? null : (_jsx(Gutter, { side: dir === 'rtl' ? 'right' : 'left', span: span.span, floor: FLOOR, ceil: CEIL, reset: WIDTH, onSpan: span.move, onKeep: span.keep, onShut: onShut, label: t('Resize sidebar') })), _jsx(Rename, { open: renaming !== null, onOpenChange: (o) => !o && setRenaming(null), title: t('Rename'), name: renaming?.name ?? '', 
                      // The name is the person's, kept on their account; typed back to its own name, it keeps none. A save the account
                      // refuses still keeps it in this browser.
                      run: async (next) => {
