@@ -780,7 +780,7 @@ function Gate() {
     let unlistenCloseTab: (() => void) | undefined;
 
     void safeListen('create-chat', () => started.current()).then((fn) => {
-      unlisten = fn ?? undefined;
+      unlistenCreate = fn ?? undefined;
     });
 
     void safeListen<string>('navigate-to-path', (event) => {
