@@ -309,7 +309,7 @@ export function LibraryOverlay({ onClose: _onClose }: { onClose: () => void }) {
       <div className="hz-overlay-header hz-library-header">
         <div className="hz-overlay-title-row">
           <h2>Library</h2>
-          <Layers size={15} style={{ color: '#38bdf8' }} />
+          <Layers size={15} style={{ color: '#888888' }} />
         </div>
         <div className="hz-overlay-tabs">
           {(['all', 'files', 'images'] as const).map((t) => (

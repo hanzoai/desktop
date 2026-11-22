@@ -32,63 +32,60 @@ const DATA_RE = /\.(sql|sqlite|db|parquet|csv|tsv)$/i;
 const CONFIG_RE = /\.(ya?ml|toml|ini|conf|cfg|xml|plist|xcconfig|entitlements)$/i;
 
 /**
- * Unix shell (LS_COLORS / eza) semantic file icons & colors so directories,
- * source languages, configs, docs, scripts, and dotfiles read at a glance.
+ * Vercel Geist / Zen semantic file icons & colors:
+ * neutral grey folders + crisp monochrome filenames with subtle Geist icon accents.
  */
 export function getFileVisual(name: string, isDir: boolean, isOpen = false): FileVisual {
   const lower = name.toLowerCase();
 
   if (isDir) {
     if (lower === '.git' || lower === '.github') {
-      return { Icon: FolderGit2, color: '#818cf8', nameColor: '#a5b4fc' };
+      return { Icon: FolderGit2, color: '#888888', nameColor: '#a1a1aa' };
     }
     if (lower.startsWith('.')) {
-      return { Icon: isOpen ? FolderOpen : Folder, color: '#64748b', nameColor: '#94a3b8' };
+      return { Icon: isOpen ? FolderOpen : Folder, color: '#525252', nameColor: '#737373' };
     }
-    return { Icon: isOpen ? FolderOpen : Folder, color: '#38bdf8', nameColor: '#e0f2fe' };
+    return { Icon: isOpen ? FolderOpen : Folder, color: '#888888', nameColor: '#ededed' };
   }
 
   if (lower === 'package.json' || lower === 'pnpm-workspace.yaml' || lower === 'cargo.toml') {
-    return { Icon: Package, color: '#f59e0b', nameColor: '#fde68a' };
+    return { Icon: Package, color: '#f5a623', nameColor: '#ededed' };
   }
   if (LOCK_RE.test(lower)) {
-    return { Icon: Lock, color: '#94a3b8', nameColor: '#94a3b8' };
+    return { Icon: Lock, color: '#666666', nameColor: '#888888' };
   }
   if (lower.endsWith('.ts') || lower.endsWith('.tsx') || lower.endsWith('.mts') || lower.endsWith('.cts')) {
-    return { Icon: FileCode2, color: '#60a5fa', nameColor: '#dbeafe' };
+    return { Icon: FileCode2, color: '#52a8ff', nameColor: '#ededed' };
   }
   if (lower.endsWith('.js') || lower.endsWith('.jsx') || lower.endsWith('.mjs') || lower.endsWith('.cjs')) {
-    return { Icon: FileCode2, color: '#fbbf24', nameColor: '#fef3c7' };
+    return { Icon: FileCode2, color: '#f5a623', nameColor: '#ededed' };
   }
-  if (lower.endsWith('.rs')) {
-    return { Icon: FileCode2, color: '#fb923c', nameColor: '#ffedd5' };
-  }
-  if (lower.endsWith('.swift')) {
-    return { Icon: FileCode2, color: '#f97316', nameColor: '#ffedd5' };
+  if (lower.endsWith('.rs') || lower.endsWith('.swift')) {
+    return { Icon: FileCode2, color: '#f57c38', nameColor: '#ededed' };
   }
   if (lower.endsWith('.py') || lower.endsWith('.go')) {
-    return { Icon: FileCode2, color: '#22d3ee', nameColor: '#cffafe' };
+    return { Icon: FileCode2, color: '#50e3c2', nameColor: '#ededed' };
   }
   if (lower.endsWith('.json') || lower.endsWith('.jsonc')) {
-    return { Icon: Braces, color: '#eab308', nameColor: '#fef08a' };
+    return { Icon: Braces, color: '#d4a72c', nameColor: '#d4d4d8' };
   }
   if (SHELL_RE.test(lower) || lower === 'makefile' || lower === 'dockerfile') {
-    return { Icon: Terminal, color: '#34d399', nameColor: '#a7f3d0' };
+    return { Icon: Terminal, color: '#46a758', nameColor: '#ededed' };
   }
   if (STYLE_RE.test(lower)) {
-    return { Icon: Palette, color: '#f472b6', nameColor: '#fce7f3' };
+    return { Icon: Palette, color: '#f75f8f', nameColor: '#ededed' };
   }
   if (IMAGE_RE.test(lower)) {
-    return { Icon: FileImage, color: '#2dd4bf', nameColor: '#ccfbf1' };
+    return { Icon: FileImage, color: '#50e3c2', nameColor: '#ededed' };
   }
   if (DOC_RE.test(lower) || lower === 'license' || lower.startsWith('readme')) {
-    return { Icon: BookText, color: '#c084fc', nameColor: '#e9d5ff' };
+    return { Icon: BookText, color: '#bf7af0', nameColor: '#ededed' };
   }
   if (DATA_RE.test(lower)) {
-    return { Icon: Database, color: '#a3e635', nameColor: '#ecfccb' };
+    return { Icon: Database, color: '#79d868', nameColor: '#ededed' };
   }
   if (CONFIG_RE.test(lower) || lower.startsWith('.')) {
-    return { Icon: FileCog, color: '#94a3b8', nameColor: '#cbd5e1' };
+    return { Icon: FileCog, color: '#737373', nameColor: '#a1a1aa' };
   }
-  return { Icon: FileText, color: '#9ca3af', nameColor: '#e5e7eb' };
+  return { Icon: FileText, color: '#737373', nameColor: '#d4d4d8' };
 }
