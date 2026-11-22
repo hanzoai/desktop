@@ -9,14 +9,12 @@ use crate::windows::{recreate_window, Window};
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let quit_menu_item = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
     let show_menu_item = MenuItemBuilder::with_id("show", "Hanzo AI").build(app)?;
-    let team_menu_item = MenuItemBuilder::with_id("team", "Hanzo Team").build(app)?;
 
     // The main window is the only window: local models are its Local AI manager.
 
     let menu = MenuBuilder::new(app)
         .items(&[
             &show_menu_item,
-            &team_menu_item,
             &quit_menu_item,
         ])
         .build()?;
@@ -43,9 +41,6 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
         .on_menu_event(move |tray, event| match event.id().as_ref() {
             "show" => {
                 let _ = recreate_window(tray.app_handle().clone(), Window::Main, true);
-            }
-            "team" => {
-                let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
             }
             "quit" => {
                 // process::exit skips RunEvent::Exit (main.rs), so what that
