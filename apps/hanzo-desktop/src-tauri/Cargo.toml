@@ -1,6 +1,6 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.63"
+version = "1.1.65"
 description = "A first class Desktop application to interact with Hanzo Node"
 authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
 license = "Apache-2.0"
@@ -63,12 +63,7 @@ kill_tree = { version = "0.2", features = ["tokio"] }
 semver = "1.0"
 sha2 = "0.10"
 rand = "0.8"
-# The OS keychain on every platform the app ships for: Keychain on macOS, the
-# Credential Manager on Windows, the Secret Service (libsecret, over D-Bus) on
-# Linux. keyring 3 has NO default store: with no feature it is the mock, whose
-# entries live and die with one `Entry`, so a session written at sign-in was
-# gone by the reload that follows it and the app came back signed out.
-keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+# OS keychain intentionally not linked: session lives in `~/.hanzo/` (identity.rs) and secrets in Cloud KMS.
 
 # hanzo-machined client (UNIX-socket HTTP/JSON)
 hyper = { version = "1.4", features = ["client", "http1"] }

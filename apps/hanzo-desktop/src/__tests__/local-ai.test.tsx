@@ -91,7 +91,10 @@ describe('the model list', () => {
     expect(ids).toContain('zen6:8b');
     expect(ids).toContain('zen-vl:8b');
     expect(ids.some((id) => /zen[45]|qwen2/i.test(id))).toBe(false);
-    for (const model of body.data) expect(model.class).toBe('free');
+    // Hanzo's picker also lists named cloud models for a guest, marked pro;
+    // everything that runs on this computer is free.
+    const cloud = ['claude-opus-4-6', 'claude-sonnet-4-6', 'claude-haiku-4-5', 'gpt-5.4', 'gpt-5.4-mini', 'o3', 'gemini-2.5-pro', 'gemini-2.5-flash', 'grok-4', 'deepseek-r1'];
+    for (const model of body.data) expect(model.class).toBe(cloud.includes(String(model.id)) ? 'pro' : 'free');
   });
 
   it('judges memory and size the way the cards say them', () => {

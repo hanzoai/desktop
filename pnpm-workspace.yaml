@@ -17,18 +17,18 @@ shamefullyHoist: true
 packages:
   - apps/*
 overrides:
-  '@hanzo/dev-core': '0.1.16'
+  '@hanzo/dev-core': '0.1.21'
   # The map hanzo.ai draws with, and only one copy of it: a second @hanzo/gui is
   # a second config, a second @hanzo/ui is a second set of component
   # registrations, a second @hanzo/design is a second set of tokens. The catalog
   # decides which version; these decide there is one.
   '@hanzo/gui': '8.3.5'
-  '@hanzo/ui': '8.33.6'
+  '@hanzo/ui': '8.33.11'
   '@hanzo/event': '0.3.69'
-  '@hanzo/design': '0.5.44'
+  '@hanzo/design': '0.5.45'
   '@hanzo/iam': '0.21.42'
   '@hanzo/appearance': '0.2.15'
-  '@hanzo/studio': '0.1.15'
+  '@hanzo/studio': '0.1.21'
   '@noble/hashes': '1.8.0'
   'zod': '^4.5.2'
   react-reconciler: '^0.33.0'
@@ -75,24 +75,11 @@ overrides:
   uuid: '>=11.1.1'
   serialize-javascript: '>=7.0.5'
   'yaml@2': '>=2.8.3'
-# The desktop draws hanzo.ai's app, so it takes hanzo.ai's patches with it:
-# @hanzo/ui 8.33.6 (glass shadows and text links, hanzo-inc/app's own patch) and
-# @hanzogui/shell 8.4.3 with hanzoai/gui#20 (the palette leaves a ⌘K the page
-# already answered). @hanzo/studio 0.1.15 so a GPU status that is not a fleet no
-# longer crashes Studio in lit(), and the window reaches the engine through the
-# hanzo-studio scheme (src-tauri/src/studio_proxy.rs), since studio.hanzo.ai's
-# CORS admits no window origin. @hanzo/app 0.3.149 with what only a desktop
-# window does: a signed-out reader chats with the local engine (any local model,
-# images and text files read in the window, Local AI from a failed turn), lists
-# that stay empty without a session, the desktop's ⌘N and ⇧⌘M in the shortcut
-# list, no Google Workspace until Google verifies its scopes, and the
-# computer's hostname (`desktopLocal().host`, 0.3.143) by which Settings →
-# Machines shares a folder with the web. Drop each when its pin moves to a
-# release that carries it.
+# Decomplected: zero monkey-patches on @hanzo/app, @hanzo/ui, @hanzo/studio.
+# Only @hanzogui/shell 8.4.3 keeps its ⌘K pass-through patch until shell bumps.
 patchedDependencies:
-  '@hanzo/app@0.3.149': patches/@hanzo__app@0.3.149.patch
-  '@hanzo/ui@8.33.6': patches/@hanzo__ui@8.33.6.patch
-  '@hanzo/studio@0.1.15': patches/@hanzo__studio@0.1.15.patch
+  '@hanzo/app@0.3.157': patches/@hanzo__app@0.3.157.patch
+  '@hanzo/tabs@0.1.17': patches/@hanzo__tabs@0.1.17.patch
   '@hanzogui/shell@8.4.3': patches/@hanzogui__shell@8.4.3.patch
 allowBuilds:
   '@swc/core': true
@@ -104,19 +91,20 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 minimumReleaseAgeExclude:
-  - '@hanzo/build@0.2.81 || 0.2.99 || 0.2.130 || 0.2.132 || 0.2.138 || 0.2.141 || 0.2.144'
-  - '@hanzo/dev-core@0.1.1 || 0.1.2 || 0.1.12 || 0.1.13 || 0.1.16'
-  - '@hanzo/app@0.2.20 || 0.2.21 || 0.2.63 || 0.3.107 || 0.3.109 || 0.3.115 || 0.3.117 || 0.3.124 || 0.3.133 || 0.3.137 || 0.3.149'
+  - '@hanzo/build@0.2.81 || 0.2.99 || 0.2.130 || 0.2.132 || 0.2.138 || 0.2.141 || 0.2.144 || 0.2.146'
+  - '@hanzo/dev-core@0.1.1 || 0.1.2 || 0.1.12 || 0.1.13 || 0.1.16 || 0.1.21'
+  - '@hanzo/app@0.2.20 || 0.2.21 || 0.2.63 || 0.3.107 || 0.3.109 || 0.3.115 || 0.3.117 || 0.3.124 || 0.3.133 || 0.3.137 || 0.3.149 || 0.3.157'
   - '@hanzo/personas@1.3.3'
   - '@hanzo/mod@0.1.0 || 0.1.2'
   - '@hanzo/ai@0.7.0'
   - '@hanzo/appearance@0.2.15'
-  - '@hanzo/design@0.5.44'
+  - '@hanzo/design@0.5.44 || 0.5.45'
+  - '@hanzo/font@1.11.0'
   - '@hanzo/event@0.3.69'
   - '@hanzo/i18n@0.6.1'
   - '@hanzo/iam@0.21.29 || 0.21.35 || 0.21.41 || 0.21.42'
-  - '@hanzo/studio@0.1.3 || 0.1.8 || 0.1.15'
-  - '@hanzo/ui@8.29.0 || 8.29.45 || 8.33.6'
+  - '@hanzo/studio@0.1.3 || 0.1.8 || 0.1.15 || 0.1.21'
+  - '@hanzo/ui@8.29.0 || 8.29.45 || 8.33.6 || 8.33.11'
   - '@hanzo/glass@0.1.0 || 0.1.1'
   - '@hanzo/voice@0.1.19'
   - '@hanzo/gui@8.2.1 || 8.3.5'
@@ -236,22 +224,22 @@ catalog:
   '@hanzo/build': '0.2.144'
   '@hanzo/composer': '0.2.1'
   '@hanzo/data': '1.2.4'
-  '@hanzo/design': '0.5.44'
+  '@hanzo/design': '0.5.45'
   '@hanzo/event': '0.3.69'
-  '@hanzo/font': '1.9.3'
+  '@hanzo/font': '1.11.0'
   '@hanzo/gui': '8.3.5'
   '@hanzo/i18n': '0.6.1'
   '@hanzo/iam': '0.21.42'
   '@hanzo/personas': '1.0.5'
   '@hanzo/plans': '1.8.17'
-  '@hanzo/app': '0.3.149'
-  '@hanzo/studio': '0.1.15'
+  '@hanzo/app': '0.3.157'
+  '@hanzo/studio': '0.1.21'
   # The commit hanzo-inc/app's lock holds (0.1.17); npm stops at 0.1.7, under
   # @hanzo/app's floor of 0.1.8.
   '@hanzo/tabs': 'github:hanzo-inc/tabs#26a30cbc5fac232e5b11d5d77939f9573ca0c8d8'
   '@hanzo/logo': '1.0.26'
   '@hanzo/pay': '0.1.2'
-  '@hanzo/ui': '8.33.6'
+  '@hanzo/ui': '8.33.11'
   '@hanzo/usage': '0.1.18'
   '@hanzo/voice': '0.1.19'
   '@hanzogui/config': '8.3.5'

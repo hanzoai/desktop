@@ -39,6 +39,42 @@ fn node() -> &'static zapd::Node {
     })
 }
 
+/// Every node registered on this user's native ZAP router (browsers, local/cloud
+/// terminals, dev servers, MCP nodes — zero-serialization binary ZAP frames).
+#[tauri::command]
+pub async fn zap_nodes() -> Result<Vec<Browser>, String> {
+    let nodes = node()
+        .nodes(Duration::from_secs(2))
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(nodes
+        .into_iter()
+        .map(|n| Browser {
+            id: n.id,
+            caps: n.desc.caps,
+            attrs: n.desc.attrs.into_iter().collect(),
+        })
+        .collect())
+}
+
+/// Call any node on the user's native ZAP router directly (zero WebSocket serialization).
+#[tauri::command]
+pub async fn zap_call(
+    target: String,
+    method: String,
+    params: HashMap<String, String>,
+) -> Result<Value, String> {
+    let raw = node()
+        .call(&target, encode(&method, &params), Duration::from_secs(30))
+        .await
+        .map_err(|e| e.to_string())?;
+    let text = String::from_utf8_lossy(&raw);
+    if let Some(why) = text.strip_prefix("ERR:") {
+        return Err(why.to_string());
+    }
+    Ok(serde_json::from_str(&text).unwrap_or_else(|_| Value::String(text.into_owned())))
+}
+
 /// The browsers registered on this user's router.
 #[tauri::command]
 pub async fn browsers() -> Result<Vec<Browser>, String> {
