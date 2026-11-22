@@ -3,8 +3,8 @@ use tauri_plugin_deep_link::DeepLinkExt;
 
 use crate::windows::{recreate_window, Window};
 
-/// Brands whose IAM issues a `<scheme>://oauth/<brand>` redirect. Mirrors the
-/// `Brand` union and the `iam.redirectUri` column in libs/brand-config.
+/// Brands whose sign-in comes back here, by name. libs/brand-config is the one
+/// brand table; the test below holds this list to it.
 pub(crate) const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -72,4 +72,26 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
         }
     });
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IAM_BRANDS;
+
+    /// The list above is the brand table's, not a second one: every brand in
+    /// libs/brand-config with a callback event, and nothing else.
+    #[test]
+    fn the_brands_are_the_brand_table_s() {
+        let table = include_str!("../../../../libs/brand-config/src/index.ts");
+        let mut from_table: Vec<&str> = table
+            .split("callbackEvent: '")
+            .skip(1)
+            .filter_map(|s| s.split('\'').next()?.strip_suffix("-iam-callback"))
+            .collect();
+        from_table.sort();
+        let mut here = IAM_BRANDS.to_vec();
+        here.sort();
+        assert!(!from_table.is_empty(), "the brand table names no callback event");
+        assert_eq!(here, from_table);
+    }
 }

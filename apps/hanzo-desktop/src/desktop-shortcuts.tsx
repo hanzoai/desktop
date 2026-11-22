@@ -2,6 +2,7 @@ import { KEYS } from '@hanzo/app/help';
 import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
 import { Text, XStack, YStack } from '@hanzo/gui';
 import { Button, Kbd, Switch } from '@hanzo/ui';
+import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import {
   ArrowLeft,
@@ -21,7 +22,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 
 import { ProvidersListSection } from './LibraryPane';
 import { openLocalAiManager } from './local-ai';
-import { safeInvoke } from './utils/tauri-check';
+import { isTauriAvailable, safeInvoke } from './utils/tauri-check';
 
 export interface FnVoiceHooks {
   isListening: () => boolean;
@@ -424,6 +425,17 @@ export function DesktopSettings({
   const [detectedTools, setDetectedTools] = useState<DetectedToolRow[]>([]);
   const [toolsLoading, setToolsLoading] = useState<boolean>(false);
   const [devMode, setDevMode] = useDevMode();
+  // Mining's switch (src-tauri mining `is_enabled`): off until the person turns it on.
+  // Null outside the desktop app, where there is nothing to share.
+  const [mining, setMining] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!isTauriAvailable()) return;
+    invoke<boolean>('mining_get_enabled').then(setMining, () => setMining(null));
+  }, []);
+  const turnMining = (on: boolean) => {
+    setMining(on);
+    invoke('mining_set_enabled', { on }).catch(() => setMining(!on));
+  };
   const [section, setSection] = useState<SettingsSectionId>(() => {
     const candidate = (initialSection ?? 'general') as SettingsSectionId;
     return VALID_SECTIONS.has(candidate) ? candidate : 'general';
@@ -682,6 +694,21 @@ export function DesktopSettings({
                       />
                     }
                   />
+                  {mining !== null && (
+                    <SettingsRow
+                      testId="desktop-mining"
+                      title="Earn rewards by sharing this computer's power"
+                      description="While on, this app uses this computer's processor in the background, once a minute, to make work proofs for its network; rewards are counted on this computer and are not paid out yet."
+                      control={
+                        <Switch
+                          aria-label="Earn rewards by sharing this computer's power"
+                          data-testid="desktop-mining-switch"
+                          checked={mining}
+                          onCheckedChange={(v: boolean) => turnMining(Boolean(v))}
+                        />
+                      }
+                    />
+                  )}
                   <SettingsRow
                     title="Enso automatic model routing"
                     description="Automatically pick the fastest frontier or local Zen model for each turn."

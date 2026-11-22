@@ -1,16 +1,19 @@
 {
   "identifier": "main-local",
-  "description": "The main window's own pages only, never the remote origins main.json lists: downloading, serving and removing models on this computer. A hanzo.ai page in the window must not be able to fill the disk or start a model. build.rs counts these as main's.",
+  "description": "The main window's own pages only, never the remote origins main.json lists: downloading, serving and removing models on this computer, the mining switch, and the sign-in callback port. A hanzo.ai page in the window must not be able to fill the disk, start a model, turn on mining or catch a sign-in. build.rs counts these as main's.",
   "local": true,
   "windows": [
     "main"
   ],
   "permissions": [
+    "allow-iam-loopback",
     "allow-local-models-status",
     "allow-local-models-pull",
     "allow-local-models-cancel",
     "allow-local-models-remove",
     "allow-local-models-serve",
-    "allow-local-models-stop"
+    "allow-local-models-stop",
+    "allow-mining-get-enabled",
+    "allow-mining-set-enabled"
   ]
 }

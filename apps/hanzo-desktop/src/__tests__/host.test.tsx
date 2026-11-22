@@ -82,6 +82,21 @@ describe('Host', () => {
     expect(window.localStorage.getItem(GUEST)).toBeNull();
   });
 
+  it('clears an old guest flag once signed in, so a later sign-out opens on Welcome', async () => {
+    window.localStorage.setItem(GUEST, '1');
+    iam.state = { isLoading: false, isAuthenticated: true, sdk: {} };
+    await open('/chat');
+    expect(screen.getByText('the app')).toBeTruthy();
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
+  it('marks nobody a guest while sign-in is still being read', async () => {
+    iam.state = { isLoading: true, isAuthenticated: false, sdk: {} };
+    await open('/settings');
+    fireEvent.click(screen.getByText('Settings back'));
+    expect(window.localStorage.getItem(GUEST)).toBeNull();
+  });
+
   it('brings a signed-out person back from Settings into Chat as a guest', async () => {
     await open('/settings');
     fireEvent.click(screen.getByText('Settings back'));

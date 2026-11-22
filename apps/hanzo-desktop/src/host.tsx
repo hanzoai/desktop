@@ -244,6 +244,17 @@ function guest(): boolean {
   }
 }
 
+/** A signed-in window is nobody's guest: an old build's flag must not outlive a sign-in. */
+function forgetGuest(): void {
+  try {
+    window.localStorage.removeItem(GUEST);
+    window.sessionStorage.removeItem('hanzo.anon.try');
+    (window as any).__hanzoAnonChat = false;
+  } catch {
+    // Without storage there is no flag to clear.
+  }
+}
+
 function stayGuest(): void {
   try {
     window.localStorage.setItem(GUEST, '1');
@@ -680,13 +691,22 @@ function Gate() {
   // Signed out, opening Chat from outside Welcome is the same as "Not now" (a
   // guest). Signed in it changes nothing: a guest flag set then would make the
   // person a guest after a later sign-out without their choosing it.
+  // While sign-in is still being read, nobody is known to be signed out yet.
   const signedIn = useRef(isAuthenticated);
   signedIn.current = isAuthenticated;
+  const reading = useRef(iamLoading);
+  reading.current = iamLoading;
   const visit = () => {
-    if (signedIn.current) return;
+    if (signedIn.current || reading.current) return;
     stayGuest();
     setVisiting(true);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    forgetGuest();
+    setVisiting(false);
+  }, [isAuthenticated]);
 
   // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
   const startChat = () => {

@@ -485,12 +485,36 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark', onBack }: B
     }
   };
 
+  /** Puts the engine's LSA back to `was`, exactly as it was read. */
+  const restoreLsa = async (was: LsaStatusResponse) => {
+    if (was.enabled && was.config) {
+      await fetch(LSA_URL, {
+        body: JSON.stringify(was.config),
+        headers: { 'content-type': 'application/json' },
+        method: 'POST',
+      });
+    } else {
+      await fetch(LSA_URL, { method: 'DELETE' });
+    }
+    setLsaEnabled(Boolean(was.enabled && was.config));
+    window.dispatchEvent(new Event('hanzo:lsa-changed'));
+  };
+
   const runAbComparison = async () => {
     setRunning(true);
     setError(null);
     setChat(null);
     setLsaChat(null);
-    const wasEnabled = lsaEnabled;
+    // The engine's own settings, so the comparison leaves them as it found them
+    // whether it finishes or fails. Unreadable, it does not run at all.
+    const was: LsaStatusResponse | null = await fetch(LSA_URL)
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null);
+    if (!was) {
+      setError('Could not read the engine’s settings, so the comparison was not run.');
+      setRunning(false);
+      return;
+    }
     try {
       // 1. Run with LSA (warm up & measure D-LSA)
       await fetch(LSA_URL, {
@@ -498,7 +522,6 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark', onBack }: B
         headers: { 'content-type': 'application/json' },
         method: 'POST',
       });
-      setLsaEnabled(true);
       const sparse = await runChatOnce('LSA-A', true);
       setLsaChat(sparse);
 
@@ -506,21 +529,11 @@ const BenchmarkPage = ({ embedded = false, initialTab = 'benchmark', onBack }: B
       await fetch(LSA_URL, { method: 'DELETE' });
       const baseline = await runChatOnce('FULL-B', false);
       setChat(baseline);
-
-      // Leave the engine as it was before the comparison: on only if it was on.
-      if (wasEnabled) {
-        await fetch(LSA_URL, {
-          body: JSON.stringify(currentLsaConfig()),
-          headers: { 'content-type': 'application/json' },
-          method: 'POST',
-        });
-      }
-      setLsaEnabled(wasEnabled);
-      window.dispatchEvent(new Event('hanzo:lsa-changed'));
-      await refreshEngineStatus();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
+      await restoreLsa(was).catch(() => setError('The engine’s settings could not be put back.'));
+      await refreshEngineStatus();
       setRunning(false);
     }
   };

@@ -1,5 +1,5 @@
 /** The benchmark page reads the engine's settings and changes them only on a button press. */
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import BenchmarkPage from '../pages/benchmark';
@@ -32,5 +32,47 @@ describe('BenchmarkPage', () => {
 
     fireEvent.click(screen.getByTestId('benchmark-back'));
     expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  /** An engine whose chat fails, with `lsa` as its own LSA settings; every LSA write is recorded. */
+  function failingEngine(lsa: { enabled: boolean; config: Record<string, number> | null }) {
+    const writes: Array<{ method: string; body?: unknown }> = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const method = init?.method ?? 'GET';
+        if (String(url).endsWith('/v1/lsa')) {
+          if (method === 'GET') return new Response(JSON.stringify(lsa), { status: 200 });
+          writes.push({ method, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+          return new Response('{}', { status: 200 });
+        }
+        if (String(url).includes('chat/completions')) throw new TypeError('Failed to fetch');
+        return new Response('{}', { status: 200 });
+      }),
+    );
+    return writes;
+  }
+
+  async function compare() {
+    render(<BenchmarkPage />);
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 0));
+    });
+    fireEvent.click(screen.getByText('⚡ Compare Full vs LSA'));
+    await waitFor(() => expect(screen.getByText('⚡ Compare Full vs LSA')).toBeTruthy());
+  }
+
+  it('a comparison that fails puts back the engine’s own LSA settings, not the page’s', async () => {
+    const own = { min_seq_len: 4096, top_k: 999 };
+    const writes = failingEngine({ enabled: true, config: own });
+    await compare();
+    expect(writes.length).toBeGreaterThan(1);
+    expect(writes.at(-1)).toEqual({ method: 'POST', body: own });
+  });
+
+  it('a comparison that fails leaves LSA off when the engine had it off', async () => {
+    const writes = failingEngine({ enabled: false, config: null });
+    await compare();
+    expect(writes.at(-1)).toEqual({ method: 'DELETE', body: undefined });
   });
 });
