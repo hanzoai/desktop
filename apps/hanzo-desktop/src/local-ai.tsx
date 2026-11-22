@@ -38,6 +38,7 @@ function keep(patch: { model?: string; effort?: string }): void {
   }
 }
 
+export const HANZOD_ENGINE_URL = 'http://127.0.0.1:3690/v1/engine';
 export const LOCAL_ENGINE_PORT_URL = 'http://127.0.0.1:36900';
 export const LOCAL_OLLAMA_URL = 'http://127.0.0.1:11434';
 
@@ -167,7 +168,7 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
   const probeTimeoutMs = isTestEnv ? 150 : 1200;
 
   const customUrl = getCustomEngineUrl();
-  const [customRows, engineRows, ollamaModels] = await Promise.all([
+  const [customRows, hanzodCatalogRows, engineRows, ollamaModels] = await Promise.all([
     customUrl
       ? (async () => {
           try {
@@ -181,6 +182,19 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
           }
         })()
       : Promise.resolve([]),
+    (async () => {
+      try {
+        const res = await fetch(`${HANZOD_ENGINE_URL}/catalog`, {
+          signal: AbortSignal.timeout(probeTimeoutMs),
+        });
+        if (!res.ok) return [];
+        const body = await res.json();
+        const models = Array.isArray(body?.models) ? body.models : [];
+        return models.filter((m: { installed?: boolean }) => m?.installed);
+      } catch {
+        return [];
+      }
+    })(),
     (async () => {
       try {
         const res = await fetch(`${LOCAL_ENGINE_PORT_URL}/v1/models`, {
@@ -211,6 +225,13 @@ export async function probeInstalledLocalModels(force = false): Promise<Installe
     if (r?.id && !seen.has(r.id)) {
       seen.add(r.id);
       found.push({ id: r.id, source: 'custom' });
+    }
+  }
+
+  for (const r of hanzodCatalogRows) {
+    if (r?.id && !seen.has(r.id)) {
+      seen.add(r.id);
+      found.push({ id: r.id, sizeBytes: r?.bytes, source: 'hanzo-engine' });
     }
   }
 
@@ -422,21 +443,23 @@ export async function handleLocalChatCompletion(
     }
   }
 
-  // 2. Try Hanzo Engine on :36900 if it has a loaded model
+  // 2. Try unified hanzod local inference (/v1/engine/chat/completions), then legacy :36900
   if (installed.some((m) => m.source === 'hanzo-engine')) {
-    try {
-      const res = await nativeFetch(`${LOCAL_ENGINE_PORT_URL}/v1/chat/completions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...payload,
-          model: requestedModel === 'enso-free' || requestedModel === 'enso' ? 'default' : requestedModel,
-        }),
-        signal: init?.signal,
-      });
-      if (res.ok) return res;
-    } catch {
-      // fall through to :11434
+    for (const url of [`${HANZOD_ENGINE_URL}/chat/completions`, `${LOCAL_ENGINE_PORT_URL}/v1/chat/completions`]) {
+      try {
+        const res = await nativeFetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...payload,
+            model: requestedModel === 'enso-free' || requestedModel === 'enso' ? 'default' : requestedModel,
+          }),
+          signal: init?.signal,
+        });
+        if (res.ok) return res;
+      } catch {
+        // try next endpoint
+      }
     }
   }
 
