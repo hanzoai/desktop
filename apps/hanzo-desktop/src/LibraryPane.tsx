@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { HanzoMark } from '@hanzogui/shell';
 import { keychain } from './keychain';
+import { CodeFileViewer } from './lib/CodeFileViewer';
 import { getFileVisual } from './lib/file-style';
 import { safeInvoke } from './utils/tauri-check';
 import {
@@ -381,15 +382,12 @@ export function LibraryOverlay({ onClose: _onClose }: { onClose: () => void }) {
           ) : null}
 
           {selectedFile ? (
-            <div className="hz-file-viewer">
-              <div className="hz-file-viewer-head">
-                <span>{selectedFile.path.split('/').pop()}</span>
-                <button type="button" className="hz-pill-btn" onClick={() => setSelectedFile(null)}>
-                  Back to list
-                </button>
-              </div>
-              <pre className="hz-file-code">{selectedFile.content.slice(0, 80000)}</pre>
-            </div>
+            <CodeFileViewer
+              filePath={selectedFile.path}
+              content={selectedFile.content}
+              onBack={() => setSelectedFile(null)}
+              backLabel="Back to list"
+            />
           ) : loading ? (
             <div className="hz-surface-note">Loading…</div>
           ) : filtered.length === 0 ? (

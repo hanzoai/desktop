@@ -22,7 +22,6 @@ import {
   RefreshCw,
   Rows2,
   Send,
-  Settings,
   Smartphone,
   SquareMenu,
   SquareTerminal,
@@ -30,6 +29,7 @@ import {
 } from 'lucide-react';
 
 import { Update } from './update';
+import { CodeFileViewer } from './lib/CodeFileViewer';
 import { getFileVisual } from './lib/file-style';
 
 export type SurfaceKind =
@@ -288,19 +288,6 @@ export function TopRightControls() {
       </button>
       <button
         type="button"
-        data-slot="desktop-settings-button"
-        className="hz-chrome-btn"
-        aria-label="Settings (⌘,)"
-        title="Settings (⌘,)"
-        onClick={() => {
-          closeDetailsPopover();
-          window.history.pushState(null, '', '/settings');
-        }}
-      >
-        <Settings size={15} strokeWidth={1.85} />
-      </button>
-      <button
-        type="button"
         data-slot="right-surface-toggle"
         className={`hz-chrome-btn ${rightOpen ? 'is-active' : ''}`}
         aria-label="Toggle right panel"
@@ -540,15 +527,11 @@ function FilesSurface() {
       </div>
       {err ? <div className="hz-surface-note">{err}</div> : null}
       {filePath ? (
-        <div className="hz-file-viewer">
-          <div className="hz-file-viewer-head">
-            <span>{filePath.split('/').pop()}</span>
-            <button type="button" className="hz-pill-btn" onClick={() => setFilePath(null)}>
-              Back
-            </button>
-          </div>
-          <pre className="hz-file-code">{fileContent.slice(0, 40000)}</pre>
-        </div>
+        <CodeFileViewer
+          filePath={filePath}
+          content={fileContent}
+          onBack={() => setFilePath(null)}
+        />
       ) : (
         <div className="hz-surface-list hz-unix-files">
           {cwd && cwd.includes('/') && cwd !== '/' ? (
