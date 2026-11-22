@@ -5,6 +5,7 @@ import { GuiProvider } from '@hanzo/gui';
 import { IamProvider, useIam } from '@hanzo/iam/react';
 import { configure, Look, Rooms, type Link, type Router } from '@hanzo/app';
 import { App, type Titlebar } from '@hanzo/app/App';
+import { org as sessionOrg } from '@hanzo/app/lib/session';
 import { empty } from '@hanzo/app/open';
 import { useScheme } from '@hanzo/appearance';
 import { invoke } from '@tauri-apps/api/core';
@@ -167,18 +168,35 @@ const IAM = {
 // (lib/host `go`), so the window re-renders on every push and replace as well
 // as on popstate. A push to another origin cannot happen in a webview; it opens
 // in the browser instead.
+const IN_WINDOW_ORG_SETTINGS = /^\/settings\/organization\/(billing|usage)(\/|$)/;
 const WEB = /^\/(billing|usage|keys|pricing)(\/|$)|^\/settings\/organization(\/|$)/;
 
 /** The hanzo.ai page an address of this window's names, or null for one the window draws. */
 export function onTheWeb(href: string): string | null {
   try {
     const url = new URL(href, window.location.href);
-    if (url.origin !== window.location.origin || !WEB.test(url.pathname)) return null;
+    if (url.origin !== window.location.origin || IN_WINDOW_ORG_SETTINGS.test(url.pathname) || !WEB.test(url.pathname)) {
+      return null;
+    }
+    const activeOrg = sessionOrg();
+    const withOrg = (targetUrl: string) => {
+      if (!activeOrg) return targetUrl;
+      const parsed = new URL(targetUrl);
+      if (!parsed.searchParams.has('org')) parsed.searchParams.set('org', activeOrg);
+      return parsed.toString();
+    };
     // /billing on hanzo.ai is the Billing product marketing page; real checkout &
     // billing management live at /pay.
     if (url.pathname === '/billing' || url.pathname.startsWith('/billing/')) {
       const rest = url.pathname.slice('/billing'.length);
-      return `${SITE}/pay${rest}${url.search}`;
+      return withOrg(`${SITE}/pay${rest}${url.search}`);
+    }
+    if (url.pathname === '/usage' || url.pathname.startsWith('/usage/')) {
+      const rest = url.pathname.slice('/usage'.length);
+      return withOrg(`${SITE}/pay/usage${rest}${url.search}`);
+    }
+    if (url.pathname === '/keys' || url.pathname.startsWith('/keys/')) {
+      return 'https://platform.hanzo.ai/api-keys';
     }
     return `${SITE}${url.pathname}${url.search}`;
   } catch {
@@ -842,10 +860,7 @@ function Gate() {
             (typeof rawUser?.id === 'string' && rawUser.id) ||
             '',
           avatar: typeof rawUser?.avatar === 'string' ? rawUser.avatar : '',
-          org:
-            (typeof rawUser?.owner === 'string' && rawUser.owner) ||
-            (typeof rawUser?.org === 'string' && rawUser.org) ||
-            '',
+          org: sessionOrg() || '',
         }
       : null;
     return (

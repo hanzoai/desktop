@@ -1,4 +1,5 @@
 import { KEYS } from '@hanzo/app/help';
+import { org as sessionOrg, scope as sessionScope } from '@hanzo/app/lib/session';
 import { getBrand } from '@hanzo/desktop-brand-config';
 import { apply, read, write, type Preference } from '@hanzo/appearance';
 import { DEV_MODE_NOTE, useDevMode } from '@hanzo/build/dev-mode';
@@ -24,7 +25,8 @@ export const platformOf = (ua: string): Platform => (/Mac|iPhone|iPad/.test(ua) 
  * (host.tsx, `windowKey`) or by main.rs, and merged into the app's row of the
  * same name below: one row per action, never a second "New chat". ⇧⌘I is the
  * system-wide key main.rs registers (`super+shift+i` and `control+shift+i`,
- * both on every platform). Hold / double-tap Fn is not here: Windows and Linux keyboards
+ * both on every platform); ⇧⌘J (Spotlight) is not registered until Spotlight
+ * can send. Hold / double-tap Fn is not here: Windows and Linux keyboards
  * resolve Fn in firmware, so no key event ever reaches the window, and macOS
  * gives a Fn (Globe) press to Dictation or the emoji picker by default. ⌘⇧M is
  * the voice key.
@@ -216,13 +218,17 @@ const SECTION_ALIASES: Record<string, Section> = {
 };
 
 /**
- * The section an address names (`/settings/advanced`). Any other settings address,
- * bare `/settings` included, opens Account.
+ * The section an address names (`/settings/advanced`, `/settings/organization/billing`).
+ * Any other settings address, bare `/settings` included, opens Account.
  */
 export const sectionOf = (path: string): Section => {
   const clean = path.replace(/\/+$/, '');
-  const sub = clean.startsWith('/settings/') ? clean.slice('/settings/'.length).split('/')[0] : '';
-  return SECTION_ALIASES[sub] ?? 'account';
+  if (!clean.startsWith('/settings/')) return 'account';
+  const parts = clean.slice('/settings/'.length).split('/');
+  if (parts[0] === 'organization' && parts[1]) {
+    return SECTION_ALIASES[parts[1]] ?? 'account';
+  }
+  return SECTION_ALIASES[parts[0] ?? ''] ?? 'account';
 };
 
 const HANZOD_DAEMON_URL = 'http://127.0.0.1:3690';
@@ -288,11 +294,51 @@ function decodeJwtClaims(): DesktopSettingsUser | null {
       email: json.email || '',
       id: json.sub || json.id || '',
       avatar: typeof json.avatar === 'string' ? json.avatar : '',
-      org: json.owner || json.org || '',
+      // Never treat `json.owner` ("hanzo") as a customer tenant org; read only
+      // the validated workspace org from @hanzo/app/lib/session.
+      org: sessionOrg() || '',
     };
   } catch {
     return null;
   }
+}
+
+const DIRECTORY_ORGS = new Set([
+  'hanzo',
+  'hanzo-id',
+  'lux',
+  'lux-id',
+  'zoo',
+  'zoo-id',
+  'pars',
+  'pars-id',
+]);
+
+function resolveBillingOrg(explicitOrg?: string | null): string | null {
+  const active = sessionOrg();
+  if (active) return active;
+  const trimmed = explicitOrg?.trim();
+  if (trimmed && !DIRECTORY_ORGS.has(trimmed)) return trimmed;
+  return null;
+}
+
+function buildDesktopPayUrl(
+  siteUrl: string,
+  subpath = '',
+  org?: string | null,
+  extra?: Record<string, string>,
+): string {
+  const params = new URLSearchParams();
+  if (extra) {
+    for (const [k, v] of Object.entries(extra)) {
+      if (v) params.set(k, v);
+    }
+  }
+  if (org) params.set('org', org);
+  const qs = params.toString();
+  const base = siteUrl.replace(/\/+$/, '');
+  const clean = !subpath || subpath === '/' ? '' : subpath.startsWith('/') ? subpath : `/${subpath}`;
+  return `${base}/pay${clean}${qs ? `?${qs}` : ''}`;
 }
 
 function initialsOf(name?: string, email?: string): string {
@@ -491,11 +537,29 @@ export function DesktopSettings({
     const token = keychain.getItem('hanzo_iam_access_token');
     if (!token) return;
     const ctrl = new AbortController();
-    const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+    const headers: Record<string, string> = {
+      ...sessionScope(),
+      Authorization: `Bearer ${token}`,
+    };
 
     if (section === 'account' || section === 'usage') {
       fetch(`${resolvedApi}/v1/billing/summary`, { headers, signal: ctrl.signal })
-        .then((r) => (r.ok ? r.json() : null))
+        .then(async (r) => {
+          if (r.ok) return r.json();
+          const [tier, bal] = await Promise.all([
+            fetch(`${resolvedApi}/v1/billing/tier`, { headers, signal: ctrl.signal })
+              .then((tr) => (tr.ok ? tr.json() : null))
+              .catch(() => null),
+            fetch(`${resolvedApi}/v1/billing/balance`, { headers, signal: ctrl.signal })
+              .then((br) => (br.ok ? br.json() : null))
+              .catch(() => null),
+          ]);
+          if (!tier && !bal) return null;
+          return {
+            plan_name: tier?.planName || tier?.tier?.displayName || tier?.plan || tier?.tier?.name,
+            balance: typeof bal?.available === 'number' ? bal.available : bal?.balance,
+          };
+        })
         .then((data) => {
           if (!data) {
             setBillingSummary((prev) => ({ ...prev, loaded: true }));
@@ -791,10 +855,9 @@ export function DesktopSettings({
                       <Button
                         size="sm"
                         variant="outline"
-                        onPress={() => {
-                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
-                          void openUrl(`${siteUrl}/pay${q}`);
-                        }}
+                        onPress={() =>
+                          void openUrl(buildDesktopPayUrl(siteUrl, '', resolveBillingOrg(identity?.org)))
+                        }
                       >
                         Manage billing
                       </Button>
@@ -809,7 +872,13 @@ export function DesktopSettings({
                   title="Token & compute usage"
                   detail="Inspect per-model token consumption, rate-limit windows, and daily spend charts."
                   trailing={
-                    <Button size="sm" variant="outline" onPress={() => void openUrl(`${siteUrl}/usage`)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onPress={() =>
+                        void openUrl(buildDesktopPayUrl(siteUrl, '/usage', resolveBillingOrg(identity?.org)))
+                      }
+                    >
                       Open Usage dashboard
                     </Button>
                   }
@@ -818,27 +887,43 @@ export function DesktopSettings({
                   title="Upgrade or add credits"
                   detail="Upgrade to Pro / Dev / Max or top up pre-paid compute credits on hanzo.ai/pay."
                   trailing={
-                    <XStack gap="$2">
+                    <XStack gap="$2" flexWrap="wrap">
                       <Button
                         size="sm"
                         variant="primary"
-                        onPress={() => {
-                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
-                          void openUrl(`${siteUrl}/pay/cart${q}`);
-                        }}
+                        onPress={() =>
+                          void openUrl(buildDesktopPayUrl(siteUrl, '/cart', resolveBillingOrg(identity?.org)))
+                        }
                       >
                         Upgrade plan
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        onPress={() => {
-                          const q = identity?.org ? `?org=${encodeURIComponent(identity.org)}` : '';
-                          void openUrl(`${siteUrl}/pay/amount/card${q}`);
-                        }}
+                        onPress={() =>
+                          void openUrl(
+                            buildDesktopPayUrl(siteUrl, '/amount/card', resolveBillingOrg(identity?.org)),
+                          )
+                        }
                       >
                         Add credits
                       </Button>
+                      {([10, 25, 50] as const).map((amt) => (
+                        <Button
+                          key={amt}
+                          size="sm"
+                          variant="outline"
+                          onPress={() =>
+                            void openUrl(
+                              buildDesktopPayUrl(siteUrl, '/confirm/card', resolveBillingOrg(identity?.org), {
+                                amount: amt.toFixed(2),
+                              }),
+                            )
+                          }
+                        >
+                          {`+$${amt}`}
+                        </Button>
+                      ))}
                     </XStack>
                   }
                 />

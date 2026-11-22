@@ -201,22 +201,33 @@ describe('Host', () => {
     expect(atLoad).toEqual({ opened: ['https://hanzo.ai/pricing'], at: '/chat' });
   });
 
-  it.each(['/settings/organization', '/settings/organization/members', '/billing', '/usage', '/keys', '/pricing'])(
-    '%s opens on hanzo.ai in the browser, and the window stays where it was',
-    (address) => {
+  it.each([
+    ['/settings/organization', 'https://hanzo.ai/settings/organization'],
+    ['/settings/organization/members', 'https://hanzo.ai/settings/organization/members'],
+    ['/billing', 'https://hanzo.ai/pay'],
+    ['/billing/invoices', 'https://hanzo.ai/pay/invoices'],
+    ['/usage', 'https://hanzo.ai/pay/usage'],
+    ['/keys', 'https://platform.hanzo.ai/api-keys'],
+    ['/pricing', 'https://hanzo.ai/pricing'],
+  ])(
+    '%s opens %s in the browser, and the window stays where it was',
+    (address, expected) => {
       window.history.replaceState(null, '', '/chat');
       vi.mocked(openUrl).mockClear();
       window.history.pushState(null, '', address);
-      expect(openUrl).toHaveBeenCalledWith(`https://hanzo.ai${address}`);
+      expect(openUrl).toHaveBeenCalledWith(expected);
       expect(window.location.pathname).toBe('/chat');
     },
   );
 
-  it('an address the window draws is not sent away', () => {
-    vi.mocked(openUrl).mockClear();
-    window.history.pushState(null, '', '/settings/account');
-    expect(openUrl).not.toHaveBeenCalled();
-    expect(window.location.pathname).toBe('/settings/account');
-  });
+  it.each(['/settings/account', '/settings/organization/billing', '/settings/organization/usage'])(
+    '%s is drawn in-window and not sent away',
+    (address) => {
+      vi.mocked(openUrl).mockClear();
+      window.history.pushState(null, '', address);
+      expect(openUrl).not.toHaveBeenCalled();
+      expect(window.location.pathname).toBe(address);
+    },
+  );
 });
 
