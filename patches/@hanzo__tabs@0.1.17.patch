@@ -1,5 +1,5 @@
 diff --git a/components/workspace.tsx b/components/workspace.tsx
-index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d368980485fc10 100644
+index a21fa0f..9fc91a4 100644
 --- a/components/workspace.tsx
 +++ b/components/workspace.tsx
 @@ -164,7 +164,7 @@ const ACTION_EVENT = 'hanzo:tabs-action';
@@ -11,7 +11,94 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
  
  /** The class of cloud machine a launcher starts. */
  type Kind = 'dev' | 'desktop' | 'browser';
-@@ -704,6 +704,24 @@ export function Workspace({
+@@ -193,6 +193,8 @@ function loadSize(): number {
+  *  each pixel here is a row of terminal, times the number of panes. */
+ const BAR = 28;
+ const CHIP = 24;
++/** Minimum readable width (px) for each terminal pane before horizontal scrolling kicks in. */
++const MIN_PANE_WIDTH = 420;
+ 
+ /** The cover a pane wears when there is no terminal to look at. Six states used
+  *  to draw this by hand, and the reason it has to be a component rather than a
+@@ -640,6 +642,53 @@ export function Workspace({
+     if (paged && focus && paged.page[focus] !== undefined) setPage(paged.page[focus]!);
+   }, [paged, focus]);
+ 
++  // Keep every split pane at least MIN_PANE_WIDTH px wide inside a horizontal scroll container
++  // so 3-5+ side-by-side terminals never squish into unreadable slivers.
++  const minRectW = !paging && geo.rects.length > 0
++    ? Math.min(...geo.rects.map((r) => r.width))
++    : 100;
++  const requiredCanvasWidth =
++    !paging && geo.rects.length > 1 && minRectW > 0
++      ? Math.ceil((MIN_PANE_WIDTH * 100) / Math.max(minRectW, 1))
++      : 0;
++  const needsHorizontalScroll = !paging && box.w > 0 && requiredCanvasWidth > box.w;
++  const canvasWidth = needsHorizontalScroll ? requiredCanvasWidth : box.w;
++
++  // Broadcast live open tabs, order, titles, and active focus to the top tab bar.
++  useEffect(() => {
++    if (!ready || typeof window === 'undefined') return;
++    const items = order
++      .filter((id) => bind[id])
++      .map((id) => {
++        const b = bind[id]!;
++        const m = machineOf(b);
++        const h = m ? hostOf(m) : undefined;
++        return {
++          id,
++          title: label(b),
++          status: b.kind === 'gone' ? 'offline' : b.kind === 'page' ? 'online' : (h?.status ?? 'online'),
++          active: id === focus,
++        };
++      });
++    (window as unknown as { __hanzoTabsState?: unknown }).__hanzoTabsState = { bind, items, focus };
++    window.dispatchEvent(new CustomEvent(STATE_EVENT, { detail: { bind, items, focus } }));
++  }, [bind, order, focus, hostOf, ready]);
++
++  // Smoothly scroll the focused pane into view when horizontal scrolling is active.
++  useEffect(() => {
++    if (!needsHorizontalScroll || !focus || !boxRef.current) return;
++    const rect = placed.get(focus);
++    if (!rect) return;
++    const el = boxRef.current;
++    const paneLeft = (rect.left / 100) * canvasWidth;
++    const paneRight = ((rect.left + rect.width) / 100) * canvasWidth;
++    if (paneLeft < el.scrollLeft) {
++      el.scrollTo({ left: paneLeft, behavior: 'smooth' });
++    } else if (paneRight > el.scrollLeft + el.clientWidth) {
++      el.scrollTo({ left: paneRight - el.clientWidth, behavior: 'smooth' });
++    }
++  }, [focus, needsHorizontalScroll, placed, canvasWidth]);
++
+   // ---- dragging a divider -------------------------------------------------
+   const [drag, setDrag] = useState<Divider | null>(null);
+   useEffect(() => {
+@@ -647,11 +696,13 @@ export function Workspace({
+     const move = (e: PointerEvent) => {
+       const r = boxRef.current?.getBoundingClientRect();
+       if (!r || r.width === 0 || r.height === 0) return;
++      const contentW = needsHorizontalScroll && canvasWidth > 0 ? canvasWidth : r.width;
++      const scrollLeft = needsHorizontalScroll ? (boxRef.current?.scrollLeft ?? 0) : 0;
+       // In the paged projection the track is `pages * 100%` wide and shifted, so a
+       // horizontal drag is measured against ONE page, not the whole track.
+       const at =
+         drag.dir === 'row'
+-          ? (100 * (e.clientX - r.left)) / r.width
++          ? (100 * (e.clientX - r.left + scrollLeft)) / contentW
+           : (100 * (e.clientY - r.top)) / r.height;
+       // The ratio is a share of the split's OWN extent: read against the whole
+       // box, a nested divider jumped away from the pointer on the first move.
+@@ -664,7 +715,7 @@ export function Workspace({
+       window.removeEventListener('pointermove', move);
+       window.removeEventListener('pointerup', up);
+     };
+-  }, [drag]);
++  }, [drag, needsHorizontalScroll, canvasWidth]);
+ 
+   // Click-to-focus from INSIDE a frame: the click never reaches this document,
+   // but the window losing focus does, and activeElement is then the iframe.
+@@ -704,6 +755,24 @@ export function Workspace({
  
    useEffect(() => {
      const onMessage = (e: MessageEvent) => {
@@ -36,7 +123,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
        if (!isReady(e.data)) return;
        // The sender identifies the pane: a message is trusted only when it comes
        // from the window of a frame this workspace actually rendered. The origin
-@@ -837,6 +855,8 @@ export function Workspace({
+@@ -837,6 +906,8 @@ export function Workspace({
    // In-flight ids are tracked outside state so a re-render mid-mint cannot start
    // a second mint for the same pane.
    const [minted, setMinted] = useState<Record<string, string>>({});
@@ -45,7 +132,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
    const minting = useRef<Set<string>>(new Set());
    useEffect(() => {
      if (!mint) return;
-@@ -856,6 +876,64 @@ export function Workspace({
+@@ -856,6 +927,64 @@ export function Workspace({
      }
    }, [rendered, bind, hostOf, mint, minted, capped]);
  
@@ -110,7 +197,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
    /** Reconnect a pane: forget the spent URL and the frame's history so the mint
     *  effect runs again with a fresh credential and the deadline re-arms. */
    const reconnect = useCallback((id: string) => {
-@@ -864,6 +942,7 @@ export function Workspace({
+@@ -864,6 +993,7 @@ export function Workspace({
        return rest;
      };
      setMinted(drop);
@@ -118,7 +205,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
      setAlive(drop);
      setWaited(drop);
    }, []);
-@@ -879,11 +958,22 @@ export function Workspace({
+@@ -879,11 +1009,22 @@ export function Workspace({
    /** A shell goes on any live machine. */
    const openShell = (at: At) => openHere(shellOn, live, at, 'dev');
  
@@ -146,7 +233,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
  
    /** A page needs no machine, so it needs no picker and no mint — the pane
     *  opens empty and the address is the whole of what it wants. */
-@@ -928,10 +1018,57 @@ export function Workspace({
+@@ -928,10 +1069,57 @@ export function Workspace({
          case 'focus':
            if (a.id && bind[a.id]) setFocus(a.id);
            return;
@@ -158,7 +245,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
 +          return;
 +        }
 +        case 'close': {
-+          const target = focus ?? rendered[0] ?? null;
++          const target = a.id && bind[a.id] ? a.id : (focus ?? rendered[0] ?? null);
 +          if (target) {
 +            doClose(target);
 +            if (a.res) a.res.handled = true;
@@ -204,7 +291,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
    if (live.length === 0 && !tile) {
      return (
        <YStack
-@@ -967,118 +1104,18 @@ export function Workspace({
+@@ -967,118 +1155,18 @@ export function Workspace({
    }
  
    return (
@@ -331,10 +418,16 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
            {Array.from({ length: pages }, (_, i) => {
              const first = geo.rects.find((r) => Math.round(r.left / 100) === i);
              const b = first ? bind[first.id] : undefined;
-@@ -1121,9 +1158,9 @@ export function Workspace({
+@@ -1116,19 +1204,23 @@ export function Workspace({
+         ref={(el) => {
+           boxRef.current = el instanceof HTMLElement ? el : null;
+         }}
++        data-slot="tabs-scroll-container"
+         position="relative"
+         width="100%"
          flex={1}
          minH={0}
-         overflow="hidden"
+-        overflow="hidden"
 -        rounded="$4"
 -        borderWidth={1}
 -        borderColor="$borderColor"
@@ -342,9 +435,55 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
 +        borderTopWidth={1}
 +        borderColor="rgba(255, 255, 255, 0.05)"
          bg={FRAME[scheme].ground}
++        style={{
++          overflowX: needsHorizontalScroll ? 'auto' : 'hidden',
++          overflowY: 'hidden',
++        }}
        >
          <YStack
-@@ -1182,7 +1219,9 @@ export function Workspace({
+-          position="absolute"
+-          inset={0}
++          position={needsHorizontalScroll ? 'relative' : 'absolute'}
++          inset={needsHorizontalScroll ? undefined : 0}
+           style={
+             paging
+               ? {
+@@ -1136,7 +1228,13 @@ export function Workspace({
+                   transform: `translate3d(-${(page * 100) / pages}%,0,0)`,
+                   transition: drag ? 'none' : 'transform 220ms cubic-bezier(0.22,1,0.36,1)',
+                 }
+-              : undefined
++              : needsHorizontalScroll
++                ? {
++                    width: `${canvasWidth}px`,
++                    minWidth: '100%',
++                    height: '100%',
++                  }
++                : undefined
+           }
+         >
+           {rendered.map((id) => {
+@@ -1162,14 +1260,19 @@ export function Workspace({
+             return (
+               <YStack
+                 key={id}
++                data-slot="terminal-pane"
+                 onPointerDown={() => setFocus(id)}
+                 position="absolute"
+                 overflow="hidden"
++                borderRightWidth={1}
++                borderBottomWidth={1}
++                borderColor="rgba(255, 255, 255, 0.06)"
+                 style={{
+                   left: `${left}%`,
+                   top: `${r.top}%`,
+                   width: `${width}%`,
+                   height: `${r.height}%`,
++                  minWidth: paging ? undefined : `${MIN_PANE_WIDTH}px`,
+                 }}
+               >
+                 {/* A pane's name bar. It is chrome around the only thing on the
+@@ -1182,7 +1285,9 @@ export function Workspace({
                    items="center"
                    gap="$1.5"
                    px="$2"
@@ -355,7 +494,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
                  >
                    {b.kind === 'page' ? (
                      <>
-@@ -1229,24 +1268,11 @@ export function Workspace({
+@@ -1229,24 +1334,11 @@ export function Workspace({
                        <Bot size={14} />
                      </Chip>
                    ) : null}
@@ -382,7 +521,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d36898
                    >
                      <X size={paging ? 16 : 14} />
                    </Chip>
-@@ -1254,10 +1280,10 @@ export function Workspace({
+@@ -1254,10 +1346,10 @@ export function Workspace({
  
                  <XStack flex={1} minH={0} flexDirection={paging ? 'column' : 'row'}>
                  <YStack position="relative" flex={1} minH={0} bg={FRAME[scheme].ground}>
