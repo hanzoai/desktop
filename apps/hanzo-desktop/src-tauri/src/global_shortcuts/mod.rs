@@ -1,4 +1,5 @@
-use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutEvent, ShortcutState};
+use hanzo_shortcut_action::{action, Action};
+use tauri_plugin_global_shortcut::{Shortcut, ShortcutEvent, ShortcutState};
 
 mod create_chat;
 mod toggle_spotlight;
@@ -7,22 +8,9 @@ pub fn global_shortcut_handler(app: &tauri::AppHandle, shortcut: Shortcut, event
     if event.state != ShortcutState::Pressed {
         return;
     }
-    match shortcut {
-        // main.rs registers each key under both Super and Control, and the
-        // shortcuts page advertises both. Only Super was matched, so the Control
-        // pair was taken from every other app and then did nothing.
-        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyI)
-            || s.matches(Modifiers::CONTROL | Modifiers::SHIFT, Code::KeyI) =>
-        {
-            create_chat::create_chat(app, shortcut, event);
-        }
-        s if s.matches(Modifiers::SUPER | Modifiers::SHIFT, Code::KeyJ)
-            || s.matches(Modifiers::CONTROL | Modifiers::SHIFT, Code::KeyJ) =>
-        {
-            toggle_spotlight::toggle_spotlight(app, shortcut, event);
-        }
-        _ => {
-          log::warn!("unhandled shortcut: {:?}", shortcut);
-        }
+    match action(shortcut.mods, shortcut.key) {
+        Some(Action::CreateChat) => create_chat::create_chat(app, shortcut, event),
+        Some(Action::ToggleSpotlight) => toggle_spotlight::toggle_spotlight(app, shortcut, event),
+        None => log::warn!("unhandled shortcut: {:?}", shortcut),
     }
 }
