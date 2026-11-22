@@ -20,9 +20,8 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
   it('lists every core Web + Desktop shortcut in KEYS and DESKTOP_GLOBAL_KEYS', () => {
     const macChords = KEYS.map((k) => k.mac);
     expect(macChords).toContain('⌘K');
-    expect(macChords).toContain('⌘N / ⌘⇧O');
+    expect(macChords).toContain('⌘⇧O');
     expect(macChords).toContain('⌘B');
-    expect(macChords).toContain('⌘⇧M');
     expect(macChords).toContain('⌘,');
     expect(macChords).toContain('⌘/');
     expect(macChords).toContain('⌘.');
@@ -133,6 +132,8 @@ describe('Hanzo Desktop & @hanzo/app keybindings', () => {
     // Files a signed-out reader attaches are read in the window, not refused.
     expect(pane).toContain('localText');
     expect(pane).not.toContain('Sign in to attach files');
-    expect(setup).toContain('const workspace = false;');
+    // Google Workspace is hidden in any window that passes `bar` by the app itself
+    // (Setup.js reads Windowed, which App sets from bar); the desktop adds no second way.
+    expect(setup).toContain("const workspace = opens('workspace') && !windowed;");
   });
 });
