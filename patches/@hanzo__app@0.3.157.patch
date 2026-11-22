@@ -1023,3 +1023,244 @@ index 2601176e14b54f2e2a4e6172fa174cf520152b07..ac1297f818efc01f0a43e05460c6d710
      const stack = scrub(typeof e === 'object' && e && typeof e.stack === 'string' ? e.stack : '').slice(0, 4000);
      const fp = fingerprint(kind, message, stack);
      const now = Date.now();
+diff --git a/dist/Chat.js b/dist/Chat.js
+index 8871da9..f77b9d4 100644
+--- a/dist/Chat.js
++++ b/dist/Chat.js
+@@ -933,10 +933,12 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+     };
+     const listed = useMemo(() => mind.models.filter(chats), [mind.models]);
+     const filteredListed = useMemo(() => {
+-        if (chatPrefs.allowThirdPartyModels)
++        // Hanzo Desktop: a signed-out reader's catalog is the local engine's
++        // (the window's fetch bridge), so every model it lists is offered.
++        if (anonymous || chatPrefs.allowThirdPartyModels)
+             return listed;
+         return listed.filter((m) => isHouseModel(m) || m.id === ENSO);
+-    }, [listed, chatPrefs.allowThirdPartyModels]);
++    }, [listed, anonymous, chatPrefs.allowThirdPartyModels]);
+     const models = filteredListed;
+     // EVERY MODEL THE GATEWAY LISTS is offered here, through the one picker, and
+     // read from the catalog's own fields (`parseModels`): its class, its family.
+@@ -948,7 +950,8 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+     const wanted = mind.model;
+     // A model the catalog lists is sent as picked, whatever it answers with; only
+     // a name the catalog does not list falls to one that converses (`served`).
+-    const sent = anonymous ? ENSO : wanted;
++    // Hanzo Desktop: the local model a signed-out reader picked is the one asked.
++    const sent = anonymous ? wanted || ENSO : wanted;
+     const model = persona?.model || (rowOf(sent) ? sent : served(models, sent));
+     // THE PLAN'S USAGE (lib/limits.ts), kept current by every chat answer's
+     // headers and read again whenever a send settles, below. The pane draws no
+@@ -1184,7 +1187,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+     // identity changes on every `setMessages` — `useChat` closes over `messages` —
+     // so an effect depending on it re-runs after each streamed token.
+     const latest = useRef(send);
+-    latest.current = (text) => send(text);
++    latest.current = (text, images) => send(text, images);
+     // THE COMPOSER'S DRAFT IS HELD HERE, so an arriving question can be typed into
+     // it. `Chat` owns a draft of its own and spreads `composer` after it, so
+     // passing value/onChange/onSend takes that ownership over rather than fighting
+@@ -1290,10 +1293,15 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+         anonStopped.current = true;
+         anonRequest.current?.abort();
+     }, []);
+-    const sendAnon = useCallback(async (rawText) => {
++    const sendAnon = useCallback(async (rawText, images) => {
+         const clean = (rawText || "").trim();
+-        if (!clean)
+-            return;
++        // HANZO DESKTOP ANSWERS ITS SIGNED-OUT READER ITSELF: the window's fetch
++        // bridge (host.tsx) sends a chat with no session to the local engine, so
++        // the turn takes the signed-in lane: the whole conversation, the model
++        // picked, pictures and files read here, and no turn limit or sign-in gate.
++        if (clean || (images && images.length))
++            setQueued(images && images.length ? { text: clean, images } : clean);
++        return;
+         try {
+             sessionStorage.setItem("hanzo.build.prompt", clean);
+             const shortTitle = clean.length > 48 ? `${clean.slice(0, 47).trimEnd()}…` : clean;
+@@ -1430,7 +1438,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+         if (queued === null || resolving)
+             return;
+         setQueued(null);
+-        void latest.current(queued);
++        if (typeof queued === "object")
++            void latest.current(queued.text, queued.images);
++        else
++            void latest.current(queued);
+     }, [queued, resolving]);
+     const streaming = useRef(false);
+     streaming.current = chat.streaming;
+@@ -1533,16 +1544,14 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+      * it leaves its place in the thread and is asked at the end, so it is asked
+      * once and not twice.
+      */
+-    const speak = useCallback((text, again) => {
+-        if (!text)
++    const speak = useCallback((text, again, images) => {
++        if (!text && !(images && images.length))
+             return;
+         // Activation: the first question this browser asks (a retry is not one).
+         if (!again)
+             first("chat_message");
+-        if (anonymous) {
+-            void sendAnon(text);
+-            return;
+-        }
++        // Hanzo Desktop: a signed-out turn takes this lane too (`sendAnon`), so a
++        // retry leaves its place in the thread as a signed-in one does.
+         if (!streaming.current && (again || resolvingNow.current || turns.current.some(blank))) {
+             apply.current((held) => held.filter((one) => one.id !== again && !blank(one)));
+             if (again)
+@@ -1550,10 +1559,10 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+                     const { [again]: _gone, ...rest } = all;
+                     return rest;
+                 });
+-            setQueued(text);
++            setQueued(images && images.length ? { text, images } : text);
+             return;
+         }
+-        void latest.current(text);
++        void latest.current(text, images);
+     }, [anonymous, sendAnon]);
+     // THE WAYS PAST A PAUSE. The upgrade opens the plans over the app; a page opens; Continue
+     // with credits turns the org's choice on and asks the last question again on
+@@ -2113,6 +2122,28 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+                     setPreparing(t("Uploading {files}", { files: names(holding, t) }));
+                 const landedFiles = (await Promise.all(holding.map(landed))).filter((f) => !!f);
+                 spend(at);
++                // Hanzo Desktop: with no session the files never left the window
++                // (pane.js `hold`): a picture goes with the turn as itself, and a
++                // text file as the passages it holds.
++                const localImages = landedFiles.map((f) => f.dataUrl).filter(Boolean);
++                const localTextFiles = landedFiles.filter((f) => typeof f.localText === "string");
++                if (anonymous || localImages.length || localTextFiles.length) {
++                    const localAttached = localTextFiles.map(refOf);
++                    const reusedLocal = earlier.filter((f) => !localAttached.some((a) => a.id === f.id));
++                    if (!localAttached.length && !reusedLocal.length) {
++                        const promptText = text || (localImages.length ? "What is in this image?" : "");
++                        guarded(extra ? carrying(promptText, extra) : promptText, undefined, localImages.length ? localImages : undefined);
++                        return;
++                    }
++                    const localGrounds = {
++                        passages: localTextFiles.map((f, i) => ({
++                            cite: `${f.name} › ¶${i + 1}`,
++                            text: String(f.localText || "").slice(0, 100000),
++                        })),
++                    };
++                    guarded(compose(text, { attached: localAttached, reused: reusedLocal }, localGrounds, undefined, undefined, extra), undefined, localImages.length ? localImages : undefined);
++                    return;
++                }
+                 const attached = landedFiles.map(refOf);
+                 const reused = earlier.filter((f) => !attached.some((a) => a.id === f.id));
+                 const all = [...attached, ...reused];
+@@ -2175,6 +2206,9 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+     const failure = (question) => {
+         const failed = failures[question.id];
+         const text = words(question.content);
++        const pictures = Array.isArray(question.content)
++            ? question.content.filter((p) => p?.type === "image_url" && p.image_url?.url).map((p) => p.image_url.url)
++            : undefined;
+         const whom = addressed(text, cast);
+         const wrong = failed?.error ?? null;
+         const how = wrong ? refusalOf(wrong) : null;
+@@ -2207,7 +2241,7 @@ function Thread({ placeholder = message(), initial, anonymous = false, settled =
+                                     : how?.provider
+                                         ? t("{model} is unavailable right now.", { model: familyOf(model) || nameOf(model, listed) })
+                                         : plainly(wrong, t("this conversation"), t);
+-        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
++        return (_jsx(Failure, { retryLabel: t("Try again"), onRetry: resign || lift || broke || spends(bill?.code ?? "") ? undefined : () => speak(text, question.id, pictures), children: _jsxs(YStack, { gap: "$2", children: [_jsxs(Text, { fontSize: "$3", color: "$ink", children: [whom.length ? `${t("No answer from {names}.", { names: join(whom, t) })} ` : "", said] }), how?.provider && wrong ? _jsx(Why, { text: detail(wrong) }) : null, anonymous || how?.provider ? (_jsxs(XStack, { gap: "$2", flexWrap: "wrap", "data-slot": "failure-local-ai", children: [_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "models" } })), children: t("Select / Download Local Model") }), anonymous ? (_jsx(Button, { size: "sm", variant: "outline", onClick: () => window.dispatchEvent(new CustomEvent("hanzo:open-local-ai", { detail: { tab: "node" } })), children: t("Manage Local Node") })) : null] })) : null, lift || broke || (!bill && (resign || how?.visitor)) ? (_jsx(XStack, { gap: "$2", flexWrap: "wrap", children: resign ? (_jsx(Button, { size: "sm", onClick: () => {
+                                 if (typeof window !== "undefined") {
+                                     localStorage.removeItem("hanzo_iam_access_token");
+                                     localStorage.removeItem("hanzo_iam_refresh_token");
+diff --git a/dist/pane.js b/dist/pane.js
+index d0b1f58..50f7afc 100644
+--- a/dist/pane.js
++++ b/dist/pane.js
+@@ -126,14 +126,26 @@ function watch(api, f, key, id) {
+  * the index, and is followed through its stages. Nothing is refused for its
+  * size or its kind: a file the index cannot read is still kept, and says why.
+  */
++// Hanzo Desktop, signed out: what the window reads itself, and how much of it.
++// A picture goes with the turn as itself; a text file as its text; anything else
++// (a PDF, a video, an archive) is only readable through the workspace, so it says
++// so instead of reaching the model as garbage or freezing the window.
++const LOCAL_TEXT = /^(text\/|application\/(json|xml|javascript|x-yaml|yaml|x-sh|sql|toml)$)/;
++const LOCAL_TEXT_NAME = /\.(txt|md|markdown|csv|tsv|json|jsonl|xml|ya?ml|toml|ini|log|html?|css|js|jsx|ts|tsx|py|rb|go|rs|java|kt|swift|c|h|cpp|hpp|cs|php|sh|sql)$/i;
++const LOCAL_IMAGE_NAME = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
++const LOCAL_TEXT_MAX = 1024 * 1024;
++const LOCAL_IMAGE_MAX = 10 * 1024 * 1024;
++/** How the window can read `file` with no session: 'image', 'text', or a sentence saying why not. */
++export function localRead(file) {
++    if (file.type.startsWith('image/') || (!file.type && LOCAL_IMAGE_NAME.test(file.name)))
++        return file.size <= LOCAL_IMAGE_MAX ? 'image' : `${file.name} is too large to attach without signing in (pictures up to 10 MB).`;
++    if (LOCAL_TEXT.test(file.type) || LOCAL_TEXT_NAME.test(file.name))
++        return file.size <= LOCAL_TEXT_MAX ? 'text' : `${file.name} is too large to attach without signing in (text files up to 1 MB).`;
++    return `Sign in to attach ${file.name}: without an account only pictures and text files can be read here.`;
++}
+ export async function hold(key, list, via) {
+     if (!list.length)
+         return;
+-    if (!via.org) {
+-        edit(key, (was) => ({ ...was, refused: 'Sign in to attach files: they are kept in your workspace Drive.' }));
+-        return;
+-    }
+-    const org = via.org;
+     const taken = list.map((file) => ({
+         id: mint('h'),
+         name: file.name,
+@@ -152,6 +164,53 @@ export async function hold(key, list, via) {
+         carrying.set(h.id, { stop, done });
+         return { h, file: list[i], stop, land };
+     });
++    // Hanzo Desktop: with no session there is no workspace to upload to, so each
++    // file is read in the window instead (Chat.js sends a picture as itself and a
++    // text file as its passages).
++    if (!via.org) {
++        await Promise.all(jobs.map(async ({ h, file, stop, land }) => {
++            try {
++                if (stop.signal.aborted)
++                    return land(null);
++                const how = localRead(file);
++                if (how !== 'image' && how !== 'text') {
++                    sources.delete(h.id); // nothing to retry: signing in is the way
++                    patch(key, h.id, { state: 'failed', error: how });
++                    return land(null);
++                }
++                const isImage = how === 'image';
++                const got = {
++                    id: `local-${h.id}`,
++                    name: file.name,
++                    size: file.size,
++                    type: file.type || (isImage ? 'image/png' : 'text/plain'),
++                    status: 'ready',
++                };
++                if (isImage) {
++                    got.dataUrl = await new Promise((resolve, reject) => {
++                        const reader = new FileReader();
++                        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
++                        reader.onerror = () => reject(new Error(`Could not read ${file.name}`));
++                        reader.readAsDataURL(file);
++                    });
++                }
++                else {
++                    got.localText = await file.text();
++                }
++                local.set(got.id, h.href);
++                know(got);
++                patch(key, h.id, fromFile(got));
++                return land(got);
++            }
++            catch (e) {
++                if (!stop.signal.aborted)
++                    patch(key, h.id, { state: 'failed', error: e?.message || `${file.name} could not be read.` });
++                return land(null);
++            }
++        }));
++        return;
++    }
++    const org = via.org;
+     await pool(jobs, FILES_AT_ONCE, async ({ h, file, stop, land }) => land(await transfer(key, h, file, org, via, stop)));
+ }
+ /**

@@ -557,7 +557,7 @@ overrides:
   yaml@2: '>=2.8.3'
 
 patchedDependencies:
-  '@hanzo/app@0.3.157': 0b1d3018f676f5547055574021f346e3372c06acc63ccfab5a0ee5223e7c8fcf
+  '@hanzo/app@0.3.157': ccb828ca8af8dcc7e826ab3e6f7353bd54ef2ce53812a5274dc215ae9f87f16f
   '@hanzo/dev-core@0.1.21': d5d081856bd4a073f511868833c7a3916c44eb3c375607bbcaad19b0475f16a4
   '@hanzo/studio@0.1.21': 743c893d285bbabb3bdc08d00521ec9dd17a8afdba8dc30173ff2708d68f66e7
   '@hanzo/tabs@0.1.17': 43b374e212b14eb721244ca88443537796b850968e201ddeb30a9c713355fa28
@@ -572,7 +572,7 @@ importers:
         version: 0.7.0(react@19.2.8)
       '@hanzo/app':
         specifier: 'catalog:'
-        version: 0.3.157(patch_hash=0b1d3018f676f5547055574021f346e3372c06acc63ccfab5a0ee5223e7c8fcf)(a4074d6b25b025fac5e8cd2391216b4e)
+        version: 0.3.157(patch_hash=ccb828ca8af8dcc7e826ab3e6f7353bd54ef2ce53812a5274dc215ae9f87f16f)(a4074d6b25b025fac5e8cd2391216b4e)
       '@hanzo/appearance':
         specifier: 0.2.15
         version: 0.2.15(react@19.2.8)
@@ -12688,7 +12688,7 @@ snapshots:
     optionalDependencies:
       react: 19.2.8
 
-  '@hanzo/app@0.3.157(patch_hash=0b1d3018f676f5547055574021f346e3372c06acc63ccfab5a0ee5223e7c8fcf)(a4074d6b25b025fac5e8cd2391216b4e)':
+  '@hanzo/app@0.3.157(patch_hash=ccb828ca8af8dcc7e826ab3e6f7353bd54ef2ce53812a5274dc215ae9f87f16f)(a4074d6b25b025fac5e8cd2391216b4e)':
     dependencies:
       '@hanzo/ai': 0.7.0(react@19.2.8)
       '@hanzo/appearance': 0.2.15(react@19.2.8)
