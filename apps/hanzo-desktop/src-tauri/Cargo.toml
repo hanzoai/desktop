@@ -1,6 +1,6 @@
 [package]
 name = "hanzo-desktop"
-version = "1.1.68"
+version = "1.1.69"
 description = "A first class Desktop application to interact with Hanzo Node"
 authors = ["Hanzo AI, Inc. <dev@hanzo.ai>"]
 license = "Apache-2.0"
@@ -19,7 +19,6 @@ serde_json = "1.0"
 # fix this dependency later on
 reqwest = { version = "0.11", features = ["json", "stream"] }
 mdns-sd = "0.20.1"
-lazy_static = "1.4.0"
 tokio = { version = "1.36.0", features = ["macros", "rt-multi-thread", "rt", "net", "sync", "io-util", "time"] }
 chrono = "0.4.38"
 futures-util = "0.3"
@@ -27,27 +26,16 @@ regex = "1.10.4"
 once_cell = "1.19.0"
 wgpu = "0.20.0"
 sysinfo = "0.30.12"
-ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 blake3 = "1.5.1"
-# Phase-2 on-chain claim signer (mining/claim.rs) — lean secp256k1 stack (not
-# alloy/ethers): BIP-39 mnemonic → BIP-44 (m/44'/60'/0'/0/0) → k256 ECDSA, with
-# EIP-1559 RLP via `rlp` and keccak via `tiny-keccak`. Derives the SAME address
-# as the frontend ethers wallet, so the mining wallet == the user's wallet.
-coins-bip39 = { version = "0.8.7", default-features = false, features = ["english"] }
-k256 = "0.13"
-rlp = "0.5"
-tiny-keccak = { version = "2.0", features = ["keccak"] }
 opener = "0.7.2"
 hex = "0.4.3"
 base64 = "0.22.1"
 toml_edit = "0.25"
 time = "^0.3.36"
-listeners = "0.2"
 log = "0.4"
 # Scrubs key material and credentials out of every log record (and the log
 # files older builds left on disk). See log-redact/src/lib.rs.
 hanzo-log-redact = { path = "log-redact" }
-hanzo-node-secret = { path = "node-secret" }
 # Finds a local hanzo-server, or says there is none (cloud#760). See engine-bin/src/lib.rs.
 hanzo-engine-bin = { path = "engine-bin" }
 # Finds Hanzo Dev, or names the release the app fetches so a local run needs no terminal. See dev-agent/src/lib.rs.
@@ -56,27 +44,14 @@ hanzo-dev-agent = { path = "dev-agent" }
 hanzo-projects = { path = "projects" }
 # Which action a global shortcut runs. See shortcut-action/src/lib.rs.
 hanzo-shortcut-action = { path = "shortcut-action" }
-# The Hanzo key and embeddings env hanzo-node is spawned with, and when a new
-# sign-in needs a restart (cloud#760). See node-env/src/lib.rs.
-hanzo-node-env = { path = "node-env" }
-anyhow = "1.0.89"
 uuid = { version = "1.10.0", features = ["v4"] }
-kill_tree = { version = "0.2", features = ["tokio"] }
-semver = "1.0"
-sha2 = "0.10"
 rand = "0.8"
 # OS keychain intentionally not linked: session lives in `~/.hanzo/` (identity.rs) and secrets in Cloud KMS.
 
-# hanzo-machined client (UNIX-socket HTTP/JSON)
-hyper = { version = "1.4", features = ["client", "http1"] }
-http-body-util = "0.1"
 bytes = "1"
 thiserror = "1.0"
 dirs = "6.0"
 
-# Shared AI-chain mining crate (canonical hanzo core), pinned to latest.
-# Same crate Zoo & Lux use so all three mine off the same network protocol.
-hanzo-mining = "1.1.21"
 
 tauri-plugin-global-shortcut = "2.3"
 tauri-plugin-shell = "2.3"
@@ -100,28 +75,7 @@ fips204 = "0.4"
 
 fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
 
-# --- Native Hanzo Engine (embedded, in-process) -----------------------------
-# In-process LLM inference via hanzoai/engine, pinned to a release tag. The engine workspace was
-# rebranded mistralrs-* -> hanzo-*: `hanzo` is the high-level SDK, `hanzo-engine`
-# is the core. Optional and OFF by default so the standard build stays light. Enable with the
-# `native-engine` feature plus a backend, e.g.
-#   cargo build --release --features "native-engine metal"   (Apple Silicon)
-#   cargo build --release --features "native-engine cuda"    (NVIDIA)
-#   cargo build --release --features "native-engine vulkan"  (AMD/Linux)
-hanzo = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
-hanzo-engine = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true }
-# The canonical server: the SAME crate `hanzo serve` builds on. The desktop's
-# embedded engine reuses its `HanzoForServerBuilder` (state) +
-# `HanzoServerRouterBuilder` (axum Router) instead of a hand-rolled server, so
-# the node serves /v1/chat/completions, /v1/responses and /v1/messages
-# identically. `default-features = false` drops the bundled swagger-ui (the
-# inference routes don't need it; the builder gates docs behind that feature).
-hanzo-server-core = { git = "https://github.com/hanzoai/engine", tag = "v1.7.108", optional = true, default-features = false }
-axum = { version = "0.8", optional = true }
-
-# SIGTERM the managed GPU-fleet / studio children so they mark the machine
-# offline (fleet) and shut down cleanly, instead of a hard SIGKILL that waits
-# out the heartbeat window. Already in the dependency tree.
+# SIGTERM for the served engine (local_models.rs), so it stops cleanly.
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 # The ZAP router (commands/browser.rs): Desktop embeds it, as every hanzo-mcp
@@ -140,29 +94,12 @@ webkit2gtk = { version = "=2.0", features = ["v2_40"] }
 tempfile = "3"
 
 [features]
-default = ["machine"]
+default = []
 # this feature is used for production builds or when `devPath` points to the filesystem
 # DO NOT REMOVE!!
 custom-protocol = ["tauri/custom-protocol"]
 
-# hanzo-machined integration (UNIX-socket HTTP/JSON client + Tauri commands).
-# Other brands can opt out by disabling default-features.
-machine = []
-
 # Inspect Element: a dev build's alone (`pnpm tauri:dev`); a release window has none.
 devtools = ["tauri/devtools"]
 
-# Embed the native Hanzo Engine for in-process inference. This runs the canonical
-# `hanzo-server-core` server (all protocols: chat/responses/messages) on
-# 127.0.0.1:36900 plus a thin /v1/engine/* management surface and Tauri IPC
-# commands. Pair with a backend feature.
-native-engine = ["dep:hanzo", "dep:hanzo-engine", "dep:hanzo-server-core", "dep:axum"]
-# GPU/CPU backends forwarded to the engine AND the server crate so their shared
-# `hanzo-engine` resolves to one feature set. Weak deps (`pkg?/feat`) so selecting
-# a backend never force-enables the engine unless `native-engine` is also on.
-metal = ["hanzo?/metal", "hanzo-engine?/metal", "hanzo-server-core?/metal"]
-cuda = ["hanzo?/cuda", "hanzo-engine?/cuda", "hanzo-server-core?/cuda"]
-vulkan = ["hanzo?/vulkan", "hanzo-engine?/vulkan", "hanzo-server-core?/vulkan"]
-accelerate = ["hanzo-engine?/accelerate", "hanzo-server-core?/accelerate"]
-flash-attn = ["hanzo?/flash-attn", "hanzo-server-core?/flash-attn"]
 

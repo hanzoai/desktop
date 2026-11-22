@@ -1,13 +1,11 @@
 /**
  * The bundle identifier is ONE value per brand, and it is load-bearing.
  *
- * `secure_storage.rs` derives the OS-keychain service name from the RUNNING
- * bundle's `app.config().identifier`. So if `tauri.conf.json` and
- * `tauri.conf.<brand>.json` disagree, two builds of the SAME brand file their
- * secrets under different keychain services and a user's saved tokens vanish
- * when they switch build variants. That is exactly what happened while the
- * default config said `ai.hanzo.desktop` and everything else said
- * `ai.hanzo.desktop`.
+ * The app's data folder, its log file and the `.app` name all derive from the
+ * RUNNING bundle's `app.config().identifier`. So if `tauri.conf.json` and
+ * `tauri.conf.<brand>.json` disagree, two builds of the SAME brand keep their
+ * data in different places, and a person's mining choice and served-model record
+ * vanish when they switch build variants.
  *
  * These assertions pin the identifier and the deep-link scheme to
  * `libs/brand-config` — the one brand table — and keep the identifier out of
@@ -92,7 +90,7 @@ describe('brand identity', () => {
   it('the default build is the hanzo build', () => {
     // Plain `tauri dev` / `tauri build` use the base config with no overlay.
     // It must therefore carry hanzo's identity, or the unbranded binary gets a
-    // keychain, log file and .app name of its own.
+    // data folder, log file and .app name of its own.
     const hanzo = readConf('tauri.conf.hanzo.json');
     expect(base.identifier).toBe(hanzo.identifier);
     expect(base.productName).toBe(hanzo.productName);

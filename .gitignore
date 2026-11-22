@@ -43,7 +43,6 @@ qr_code_device_0.png
 apps/hanzo-desktop/src-tauri/storage
 apps/hanzo-desktop/src-tauri/node_storage
 
-apps/hanzo-desktop/src-tauri/external-binaries
 launch.json
 temp
 apps/hanzo-app/android/.gradle

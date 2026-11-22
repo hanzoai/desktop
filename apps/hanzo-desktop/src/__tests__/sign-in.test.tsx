@@ -42,7 +42,7 @@ describe('signing in through the browser', () => {
     expect(tauri.unlisten).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(1);
-    expect(await result).toMatch(/^Sign-in was not finished/);
+    expect(await result).toMatch(/was not finished in time/);
     expect(tauri.unlisten).toHaveBeenCalledTimes(1);
   });
 });

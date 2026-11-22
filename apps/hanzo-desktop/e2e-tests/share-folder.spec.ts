@@ -17,11 +17,8 @@ const TOKEN = [
   b64({ sub: 'u1', name: 'James', email: 'james@acme.test', owner: 'acme', exp: expires, orgs: [{ org: 'acme', role: 'member' }], org: 'acme' }),
   'x',
 ].join('.');
-const SESSION = JSON.stringify({
-  hanzo_iam_access_token: TOKEN,
-  hanzo_iam_refresh_token: 'r',
-  hanzo_iam_expires_at: String(Date.now() + 86_400_000),
-});
+// What identity_adopt answers: the shared sign-in's tokens (identity.rs).
+const SESSION = { access_token: TOKEN };
 
 const HOST = 'james-mbp.local';
 const SHOP = '/Users/james/work/shop';
@@ -51,9 +48,8 @@ async function signedIn(page: Page, world: Platform): Promise<void> {
         convertFileSrc: (p: string) => p,
         async invoke(cmd: string, args: Record<string, unknown>) {
           switch (cmd) {
-            case 'secure_storage_get':
-              if (args.key === 'iam-session') return session;
-              throw 'Key not found';
+            case 'identity_adopt':
+              return session;
             case 'plugin:event|listen':
               return callback++;
             case 'plugin:os|hostname':

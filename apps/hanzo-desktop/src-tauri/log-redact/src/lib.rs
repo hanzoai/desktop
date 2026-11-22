@@ -15,9 +15,9 @@
 //! * long hex (raw 32-byte+ secret keys) and long base58 (wallet keys);
 //! * runs of 12+ BIP-39 words (wallet mnemonics).
 //!
-//! [`StreamRedactor`] adds the one thing a per-line filter cannot see: a PEM
-//! block split across several stderr events. [`scrub_log_dir`] rewrites log
-//! files already on disk, so an upgrade also cleans what older builds wrote.
+//! [`scrub_log_dir`] rewrites log files already on disk, so an upgrade also
+//! cleans what older builds wrote; [`redact_report`] is the same redaction plus
+//! what is personal, for a report that leaves the computer.
 
 use coins_bip39::{English, Wordlist};
 use once_cell::sync::Lazy;
@@ -58,6 +58,20 @@ static OAUTH_CODE: Lazy<Regex> = Lazy::new(|| {
 static BEARER: Lazy<Regex> =
     Lazy::new(|| Regex::new(r"(?i)\bbearer\s+[A-Za-z0-9\-._~+/]+=*").unwrap());
 
+/// HTTP Basic credentials (`Basic <base64 of user:password>`) wherever they appear.
+static BASIC: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)\bbasic\s+[A-Za-z0-9+/]{8,}={0,2}").unwrap());
+
+/// A password in an address (`scheme://user:password@host`).
+static URL_PASSWORD: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?P<k>[a-z][a-z0-9+.\-]*://[^\s:/@]+:)[^\s/@]+@").unwrap());
+
+/// A person's account name in a home folder path (macOS, Linux, Windows).
+static HOME_PATH: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"(?i)(?P<k>/Users/|/home/|[A-Z]:\\Users\\)[^/\\\s\x22']+").unwrap());
+
+/// Quoted text: in an error report this is most often what the person typed.
+static QUOTED: Lazy<Regex> = Lazy::new(|| Regex::new(r#""[^"\r\n]{2,}"|“[^”\r\n]{2,}”"#).unwrap());
+
 static KNOWN_TOKEN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(concat!(
         r"\b(?:",
@@ -95,6 +109,8 @@ pub fn redact(input: &str) -> Cow<'_, str> {
     s = apply(s, &UNTERMINATED_PRIVATE_KEY, |_| format!("-----BEGIN PRIVATE KEY----- {REDACTED}"));
     s = apply(s, &AUTH_HEADER, |c| format!("{}{REDACTED}", &c["k"]));
     s = apply(s, &BEARER, |_| format!("Bearer {REDACTED}"));
+    s = apply(s, &BASIC, |_| format!("Basic {REDACTED}"));
+    s = apply(s, &URL_PASSWORD, |c| format!("{}{REDACTED}@", &c["k"]));
     s = apply(s, &SECRET_FIELD, |c| {
         let v = &c["v"];
         if v.contains(REDACTED) || v.starts_with("-----") {
@@ -111,6 +127,17 @@ pub fn redact(input: &str) -> Cow<'_, str> {
     s = apply(s, &LONG_BASE58, |_| REDACTED.to_string());
     s = redact_base64_runs(s);
     redact_mnemonics(s)
+}
+
+/// Redacts a report that leaves this computer (the crash screen's Copy
+/// details): everything [`redact`] removes, plus what is personal rather than
+/// secret, which a log kept here may hold but a report must not: the account
+/// name in a home folder path, and quoted text, which is mostly what the person
+/// wrote.
+pub fn redact_report(input: &str) -> String {
+    let s = redact(input);
+    let s = apply(s, &HOME_PATH, |c| format!("{}{REDACTED}", &c["k"]));
+    apply(s, &QUOTED, |_| format!("\"{REDACTED}\"")).into_owned()
 }
 
 fn apply<'a>(s: Cow<'a, str>, re: &Regex, f: impl Fn(&Captures) -> String) -> Cow<'a, str> {
@@ -248,51 +275,6 @@ fn redact_mnemonics(s: Cow<'_, str>) -> Cow<'_, str> {
     }
     out.push_str(&s[last..]);
     Cow::Owned(out)
-}
-
-/// Line-at-a-time redaction for a sidecar's output stream. Suppresses every
-/// line between a PEM `BEGIN` and its `END` when they arrive as separate
-/// events, and applies [`redact`] to everything else. `None` means "drop the
-/// line".
-#[derive(Default)]
-pub struct StreamRedactor {
-    in_pem: Option<usize>,
-}
-
-impl StreamRedactor {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    /// Redacts one output event (which may hold several lines) and returns
-    /// the lines that may be logged, already redacted. Callers log these and
-    /// run any further matching (e.g. a ready signal) on them, never on the
-    /// raw event.
-    pub fn redact_chunk(&mut self, chunk: &str) -> Vec<String> {
-        chunk.lines().filter_map(|l| self.redact_line(l)).collect()
-    }
-
-    pub fn redact_line(&mut self, line: &str) -> Option<String> {
-        if let Some(n) = self.in_pem {
-            if let Some(e) = line.find("-----END ") {
-                self.in_pem = None;
-                let tail = line[e + 9..].find("-----").map(|i| e + 9 + i + 5).unwrap_or(line.len());
-                let rest = line[tail..].trim();
-                return if rest.is_empty() { None } else { Some(redact(rest).into_owned()) };
-            }
-            self.in_pem = if n + 1 >= PEM_MAX_LINES { None } else { Some(n + 1) };
-            return None;
-        }
-        if let Some(b) = line.find("-----BEGIN ") {
-            if !line[b..].contains("-----END ") {
-                self.in_pem = Some(0);
-                let label = line[b + 11..].split("-----").next().unwrap_or("");
-                let prefix = redact(&line[..b]).into_owned();
-                return Some(format!("{prefix}-----BEGIN {label}----- {REDACTED}"));
-            }
-        }
-        Some(redact(line).into_owned())
-    }
 }
 
 static RECORD_PREFIX: Lazy<Regex> =

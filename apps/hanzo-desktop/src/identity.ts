@@ -17,6 +17,13 @@ export const SESSION = {
 
 type Tokens = { access_token: string; refresh_token?: string; id_token?: string };
 
+/**
+ * Who this window is signed in as: the access token it adopted or filed. Kept here
+ * because a sign-out clears the session before the host hears of it, and the
+ * shared store must forget this identity, not whichever one the CLI has active.
+ */
+let mine: string | null = null;
+
 /** The token's own expiry, in the milliseconds @hanzo/iam stores. */
 function expiry(jwt: string): number | null {
   try {
@@ -31,6 +38,7 @@ function expiry(jwt: string): number | null {
 export async function adopt(ask: () => Promise<Tokens | null> = () => invoke<Tokens | null>('identity_adopt')): Promise<boolean> {
   const held = await ask();
   if (!held) return false;
+  mine = held.access_token;
   keychain.setItem(SESSION.access, held.access_token);
   if (held.id_token) keychain.setItem(SESSION.id, held.id_token);
   const until = expiry(held.access_token);
@@ -42,6 +50,7 @@ export async function adopt(ask: () => Promise<Tokens | null> = () => invoke<Tok
 export async function share(file: (tokens: Tokens) => Promise<unknown> = (tokens) => invoke('identity_file', { tokens })): Promise<void> {
   const access = keychain.getItem(SESSION.access);
   if (!access) return;
+  mine = access;
   await file({
     access_token: access,
     refresh_token: keychain.getItem(SESSION.refresh) ?? undefined,
@@ -49,3 +58,15 @@ export async function share(file: (tokens: Tokens) => Promise<unknown> = (tokens
   });
   keychain.removeItem(SESSION.refresh);
 }
+
+/**
+ * Sign this window's identity out of the shared store, as `hanzo auth logout` does
+ * (identity.rs `identity_forget`), so the next launch does not sign it back in. The
+ * CLI's other identities stay.
+ */
+export async function forget(drop: (token: string) => Promise<unknown> = (accessToken) => invoke('identity_forget', { accessToken })): Promise<void> {
+  const token = mine ?? keychain.getItem(SESSION.access);
+  mine = null;
+  if (token) await drop(token);
+}
+

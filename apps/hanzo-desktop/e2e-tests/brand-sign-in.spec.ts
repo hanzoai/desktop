@@ -55,12 +55,6 @@ async function installTauriBridge(page: Page) {
           return nextCallbackId++;
         case 'plugin:event|unlisten':
           return null;
-        case 'secure_storage_set':
-        case 'secure_storage_delete':
-          return null;
-        case 'secure_storage_get':
-          // What the real command returns for an absent entry.
-          throw new Error('Key not found');
         default:
           return null;
       }

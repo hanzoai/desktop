@@ -1,34 +1,22 @@
 use tauri::{
-    menu::{MenuBuilder, MenuItemBuilder, SubmenuBuilder},
+    menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, TrayIconBuilder, TrayIconEvent},
     Manager,
 };
 
-use crate::{
-    globals::HANZO_NODE_MANAGER_INSTANCE,
-    windows::{recreate_window, Window},
-};
+use crate::windows::{recreate_window, Window};
 
 pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
     let quit_menu_item = MenuItemBuilder::with_id("quit", "Quit").build(app)?;
     let show_menu_item = MenuItemBuilder::with_id("show", "Hanzo AI").build(app)?;
     let team_menu_item = MenuItemBuilder::with_id("team", "Hanzo Team").build(app)?;
-    let hanzo_spotlight_menu_item = MenuItemBuilder::with_id("hanzo_spotlight", "Hanzo Spotlight")
-        .accelerator("CmdOrCtrl+Shift+J")
-        .build(app)?;
 
-    let open_hanzo_node_manager_window_menu_item =
-        MenuItemBuilder::with_id("open_hanzo_node_manager_window", "Open").build(app)?;
-    let hanzo_node_manager_menu_item = SubmenuBuilder::new(app, "Hanzo Node Manager")
-        .item(&open_hanzo_node_manager_window_menu_item)
-        .build()?;
+    // The main window is the only window: local models are its Local AI manager.
 
     let menu = MenuBuilder::new(app)
         .items(&[
             &show_menu_item,
             &team_menu_item,
-            &hanzo_node_manager_menu_item,
-            &hanzo_spotlight_menu_item,
             &quit_menu_item,
         ])
         .build()?;
@@ -59,23 +47,13 @@ pub fn create_tray(app: &tauri::AppHandle) -> tauri::Result<()> {
             "team" => {
                 let _ = tauri_plugin_opener::open_url("https://hanzo.team", None::<&str>);
             }
-            "open_hanzo_node_manager_window" => {
-                let _ = recreate_window(tray.app_handle().clone(), Window::HanzoNodeManager, true);
-            }
-            "hanzo_spotlight" => {
-                let _ = recreate_window(tray.app_handle().clone(), Window::Spotlight, true);
-            }
             "quit" => {
-                tauri::async_runtime::spawn(async move {
-                    // For some reason process::exit doesn't fire RunEvent::ExitRequested event in tauri
-                    let mut hanzo_node_manager_guard =
-                        HANZO_NODE_MANAGER_INSTANCE.get().unwrap().write().await;
-                    if hanzo_node_manager_guard.is_running().await {
-                        hanzo_node_manager_guard.kill().await;
-                    }
-                    drop(hanzo_node_manager_guard);
-                    std::process::exit(0);
-                });
+                // process::exit skips RunEvent::Exit (main.rs), so what that
+                // stops is stopped here: a served model would otherwise keep
+                // :36900 and its memory after the app is gone.
+                crate::commands::local_site::stop_all();
+                crate::local_models::stop_all();
+                std::process::exit(0);
             }
             _ => (),
         })

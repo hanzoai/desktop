@@ -5,7 +5,6 @@
 //! On-chain submission is Phase 2 and intentionally out of scope here.
 
 pub mod backend;
-pub mod claim;
 pub mod error;
 pub mod precompile;
 pub mod proof;
@@ -24,6 +23,8 @@ use proof::{MlDsa65SigningKey, PrivacyLevel};
 
 const HISTORY_CAP: usize = 1000;
 const TICK_SECS: u64 = 60;
+/// What the Settings switch writes to say yes, and the only thing read as one.
+const CONSENT: &[u8] = b"on: the person turned this on in Settings\n";
 
 /// Single proof record persisted in history.json.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,6 +72,27 @@ pub struct MiningManager {
     storage_dir: PathBuf,
     backend: Arc<dyn MiningBackend>,
     signing_key: Arc<RwLock<MlDsa65SigningKey>>,
+    /// The one running loop's task. Stop aborts it and waits for it to end, so
+    /// off-then-on can never leave an old loop running beside a new one.
+    task: tokio::sync::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
+    /// Loops alive right now: each holds one count until its task ends.
+    live: Arc<std::sync::atomic::AtomicUsize>,
+}
+
+/// One live loop's count, given back when its task ends, aborted or not.
+struct Alive(Arc<std::sync::atomic::AtomicUsize>);
+
+impl Alive {
+    fn new(live: &Arc<std::sync::atomic::AtomicUsize>) -> Self {
+        live.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        Self(live.clone())
+    }
+}
+
+impl Drop for Alive {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
+    }
 }
 
 impl MiningManager {
@@ -86,21 +108,37 @@ impl MiningManager {
             storage_dir,
             backend: Arc::new(CpuBackend),
             signing_key: Arc::new(RwLock::new(key)),
+            task: tokio::sync::Mutex::new(None),
+            live: Arc::new(std::sync::atomic::AtomicUsize::new(0)),
         }
     }
 
-    pub async fn get_state(&self) -> MiningState {
-        self.state.read().await.clone()
+    /// The person's own yes, kept across launches: a file in the mining dir
+    /// holding exactly `CONSENT`. Anything else there (absent, a folder, other
+    /// bytes) means no mining at all.
+    fn consent_path(&self) -> PathBuf {
+        self.storage_dir.join("enabled")
     }
 
-    pub async fn set_privacy(&self, privacy: PrivacyLevel) {
-        self.state.write().await.privacy = privacy;
+    pub fn is_enabled(&self) -> bool {
+        std::fs::read(self.consent_path()).is_ok_and(|b| b == CONSENT)
+    }
+
+    pub fn set_enabled(&self, on: bool) -> std::io::Result<()> {
+        if on {
+            std::fs::create_dir_all(&self.storage_dir)?;
+            std::fs::write(self.consent_path(), CONSENT)
+        } else {
+            match std::fs::remove_file(self.consent_path()) {
+                Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e),
+                _ => Ok(()),
+            }
+        }
     }
 
     /// Phase-1 dev mining wallet: a stable, per-install EVM-style address
     /// persisted under the mining storage dir so accrued rewards survive
-    /// restarts. The frontend re-homes rewards to the user's connected wallet
-    /// once it resolves (the boot auto-start needs an address before then).
+    /// restarts. Phase 1 has no claim to a wallet the person holds yet.
     pub fn ensure_dev_wallet(&self) -> String {
         let path = self.storage_dir.join("wallet.addr");
         if let Ok(addr) = std::fs::read_to_string(&path) {
@@ -122,11 +160,23 @@ impl MiningManager {
     }
 
     pub async fn start_mining(&self, app: AppHandle, wallet_address: String, chain_id: u64) {
+        self.run(wallet_address, chain_id, move |event, payload| {
+            let _ = app.emit(event, payload);
+        })
+        .await;
+    }
+
+    /// Starts the loop unless one is running; `emit` hears its events.
+    async fn run<E>(&self, wallet_address: String, chain_id: u64, emit: E)
+    where
+        E: Fn(&'static str, serde_json::Value) + Send + 'static,
+    {
+        let mut task = self.task.lock().await;
+        if task.as_ref().is_some_and(|t| !t.inner().is_finished()) {
+            return;
+        }
         {
             let mut s = self.state.write().await;
-            if s.is_mining {
-                return;
-            }
             if !wallet_address.is_empty() {
                 s.wallet_address = wallet_address;
             }
@@ -143,13 +193,12 @@ impl MiningManager {
         let backend = self.backend.clone();
         let key = self.signing_key.clone();
 
-        tauri::async_runtime::spawn(async move {
+        let alive = Alive::new(&self.live);
+        *task = Some(tauri::async_runtime::spawn(async move {
+            let _alive = alive;
             let mut ticker = interval(Duration::from_secs(TICK_SECS));
             loop {
                 ticker.tick().await;
-                if !state.read().await.is_mining {
-                    break;
-                }
 
                 let (wallet, privacy) = {
                     let s = state.read().await;
@@ -173,36 +222,25 @@ impl MiningManager {
                         s.history_count = history.len();
                         let snapshot = s.clone();
                         drop(s);
-                        let _ = app.emit("mining://progress", &record);
-                        let _ = app.emit("mining-update", &snapshot);
+                        emit("mining://progress", serde_json::to_value(&record).unwrap_or_default());
+                        emit("mining-update", serde_json::to_value(&snapshot).unwrap_or_default());
                     }
                     Err(e) => {
                         log::error!("mining tick failed: {e}");
-                        let _ = app.emit("mining://error", e.to_string());
+                        emit("mining://error", e.to_string().into());
                     }
                 }
             }
-        });
+        }));
     }
 
+    /// Stops the loop now: its task is aborted and has ended when this returns.
     pub async fn stop_mining(&self) {
-        self.state.write().await.is_mining = false;
-    }
-
-    pub async fn get_history(&self) -> Vec<ProofRecord> {
-        let wallet = self.state.read().await.wallet_address.clone();
-        if wallet.is_empty() {
-            return vec![];
+        if let Some(task) = self.task.lock().await.take() {
+            task.abort();
+            let _ = task.await;
         }
-        read_history(&self.storage_dir, &wallet).unwrap_or_default()
-    }
-
-    pub async fn get_local_pending_wei(&self) -> String {
-        self.state.read().await.local_pending_wei.clone()
-    }
-
-    pub async fn get_wallet_address(&self) -> String {
-        self.state.read().await.wallet_address.clone()
+        self.state.write().await.is_mining = false;
     }
 }
 
@@ -314,6 +352,52 @@ mod tests {
 
     fn fresh_dir() -> TempDir {
         TempDir::new().expect("tempdir")
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn off_and_on_leaves_exactly_one_loop_and_off_stops_it_now() {
+        use std::sync::atomic::Ordering::SeqCst;
+        let tmp = fresh_dir();
+        let m = MiningManager::new(tmp.path().join("mining"));
+        for _ in 0..2 {
+            m.run("0xabc".into(), 96369, |_, _| {}).await;
+            m.run("0xabc".into(), 96369, |_, _| {}).await;
+            assert_eq!(m.live.load(SeqCst), 1, "on while on starts nothing more");
+            m.stop_mining().await;
+            assert_eq!(m.live.load(SeqCst), 0, "off has stopped the loop when it returns");
+        }
+        m.run("0xabc".into(), 96369, |_, _| {}).await;
+        assert_eq!(m.live.load(SeqCst), 1, "off, on, off, on: one loop");
+        m.stop_mining().await;
+    }
+
+    #[test]
+    fn mining_is_off_until_the_person_turns_it_on_and_the_choice_is_kept() {
+        let tmp = fresh_dir();
+        let dir = tmp.path().join("mining");
+        assert!(!MiningManager::new(dir.clone()).is_enabled(), "a new install is off");
+        MiningManager::new(dir.clone()).set_enabled(true).unwrap();
+        assert!(MiningManager::new(dir.clone()).is_enabled(), "kept across launches");
+        let m = MiningManager::new(dir.clone());
+        m.set_enabled(false).unwrap();
+        m.set_enabled(false).unwrap();
+        assert!(!MiningManager::new(dir).is_enabled());
+    }
+
+    #[test]
+    fn only_the_switch_s_own_file_means_on() {
+        let tmp = fresh_dir();
+        let dir = tmp.path().join("mining");
+        let m = MiningManager::new(dir.clone());
+        std::fs::create_dir_all(dir.join("enabled")).unwrap();
+        assert!(!m.is_enabled(), "a folder named enabled is not a yes");
+        std::fs::remove_dir(dir.join("enabled")).unwrap();
+        for other in [&b""[..], b"1", b"on", b"true\n"] {
+            std::fs::write(dir.join("enabled"), other).unwrap();
+            assert!(!m.is_enabled(), "{:?} is not the switch's yes", String::from_utf8_lossy(other));
+        }
+        m.set_enabled(true).unwrap();
+        assert!(m.is_enabled());
     }
 
     #[test]

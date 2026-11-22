@@ -1,27 +1,16 @@
-use tauri::{Emitter, Listener};
+use tauri::Emitter;
 use tauri_plugin_deep_link::DeepLinkExt;
 
-use crate::windows::{get_window, recreate_window, Window};
+use crate::windows::{recreate_window, Window};
 
-/// Brands whose IAM issues a `<scheme>://oauth/<brand>` redirect. Mirrors the
-/// `Brand` union and the `iam.redirectUri` column in libs/brand-config.
-const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
+/// Brands whose sign-in comes back here, by name. libs/brand-config is the one
+/// brand table; the test below holds this list to it.
+pub(crate) const IAM_BRANDS: [&str; 3] = ["hanzo", "zoo", "lux"];
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct OAuthDeepLinkPayload {
     pub state: String,
     pub code: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct StoreDeepLinkPayload {
-    pub tool_type: String,
-    pub tool_url: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct ConfigDeepLinkPayload {
-    pub tool_router_key: String,
 }
 
 pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
@@ -39,59 +28,8 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
         for url in urls {
             log::debug!("handling deep link: {:?}", url);
             if let Some(host) = url.host() {
-                if host.to_string() == "store" {
-                    // hanzo://store?type=tool&url=https://download.hanzo.app/tool/email-fetcher.zip
-                    let query_pairs = url.query_pairs().collect::<Vec<_>>();
-                    let tool_type = query_pairs
-                        .iter()
-                        .find(|(key, _)| key == "type")
-                        .map(|(_, value)| value.to_string())
-                        .unwrap_or_default();
-                    let tool_url = query_pairs
-                        .iter()
-                        .find(|(key, _)| key == "url")
-                        .map(|(_, value)| value.to_string())
-                        .unwrap_or_default();
-
-                    let payload = StoreDeepLinkPayload {
-                        tool_type,
-                        tool_url,
-                    };
-                    let app_handle_clone = app_handle.clone();
-
-                    match get_window(app_handle_clone.clone(), Window::Main, true) {
-                        Ok(_) => {
-                            log::info!("Successfully got main window");
-                            let _ = app_handle_clone.emit_to(
-                                Window::Main.as_str(),
-                                "store-deep-link",
-                                payload,
-                            );
-                        }
-                        Err(e) => {
-                            log::error!("Failed to get main window: {}", e);
-                            // Spawn window recreation in a separate task
-                            tauri::async_runtime::spawn(async move {
-                                match recreate_window(app_handle_clone.clone(), Window::Main, true) {
-                                    Ok(window) => {
-                                        window.once("hanzo-app-ready", move |_| {
-                                            log::info!("hanzo-app-ready event received, emitting store-deep-link");
-                                            let _ = app_handle_clone.emit_to(
-                                                Window::Main.as_str(),
-                                                "store-deep-link",
-                                                payload,
-                                            );
-                                        });
-                                    }
-                                    Err(e) => {
-                                        log::error!("Failed to recreate main window: {}", e);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                }
-
+                // Only sign-in comes back on a deep link. `store` and `config`
+                // links emitted events no window listened for, so they are gone.
                 if host.to_string() == "oauth" {
                     log::debug!("oauth deep link: {:?}", url);
                     let query_pairs = url.query_pairs().collect::<Vec<_>>();
@@ -125,62 +63,35 @@ pub fn setup_deep_links(app: &tauri::AppHandle) -> tauri::Result<()> {
                             let _ = recreate_window(app_handle.clone(), Window::Main, true);
                             let _ = app_handle.emit(&event, payload);
                         }
-                        None => {
-                            log::debug!("emitting oauth-deep-link event to all windows");
-                            let _ = recreate_window(app_handle.clone(), Window::Main, true);
-                            let _ = app_handle.emit("oauth-deep-link", payload);
-                        }
-                    }
-                }
-
-                if host.to_string() == "config" {
-                    log::debug!("config deep link: {:?}", url);
-                    let query_pairs = url.query_pairs().collect::<Vec<_>>();
-                    let tool_router_key = query_pairs
-                        .iter()
-                        .find(|(key, _)| key == "tool")
-                        .map(|(_, value)| value.to_string())
-                        .unwrap_or_default();
-                    
-                    let payload = ConfigDeepLinkPayload {
-                        tool_router_key,
-                    };
-                    let app_handle_clone = app_handle.clone();
-
-                    match get_window(app_handle_clone.clone(), Window::Main, true) {
-                        Ok(_) => {
-                            log::info!("Successfully got main window");
-                            let _ = app_handle_clone.emit_to(
-                                Window::Main.as_str(),
-                                "config-deep-link",
-                                payload,
-                            );
-                        }
-                        Err(e) => {
-                            log::error!("Failed to get main window: {}", e);
-                            // Spawn window recreation in a separate task
-                            tauri::async_runtime::spawn(async move {
-                                match recreate_window(app_handle_clone.clone(), Window::Main, true) {
-                                    Ok(window) => {
-                                        window.once("hanzo-app-ready", move |_| {
-                                            log::info!("hanzo-app-ready event received, emitting config-deep-link");
-                                            let _ = app_handle_clone.emit_to(
-                                                Window::Main.as_str(),
-                                                "config-deep-link",
-                                                payload,
-                                            );
-                                        });
-                                    }
-                                    Err(e) => {
-                                        log::error!("Failed to recreate main window: {}", e);
-                                    }
-                                }
-                            });
-                        }
+                        // Any other oauth link went to the hidden Coordinator's
+                        // legacy-node listener, which is gone; nothing else asks.
+                        None => log::debug!("ignoring oauth deep link for no brand: {:?}", url),
                     }
                 }
             }
         }
     });
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IAM_BRANDS;
+
+    /// The list above is the brand table's, not a second one: every brand in
+    /// libs/brand-config with a callback event, and nothing else.
+    #[test]
+    fn the_brands_are_the_brand_table_s() {
+        let table = include_str!("../../../../libs/brand-config/src/index.ts");
+        let mut from_table: Vec<&str> = table
+            .split("callbackEvent: '")
+            .skip(1)
+            .filter_map(|s| s.split('\'').next()?.strip_suffix("-iam-callback"))
+            .collect();
+        from_table.sort();
+        let mut here = IAM_BRANDS.to_vec();
+        here.sort();
+        assert!(!from_table.is_empty(), "the brand table names no callback event");
+        assert_eq!(here, from_table);
+    }
 }

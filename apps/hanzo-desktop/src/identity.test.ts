@@ -1,7 +1,7 @@
 import { IAM } from '@hanzo/iam';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { adopt, SESSION, share } from './identity';
+import { adopt, forget, SESSION, share } from './identity';
 import { keychain } from './keychain';
 
 const jwt = (claims: object) => {
@@ -51,3 +51,27 @@ describe('adopting the identity the shared store holds', () => {
     expect(invoked.filter((c) => c.includes('secure_storage'))).toEqual([]);
   });
 });
+
+describe('signing out', () => {
+  it('forgets the identity this window adopted, even after the app has cleared the session', async () => {
+    const access = jwt({ owner: 'hanzo', name: 'z', exp: Math.floor(Date.now() / 1000) + 3600 });
+    await adopt(async () => ({ access_token: access }));
+    keychain.clear(); // @hanzo/ui signOut clears the session before the host hears of it
+    const drop = vi.fn(async (_: string) => undefined);
+    await forget(drop);
+    expect(drop).toHaveBeenCalledWith(access);
+    await forget(drop);
+    expect(drop).toHaveBeenCalledTimes(1);
+  });
+
+  it('forgets the identity a sign-in here filed, not the one the CLI had', async () => {
+    await adopt(async () => ({ access_token: jwt({ owner: 'hanzo', name: 'cli' }) }));
+    const mine = jwt({ owner: 'acme', name: 'ada' });
+    keychain.setItem(SESSION.access, mine);
+    await share(async () => undefined);
+    const drop = vi.fn(async (_: string) => undefined);
+    await forget(drop);
+    expect(drop).toHaveBeenCalledWith(mine);
+  });
+});
+

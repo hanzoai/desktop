@@ -6,7 +6,7 @@
  * (`local_preview_start`) and shows it in Chrome (`local_preview_open`), and the agent is the ordinary
  * `local_workspace_run_dev`. There is no Tauri runtime in this suite, so the IPC is a stand-in that answers the way
  * the Rust commands do and writes every call down; the Rust side is `cargo test local_site`. Signed in with a token
- * the app reads from the keychain record, against a stubbed platform.
+ * the app adopts from the shared sign-in (`identity_adopt`), against a stubbed platform.
  */
 import { expect, type Page, test } from '@playwright/test';
 
@@ -17,11 +17,8 @@ const TOKEN = [
   b64({ sub: 'u1', name: 'James', email: 'james@acme.test', owner: 'acme', exp: expires, orgs: [{ org: 'acme', role: 'member' }], org: 'acme' }),
   'x',
 ].join('.');
-const SESSION = JSON.stringify({
-  hanzo_iam_access_token: TOKEN,
-  hanzo_iam_refresh_token: 'r',
-  hanzo_iam_expires_at: String(Date.now() + 86_400_000),
-});
+// What identity_adopt answers: the shared sign-in's tokens (identity.rs).
+const SESSION = { access_token: TOKEN };
 
 type Call = { cmd: string; args: Record<string, unknown> };
 
@@ -44,9 +41,8 @@ async function signedIn(page: Page, refuse = ''): Promise<Call[]> {
         async invoke(cmd: string, args: Record<string, unknown>) {
           (window as unknown as { __ipc: (c: unknown) => void }).__ipc({ cmd, args });
           switch (cmd) {
-            case 'secure_storage_get':
-              if (args.key === 'iam-session') return session;
-              throw 'Key not found';
+            case 'identity_adopt':
+              return session;
             case 'plugin:event|listen':
               return callback++;
             case 'local_site_folder':

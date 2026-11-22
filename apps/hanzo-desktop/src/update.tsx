@@ -8,8 +8,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { isTauriAvailable } from './utils/tauri-check';
 
-// A newer version is said quietly in the bar, beside Local AI, and installed in one press:
-// download, install, stop the node, relaunch (Windows' installer restarts Hanzo itself).
+// A newer version is said quietly in the bar, and installed in one press:
+// download, stop the model and the node, install, relaunch (Windows' installer restarts Hanzo itself).
 
 const EVERY = 30 * 60 * 1000;
 
@@ -22,6 +22,20 @@ export type Stage =
 /** Whole percent of a download, or null while its size is not yet known. */
 export function percent(done: number, total: number | undefined): number | null {
   return total && total > 0 ? Math.min(100, Math.round((done / total) * 100)) : null;
+}
+
+/**
+ * Calls a model download off and gives it up to 2 s to take back its partial
+ * files (local_models.rs `stop_all` does the same on the other exit paths).
+ * Anything still there then is removed at the next start.
+ */
+async function cancelDownload(): Promise<void> {
+  if (!(await invoke<boolean>('local_models_cancel'))) return;
+  for (let waited = 0; waited < 2000; waited += 100) {
+    const status = await invoke<{ pulling: string | null } | undefined>('local_models_status');
+    if (!status?.pulling) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
 }
 
 /** What the bar says for a stage: the words, the hover line and whether a press does anything. */
@@ -89,16 +103,22 @@ export function useUpdate(): { stage: Stage; install: () => void } {
     let done = 0;
     setStage({ name: 'updating', version: found.version, percent: null });
     found
-      .downloadAndInstall((event) => {
+      .download((event) => {
         if (event.event === 'Started') total = event.data.contentLength;
         else if (event.event === 'Progress') {
           done += event.data.chunkLength;
           setStage({ name: 'updating', version: found.version, percent: percent(done, total) });
         } else if (event.event === 'Finished') {
           setStage({ name: 'updating', version: found.version, percent: 100 });
-          void invoke('hanzo_node_kill').catch(() => undefined);
         }
       })
+      // Stopped before install, and awaited: Windows' installer ends this
+      // process with process::exit, which skips the exit hook that would stop
+      // a served model and call off a download (main.rs), so the model would
+      // outlive the app and a half-downloaded one would stay on the disk.
+      .then(() => cancelDownload().catch(() => undefined))
+      .then(() => invoke('local_models_stop').catch(() => undefined))
+      .then(() => found.install())
       .then(() => (platform() === 'windows' ? undefined : relaunch()))
       .catch((err: unknown) => {
         busy.current = false;

@@ -13,21 +13,17 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { ErrorBoundary } from 'react-error-boundary';
 
 import config from '../gui.config';
-import {
-  createFnVoiceController,
-  createMicLeaseArbitrator,
-  DesktopSettings,
-  windowKey,
-} from './desktop-shortcuts';
-import { adopt } from './identity';
+import { Crash } from './crash';
+import { DesktopSettings, windowKey } from './desktop-shortcuts';
+import { adopt, forget } from './identity';
 import { keychain } from './keychain';
+import { LibraryOverlay, ProvidersPluginsOverlay } from './LibraryPane';
 import {
   buildLocalModelsCatalogResponse,
   handleLocalChatCompletion,
   LocalAiManager,
 } from './local-ai';
-import BenchmarkPage, { LSA_URL, ZEN_27B_TREE_PRESET } from './pages/benchmark';
-import { LibraryOverlay, ProvidersPluginsOverlay } from './LibraryPane';
+import { onward, signIn } from './sign-in';
 import {
   BottomTerminalDrawer,
   SurfacePanel,
@@ -35,8 +31,8 @@ import {
   useWorkspacePanels,
   WorkspaceDetailsPopover,
 } from './SurfacePanel';
-import { onward, signIn } from './sign-in';
 import { Welcome } from './Welcome';
+import { SignInCancelled } from './lib/sign-in-attempt';
 import { safeInvoke, safeListen } from './utils/tauri-check';
 
 // The main window is hanzo.ai's app: the same @hanzo/rooms `App` hanzo.ai draws
@@ -70,6 +66,11 @@ configure({
   // The session is in the keychain, never the webview's localStorage: the rooms
   // read the token, its expiry and its claims there.
   session: keychain,
+  // The host's own leaving, which the app awaits on every sign-out the person
+  // chooses, before it ends the session and moves the page, and never on a token
+  // that expired: this window's identity is revoked and forgotten in the shared
+  // store, or the next launch would sign the person straight back in.
+  signOut: forget,
   // Dev's runtime is the Dev server on this computer (src-tauri local_dev.rs): the address it
   // published, and a one-time pairing credential its CLI issues for each session.
   runtime: async () => {
@@ -125,13 +126,8 @@ if (window.location.pathname === '/' || window.location.pathname === '/index.htm
 // through the router below. macOS paints its traffic lights over the page's
 // top-left corner (tauri.conf.json: titleBarStyle Overlay), so the bar keeps
 // 78px clear there; Windows and Linux keep their native title bar above the
-// page and need none. The bar drags the window. Its controls are the window's:
-// Local AI, in place of the minimise, maximise and close a frameless window
-// would draw, which the native title bar already has, and, when there is a newer
-// version, the one quiet line that installs it (update.tsx).
+// page and need none. The bar drags the window.
 const MAC = /Mac/.test(navigator.userAgent);
-// The focused pages (Gate's sheets: organization, plan) carry their own header,
-// whose wordmark starts at the page's gutter, under the traffic lights (app.css).
 if (MAC) document.documentElement.dataset.mac = '';
 
 const BAR: Titlebar = {
@@ -156,13 +152,41 @@ const IAM = {
 // (lib/host `go`), so the window re-renders on every push and replace as well
 // as on popstate. A push to another origin cannot happen in a webview; it opens
 // in the browser instead.
+const WEB = /^\/(billing|usage|keys|pricing)(\/|$)|^\/settings\/organization(\/|$)/;
+
+/** The hanzo.ai page an address of this window's names, or null for one the window draws. */
+export function onTheWeb(href: string): string | null {
+  try {
+    const url = new URL(href, window.location.href);
+    return url.origin === window.location.origin && WEB.test(url.pathname) ? `${SITE}${url.pathname}${url.search}` : null;
+  } catch {
+    return null;
+  }
+}
+
 const MOVED = 'hanzo:moved';
 for (const name of ['pushState', 'replaceState'] as const) {
   const original = window.history[name].bind(window.history);
   window.history[name] = (...args: Parameters<History['pushState']>) => {
+    const out = args[2] == null ? null : onTheWeb(String(args[2]));
+    if (out) {
+      void openUrl(out);
+      return;
+    }
     original(...args);
     window.dispatchEvent(new Event(MOVED));
   };
+}
+
+// A page load onto one of them (the guest Rail's "See plans and pricing" is
+// `location.assign('/pricing')`, not a push) takes the same rule: it opens there,
+// and the window shows Chat rather than an address it has no page for.
+{
+  const out = onTheWeb(window.location.href);
+  if (out) {
+    void openUrl(out);
+    window.history.replaceState(null, '', '/chat');
+  }
 }
 
 function subscribe(changed: () => void): () => void {
@@ -228,15 +252,14 @@ function outward(e: globalThis.MouseEvent): void {
 // draw the desktop's sign-in rather than a page of the app.
 const DOORS = new Set(['/login', '/signup']);
 
-// A visitor who chose "Not now" opens the app signed out from then on, as the
-// web does for a guest; signing in is one click away in the app itself.
+// A visitor who chose "Not now" on Welcome opens the app signed out from then on,
+// as the web does for a guest; signing in is one click away in the app itself.
+// That button is the only way to become a guest: no key, address or Back does it.
 const GUEST = 'hanzo:guest';
 
 function guest(): boolean {
   try {
-    const isGuest =
-      new URLSearchParams(window.location.search).get('guest') === '1' ||
-      window.localStorage.getItem(GUEST) === '1';
+    const isGuest = window.localStorage.getItem(GUEST) === '1';
     if (isGuest) {
       window.sessionStorage.setItem('hanzo.anon.try', '1');
       (window as any).__hanzoAnonChat = true;
@@ -244,6 +267,17 @@ function guest(): boolean {
     return isGuest;
   } catch {
     return false;
+  }
+}
+
+/** A signed-in window is nobody's guest: an old build's flag must not outlive a sign-in. */
+function forgetGuest(): void {
+  try {
+    window.localStorage.removeItem(GUEST);
+    window.sessionStorage.removeItem('hanzo.anon.try');
+    (window as any).__hanzoAnonChat = false;
+  } catch {
+    // Without storage there is no flag to clear.
   }
 }
 
@@ -286,7 +320,6 @@ function LoadingScreen({ message = 'Loading Hanzo…' }: { message?: string }) {
   );
 }
 
-const LOCAL_ENGINE_URL = 'http://localhost:36900';
 const LOCAL_CONVERSATIONS_KEY = 'hanzo:local:conversations';
 
 type StoredLocalConversation = {
@@ -327,7 +360,7 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 // Install local-first fetch bridge for unauthenticated / guest desktop sessions
 // so "Continue without login · Local AI" works with zero "Failed to fetch" errors
-// and routes chat completions to the embedded local Hanzo Engine (:36900).
+// and routes chat completions to Hanzo's engine on this computer (local-ai.tsx).
 if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTALLED__) {
   (window as any).__HANZO_LOCAL_FETCH_INSTALLED__ = true;
   const nativeFetch = window.fetch.bind(window);
@@ -466,35 +499,10 @@ if (typeof window !== 'undefined' && !(window as any).__HANZO_LOCAL_FETCH_INSTAL
       }
     }
 
-    try {
-      return await nativeFetch(input, init);
-    } catch (err) {
-      // Graceful fallback if cloud endpoint is unreachable in desktop webview
-      if (isCloudApi && parsed) {
-        const path = parsed.pathname;
-        if (path.startsWith('/v1/agents/chat/conversations')) {
-          return jsonResponse({ conversations: readLocalConversations() });
-        }
-        if (path === '/v1/agent/sessions' || path === '/v1/agents/sessions') {
-          return jsonResponse({ sessions: [] });
-        }
-        if (path === '/v1/agents') {
-          return jsonResponse({ agents: [] });
-        }
-        if (path === '/v1/project') {
-          return jsonResponse([]);
-        }
-        if (path === '/v1/pref' || path === '/v1/preferences') {
-          return jsonResponse({});
-        }
-      }
-      throw err;
-    }
+    // Signed in, every call is the cloud's, and offline it fails as itself: the
+    // app says so with its own Try again. Nothing here stands in for the account.
+    return nativeFetch(input, init);
   };
-}
-
-if (typeof window !== 'undefined') {
-  (window as any).__HANZO_BENCHMARK_COMPONENT__ = BenchmarkPage;
 }
 
 function Gate() {
@@ -506,6 +514,40 @@ function Gate() {
   const [busy, setBusy] = useState(false);
   const [visiting, setVisiting] = useState(guest);
   const [providersPane, setProvidersPane] = useState<'providers' | 'plugins' | null>(null);
+
+  // The attempt in progress, so Cancel can stop it and a new press can replace
+  // it; and "Open the sign-in page again", once its page has been opened.
+  const attempt = useRef<AbortController | null>(null);
+  const [reopen, setReopen] = useState<(() => void) | null>(null);
+
+  const startSignIn = () => {
+    attempt.current?.abort();
+    const ctrl = new AbortController();
+    attempt.current = ctrl;
+    setBusy(true);
+    setError(null);
+    setReopen(null);
+    signIn(sdk, {
+      signal: ctrl.signal,
+      ready: (again) => {
+        if (attempt.current === ctrl) setReopen(() => again);
+      },
+    }).catch((err: unknown) => {
+      // A cancelled or replaced attempt has already handed the screen back.
+      if (attempt.current !== ctrl) return;
+      attempt.current = null;
+      setBusy(false);
+      setReopen(null);
+      if (!(err instanceof SignInCancelled)) setError(err instanceof Error ? err : new Error(String(err)));
+    });
+  };
+  const cancelSignIn = () => {
+    const ctrl = attempt.current;
+    attempt.current = null;
+    ctrl?.abort();
+    setBusy(false);
+    setReopen(null);
+  };
 
   useEffect(() => {
     const raw = user as Record<string, unknown> | null | undefined;
@@ -592,13 +634,18 @@ function Gate() {
     return () => clearTimeout(timer);
   }, []);
 
-  // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and
-  // focused. Signed out, it is the same as "Not now" (a guest, in Chat).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    forgetGuest();
+    setVisiting(false);
+  }, [isAuthenticated]);
+
+  // Whether Welcome is the whole window (set below, read when a key arrives).
+  const welcoming = useRef(false);
+  // A new chat, from the global ⇧⌘I or the window's ⌘N: the composer, empty and focused.
+  // On Welcome there is no chat to start, so nothing moves and the address (its `next`) stays.
   const startChat = () => {
-    if (!isAuthenticated) {
-      stayGuest();
-      setVisiting(true);
-    }
+    if (welcoming.current) return;
     empty();
     window.history.pushState(null, '', '/chat');
     requestAnimationFrame(() => {
@@ -627,7 +674,22 @@ function Gate() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  // Wire Tauri desktop global shortcuts ('create-chat' on ⇧⌘I, 'navigate-to-path', and 'tabs-split' on ⌘D / ⌘⇧D)
+  // ONE SETTINGS FOR EVERY VISITOR. Signed out, every Settings door of the app (the
+  // rail's mark, ⌘,, the palette, a row's menu, the sidebar) raises
+  // 'hanzo:anon-settings' to open its own small pane, which has no Local models: a
+  // guest who downloaded a model could not remove it. The window's Settings answers
+  // instead, on Local models, the part of it a guest has. `{ open: false }` is the
+  // app closing its pane, not a door.
+  useEffect(() => {
+    const door = (e: Event) => {
+      if ((e as CustomEvent<{ open?: boolean } | undefined>).detail?.open === false) return;
+      window.history.pushState(null, '', '/settings/local-models');
+    };
+    window.addEventListener('hanzo:anon-settings', door);
+    return () => window.removeEventListener('hanzo:anon-settings', door);
+  }, []);
+
+  // Wire Tauri desktop global shortcuts & native menu events.
   useEffect(() => {
     let unlistenCreate: (() => void) | undefined;
     let unlistenNavigate: (() => void) | undefined;
@@ -640,8 +702,6 @@ function Gate() {
 
     void safeListen<string>('navigate-to-path', (event) => {
       const target = typeof event.payload === 'string' && event.payload.startsWith('/') ? event.payload : '/chat';
-      stayGuest();
-      setVisiting(true);
       window.history.pushState(null, '', target);
     }).then((fn) => {
       unlistenNavigate = fn ?? undefined;
@@ -674,107 +734,28 @@ function Gate() {
     };
   }, []);
 
-  // Wire Desktop `Fn` key push-to-talk (hold Fn) and hands-free voice (double-tap Fn)
-  // with cross-window / cross-app mic lease arbitration so multiple open Hanzo apps never fight over the mic.
-  useEffect(() => {
-    const instanceId = `${brand.brand}-${Math.random().toString(36).slice(2, 10)}`;
-    const lease = createMicLeaseArbitrator({
-      instanceId,
-      onPreempted: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
-          mic.click();
-        }
-      },
-    });
-    const controller = createFnVoiceController({
-      isListening: () => findMic()?.getAttribute('aria-pressed') === 'true',
-      start: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') !== 'true') {
-          lease.claim();
-          mic.click();
-        }
-      },
-      stop: () => {
-        const mic = findMic();
-        if (mic && !mic.disabled && mic.getAttribute('aria-pressed') === 'true') {
-          mic.click();
-          lease.release();
-        }
-      },
-      toggle: () => {
-        const mic = findMic();
-        if (!mic || mic.disabled) return;
-        const active = mic.getAttribute('aria-pressed') === 'true';
-        if (active) {
-          mic.click();
-          lease.release();
-        } else {
-          lease.claim();
-          mic.click();
-        }
-      },
-    });
-    window.addEventListener('keydown', controller.onKeyDown);
-    window.addEventListener('keyup', controller.onKeyUp);
-    return () => {
-      window.removeEventListener('keydown', controller.onKeyDown);
-      window.removeEventListener('keyup', controller.onKeyUp);
-      controller.dispose();
-      lease.dispose();
-    };
-  }, []);
-
-  // Ensure LSA is armed by default on the embedded engine
-  useEffect(() => {
-    fetch(LSA_URL)
-      .then((r) => (r.ok ? r.json() : null))
-      .then(async (s) => {
-        if (s && !s.enabled) {
-          await fetch(LSA_URL, {
-            body: JSON.stringify({ ...ZEN_27B_TREE_PRESET, min_seq_len: 1024, top_k: 512, top_p: 128 }),
-            headers: { 'content-type': 'application/json' },
-            method: 'POST',
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
   const isLoading = iamLoading && !loadingTimedOut;
   // A bundled window starts on its own index (windows/mod.rs `main_url`); that
   // is the app's front door, not an address of its own.
   const raw = here.split('?')[0] || '/';
   const path = raw === '/' || raw === '/index.html' ? '/chat' : raw;
   const isSettings = path === '/settings' || path.startsWith('/settings/');
-  const isBenchOrSettings = path === '/benchmark' || path === '/lsa' || isSettings;
+  welcoming.current = !isAuthenticated && !isSettings && (DOORS.has(path) || !visiting);
 
-  if (isLoading && !isBenchOrSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
-  if (!isAuthenticated && !isBenchOrSettings && (DOORS.has(path) || !visiting)) {
+  if (isLoading && !isSettings) return <LoadingScreen message="Loading Hanzo AI…" />;
+  if (!isAuthenticated && !isSettings && (DOORS.has(path) || !visiting)) {
     return (
       <Welcome
         busy={busy}
         error={error}
-        onSignIn={() => {
-          setBusy(true);
-          setError(null);
-          signIn(sdk).catch((err: unknown) => {
-            setBusy(false);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          });
-        }}
+        onSignIn={startSignIn}
+        onCancel={cancelSignIn}
+        onReopen={reopen ?? undefined}
         onSkip={() => {
+          cancelSignIn();
           stayGuest();
-          setBusy(false);
           setVisiting(true);
           window.history.replaceState(null, '', DOORS.has(path) || path === '/' ? onward() : here);
-        }}
-        onBenchmark={() => {
-          stayGuest();
-          setBusy(false);
-          setVisiting(true);
-          window.history.replaceState(null, '', '/benchmark');
         }}
       />
     );
@@ -783,35 +764,18 @@ function Gate() {
     window.history.replaceState(null, '', onward());
     return null;
   }
-  if (path === '/benchmark' || path === '/lsa') {
-    return <BenchmarkPage />;
-  }
   if (isSettings) {
-    const sub = path.replace(/^\/settings\/?/, '').split('/')[0] || 'general';
     return (
       <DesktopSettings
-        initialSection={sub}
         isAuthenticated={isAuthenticated}
         siteUrl={SITE}
-        localEngineUrl={LOCAL_ENGINE_URL}
         barInset={BAR.inset ?? 0}
         onSignIn={() => {
-          setBusy(true);
-          setError(null);
-          signIn(sdk).catch((err: unknown) => {
-            setBusy(false);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          });
+          // Signing in is the Welcome screen's job: it shows the attempt and its Cancel.
+          window.history.pushState(null, '', '/login?next=/settings');
+          startSignIn();
         }}
-        onBack={() => {
-          stayGuest();
-          setVisiting(true);
-          if (window.history.length > 1) {
-            window.history.back();
-          } else {
-            window.history.pushState(null, '', '/chat');
-          }
-        }}
+        onBack={() => window.history.pushState(null, '', '/chat')}
       />
     );
   }
@@ -843,12 +807,8 @@ function Gate() {
                 initialTab={providersPane}
                 onSignIn={() => {
                   setProvidersPane(null);
-                  setBusy(true);
-                  setError(null);
-                  signIn(sdk).catch((err: unknown) => {
-                    setBusy(false);
-                    setError(err instanceof Error ? err : new Error(String(err)));
-                  });
+                  window.history.pushState(null, '', '/login?next=/chat');
+                  startSignIn();
                 }}
                 onClose={() => setProvidersPane(null)}
               />
@@ -861,33 +821,6 @@ function Gate() {
       <WorkspaceDetailsPopover
         onOpenSettings={() => window.history.pushState(null, '', '/settings')}
       />
-    </div>
-  );
-}
-
-function Crash({ error }: { error: unknown }) {
-  const text = error instanceof Error ? `${error.name}: ${error.message}\n\n${error.stack ?? ''}` : String(error);
-  return (
-    <div
-      role="alert"
-      style={{
-        height: '100vh',
-        width: '100vw',
-        overflow: 'auto',
-        padding: '48px 40px',
-        background: '#0a0a0a',
-        color: '#f5f5f5',
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-        fontSize: 12,
-        lineHeight: 1.6,
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-      }}
-    >
-      <div style={{ color: '#ff6b6b', fontWeight: 600, marginBottom: 12 }}>
-        Hanzo could not start
-      </div>
-      {text}
     </div>
   );
 }

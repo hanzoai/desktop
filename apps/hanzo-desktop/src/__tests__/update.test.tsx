@@ -28,9 +28,15 @@ function release(play: (emit: (e: Event) => void) => Promise<void>) {
   return {
     available: true,
     version: '1.2.0',
-    downloadAndInstall: vi.fn(async (onEvent: (e: Event) => void) => play(onEvent)),
+    download: vi.fn(async (onEvent: (e: Event) => void) => play(onEvent)),
+    install: vi.fn(async () => {
+      order.push('install');
+    }),
   };
 }
+
+/** What reached the app, in order: commands invoked and the install. */
+let order: string[] = [];
 
 const mount = () =>
   render(
@@ -50,6 +56,10 @@ describe('the update mark', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     for (const m of [plugin.check, plugin.relaunch, plugin.invoke]) m.mockClear();
+    order = [];
+    plugin.invoke.mockImplementation(async (cmd: string) => {
+      order.push(cmd);
+    });
     plugin.platform.mockReturnValue('macos');
   });
   afterEach(() => vi.useRealTimers());
@@ -83,7 +93,7 @@ describe('the update mark', () => {
     expect(plugin.check).toHaveBeenCalledTimes(2);
   });
 
-  it('installs on one press: progress, the node stopped, Hanzo opened again', async () => {
+  it('installs on one press: progress, the model stopped, Hanzo opened again', async () => {
     let step: (e: Event) => void = () => undefined;
     let finish: () => void = () => undefined;
     plugin.check.mockResolvedValue(
@@ -110,7 +120,9 @@ describe('the update mark', () => {
       step({ event: 'Finished' });
       finish();
     });
-    expect(plugin.invoke).toHaveBeenCalledWith('hanzo_node_kill');
+    // The model is stopped before the installer runs, which on Windows ends
+    // this process without the exit hook.
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'install']);
     expect(plugin.relaunch).toHaveBeenCalledTimes(1);
   });
 
@@ -122,7 +134,36 @@ describe('the update mark', () => {
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: /is ready/ }));
     });
+    expect(order).toEqual(['local_models_cancel', 'local_models_stop', 'install']);
     expect(plugin.relaunch).not.toHaveBeenCalled();
+  });
+
+  it('calls a model download off and waits for it to clear up before installing', async () => {
+    plugin.platform.mockReturnValue('windows');
+    let polls = 0;
+    plugin.invoke.mockImplementation(async (cmd: string) => {
+      order.push(cmd);
+      if (cmd === 'local_models_cancel') return true;
+      if (cmd === 'local_models_status') return { pulling: ++polls < 3 ? 'zenlm/zen-nano-0.6b' : null };
+      return undefined;
+    });
+    plugin.check.mockResolvedValue(release(async () => undefined));
+    mount();
+    await opened();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /is ready/ }));
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(order).toEqual([
+      'local_models_cancel',
+      'local_models_status',
+      'local_models_status',
+      'local_models_status',
+      'local_models_stop',
+      'install',
+    ]);
   });
 
   it('says a failed install and can be pressed again', async () => {
@@ -142,7 +183,7 @@ describe('the update mark', () => {
     await act(async () => {
       fireEvent.click(again);
     });
-    expect(rel.downloadAndInstall).toHaveBeenCalledTimes(2);
+    expect(rel.download).toHaveBeenCalledTimes(2);
   });
 });
 

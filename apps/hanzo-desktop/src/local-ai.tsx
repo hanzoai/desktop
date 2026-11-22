@@ -1,7 +1,47 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { getBrand } from '@hanzo/desktop-brand-config';
+import { XStack, YStack } from '@hanzo/gui';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  Badge,
+  Button,
+  Input,
+  Progress,
+  Text,
+} from '@hanzo/ui';
 
-import rawCatalog from './lib/hanzo-node-manager/model-catalog.json';
+import {
+  CANCELLED,
+  ENGINE_RELEASES_URL,
+  LOCAL_ENGINE_URL,
+  LOCAL_SOURCES,
+  type EngineStatus,
+  type LocalSource,
+  cancelPull,
+  engineStatus,
+  fitsThisMac,
+  formatSize,
+  memoryGb,
+  memoryNeededGb,
+  overall,
+  pullModel,
+  reason,
+  removeModel,
+  serveModel,
+  sourceForRepo,
+  sourceForTag,
+  stopModel,
+  waitForEngine,
+} from './lib/local-models';
+import { keychain } from './keychain';
 import { isTauriAvailable as isTauri } from './utils/tauri-check';
 
 const MIND_STORAGE_KEY = 'hanzo.mind';
@@ -38,61 +78,14 @@ function keep(patch: { model?: string; effort?: string }): void {
   }
 }
 
-export const HANZOD_ENGINE_URL = 'http://127.0.0.1:3690/v1/engine';
-export const LOCAL_ENGINE_PORT_URL = 'http://127.0.0.1:36900';
-export const LOCAL_OLLAMA_URL = 'http://127.0.0.1:11434';
-
-// Release bundles ship no engine (src-tauri/engine-bin), and a download goes to
-// Ollama's API on :11434 and nowhere else. With nothing listening there the
-// request is refused and fetch() rejects with a TypeError whose text is the
-// webview's own ("Load failed" in WebKit, "Failed to fetch" in Chromium), which
-// says nothing a reader can act on.
-export const DOWNLOAD_UNREACHABLE_MESSAGE =
-  'The download did not start: nothing on this computer is answering at 127.0.0.1:11434. Model downloads use Ollama. Start Ollama and try again. Cloud models are not affected.';
-export const ENGINE_NOT_RUNNING_MESSAGE =
-  'The Hanzo Engine is not running on this computer (127.0.0.1:36900), so there is nothing to load a model into.';
-
-/** True when a request found nothing listening, rather than a server that said no. */
-function unreachable(err: unknown): boolean {
-  return err instanceof TypeError;
-}
 export const OPEN_LOCAL_AI_EVENT = 'hanzo:open-local-ai';
 export const LOCAL_MODELS_UPDATED_EVENT = 'hanzo:local-models-updated';
 const CUSTOM_ENGINE_STORAGE_KEY = 'hanzo:local:engine-url';
 
-export interface CatalogTag {
-  name: string;
-  hash: string;
-  size: string;
-  isDefault?: boolean;
-}
-
-export interface CatalogModel {
-  name: string;
-  description: string;
-  supportTools: boolean;
-  defaultTag: string;
-  tags: CatalogTag[];
-  embedding: boolean;
-  vision: boolean;
-  thinking: boolean;
-  cloud: boolean;
-}
-
 export interface InstalledModelInfo {
   id: string;
   sizeBytes?: number;
-  source: 'hanzo-engine' | 'ollama' | 'custom';
-}
-
-export interface LocalNodeOptions {
-  node_api_ip?: string;
-  node_api_port?: string;
-  node_port?: string;
-  node_ws_port?: string;
-  node_storage_path?: string;
-  first_device_needs_registration_code?: string;
-  default_embedding_model?: string;
+  source: 'hanzo-engine' | 'custom';
 }
 
 export interface DiscoveredEngine {
@@ -105,35 +98,6 @@ export interface DiscoveredEngine {
   latency_ms?: number | null;
   base_url: string;
 }
-
-// Filter out legacy models (Zen models: zen6 / qwen3+ only) and embedding-only models for chat
-const LEGACY_MODEL_RE = /qwen2|zen[45]/i;
-const ALL_CATALOG_MODELS: CatalogModel[] = (rawCatalog as CatalogModel[]).filter(
-  (m) => !LEGACY_MODEL_RE.test(m.name),
-);
-
-// Map friendly Zen model aliases to underlying weights when pulling via Ollama registry if needed
-const OLLAMA_PULL_ALIASES: Record<string, string> = {
-  'zen-nano:0.6b': 'qwen3:0.6b',
-  'zen-agent:4b': 'qwen3:4b',
-  'zen-coder:24b': 'qwen3-coder:30b',
-  'zen6:latest': 'qwen3:8b',
-  'zen6:4b': 'qwen3:4b',
-  'zen6:8b': 'qwen3:8b',
-  'zen6:14b': 'qwen3:14b',
-  'zen6:30b': 'qwen3:30b',
-  'zen6:80b': 'qwen3:32b',
-  'zen6-coder:latest': 'qwen3-coder:30b',
-  'zen6-coder:31b': 'qwen3-coder:30b',
-  'zen6-coder:80b': 'qwen3:32b',
-  'zen6-flash:latest': 'qwen3:4b',
-  'zen6-flash:4b': 'qwen3:4b',
-  'zen6-flash:8b': 'qwen3:8b',
-  'zen-vl:latest': 'qwen3-vl:8b',
-  'zen-vl:4b': 'qwen3-vl:4b',
-  'zen-vl:8b': 'qwen3-vl:8b',
-  'zen-vl:30b': 'qwen3-vl:30b',
-};
 
 export function getCustomEngineUrl(): string {
   try {
@@ -155,134 +119,66 @@ export function setCustomEngineUrl(url: string): void {
   }
 }
 
+const isTestEnv = () =>
+  typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test';
+
+/** The model ids an OpenAI-compatible server at `base` (ending in /v1) answers with. */
+async function servedIds(base: string, fetchImpl: typeof fetch = fetch): Promise<string[]> {
+  try {
+    const res = await fetchImpl(`${base}/models`, { signal: AbortSignal.timeout(isTestEnv() ? 150 : 1200) });
+    if (!res.ok) return [];
+    const body = await res.json();
+    return Array.isArray(body?.data) ? body.data.map((r: { id?: unknown }) => String(r?.id ?? '')).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+const customBase = (url: string) => (url.endsWith('/v1') ? url : `${url}/v1`);
+
 let cachedInstalledModels: InstalledModelInfo[] = [];
 let lastProbeAt = 0;
 
+/** Downloaded models (by catalogue tag), plus what a custom endpoint serves. */
 export async function probeInstalledLocalModels(force = false): Promise<InstalledModelInfo[]> {
   if (!force && Date.now() - lastProbeAt < 3000 && cachedInstalledModels.length > 0) {
     return cachedInstalledModels;
   }
+  const customUrl = getCustomEngineUrl();
+  const [status, customRows] = await Promise.all([
+    engineStatus().catch(() => null),
+    customUrl ? servedIds(customBase(customUrl)) : Promise.resolve([]),
+  ]);
   const found: InstalledModelInfo[] = [];
   const seen = new Set<string>();
-  const isTestEnv = typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test';
-  const probeTimeoutMs = isTestEnv ? 150 : 1200;
-
-  const customUrl = getCustomEngineUrl();
-  const [customRows, hanzodCatalogRows, engineRows, ollamaModels] = await Promise.all([
-    customUrl
-      ? (async () => {
-          try {
-            const base = customUrl.endsWith('/v1') ? customUrl : `${customUrl}/v1`;
-            const res = await fetch(`${base}/models`, { signal: AbortSignal.timeout(probeTimeoutMs) });
-            if (!res.ok) return [];
-            const body = await res.json();
-            return Array.isArray(body?.data) ? body.data : [];
-          } catch {
-            return [];
-          }
-        })()
-      : Promise.resolve([]),
-    (async () => {
-      try {
-        const res = await fetch(`${HANZOD_ENGINE_URL}/catalog`, {
-          signal: AbortSignal.timeout(probeTimeoutMs),
-        });
-        if (!res.ok) return [];
-        const body = await res.json();
-        const models = Array.isArray(body?.models) ? body.models : [];
-        return models.filter((m: { installed?: boolean }) => m?.installed);
-      } catch {
-        return [];
-      }
-    })(),
-    (async () => {
-      try {
-        const res = await fetch(`${LOCAL_ENGINE_PORT_URL}/v1/models`, {
-          signal: AbortSignal.timeout(probeTimeoutMs),
-        });
-        if (!res.ok) return [];
-        const body = await res.json();
-        return Array.isArray(body?.data) ? body.data : [];
-      } catch {
-        return [];
-      }
-    })(),
-    (async () => {
-      try {
-        const res = await fetch(`${LOCAL_OLLAMA_URL}/api/tags`, {
-          signal: AbortSignal.timeout(probeTimeoutMs),
-        });
-        if (!res.ok) return [];
-        const body = await res.json();
-        return Array.isArray(body?.models) ? body.models : [];
-      } catch {
-        return [];
-      }
-    })(),
-  ]);
-
-  for (const r of customRows) {
-    if (r?.id && !seen.has(r.id)) {
-      seen.add(r.id);
-      found.push({ id: r.id, source: 'custom' });
+  const add = (row: InstalledModelInfo) => {
+    if (!seen.has(row.id)) {
+      seen.add(row.id);
+      found.push(row);
     }
+  };
+  customRows.forEach((id) => add({ id, source: 'custom' }));
+  for (const m of status?.installed ?? []) {
+    add({ id: sourceForRepo(m.repo)?.tag ?? m.repo, sizeBytes: m.bytes, source: 'hanzo-engine' });
   }
-
-  for (const r of hanzodCatalogRows) {
-    if (r?.id && !seen.has(r.id)) {
-      seen.add(r.id);
-      found.push({ id: r.id, sizeBytes: r?.bytes, source: 'hanzo-engine' });
-    }
-  }
-
-  for (const r of engineRows) {
-    if (r?.id && !seen.has(r.id)) {
-      seen.add(r.id);
-      found.push({ id: r.id, source: 'hanzo-engine' });
-    }
-  }
-
-  for (const m of ollamaModels) {
-    const name = String(m?.name || m?.model || '').trim();
-    if (!name || LEGACY_MODEL_RE.test(name)) continue;
-    if (!seen.has(name)) {
-      seen.add(name);
-      found.push({ id: name, sizeBytes: m?.size, source: 'ollama' });
-    }
-    // If qwen3:0.6b is installed, also mark zen-nano:0.6b as ready
-    for (const [zenTag, targetTag] of Object.entries(OLLAMA_PULL_ALIASES)) {
-      if (name === targetTag && !seen.has(zenTag)) {
-        seen.add(zenTag);
-        found.push({ id: zenTag, sizeBytes: m?.size, source: 'ollama' });
-      }
-    }
-  }
-
   cachedInstalledModels = found;
   lastProbeAt = Date.now();
   return found;
 }
 
-function formatModelTitle(model: CatalogModel, tag: CatalogTag, installed: boolean): string {
-  const baseName = model.name
-    .split(/[-_]/)
-    .map((w) => (w.toLowerCase() === 'zen' ? 'Zen' : w.toLowerCase() === 'zen6' ? 'Zen 6' : w.toLowerCase() === 'vl' ? 'VL' : w.toLowerCase() === 'r1' ? 'R1' : w.charAt(0).toUpperCase() + w.slice(1)))
-    .join(' ');
-  const paramPart = tag.name.includes(':') ? tag.name.split(':')[1] : '';
-  const suffix = paramPart && paramPart !== 'latest' ? ` ${paramPart.toUpperCase()}` : '';
-  const sizeBadge = tag.size && tag.size !== 'Unknown' ? ` · ${tag.size}` : '';
-  const statusBadge = installed ? ' · Installed' : '';
-  return `${baseName}${suffix} (Local${sizeBadge}${statusBadge})`;
+/**
+ * Builds the OpenAI-compatible `/v1/models` list for local / signed-out mode:
+ * the router aliases, what is installed, then every model this app can download
+ * (local-sources.json), so the composer's picker offers nothing it cannot fetch.
+ */
+/** What the picker may say a model can do: only what local-sources.json says, and no model here sees images. */
+function abilities(tag: string) {
+  const src = sourceForTag(tag);
+  return { supports_vision: false, supports_tools: src?.tools ?? false, supports_reasoning: src?.reasons ?? false };
 }
 
-/**
- * Builds the OpenAI-compatible `/v1/models` list for local / signed-out mode,
- * combining installed models with the curated local AI catalog so the composer's
- * ModelPicker lets the user browse and pick any local model.
- */
 export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list'; data: Array<Record<string, unknown>> }> {
   const installed = await probeInstalledLocalModels();
-  const installedSet = new Set(installed.map((m) => m.id));
   const data: Array<Record<string, unknown>> = [];
   const added = new Set<string>();
 
@@ -293,123 +189,83 @@ export async function buildLocalModelsCatalogResponse(): Promise<{ object: 'list
     data.push(entry);
   };
 
-  // First: flagship multi-provider catalog so Desktop's model picker always shows
-  // Hanzo/Enso/Zen6, Anthropic, OpenAI, Google, xAI, DeepSeek, and Local models even signed out.
+  // First: add default router aliases so `enso-free` and `enso` always resolve cleanly
   const firstInstalledChat = installed.find(
     (m) => !m.id.includes('embed') && !m.id.includes('minilm') && m.id !== 'default',
   );
   const activeLabel = firstInstalledChat
     ? `Local AI (${firstInstalledChat.id})`
-    : 'Zen 6 Flash (Local)';
+    : 'Zen Nano 0.6B (Local AI)';
 
-  const multiProviderCatalog: Array<Record<string, unknown>> = [
-    { id: 'enso-auto', name: 'Enso Auto', owned_by: 'hanzo', family: 'enso', class: 'free' },
-    { id: 'enso-flash', name: 'enso-flash', owned_by: 'hanzo', family: 'enso', class: 'free' },
-    { id: 'enso', name: 'enso', owned_by: 'hanzo', family: 'enso', class: 'free' },
-    { id: 'zen6', name: 'Zen 6', owned_by: 'hanzo', family: 'zen', class: 'free' },
-    { id: 'zen6-flash', name: 'Zen 6 Flash', owned_by: 'hanzo', family: 'zen', class: 'free' },
-    { id: 'zen6-coder', name: 'Zen 6 Coder', owned_by: 'hanzo', family: 'zen', class: 'free' },
-    { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', owned_by: 'anthropic', class: 'pro' },
-    { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', owned_by: 'anthropic', class: 'pro' },
-    { id: 'claude-haiku-4-5', name: 'Claude Haiku 4.5', owned_by: 'anthropic', class: 'pro' },
-    { id: 'gpt-5.4', name: 'GPT-5.4', owned_by: 'openai', class: 'pro' },
-    { id: 'gpt-5.4-mini', name: 'GPT-5.4 Mini', owned_by: 'openai', class: 'pro' },
-    { id: 'o3', name: 'o3', owned_by: 'openai', class: 'pro' },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', owned_by: 'google', class: 'pro' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', owned_by: 'google', class: 'pro' },
-    { id: 'grok-4', name: 'Grok 4', owned_by: 'xai', class: 'pro' },
-    { id: 'deepseek-r1', name: 'DeepSeek R1', owned_by: 'deepseek', class: 'pro' },
-    { id: 'enso-free', name: activeLabel, owned_by: 'ollama', family: 'enso', class: 'free' },
-  ];
-
-  for (const entry of multiProviderCatalog) {
+  for (const routerId of ['enso-auto', 'enso-free', 'enso']) {
     pushModel({
-      ...entry,
+      id: routerId,
+      name: activeLabel,
+      description: 'The model you chose on this computer.',
       object: 'model',
       created: 1793775303,
+      owned_by: 'hanzo-local',
+      family: 'enso',
+      class: 'free',
       context_window: 131072,
-      supports_vision: true,
-      supports_tools: true,
-      supports_reasoning: true,
+      // The alias answers with the model chosen on this computer (handleLocalChatCompletion).
+      ...abilities(kept().model),
     });
   }
 
   // Second: any currently installed local models right at the top
   for (const inst of installed) {
     if (inst.id === 'default' || inst.id.includes('embed') || inst.id.includes('minilm')) continue;
-    const isZen = inst.id.toLowerCase().startsWith('zen') || inst.id.toLowerCase().startsWith('qwen3');
-    const isVision = inst.id.toLowerCase().includes('vl') || inst.id.toLowerCase().includes('vision') || inst.id.toLowerCase().includes('llava');
+    const isZen = inst.id.toLowerCase().startsWith('zen');
     pushModel({
       id: inst.id,
-      name: `${inst.id} (Local · Installed)`,
-      description: `Installed on local ${inst.source} engine`,
+      name: `${sourceForTag(inst.id)?.title ?? inst.id} (Local · Installed)`,
+      description: inst.source === 'custom' ? 'Served by your own endpoint' : 'Downloaded to this computer',
       object: 'model',
       created: 1793775303,
       owned_by: isZen ? 'zenlm' : 'local',
       ...(isZen ? { family: 'zen' } : {}),
       class: 'free',
       context_window: 131072,
-      supports_vision: isVision,
-      supports_tools: true,
-      supports_reasoning: true,
+      // A custom endpoint's model is not in the list, so nothing is claimed for it.
+      ...abilities(inst.id),
     });
   }
 
-  // Third: all chat models from model-catalog.json (default tag + popular size tags)
-  for (const model of ALL_CATALOG_MODELS) {
-    if (model.embedding) continue;
-    const isZen = model.name.toLowerCase().startsWith('zen');
-    const ownedBy = isZen
-      ? 'zenlm'
-      : model.name.startsWith('qwen')
-        ? 'zenlm'
-        : model.name.startsWith('deepseek')
-          ? 'deepseek'
-          : model.name.startsWith('llama')
-            ? 'meta-llama'
-            : model.name.startsWith('gemma')
-              ? 'google'
-              : model.name.startsWith('mistral') || model.name.startsWith('devstral') || model.name.startsWith('ministral')
-                ? 'mistralai'
-                : 'local';
-
-    // Include the default tag plus up to 3 local (non-cloud) tags per model family
-    const localTags = model.tags.filter((t) => !t.name.endsWith('-cloud') && t.size !== 'Unknown');
-    const chosenTags = localTags.slice(0, 4);
-    if (chosenTags.length === 0 && model.tags.length > 0) {
-      chosenTags.push(model.tags[0]);
-    }
-
-    for (const tag of chosenTags) {
-      const isInstalled = installedSet.has(tag.name);
-      pushModel({
-        id: tag.name,
-        name: formatModelTitle(model, tag, isInstalled),
-        description: model.description,
-        object: 'model',
-        created: 1793775303,
-        owned_by: ownedBy,
-        ...(isZen ? { family: 'zen' } : {}),
-        class: 'free',
-        context_window: 131072,
-        supports_vision: Boolean(model.vision),
-        supports_tools: Boolean(model.supportTools),
-        supports_reasoning: Boolean(model.thinking),
-      });
-    }
+  // Third: every model the app can download, by its catalogue tag.
+  for (const src of LOCAL_SOURCES) {
+    pushModel({
+      id: src.tag,
+      name: `${src.title} (Local · ${formatSize(src.bytes)})`,
+      description: src.blurb,
+      object: 'model',
+      created: 1793775303,
+      owned_by: src.repo.split('/')[0],
+      ...(src.tag.startsWith('zen') ? { family: 'zen' } : {}),
+      class: 'free',
+      context_window: 131072,
+      ...abilities(src.tag),
+    });
   }
 
   return { object: 'list', data };
 }
 
+const ROUTER_ALIASES = new Set(['enso', 'enso-free', 'enso-auto', 'zen6-free', 'zen-free', 'free', 'default']);
+
+function needsModel(model: string, code: string, message: string): Response {
+  window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: { model, tab: 'models' } }));
+  return new Response(JSON.stringify({ error: { message, code } }), {
+    status: 503,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 /**
- * Routes a local chat completion request to the best available local inference engine:
- * 1. Custom engine URL (if configured)
- * 2. Embedded Hanzo Engine (:36900)
- * 3. Local Ollama runtime (:11434/v1/chat/completions)
- *
- * If the requested model isn't installed yet or no local engine has a model loaded,
- * opens the Local AI & Node Manager modal so the user can download/select one.
+ * Answers a chat turn on this computer: a custom endpoint when one is set,
+ * otherwise the model Hanzo's engine serves (LOCAL_ENGINE_URL). A downloaded model
+ * that is not running yet is started for the turn (the person picked it).
+ * With nothing to answer, the Local AI screen opens so one can be downloaded.
  */
 export async function handleLocalChatCompletion(
   nativeFetch: typeof window.fetch,
@@ -422,16 +278,12 @@ export async function handleLocalChatCompletion(
   } catch {
     payload = {};
   }
-
   const requestedModel = String(payload.model || 'enso-free').trim();
-  const installed = await probeInstalledLocalModels(true);
 
-  // 1. Try custom engine URL if set
   const customUrl = getCustomEngineUrl();
   if (customUrl) {
     try {
-      const base = customUrl.endsWith('/v1') ? customUrl : `${customUrl}/v1`;
-      const res = await nativeFetch(`${base}/chat/completions`, {
+      const res = await nativeFetch(`${customBase(customUrl)}/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -439,87 +291,45 @@ export async function handleLocalChatCompletion(
       });
       if (res.ok) return res;
     } catch {
-      // fall through
+      // fall through to this computer's engine
     }
   }
 
-  // 2. Try unified hanzod local inference (/v1/engine/chat/completions), then legacy :36900
-  if (installed.some((m) => m.source === 'hanzo-engine')) {
-    for (const url of [`${HANZOD_ENGINE_URL}/chat/completions`, `${LOCAL_ENGINE_PORT_URL}/v1/chat/completions`]) {
+  const status = await engineStatus().catch(() => null);
+  const installedRepos = new Set(status?.installed.map((m) => m.repo) ?? []);
+  const asked = ROUTER_ALIASES.has(requestedModel) ? kept().model : requestedModel;
+  const askedSource = sourceForTag(asked);
+  if (!ROUTER_ALIASES.has(requestedModel) && !(askedSource && installedRepos.has(askedSource.repo)) && status) {
+    return needsModel(
+      requestedModel,
+      'local_model_not_installed',
+      `${askedSource?.title ?? requestedModel} is not downloaded yet. Download it on the Local AI screen, or pick a downloaded model.`,
+    );
+  }
+
+  // Outside the app (a plain browser) nothing can say who serves the port, so
+  // whatever answers there is used; in the app, only the model it started.
+  let ours = !status;
+  if (status?.engine) {
+    const want =
+      askedSource && installedRepos.has(askedSource.repo) ? askedSource.repo : status.installed[0]?.repo ?? null;
+    if (want) {
       try {
-        const res = await nativeFetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...payload,
-            model: requestedModel === 'enso-free' || requestedModel === 'enso' ? 'default' : requestedModel,
-          }),
-          signal: init?.signal,
-        });
-        if (res.ok) return res;
+        if (status.serving !== want) await serveModel(want);
+        ours = await waitForEngine(want);
       } catch {
-        // try next endpoint
+        // said below: nothing answers
       }
     }
   }
 
-  // 3. Try local Ollama OpenAI-compatible endpoint (:11434/v1/chat/completions)
-  const ollamaModels = installed.filter(
-    (m) => m.source === 'ollama' && !m.id.includes('embed') && !m.id.includes('minilm'),
-  );
-  if (ollamaModels.length > 0) {
-    let targetModel = requestedModel;
-    if (OLLAMA_PULL_ALIASES[targetModel]) {
-      const aliased = OLLAMA_PULL_ALIASES[targetModel];
-      if (ollamaModels.some((m) => m.id === aliased)) {
-        targetModel = aliased;
-      }
-    }
-    const exactMatch = ollamaModels.find((m) => m.id === targetModel);
-    if (!exactMatch) {
-      if (
-        targetModel === 'enso-free' ||
-        targetModel === 'zen6-free' ||
-        targetModel === 'zen-free' ||
-        targetModel === 'enso' ||
-        targetModel === 'default' ||
-        targetModel === 'zen-nano:0.6b'
-      ) {
-        // Use the first installed local chat model (e.g. qwen3:0.6b)
-        const realOllamaTag = OLLAMA_PULL_ALIASES[ollamaModels[0].id] || ollamaModels[0].id;
-        targetModel = realOllamaTag;
-      } else {
-        // The user specifically selected an uninstalled model from the picker!
-        // Open the Local AI modal focused on downloading this model.
-        window.dispatchEvent(
-          new CustomEvent(OPEN_LOCAL_AI_EVENT, {
-            detail: { model: requestedModel, tab: 'models' },
-          }),
-        );
-        return new Response(
-          JSON.stringify({
-            error: {
-              message: `Local model "${requestedModel}" is not downloaded yet. Use the Local AI Manager to download it with 1 click, or pick an installed local model.`,
-              code: 'local_model_not_installed',
-            },
-          }),
-          { status: 503, headers: { 'Content-Type': 'application/json' } },
-        );
-      }
-    } else if (OLLAMA_PULL_ALIASES[exactMatch.id]) {
-      targetModel = OLLAMA_PULL_ALIASES[exactMatch.id];
-    }
-
+  const served = ours ? await servedIds(`${LOCAL_ENGINE_URL}/v1`, nativeFetch) : [];
+  if (served.length > 0) {
     try {
-      // Strip cloud-only tools parameter if present so small local models answer directly
-      const { tools: _tools, ...cleanPayload } = payload;
-      const res = await nativeFetch(`${LOCAL_OLLAMA_URL}/v1/chat/completions`, {
+      const res = await nativeFetch(`${LOCAL_ENGINE_URL}/v1/chat/completions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...cleanPayload,
-          model: targetModel,
-        }),
+        body: JSON.stringify({ ...payload, model: served[0] }),
         signal: init?.signal,
       });
       if (res.ok) return res;
@@ -528,22 +338,12 @@ export async function handleLocalChatCompletion(
     }
   }
 
-  // No local model is installed or running yet -> open the Local AI model selector/downloader!
-  window.dispatchEvent(
-    new CustomEvent(OPEN_LOCAL_AI_EVENT, {
-      detail: { model: requestedModel !== 'enso-free' ? requestedModel : 'zen-nano:0.6b', tab: 'models' },
-    }),
-  );
-
-  return new Response(
-    JSON.stringify({
-      error: {
-        message:
-          'No local AI model is loaded yet. Select or download a local model (such as Zen Nano 0.6B or Zen 6 8B) in the Local AI & Node Manager.',
-        code: 'local_model_required',
-      },
-    }),
-    { status: 503, headers: { 'Content-Type': 'application/json' } },
+  return needsModel(
+    requestedModel !== 'enso-free' ? requestedModel : 'zen-nano:0.6b',
+    'local_model_required',
+    status && !status.engine
+      ? 'Local models are not set up: Hanzo’s engine is not installed on this computer. The Local AI screen shows how to get it.'
+      : 'No local model is running yet. Download one on the Local AI screen, then choose Use.',
   );
 }
 
@@ -554,349 +354,348 @@ export function openLocalAiManager(
   window.dispatchEvent(new CustomEvent(OPEN_LOCAL_AI_EVENT, { detail: normalized }));
 }
 
+/** Memory to judge "fits" against when the app cannot read it (a plain browser). */
+const ASSUMED_RAM_GB = 8;
+
+function openOutside(url: string) {
+  if (isTauri()) void openUrl(url).catch(() => undefined);
+  else window.open(url, '_blank', 'noopener');
+}
+
 export function LocalAiManager() {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<'models' | 'node' | 'engine'>('models');
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<'all' | 'installed' | 'zen' | 'vision' | 'coding' | 'reasoning'>('all');
-  const [installed, setInstalled] = useState<InstalledModelInfo[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>(() => kept().model || 'zen-nano:0.6b');
-
-  // Pulling / downloading state
-  const [pullingTag, setPullingTag] = useState<string | null>(null);
-  const [pullStatus, setPullStatus] = useState<string>('');
-  const [pullPercent, setPullPercent] = useState<number>(0);
-  const [pullError, setPullError] = useState<string | null>(null);
-
-  // Local Hanzo Node state
-  const [nodeRunning, setNodeRunning] = useState<boolean>(false);
-  const [nodeBusy, setNodeBusy] = useState<boolean>(false);
-  const [nodeOptions, setNodeOptions] = useState<LocalNodeOptions | null>(null);
-  const [nodeMessage, setNodeMessage] = useState<string>('');
-
-  // Local Engine state
-  const [engine36900Up, setEngine36900Up] = useState<boolean>(false);
-  const [ollama11434Up, setOllama11434Up] = useState<boolean>(false);
-  const [customEngineUrlState, setCustomEngineUrlState] = useState<string>(() => getCustomEngineUrl());
+  const [status, setStatus] = useState<EngineStatus | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [ram, setRam] = useState<number | null>(null);
+  // The model Remove was pressed on, while the person is asked to confirm.
+  const [removing, setRemoving] = useState<LocalSource | null>(null);
+  const [selected, setSelected] = useState<string>(() => kept().model);
+  const [percent, setPercent] = useState<Record<string, number>>({});
+  const [starting, setStarting] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [advanced, setAdvanced] = useState(false);
+  const [customUrl, setCustomUrl] = useState<string>(() => getCustomEngineUrl());
+  const [customNote, setCustomNote] = useState('');
   const [lanEngines, setLanEngines] = useState<DiscoveredEngine[]>([]);
-  const [discoveringLan, setDiscoveringLan] = useState<boolean>(false);
-  const [lanMessage, setLanMessage] = useState<string>('');
-  const [ggufRepoOrPath, setGgufRepoOrPath] = useState<string>('Qwen/Qwen3-0.6B');
-  const [loadingEngineModel, setLoadingEngineModel] = useState<boolean>(false);
-  const [engineMessage, setEngineMessage] = useState<string>('');
+  const [scanning, setScanning] = useState(false);
+  const [lanMessage, setLanMessage] = useState('');
+  const panel = useRef<HTMLDivElement>(null);
 
-  const [showAllModels, setShowAllModels] = useState<boolean>(false);
-
-  const refreshState = useCallback(async () => {
-    const isTestEnv = typeof import.meta !== 'undefined' && (import.meta as { env?: { MODE?: string } }).env?.MODE === 'test';
-    const healthTimeoutMs = isTestEnv ? 150 : 1000;
-
-    const [models, engineOk, ollamaOk] = await Promise.all([
-      probeInstalledLocalModels(true),
-      fetch(`${LOCAL_ENGINE_PORT_URL}/health`, { signal: AbortSignal.timeout(healthTimeoutMs) })
-        .then((r) => r.ok)
-        .catch(() => false),
-      fetch(`${LOCAL_OLLAMA_URL}/api/tags`, { signal: AbortSignal.timeout(healthTimeoutMs) })
-        .then((r) => r.ok)
-        .catch(() => false),
-    ]);
-
-    setInstalled(models);
-    setSelectedModel(kept().model || 'zen-nano:0.6b');
-    setEngine36900Up(engineOk);
-    setOllama11434Up(ollamaOk);
-
-    // Check hanzo-node via Tauri IPC
-    if (isTauri()) {
-      try {
-        const running = await invoke<boolean>('hanzo_node_is_running');
-        setNodeRunning(Boolean(running));
-      } catch {
-        setNodeRunning(false);
-      }
-      try {
-        const opts = await invoke<LocalNodeOptions>('hanzo_node_get_options');
-        setNodeOptions(opts);
-      } catch {
-        // ignore
-      }
-    }
+  const refresh = useCallback(async () => {
+    const next = await engineStatus().catch(() => null);
+    setStatus(next);
+    setSelected(kept().model);
+    setChecked(true);
   }, []);
 
   useEffect(() => {
     const onOpen = (e: Event) => {
       const detail = (e as CustomEvent<{ tab?: 'models' | 'node' | 'engine'; model?: string }>).detail;
-      if (detail?.tab) setTab(detail.tab);
-      if (detail?.model && detail.model !== 'enso-free' && detail.model !== 'enso') {
-        setSearch(detail.model.split(':')[0]);
-      }
+      if (detail?.tab === 'node' || detail?.tab === 'engine') setAdvanced(true);
       setOpen(true);
-      void refreshState();
+      void refresh();
+      void memoryGb().then(setRam);
     };
     window.addEventListener(OPEN_LOCAL_AI_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_LOCAL_AI_EVENT, onOpen);
-  }, [refreshState]);
+  }, [refresh]);
 
-  // Listen for model picker changes when signed out: if the user picks a local model
-  // from the composer's ModelPicker that is not yet downloaded, open the modal so they can pull it!
+  // A signed-out pick of a model that is not downloaded opens this screen on it.
   useEffect(() => {
     const onMindChange = async () => {
       const current = kept().model;
-      setSelectedModel(current);
-      if (!current || current === 'enso' || current === 'enso-free' || current === 'free') return;
-      const hasToken = Boolean(window.localStorage.getItem('hanzo_iam_access_token'));
-      if (hasToken) return;
+      setSelected(current);
+      if (!current || ROUTER_ALIASES.has(current)) return;
+      if (keychain.getItem('hanzo_iam_access_token')) return;
       const models = await probeInstalledLocalModels();
-      const isInstalled = models.some((m) => m.id === current);
-      const isCatalogModel = ALL_CATALOG_MODELS.some((m) => m.tags.some((t) => t.name === current));
-      if (isCatalogModel && !isInstalled) {
-        setSearch(current.split(':')[0]);
-        setTab('models');
-        setOpen(true);
-      }
+      if (sourceForTag(current) && !models.some((m) => m.id === current)) setOpen(true);
     };
-    window.addEventListener('hanzo:mind', onMindChange);
-    return () => window.removeEventListener('hanzo:mind', onMindChange);
+    window.addEventListener(MIND_CHANGE_EVENT, onMindChange);
+    return () => window.removeEventListener(MIND_CHANGE_EVENT, onMindChange);
   }, []);
 
-  const handleSelectModel = (tag: string) => {
-    keep({ model: tag });
-    setSelectedModel(tag);
+  useEffect(() => {
+    if (!open) return;
+    panel.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      // Escape with the Remove question open closes only the question.
+      if (e.key === 'Escape' && !removing) setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, removing]);
+
+  const installedRepos = useMemo(() => new Set(status?.installed.map((m) => m.repo) ?? []), [status]);
+  const downloading = Object.keys(percent)[0] ?? null;
+  const ramGb = ram ?? ASSUMED_RAM_GB;
+
+  const setError = (tag: string, message: string | null) =>
+    setErrors((all) => {
+      const next = { ...all };
+      if (message) next[tag] = message;
+      else delete next[tag];
+      return next;
+    });
+
+  const download = async (src: LocalSource) => {
+    setError(src.tag, null);
+    setPercent({ [src.tag]: 0 });
+    try {
+      await pullModel(src.repo, (p) => setPercent({ [src.tag]: p }));
+    } catch (err) {
+      const why = reason(err);
+      if (why !== CANCELLED) setError(src.tag, why);
+    } finally {
+      setPercent({});
+      await refresh();
+      window.dispatchEvent(new Event(LOCAL_MODELS_UPDATED_EVENT));
+    }
+  };
+
+  const use = async (src: LocalSource) => {
+    keep({ model: src.tag });
+    setSelected(src.tag);
+    window.dispatchEvent(new Event(LOCAL_MODELS_UPDATED_EVENT));
+    setError(src.tag, null);
+    if (!status?.engine) {
+      setError(src.tag, 'Chosen. It will run once Hanzo’s engine is installed on this computer.');
+      return;
+    }
+    setStarting(src.tag);
+    try {
+      await serveModel(src.repo);
+      if (!(await waitForEngine(src.repo))) {
+        const after = await engineStatus().catch(() => null);
+        const said = after?.serve_error?.split('\n').filter(Boolean).pop();
+        setError(src.tag, `${src.title} did not start${said ? `: ${said}` : '.'}`);
+      }
+    } catch (err) {
+      setError(src.tag, reason(err));
+    } finally {
+      setStarting(null);
+      await refresh();
+    }
+  };
+
+  const remove = async (src: LocalSource) => {
+    setError(src.tag, null);
+    try {
+      await removeModel(src.repo);
+    } catch (err) {
+      setError(src.tag, reason(err));
+    }
+    await refresh();
     window.dispatchEvent(new Event(LOCAL_MODELS_UPDATED_EVENT));
   };
 
-  const handlePullModel = async (tag: string) => {
-    if (pullingTag) return;
-    setPullingTag(tag);
-    setPullError(null);
-    setPullStatus(`Connecting to local inference runtime…`);
-    setPullPercent(2);
-
-    const pullTarget = OLLAMA_PULL_ALIASES[tag] || tag;
-    // A stream that drops half-way is a TypeError too, and that is a download
-    // that broke, not one that never started.
-    let connected = false;
-
-    try {
-      // Ensure local node/engine is spawned if Ollama is not answering yet
-      if (!ollama11434Up && isTauri()) {
-        setPullStatus('Starting local inference runtime…');
-        try {
-          await invoke('hanzo_node_spawn');
-          await new Promise((r) => setTimeout(r, 1200));
-        } catch {
-          // continue and try :11434 directly
-        }
-      }
-
-      const res = await fetch(`${LOCAL_OLLAMA_URL}/api/pull`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: pullTarget, stream: true }),
-      });
-      connected = true;
-
-      if (!res.ok || !res.body) {
-        throw new Error(`Local runtime returned HTTP ${res.status}. Make sure Ollama or Hanzo Engine is running.`);
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const msg = JSON.parse(line);
-            if (msg.error) {
-              throw new Error(String(msg.error));
-            }
-            if (msg.status) {
-              setPullStatus(String(msg.status));
-            }
-            if (typeof msg.completed === 'number' && typeof msg.total === 'number' && msg.total > 0) {
-              setPullPercent(Math.min(99, Math.round((msg.completed / msg.total) * 100)));
-            }
-          } catch (innerErr) {
-            if (innerErr instanceof Error && innerErr.message !== 'Unexpected end of JSON input') {
-              throw innerErr;
-            }
-          }
-        }
-      }
-
-      setPullPercent(100);
-      setPullStatus(`Installed ${tag}`);
-      await refreshState();
-      handleSelectModel(tag);
-    } catch (err) {
-      setPullError(
-        unreachable(err)
-          ? connected
-            ? `The download of ${tag} stopped part-way: the connection to Ollama was lost. Try again.`
-            : DOWNLOAD_UNREACHABLE_MESSAGE
-          : err instanceof Error
-            ? err.message
-            : 'Could not download model. Ensure local inference engine (:11434 or :36900) is running.',
-      );
-    } finally {
-      setPullingTag(null);
-    }
+  const stop = async () => {
+    await stopModel().catch(() => undefined);
+    await refresh();
   };
 
-  const handleDeleteModel = async (tag: string) => {
-    const deleteTarget = OLLAMA_PULL_ALIASES[tag] || tag;
-    try {
-      const res = await fetch(`${LOCAL_OLLAMA_URL}/api/delete`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: deleteTarget }),
-      });
-      if (!res.ok) throw new Error(`the local runtime returned HTTP ${res.status}`);
-      setPullError(null);
-      await refreshState();
-    } catch (err) {
-      setPullError(
-        unreachable(err)
-          ? `Could not remove ${tag}: no local model engine is running on this computer.`
-          : `Could not remove ${tag}: ${err instanceof Error ? err.message : String(err)}.`,
-      );
-    }
-  };
-
-  const handleStartNode = async () => {
+  const scanLan = async () => {
     if (!isTauri()) return;
-    setNodeBusy(true);
-    setNodeMessage('Starting local Hanzo Node…');
-    try {
-      await invoke('hanzo_node_spawn');
-      // The node left this app (HIP-1330) and `hanzo_node_spawn` now returns Ok
-      // without starting one, so ask instead of assuming.
-      const running = await invoke<boolean>('hanzo_node_is_running').catch(() => false);
-      setNodeMessage(
-        running
-          ? 'Local Hanzo Node is running.'
-          : 'No Hanzo Node started: this app no longer includes one. The node on this computer is hanzod, which runs separately.',
-      );
-      await refreshState();
-    } catch (err) {
-      setNodeMessage(err instanceof Error ? err.message : String(err));
-    } finally {
-      setNodeBusy(false);
-    }
-  };
-
-  const handleStopNode = async () => {
-    if (!isTauri()) return;
-    setNodeBusy(true);
-    setNodeMessage('Stopping local Hanzo Node…');
-    try {
-      await invoke('hanzo_node_kill');
-      setNodeMessage('Local Hanzo Node stopped.');
-      await refreshState();
-    } catch (err) {
-      setNodeMessage(err instanceof Error ? err.message : String(err));
-    } finally {
-      setNodeBusy(false);
-    }
-  };
-
-  const handleOpenStorage = async () => {
-    if (!isTauri()) return;
-    try {
-      await invoke('hanzo_node_open_storage_location');
-    } catch (err) {
-      setNodeMessage(err instanceof Error ? err.message : String(err));
-    }
-  };
-
-  const handleDiscoverLan = async () => {
-    if (!isTauri()) return;
-    setDiscoveringLan(true);
+    setScanning(true);
     setLanMessage('');
     try {
       const found = await invoke<DiscoveredEngine[]>('engines_discover');
       const engines = Array.isArray(found) ? found : [];
       setLanEngines(engines);
-      if (engines.length === 0) setLanMessage('No engines found on this network.');
+      if (engines.length === 0) setLanMessage('No model servers found on this network.');
     } catch (err) {
       setLanEngines([]);
-      setLanMessage(`The scan failed: ${err instanceof Error ? err.message : String(err)}`);
+      setLanMessage(`The search failed: ${reason(err)}`);
     } finally {
-      setDiscoveringLan(false);
+      setScanning(false);
     }
   };
 
-  const handleLoadIntoHanzoEngine = async () => {
-    if (!ggufRepoOrPath.trim()) return;
-    setLoadingEngineModel(true);
-    setEngineMessage(`Loading ${ggufRepoOrPath} into Hanzo Engine…`);
-    try {
-      const res = await fetch(`${LOCAL_ENGINE_PORT_URL}/v1/engine/load`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model_id: ggufRepoOrPath.trim(),
-          format: ggufRepoOrPath.endsWith('.gguf') ? 'gguf' : 'auto',
-        }),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(text || `HTTP ${res.status}`);
-      }
-      setEngineMessage(`Loaded ${ggufRepoOrPath} on :36900.`);
-      await refreshState();
-    } catch (err) {
-      setEngineMessage(
-        unreachable(err)
-          ? ENGINE_NOT_RUNNING_MESSAGE
-          : err instanceof Error
-            ? `Engine load error: ${err.message}`
-            : 'Hanzo Engine (:36900) is not listening.',
-      );
-    } finally {
-      setLoadingEngineModel(false);
-    }
+  const saveCustom = (url: string) => {
+    setCustomUrl(url);
+    setCustomEngineUrl(url);
+    setCustomNote(url.trim() ? `Chat will use ${url.trim()} first.` : 'Chat uses this computer’s engine again.');
   };
-
-  const installedSet = useMemo(() => new Set(installed.map((m) => m.id)), [installed]);
-
-  const filteredModels = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return ALL_CATALOG_MODELS.filter((m) => {
-      if (m.embedding) return false;
-      if (category === 'installed' && !m.tags.some((t) => installedSet.has(t.name))) return false;
-      if (category === 'zen' && !m.name.toLowerCase().startsWith('zen')) return false;
-      if (category === 'vision' && !m.vision) return false;
-      if (category === 'coding' && !m.name.toLowerCase().includes('coder') && !m.name.toLowerCase().includes('code') && !m.name.toLowerCase().includes('devstral')) return false;
-      if (category === 'reasoning' && !m.thinking) return false;
-      if (!q) return true;
-      return (
-        m.name.toLowerCase().includes(q) ||
-        m.description.toLowerCase().includes(q) ||
-        m.tags.some((t) => t.name.toLowerCase().includes(q))
-      );
-    });
-  }, [search, category, installedSet]);
-
-  const visibleModels = useMemo(() => {
-    if (search.trim() || showAllModels || category !== 'all') return filteredModels;
-    return filteredModels.slice(0, 20);
-  }, [filteredModels, search, showAllModels, category]);
 
   if (!open) return null;
+
+  const state = overall(checked ? status : null);
+  const recommended = LOCAL_SOURCES.filter((s) => fitsThisMac(s.bytes, ramGb));
+  const firstInstalled = LOCAL_SOURCES.find((s) => installedRepos.has(s.repo));
+  const chosen = sourceForTag(selected);
+  const nextUse = chosen && installedRepos.has(chosen.repo) ? chosen : firstInstalled;
+  const starter = LOCAL_SOURCES[0];
+
+  const card = (src: LocalSource) => {
+    const installed = installedRepos.has(src.repo);
+    const running = status?.serving === src.repo;
+    const pct = percent[src.tag];
+    const busy = pct !== undefined;
+    // No fit claim when the memory could not be read: 8 GB is only a guess.
+    const fits = ram !== null && fitsThisMac(src.bytes, ram);
+    const err = errors[src.tag];
+    return (
+      <YStack
+        key={src.tag}
+        data-testid={`local-ai-model-${src.tag}`}
+        gap="$2"
+        p="$3"
+        rounded="$4"
+        borderWidth={1}
+        borderColor={running ? '$color8' : '$borderColor'}
+        bg="$color2"
+      >
+        <XStack items="center" justify="space-between" gap="$3" flexWrap="wrap">
+          <YStack gap="$1" flex={1} minW={200}>
+            <XStack items="center" gap="$2" flexWrap="wrap">
+              <Text fontSize="$4" fontWeight="600" color="$color">
+                {src.title}
+              </Text>
+              <Badge variant={fits ? 'secondary' : 'outline'} size="sm">
+                {fits ? 'Fits this computer' : `Needs ${memoryNeededGb(src.bytes)} GB memory`}
+              </Badge>
+              {installed && (
+                <Badge variant="outline" size="sm">
+                  Downloaded
+                </Badge>
+              )}
+            </XStack>
+            <Text fontSize="$2" color="$color11">
+              {src.blurb} {formatSize(src.bytes)} download.
+            </Text>
+          </YStack>
+          <XStack gap="$2" items="center">
+            {busy ? (
+              <>
+                <Text fontSize="$2" color="$color11" aria-live="polite">
+                  Downloading {pct}%
+                </Text>
+                <Button size="sm" variant="outline" onPress={() => void cancelPull()} aria-label={`Cancel downloading ${src.title}`}>
+                  Cancel
+                </Button>
+              </>
+            ) : installed ? (
+              <>
+                {running ? (
+                  <Button size="sm" variant="secondary" disabled aria-label={`${src.title} is in use`}>
+                    In use
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={starting !== null}
+                    onPress={() => void use(src)}
+                    aria-label={`Use ${src.title}`}
+                  >
+                    {starting === src.tag ? 'Starting…' : 'Use'}
+                  </Button>
+                )}
+                <Button size="sm" variant="ghost" onPress={() => setRemoving(src)} aria-label={`Remove ${src.title}`}>
+                  Remove
+                </Button>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                variant={fits ? 'primary' : 'outline'}
+                disabled={downloading !== null || !status}
+                onPress={() => void download(src)}
+                aria-label={`Download ${src.title}`}
+              >
+                Download
+              </Button>
+            )}
+          </XStack>
+        </XStack>
+        {busy && <Progress value={pct} size="sm" aria-label={`${src.title} download progress`} />}
+        {err && (
+          <XStack items="center" justify="space-between" gap="$2" flexWrap="wrap">
+            <Text role="alert" data-testid="local-ai-pull-error" fontSize="$2" color="$red10" flex={1}>
+              {err}
+            </Text>
+            {!installed && !busy && status && (
+              <Button size="xs" variant="outline" onPress={() => void download(src)} aria-label={`Try downloading ${src.title} again`}>
+                Try again
+              </Button>
+            )}
+          </XStack>
+        )}
+      </YStack>
+    );
+  };
+
+  const header = (() => {
+    if (!checked) return { title: 'Checking this computer…', body: '', action: null as ReactNode };
+    const fetching = downloading ? sourceForTag(downloading) : undefined;
+    if (fetching && state.kind !== 'running') {
+      return {
+        title: `Downloading ${fetching.title}… ${percent[fetching.tag]}%`,
+        body: `You can keep using ${getBrand().name} while it downloads.`,
+        action: null,
+      };
+    }
+    switch (state.kind) {
+      case 'app-only':
+        return {
+          title: 'Local models are not set up',
+          body: `Models run on your computer only in the ${getBrand().name} desktop app. Open this screen there to download one.`,
+          action: null,
+        };
+      case 'no-engine':
+        return {
+          title: 'Local models are not set up',
+          body: `Hanzo’s engine, which runs models on this computer, is not installed. You can download models now; they run once the engine is installed.`,
+          action: (
+            <XStack gap="$2" flexWrap="wrap">
+              <Button size="sm" variant="primary" onPress={() => openOutside(ENGINE_RELEASES_URL)}>
+                Get Hanzo’s engine
+              </Button>
+              <Button size="sm" variant="ghost" onPress={() => void refresh()}>
+                Check again
+              </Button>
+            </XStack>
+          ),
+        };
+      case 'running': {
+        const src = sourceForRepo(state.repo);
+        return {
+          title: `Running ${src?.title ?? state.repo}`,
+          body: 'Chat answers on this computer, without the internet.',
+          action: (
+            <Button size="sm" variant="outline" onPress={() => void stop()}>
+              Stop
+            </Button>
+          ),
+        };
+      }
+      case 'ready':
+        return state.installed === 0
+          ? {
+              title: 'Ready',
+              body: `Nothing downloaded yet. ${starter.title} is a good first model (${formatSize(starter.bytes)}).`,
+              action: percent[starter.tag] === undefined && (
+                <Button size="sm" variant="primary" disabled={downloading !== null} onPress={() => void download(starter)}>
+                  {`Download ${starter.title}`}
+                </Button>
+              ),
+            }
+          : {
+              title: 'Ready',
+              body: `${state.installed} ${state.installed === 1 ? 'model' : 'models'} downloaded. Choose one to chat without the internet.`,
+              action: nextUse ? (
+                <Button size="sm" variant="primary" disabled={starting !== null} onPress={() => void use(nextUse)}>
+                  {starting === nextUse.tag ? 'Starting…' : `Use ${nextUse.title}`}
+                </Button>
+              ) : null,
+            };
+    }
+  })();
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Local AI Models & Hanzo Node Manager"
+      aria-labelledby="local-ai-title"
       data-slot="local-ai-modal"
       data-testid="local-ai-manager-modal"
       onClick={(e) => {
@@ -906,785 +705,179 @@ export function LocalAiManager() {
         position: 'fixed',
         inset: 0,
         zIndex: 9999,
-        backgroundColor: 'rgba(0, 0, 0, 0.72)',
-        backdropFilter: 'blur(6px)',
+        background: 'rgba(0, 0, 0, 0.72)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 20,
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        padding: 16,
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 780,
-          maxHeight: '86vh',
-          backgroundColor: '#121212',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 16,
-          boxShadow: '0 24px 64px rgba(0, 0, 0, 0.75)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          color: '#f5f5f5',
-        }}
+      <YStack
+        ref={panel as never}
+        tabIndex={-1}
+        width="100%"
+        maxW={760}
+        maxH="88vh"
+        bg="$background"
+        borderWidth={1}
+        borderColor="$borderColor"
+        rounded="$6"
+        overflow="hidden"
       >
-        {/* Modal Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 999,
-                backgroundColor: nodeRunning || ollama11434Up || engine36900Up ? '#22c55e' : '#eab308',
-                boxShadow:
-                  nodeRunning || ollama11434Up || engine36900Up
-                    ? '0 0 10px rgba(34, 197, 94, 0.6)'
-                    : 'none',
-              }}
-            />
-            <div>
-              <div style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.01em' }}>
-                Local AI Models &amp; Hanzo Node
-              </div>
-              <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 2 }}>
-                Browse, download, and run local AI models offline · Manage local Hanzo Node &amp; multimodal inference
-              </div>
-            </div>
-          </div>
-          <button
-            type="button"
-            aria-label="Close Local AI Manager"
-            onClick={() => setOpen(false)}
-            style={{
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#d4d4d8',
-              width: 30,
-              height: 30,
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontSize: 15,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+        <XStack items="center" justify="space-between" gap="$3" px="$4" py="$3" borderBottomWidth={1} borderColor="$borderColor">
+          <Text id="local-ai-title" tag="h2" fontSize="$5" fontWeight="600" color="$color">
+            Local AI
+          </Text>
+          <Button size="icon-sm" variant="ghost" aria-label="Close" onPress={() => setOpen(false)}>
             ✕
-          </button>
-        </div>
+          </Button>
+        </XStack>
 
-        {/* Navigation Tabs */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '10px 20px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.07)',
-            backgroundColor: '#161616',
-            gap: 8,
-          }}
-        >
-          <div style={{ display: 'flex', gap: 6 }}>
-            {(
-              [
-                { id: 'models', label: `Local AI Models (${ALL_CATALOG_MODELS.filter((m) => !m.embedding).length})` },
-                { id: 'node', label: `Local Hanzo Node (${nodeRunning ? 'Running' : 'Stopped'})` },
-                { id: 'engine', label: `Inference Engine (${engine36900Up || ollama11434Up ? 'Online' : 'Not running'})` },
-              ] as const
-            ).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                data-testid={`local-ai-tab-${t.id}`}
-                onClick={() => setTab(t.id)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  border: tab === t.id ? '1px solid rgba(255,255,255,0.18)' : '1px solid transparent',
-                  backgroundColor: tab === t.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: tab === t.id ? '#ffffff' : '#a1a1aa',
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ fontSize: 12, color: '#a1a1aa' }}>
-            Active model:{' '}
-            <strong style={{ color: '#ffffff' }}>
-              {selectedModel === 'enso-free' ? (installed[0]?.id ?? 'zen-nano:0.6b') : selectedModel}
-            </strong>
-          </div>
-        </div>
-
-        {/* Download Progress Banner */}
-        {(pullingTag || pullError) && (
-          <div
-            style={{
-              padding: '10px 20px',
-              backgroundColor: pullError ? 'rgba(239, 68, 68, 0.14)' : 'rgba(255, 255, 255, 0.05)',
-              borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 6,
-            }}
+        <YStack flexShrink={1} minH={0} overflow="scroll" px="$4" py="$3" gap="$4">
+          <YStack
+            role="status"
+            data-testid="local-ai-status"
+            gap="$2"
+            p="$3"
+            rounded="$4"
+            bg="$color3"
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12 }}>
-              <span>
-                {pullError ? (
-                  <span data-testid="local-ai-pull-error" role="alert" style={{ color: '#f87171' }}>
-                    {pullError}
-                  </span>
-                ) : (
-                  <>
-                    Downloading <strong>{pullingTag}</strong>: {pullStatus}
-                  </>
-                )}
-              </span>
-              {pullingTag && <span>{pullPercent}%</span>}
-            </div>
-            {pullingTag && (
-              <div
-                style={{
-                  height: 5,
-                  width: '100%',
-                  backgroundColor: 'rgba(255,255,255,0.1)',
-                  borderRadius: 999,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    height: '100%',
-                    width: `${pullPercent}%`,
-                    backgroundColor: '#ffffff',
-                    transition: 'width 0.2s ease',
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        )}
+            <Text fontSize="$4" fontWeight="600" color="$color">
+              {header.title}
+            </Text>
+            {header.body ? (
+              <Text fontSize="$3" color="$color11">
+                {header.body}
+              </Text>
+            ) : null}
+            {status?.serve_error && state.kind !== 'running' ? (
+              <Text role="alert" fontSize="$2" color="$red10">
+                {`The model stopped: ${status.serve_error.split('\n').filter(Boolean).pop()}`}
+              </Text>
+            ) : null}
+            {header.action ? <XStack>{header.action}</XStack> : null}
+            {/* host.tsx sends a chat to the local engine only when no session is held; a
+                signed-in window's chats go to the cloud whatever is downloaded here. */}
+            {keychain.getItem('hanzo_iam_access_token') ? (
+              <Text data-testid="local-ai-signed-in-note" fontSize="$2" color="$color11">
+                {`You are signed in, so chat uses ${getBrand().name}’s cloud models. A local model answers when you use ${getBrand().name} without signing in.`}
+              </Text>
+            ) : null}
+          </YStack>
 
-        {/* TAB 1: Browse & Download Local AI Models */}
-        {tab === 'models' && (
-          <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-            <div
-              style={{
-                padding: '12px 20px',
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: 10,
-                alignItems: 'center',
-                borderBottom: '1px solid rgba(255,255,255,0.06)',
-              }}
-            >
-              <input
-                type="search"
-                data-testid="local-ai-search-input"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search local models (zen6, qwen3, deepseek-r1, vision, coder…)"
-                style={{
-                  flex: 1,
-                  minWidth: 220,
-                  height: 34,
-                  padding: '0 12px',
-                  borderRadius: 8,
-                  border: '1px solid rgba(255,255,255,0.12)',
-                  backgroundColor: '#0a0a0a',
-                  color: '#f5f5f5',
-                  fontSize: 13,
-                  outline: 'none',
-                }}
-              />
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                {(
-                  [
-                    { id: 'all', label: 'All' },
-                    { id: 'installed', label: `Installed (${installed.length})` },
-                    { id: 'zen', label: 'Zen LM' },
-                    { id: 'vision', label: 'Vision / Images' },
-                    { id: 'coding', label: 'Coding' },
-                    { id: 'reasoning', label: 'Reasoning' },
-                  ] as const
-                ).map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setCategory(c.id)}
-                    style={{
-                      padding: '5px 10px',
-                      borderRadius: 999,
-                      fontSize: 12,
-                      cursor: 'pointer',
-                      border: category === c.id ? '1px solid rgba(255,255,255,0.24)' : '1px solid rgba(255,255,255,0.08)',
-                      backgroundColor: category === c.id ? '#ffffff' : 'transparent',
-                      color: category === c.id ? '#09090b' : '#d4d4d8',
-                      fontWeight: category === c.id ? 600 : 400,
-                    }}
-                  >
-                    {c.label}
-                  </button>
+          <YStack gap="$2">
+            <Text tag="h3" fontSize="$4" fontWeight="600" color="$color">
+              {ram ? `Recommended for this computer (${ram} GB memory)` : 'Recommended'}
+            </Text>
+            {recommended.map(card)}
+          </YStack>
+
+          <YStack gap="$2">
+            <Text tag="h3" fontSize="$4" fontWeight="600" color="$color">
+              {`All models (${LOCAL_SOURCES.length})`}
+            </Text>
+            {LOCAL_SOURCES.map(card)}
+          </YStack>
+
+          <details
+            open={advanced}
+            onToggle={(e) => setAdvanced((e.currentTarget as HTMLDetailsElement).open)}
+            data-testid="local-ai-advanced"
+          >
+            <summary style={{ cursor: 'pointer', padding: '4px 0' }}>
+              <Text fontSize="$3" fontWeight="600" color="$color">
+                Advanced
+              </Text>
+            </summary>
+            <YStack gap="$3" pt="$2">
+              <YStack gap="$1">
+                <Text fontSize="$3" fontWeight="600" color="$color">
+                  Engine
+                </Text>
+                <Text fontSize="$2" color="$color11">
+                  {`Program: ${status?.engine ?? 'not installed (looked for hanzo-engine and hanzo-server beside the app and on PATH, or HANZO_ENGINE_BIN)'}`}
+                </Text>
+                <Text fontSize="$2" color="$color11">
+                  {`Models folder: ${status?.cache_dir ?? 'unknown'}`}
+                </Text>
+                <Text fontSize="$2" color="$color11">
+                  {`Address: ${LOCAL_ENGINE_URL} (this computer only)`}
+                </Text>
+              </YStack>
+
+              <YStack gap="$2">
+                <Text fontSize="$3" fontWeight="600" color="$color">
+                  Custom endpoint
+                </Text>
+                <Text fontSize="$2" color="$color11">
+                  Send local chat to another OpenAI-compatible server first (on this computer or your network).
+                </Text>
+                <XStack gap="$2" flexWrap="wrap">
+                  <YStack flex={1} minW={220}>
+                    <Input
+                      type="url"
+                      aria-label="Custom endpoint address"
+                      value={customUrl}
+                      onChangeText={setCustomUrl}
+                      placeholder="http://10.0.0.19:36900"
+                    />
+                  </YStack>
+                  <Button size="sm" variant="outline" onPress={() => saveCustom(customUrl)}>
+                    Save
+                  </Button>
+                  <Button size="sm" variant="ghost" disabled={scanning || !isTauri()} onPress={() => void scanLan()}>
+                    {scanning ? 'Searching…' : 'Find on network'}
+                  </Button>
+                </XStack>
+                {customNote ? (
+                  <Text fontSize="$2" color="$color11">
+                    {customNote}
+                  </Text>
+                ) : null}
+                {lanMessage ? (
+                  <Text data-testid="local-ai-lan-message" fontSize="$2" color="$color11">
+                    {lanMessage}
+                  </Text>
+                ) : null}
+                {lanEngines.map((eng) => (
+                  <XStack key={eng.base_url} items="center" justify="space-between" gap="$2" flexWrap="wrap">
+                    <Text fontSize="$2" color="$color">
+                      {`${eng.name} (${eng.base_url}) ${eng.models.join(', ')}`}
+                    </Text>
+                    <Button size="xs" variant="outline" onPress={() => saveCustom(eng.base_url)}>
+                      Use
+                    </Button>
+                  </XStack>
                 ))}
-              </div>
-            </div>
-
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                padding: '12px 20px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}
-            >
-              {visibleModels.map((model) => {
-                const localTags = model.tags.filter((t) => !t.name.endsWith('-cloud') && t.size !== 'Unknown');
-                const tagsToShow = localTags.length > 0 ? localTags.slice(0, 6) : model.tags.slice(0, 3);
-                return (
-                  <div
-                    key={model.name}
-                    style={{
-                      padding: '12px 14px',
-                      borderRadius: 12,
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      backgroundColor: '#18181b',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 8,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: '#ffffff' }}>{model.name}</span>
-                        {model.name.startsWith('zen') && (
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
-                              borderRadius: 999,
-                              backgroundColor: 'rgba(255,255,255,0.12)',
-                              color: '#ffffff',
-                              fontWeight: 500,
-                            }}
-                          >
-                            Zen LM
-                          </span>
-                        )}
-                        {model.vision && (
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
-                              borderRadius: 999,
-                              backgroundColor: 'rgba(59, 130, 246, 0.18)',
-                              color: '#93c5fd',
-                            }}
-                          >
-                            Vision · Images
-                          </span>
-                        )}
-                        {model.supportTools && (
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
-                              borderRadius: 999,
-                              backgroundColor: 'rgba(16, 185, 129, 0.16)',
-                              color: '#6ee7b7',
-                            }}
-                          >
-                            Tools
-                          </span>
-                        )}
-                        {model.thinking && (
-                          <span
-                            style={{
-                              fontSize: 11,
-                              padding: '2px 7px',
-                              borderRadius: 999,
-                              backgroundColor: 'rgba(168, 85, 247, 0.18)',
-                              color: '#d8b4fe',
-                            }}
-                          >
-                            Reasoning
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div style={{ fontSize: 12, color: '#a1a1aa', lineHeight: 1.45 }}>{model.description}</div>
-
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 2 }}>
-                      {tagsToShow.map((tag) => {
-                        const isInstalled = installedSet.has(tag.name);
-                        const isSelected = selectedModel === tag.name;
-                        const isPulling = pullingTag === tag.name;
-
-                        return (
-                          <div
-                            key={tag.name}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 6,
-                              padding: '5px 10px',
-                              borderRadius: 8,
-                              border: isSelected
-                                ? '1px solid #ffffff'
-                                : isInstalled
-                                  ? '1px solid rgba(34, 197, 94, 0.45)'
-                                  : '1px solid rgba(255,255,255,0.1)',
-                              backgroundColor: isSelected
-                                ? 'rgba(255,255,255,0.14)'
-                                : isInstalled
-                                  ? 'rgba(34, 197, 94, 0.08)'
-                                  : 'rgba(255,255,255,0.03)',
-                              fontSize: 12,
-                            }}
-                          >
-                            <span style={{ fontWeight: 500, color: '#f4f4f5' }}>{tag.name}</span>
-                            {tag.size && tag.size !== 'Unknown' && (
-                              <span style={{ color: '#71717a', fontSize: 11 }}>{tag.size}</span>
-                            )}
-                            {isInstalled ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    handleSelectModel(tag.name);
-                                    setOpen(false);
-                                  }}
-                                  style={{
-                                    padding: '2px 8px',
-                                    borderRadius: 6,
-                                    border: 0,
-                                    backgroundColor: isSelected ? '#22c55e' : '#ffffff',
-                                    color: '#09090b',
-                                    fontWeight: 600,
-                                    fontSize: 11,
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  {isSelected ? '✓ Active' : 'Use in Chat'}
-                                </button>
-                                <button
-                                  type="button"
-                                  title={`Delete ${tag.name}`}
-                                  onClick={() => void handleDeleteModel(tag.name)}
-                                  style={{
-                                    padding: '2px 5px',
-                                    borderRadius: 6,
-                                    border: 0,
-                                    backgroundColor: 'transparent',
-                                    color: '#71717a',
-                                    fontSize: 11,
-                                    cursor: 'pointer',
-                                  }}
-                                >
-                                  ✕
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                type="button"
-                                disabled={Boolean(pullingTag)}
-                                onClick={() => void handlePullModel(tag.name)}
-                                style={{
-                                  padding: '2px 8px',
-                                  borderRadius: 6,
-                                  border: '1px solid rgba(255,255,255,0.18)',
-                                  backgroundColor: 'rgba(255,255,255,0.08)',
-                                  color: '#ffffff',
-                                  fontWeight: 500,
-                                  fontSize: 11,
-                                  cursor: pullingTag ? 'default' : 'pointer',
-                                  opacity: pullingTag && !isPulling ? 0.5 : 1,
-                                }}
-                              >
-                                {isPulling ? `${pullPercent}%…` : '↓ Download'}
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-              {visibleModels.length < filteredModels.length && (
-                <button
-                  type="button"
-                  onClick={() => setShowAllModels(true)}
-                  style={{
-                    padding: '9px 14px',
-                    borderRadius: 10,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    backgroundColor: 'rgba(255,255,255,0.04)',
-                    color: '#e4e4e7',
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Show all {filteredModels.length} local models ↓
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: Local Hanzo Node Management */}
-        {tab === 'node' && (
-          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.08)',
-                backgroundColor: '#18181b',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 16,
-                flexWrap: 'wrap',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: 999,
-                      backgroundColor: nodeRunning ? '#22c55e' : '#ef4444',
-                    }}
-                  />
-                  <span style={{ fontSize: 15, fontWeight: 600 }}>
-                    Local Hanzo Node ({nodeRunning ? 'Running' : 'Stopped'})
-                  </span>
-                </div>
-                <div style={{ fontSize: 12, color: '#a1a1aa', marginTop: 4 }}>
-                  API Endpoint: <code>http://{nodeOptions?.node_api_ip || '127.0.0.1'}:{nodeOptions?.node_api_port || '3690'}</code>
-                  {' · '}P2P: <code>:{nodeOptions?.node_port || '3691'}</code>
-                  {' · '}WS: <code>:{nodeOptions?.node_ws_port || '3692'}</code>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                {nodeRunning ? (
-                  <>
-                    <button
-                      type="button"
-                      disabled={nodeBusy}
-                      onClick={() => void handleStartNode()}
-                      style={{
-                        padding: '7px 14px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(255,255,255,0.16)',
-                        backgroundColor: 'rgba(255,255,255,0.08)',
-                        color: '#ffffff',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Restart Node
-                    </button>
-                    <button
-                      type="button"
-                      disabled={nodeBusy}
-                      onClick={() => void handleStopNode()}
-                      style={{
-                        padding: '7px 14px',
-                        borderRadius: 8,
-                        border: '1px solid rgba(239,68,68,0.4)',
-                        backgroundColor: 'rgba(239,68,68,0.12)',
-                        color: '#fca5a5',
-                        fontSize: 13,
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Stop Node
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={nodeBusy}
-                    onClick={() => void handleStartNode()}
-                    style={{
-                      padding: '7px 16px',
-                      borderRadius: 8,
-                      border: 0,
-                      backgroundColor: '#ffffff',
-                      color: '#09090b',
-                      fontSize: 13,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {nodeBusy ? 'Starting…' : 'Start Local Node'}
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleOpenStorage()}
-                  style={{
-                    padding: '7px 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.14)',
-                    backgroundColor: 'transparent',
-                    color: '#d4d4d8',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Open Storage Folder
-                </button>
-              </div>
-            </div>
-
-            {nodeMessage && (
-              <div
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: 8,
-                  backgroundColor: 'rgba(255,255,255,0.06)',
-                  fontSize: 12,
-                  color: '#e4e4e7',
+              </YStack>
+            </YStack>
+          </details>
+        </YStack>
+      </YStack>
+      {/* Remove deletes the copy in the shared Hugging Face folder, which other
+          tools on this computer read too, so it is never done on one press. */}
+      <AlertDialog open={removing !== null} onOpenChange={(next) => !next && setRemoving(null)}>
+        {removing ? (
+          <AlertDialogContent data-testid="local-ai-remove-confirm">
+            <AlertDialogTitle>{`Remove ${removing.title}?`}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`This deletes ${formatSize(status?.installed.find((m) => m.repo === removing.repo)?.folder_bytes ?? removing.bytes)} from this computer. Other programs that use the same model from the shared Hugging Face folder lose it too. You can download it again later.`}
+            </AlertDialogDescription>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep it</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  const src = removing;
+                  setRemoving(null);
+                  void remove(src);
                 }}
               >
-                {nodeMessage}
-              </div>
-            )}
-
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.08)',
-                backgroundColor: '#18181b',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 8,
-                fontSize: 12,
-                color: '#a1a1aa',
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#ffffff' }}>Node Configuration</div>
-              <div>
-                <strong>Storage Path:</strong> <code>{nodeOptions?.node_storage_path || '~/Library/Application Support/ai.hanzo.desktop/node_storage'}</code>
-              </div>
-              <div>
-                <strong>Default Embedding Model:</strong> <code>{nodeOptions?.default_embedding_model || 'embeddinggemma:300m'}</code>
-              </div>
-              <div>
-                <strong>Multimodal Images &amp; Files:</strong> Enabled locally (paste, drag-and-drop, or click <code>+</code> in the chat composer to attach images and files directly without signing in).
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: Local Inference Engine & LAN Discovery */}
-        {tab === 'engine' && (
-          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto' }}>
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.08)',
-                backgroundColor: '#18181b',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Embedded Hanzo Engine (:36900) — Load GGUF / Safetensors / MLX</div>
-              <div style={{ fontSize: 12, color: '#a1a1aa' }}>
-                Status: <strong style={{ color: engine36900Up ? '#22c55e' : '#a1a1aa' }}>{engine36900Up ? 'Listening on 127.0.0.1:36900' : 'Idle'}</strong>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="text"
-                  value={ggufRepoOrPath}
-                  onChange={(e) => setGgufRepoOrPath(e.target.value)}
-                  placeholder="HuggingFace model ID (e.g. Qwen/Qwen3-0.6B) or local .gguf path"
-                  style={{
-                    flex: 1,
-                    height: 34,
-                    padding: '0 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    backgroundColor: '#0a0a0a',
-                    color: '#f5f5f5',
-                    fontSize: 13,
-                  }}
-                />
-                <button
-                  type="button"
-                  disabled={loadingEngineModel}
-                  onClick={() => void handleLoadIntoHanzoEngine()}
-                  style={{
-                    padding: '0 14px',
-                    borderRadius: 8,
-                    border: 0,
-                    backgroundColor: '#ffffff',
-                    color: '#09090b',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {loadingEngineModel ? 'Loading…' : 'Load Model'}
-                </button>
-              </div>
-              {engineMessage && <div style={{ fontSize: 12, color: '#d4d4d8' }}>{engineMessage}</div>}
-            </div>
-
-            <div
-              style={{
-                padding: 16,
-                borderRadius: 12,
-                border: '1px solid rgba(255,255,255,0.08)',
-                backgroundColor: '#18181b',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10,
-              }}
-            >
-              <div style={{ fontSize: 14, fontWeight: 600 }}>Custom / LAN OpenAI-Compatible Inference Endpoint</div>
-              <div style={{ fontSize: 12, color: '#a1a1aa' }}>
-                Point local chat at any local or LAN inference server (Hanzo Engine, MLX Server, vLLM, LM Studio, or Ollama).
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="url"
-                  value={customEngineUrlState}
-                  onChange={(e) => setCustomEngineUrlState(e.target.value)}
-                  placeholder="http://127.0.0.1:11434 or http://10.0.0.19:36900"
-                  style={{
-                    flex: 1,
-                    height: 34,
-                    padding: '0 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    backgroundColor: '#0a0a0a',
-                    color: '#f5f5f5',
-                    fontSize: 13,
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCustomEngineUrl(customEngineUrlState);
-                    void refreshState();
-                    setEngineMessage(
-                      customEngineUrlState.trim()
-                        ? `Saved custom engine URL: ${customEngineUrlState.trim()}`
-                        : 'Cleared custom engine URL (using automatic local detection).',
-                    );
-                  }}
-                  style={{
-                    padding: '0 14px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.16)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    color: '#ffffff',
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Save Endpoint
-                </button>
-                <button
-                  type="button"
-                  disabled={discoveringLan}
-                  onClick={() => void handleDiscoverLan()}
-                  style={{
-                    padding: '0 12px',
-                    borderRadius: 8,
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    backgroundColor: 'transparent',
-                    color: '#d4d4d8',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                  }}
-                >
-                  {discoveringLan ? 'Scanning LAN…' : 'Scan LAN'}
-                </button>
-              </div>
-              {lanMessage && (
-                <div data-testid="local-ai-lan-message" style={{ fontSize: 12, color: '#d4d4d8' }}>
-                  {lanMessage}
-                </div>
-              )}
-              {lanEngines.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
-                  {lanEngines.map((eng) => (
-                    <div
-                      key={eng.base_url}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        padding: '6px 10px',
-                        borderRadius: 8,
-                        backgroundColor: 'rgba(255,255,255,0.04)',
-                        fontSize: 12,
-                      }}
-                    >
-                      <span>
-                        <strong>{eng.name}</strong> ({eng.base_url}) — {eng.models.join(', ') || 'ready'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomEngineUrlState(eng.base_url);
-                          setCustomEngineUrl(eng.base_url);
-                          void refreshState();
-                        }}
-                        style={{
-                          padding: '3px 8px',
-                          borderRadius: 6,
-                          border: 0,
-                          backgroundColor: '#ffffff',
-                          color: '#09090b',
-                          fontSize: 11,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        Use Engine
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        ) : null}
+      </AlertDialog>
     </div>
   );
 }

@@ -7,9 +7,6 @@
       "wix": {
         "template": "./dummy.wxs"
       }
-    },
-    "resources": {
-      "llm-models/": "llm-models/"
     }
   }
 }

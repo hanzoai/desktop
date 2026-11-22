@@ -119,8 +119,22 @@ fn bare(status: StatusCode) -> Response<Vec<u8>> {
     r
 }
 
-/// Answer one request to the scheme by asking the engine at `base`.
+/// Every answer of the scheme, whatever the engine sent: never a document that
+/// can run (`sandbox`: no script, an opaque origin, so no IPC), and its type is
+/// never guessed into one (`nosniff`).
+fn sealed(mut res: Response<Vec<u8>>) -> Response<Vec<u8>> {
+    let h = res.headers_mut();
+    h.insert(header::CONTENT_SECURITY_POLICY, header::HeaderValue::from_static("sandbox"));
+    h.insert(header::X_CONTENT_TYPE_OPTIONS, header::HeaderValue::from_static("nosniff"));
+    res
+}
+
+/// Answer one request to the scheme by asking the engine at `base`, sealed.
 async fn answer(req: Request<Vec<u8>>, base: &str) -> Response<Vec<u8>> {
+    sealed(reply(req, base).await)
+}
+
+async fn reply(req: Request<Vec<u8>>, base: &str) -> Response<Vec<u8>> {
     let origin = window_origin(&req);
     let origin = origin.as_deref();
     if req.method() == Method::OPTIONS {
@@ -321,6 +335,21 @@ mod tests {
         assert!(res.headers().get("set-cookie").is_none());
         let fleet: serde_json::Value = serde_json::from_slice(res.body()).unwrap();
         assert!(fleet["nodes"].is_array());
+    }
+
+    #[tokio::test]
+    async fn every_answer_is_sealed_against_becoming_a_page() {
+        let (base, seen) = engine_once("HTTP/1.1 200 OK\r\ncontent-type: text/html", "<script>window.__TAURI_INTERNALS__</script>");
+        let html = Request::builder().uri("hanzo-studio://localhost/v1/page").body(Vec::new()).unwrap();
+        let res = answer(html, &base).await;
+        seen.join().unwrap();
+        let preflight = Request::builder().method("OPTIONS").uri("hanzo-studio://localhost/v1/x").body(Vec::new()).unwrap();
+        let outside = Request::builder().uri("hanzo-studio://localhost/index.html").body(Vec::new()).unwrap();
+        let unreachable = Request::builder().uri("hanzo-studio://localhost/v1/x").body(Vec::new()).unwrap();
+        for res in [res, answer(preflight, "http://127.0.0.1:1").await, answer(outside, "http://127.0.0.1:1").await, answer(unreachable, "http://127.0.0.1:1").await] {
+            assert_eq!(res.headers()["content-security-policy"], "sandbox", "{}", res.status());
+            assert_eq!(res.headers()["x-content-type-options"], "nosniff", "{}", res.status());
+        }
     }
 
     #[tokio::test]

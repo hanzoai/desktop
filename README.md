@@ -110,11 +110,8 @@ Hanzo is built as a modern monorepo using **NX** for orchestration and dependenc
 
 **Shared Libraries:**
 
-- **hanzo-message-ts** – Message protocols and network communication with Hanzo Node
-- **hanzo-node-state** – React Query-based state management for node data
-- **hanzo-ui** – Reusable React components with design system
-- **hanzo-artifacts** – Styled UI primitives built on Radix and Tailwind CSS
-- **hanzo-i18n** – Internationalization utilities powered by i18next
+- **brand-config** – The one brand table (name, sign-in client, callback event, identifier)
+- **hanzo-logo** – `<BrandMark brand/>`, the one brand glyph
 
 **Technology Stack:**
 
@@ -134,23 +131,6 @@ cd desktop
 nvm use
 npm ci
 ```
-
-#### 2. Fetch the side binaries
-
-The app spawns a Hanzo Node beside itself, so the node binary and the embedding
-model have to be on disk before Tauri can bundle them. One command, every
-platform — it reads your OS and architecture, and takes the release from
-`apps/hanzo-desktop/src-tauri/pins`:
-
-```bash
-cd apps/hanzo-desktop && pnpm download-binaries
-```
-
-`pnpm dev` and `pnpm build` run it for you; the command above is for fetching
-ahead of time, or after changing the pin. To move to a different node release,
-edit `pins` — no other file names a version.
-
-### 📦 Essential Commands
 
 #### Development Server
 
@@ -175,17 +155,8 @@ npx nx run-many --target=build
 #### Third party data and repository management
 
 ```bash
-# Update the built-in Ollama models repository. This repository contains model definitions, tags and metadata for all supported AI models. The command below regenerates the repository files to ensure compatibility with the latest Ollama version and model updates
-npx ts-node ./ci-scripts/generate-ollama-models-repository.ts
-
 # Generate Composio apps repository - This script regenerates the repository of pre-built Composio apps and templates that users can import into Hanzo. It ensures the app catalog stays up-to-date with the latest official releases.
 deno run -A ./ci-scripts/composio-repository/main.ts
-
-# Generate translations for all languages (EN, ES, etc.)
-# This command uses AI to automatically generate translations for all supported languages based on the primary i18n source file (English).
-# It ensures consistent translations across the entire application while maintaining natural language quality.
-
-npx nx run hanzo-i18n:i18n
 ```
 
 #### Testing & Quality
@@ -207,13 +178,9 @@ desktop/
 ├── apps/
 │   └── hanzo-desktop/          # Main desktop application
 ├── libs/
-│   ├── hanzo-message-ts/       # Core messaging protocol
-│   ├── hanzo-node-state/       # State management
-│   ├── hanzo-ui/               # Component library
-│   ├── hanzo-artifacts/        # UI primitives
-│   └── hanzo-i18n/             # Internationalization
-├── ci-scripts/                   # Build and deployment scripts
-└── tools/                        # Development utilities
+│   ├── brand-config/           # The one brand table
+│   └── hanzo-logo/             # The one brand glyph
+└── ci-scripts/                   # Build and deployment scripts
 ```
 
 ### 🎨 UI Development Guidelines

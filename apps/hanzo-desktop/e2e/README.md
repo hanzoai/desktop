@@ -75,18 +75,6 @@ DISPLAY=:1 WDIO_LOG_LEVEL=info pnpm test:e2e
   on onboarding.
 - `login.e2e.ts` — the onboarding **Login** button is present and enables only
   after the terms checkbox is accepted.
-- `models.e2e.ts` — the local **Zen** engine is named on the benchmark surface;
-  the chat home mounts its model selector + composer.
-- `chat.e2e.ts` — the real chat composer accepts input and submits (starts a
-  job). A streamed *assistant reply* additionally needs a running local engine
-  (see the note in the spec).
-- `mining.e2e.ts` — the mining/wallet panel renders: `mining-page`, on-chain &
-  pending balances, the four-tier privacy selector, recent-proofs table.
-
-Surfaces behind `ProtectedRoute` are reached by restoring a **real** persisted
-session (`restoreSignedInSession()` in `helpers.ts`) — the same localStorage
-envelope the app writes for a returning, signed-in (cloud-mode) user. That is
-real app state, not a behavioural mock.
 
 ## macOS caveat
 
