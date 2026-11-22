@@ -1,11 +1,42 @@
 /*
- * Hanzo Desktop chrome — minimal platform rules only.
- * The flat #0a0a0a obsidian palette and 0px pane layout come natively from
- * @hanzo/design 0.5.45 + @hanzo/ui 8.33.11 + @hanzo/dev-core 0.1.21.
+ * Hanzo Desktop chrome — minimal platform rules + Appearance Profiles:
+ *   - 'zen' (default): Hanzo Dev / Vercel pure black (#000000)
+ *   - 'lelouch': Obsidian dark grey (#0a0a0a)
+ *   - 'light': Daylight light mode
  */
-html:root:not(.t_light):not(.light) {
+html:root:not(.t_light):not(.light),
+html[data-theme-profile='zen'] {
+  --hz-ground: #000000;
+  --hz-surface: #070707;
+  --hz-elevated: #0f0f0f;
+  --hz-hover: #141414;
+  --hz-border: rgba(255, 255, 255, 0.08);
+  --background: #000000;
+  --panel: #070707;
+  --border: rgba(255, 255, 255, 0.07);
+  --pane-edge: rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme-profile='lelouch'] {
+  --hz-ground: #0a0a0a;
+  --hz-surface: #111111;
+  --hz-elevated: #161616;
+  --hz-hover: #1c1c1c;
+  --hz-border: rgba(255, 255, 255, 0.06);
+  --background: #0a0a0a;
+  --panel: #111111;
   --border: rgba(255, 255, 255, 0.05);
   --pane-edge: rgba(255, 255, 255, 0.045);
+}
+
+html.light,
+html.t_light,
+html[data-theme-profile='light'] {
+  --hz-ground: #fafafa;
+  --hz-surface: #ffffff;
+  --hz-elevated: #f4f4f5;
+  --hz-hover: #e4e4e7;
+  --hz-border: rgba(0, 0, 0, 0.08);
 }
 
 /* Slim dark monochrome scrollbars across Recents, panes, and dialogs */
@@ -67,22 +98,35 @@ html:root:not(.t_light):not(.light) {
   background-color: #121212 !important;
 }
 
-/* Unified obsidian #0a0a0a ground across window, rail, org switcher, and sidebar (no pitch-black bar) */
+/* Unified ground across window, rail, and sidebar (tracks Zen / Lelouch / Light profile) */
 html:root:not(.t_light):not(.light) [data-slot='window'],
 html:root:not(.t_light):not(.light) [data-slot='frame'],
 html:root:not(.t_light):not(.light) [data-slot='rail'],
 html:root:not(.t_light):not(.light) [data-slot='org-rail'],
-html:root:not(.t_light):not(.light) [data-slot='app-column'] {
-  background-color: #0a0a0a !important;
+html:root:not(.t_light):not(.light) [data-slot='app-column'],
+html:root:not(.t_light):not(.light) [data-slot='terminals'] {
+  background-color: var(--hz-ground, #000000) !important;
 }
 
-html:root:not(.t_light):not(.light) [data-slot='rail'] {
+/* Remove ALL dividing lines between rail, icons, text, and sidebar so header icons stay clean */
+[data-slot='rail'],
+[data-slot='app-column'],
+[data-slot='sidebar-nav'],
+[data-slot='nav-sublinks'] {
+  border-inline-start: none !important;
   border-inline-end: none !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
-html:root:not(.t_light):not(.light) [data-slot='app-column'] {
-  border-width: 0 !important;
-  border-inline-end: none !important;
+/* Zero top gutter on /tabs so terminals reach the very top of the window */
+[data-app='tabs'] {
+  padding-top: 0 !important;
+}
+
+[data-app='tabs'] [data-slot='pane'] {
+  border-top: none !important;
+  border-radius: 0 !important;
 }
 
 /* Smooth hover-peek sidebar drawer when collapsed */
@@ -111,8 +155,8 @@ html:root:not(.t_light):not(.light) [data-slot='app-column'] {
 
 html:root:not(.t_light):not(.light) [data-slot='pane'],
 html:root:not(.t_light):not(.light) [data-slot='side'] {
-  background-color: #0a0a0a !important;
-  border-inline-start: 1px solid rgba(255, 255, 255, 0.04) !important;
+  background-color: var(--hz-ground, #000000) !important;
+  border-inline-start: none !important;
 }
 
 [data-slot='side-strip'] {
@@ -370,11 +414,21 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
  * ============================================================================ */
 .hz-desktop-shell {
   display: flex;
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #0a0a0a;
+  background-color: var(--hz-ground, #000000);
   color: #f5f5f5;
+}
+
+.hz-desktop-row {
+  flex: 1 1 0%;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
 }
 
 .hz-desktop-main {
@@ -446,8 +500,8 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   position: relative;
   flex: 0 0 auto;
   height: 100%;
-  background-color: #0a0a0a;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: var(--hz-ground, #000000);
+  border-left: 1px solid var(--hz-border, rgba(255, 255, 255, 0.06));
   display: flex;
   flex-direction: column;
   min-width: 320px;
@@ -1043,14 +1097,16 @@ html:root:not(.t_light):not(.light) [data-slot='side'] {
   color: #ffffff;
 }
 
-/* Bottom Terminal Drawer (PanelBottom) */
+/* Bottom Terminal Drawer (PanelBottom) — FULL WIDTH across workspace AND right surface panel */
 .hz-bottom-drawer {
-  height: 210px;
+  width: 100%;
+  height: 220px;
   flex-shrink: 0;
-  background-color: #0a0a0a;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background-color: var(--hz-surface, #070707);
+  border-top: 1px solid var(--hz-border, rgba(255, 255, 255, 0.08));
   display: flex;
   flex-direction: column;
+  z-index: 35;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
 }
 

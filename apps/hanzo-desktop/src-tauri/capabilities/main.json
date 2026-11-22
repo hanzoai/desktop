@@ -187,6 +187,7 @@
     "allow-browsers",
     "allow-zap-call",
     "allow-zap-nodes",
+    "allow-detect-local-tools",
     "allow-check-claude-installed",
     "allow-check-cursor-installed",
     "allow-download-logs",

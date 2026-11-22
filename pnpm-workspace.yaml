@@ -79,6 +79,8 @@ overrides:
 # Only @hanzogui/shell 8.4.3 keeps its ⌘K pass-through patch until shell bumps.
 patchedDependencies:
   '@hanzo/app@0.3.157': patches/@hanzo__app@0.3.157.patch
+  '@hanzo/dev-core@0.1.21': patches/@hanzo__dev-core@0.1.21.patch
+  '@hanzo/studio@0.1.21': patches/@hanzo__studio@0.1.21.patch
   '@hanzo/tabs@0.1.17': patches/@hanzo__tabs@0.1.17.patch
   '@hanzogui/shell@8.4.3': patches/@hanzogui__shell@8.4.3.patch
 allowBuilds:

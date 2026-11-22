@@ -212,6 +212,18 @@ type SettingsSectionId =
 
 type SidebarStylePref = 'flat' | 'nested';
 
+type AppearanceProfile = 'zen' | 'lelouch' | 'light';
+
+interface DetectedToolRow {
+  id: string;
+  name: string;
+  category: string;
+  installed: boolean;
+  logged_in: boolean;
+  path?: string | null;
+  detail: string;
+}
+
 interface ZapNodeRow {
   id?: string;
   name?: string;
@@ -338,7 +350,21 @@ function StatusPill({ online, loading }: { online: boolean | null; loading?: boo
   );
 }
 
+const VALID_SECTIONS = new Set<SettingsSectionId>([
+  'general',
+  'appearance',
+  'providers',
+  'voice',
+  'engine',
+  'zap',
+  'node',
+  'extension',
+  'account',
+  'shortcuts',
+]);
+
 export function DesktopSettings({
+  initialSection,
   isAuthenticated,
   siteUrl = 'https://hanzo.ai',
   localEngineUrl = 'http://localhost:36900',
@@ -346,6 +372,7 @@ export function DesktopSettings({
   onSignIn,
   onBack,
 }: {
+  initialSection?: string;
   isAuthenticated: boolean;
   siteUrl?: string;
   localEngineUrl?: string;
@@ -354,9 +381,19 @@ export function DesktopSettings({
   onBack: () => void;
 }) {
   const apple = /Mac|iPhone|iPad/.test(navigator.userAgent);
-  const [theme, setTheme] = useState<'dark' | 'light'>(() =>
-    document.documentElement.classList.contains('light') ? 'light' : 'dark',
-  );
+  const [profile, setProfile] = useState<AppearanceProfile>(() => {
+    try {
+      const raw = window.localStorage.getItem('hanzo.appearance');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { profile?: string; theme?: string };
+        if (parsed.profile === 'lelouch') return 'lelouch';
+        if (parsed.profile === 'light' || parsed.theme === 'light') return 'light';
+        if (parsed.profile === 'zen') return 'zen';
+      }
+    } catch {}
+    return document.documentElement.classList.contains('light') ? 'light' : 'zen';
+  });
+  const theme: 'dark' | 'light' = profile === 'light' ? 'light' : 'dark';
   const [sidebarStyle, setSidebarStyle] = useState<SidebarStylePref>(() => {
     try {
       return window.localStorage.getItem('hanzo.sidebar.style') === 'nested' ? 'nested' : 'flat';
@@ -384,8 +421,13 @@ export function DesktopSettings({
   const [ollamaUp, setOllamaUp] = useState<boolean | null>(null);
   const [zapNodes, setZapNodes] = useState<ZapNodeRow[]>([]);
   const [zapLoading, setZapLoading] = useState<boolean>(false);
+  const [detectedTools, setDetectedTools] = useState<DetectedToolRow[]>([]);
+  const [toolsLoading, setToolsLoading] = useState<boolean>(false);
   const [devMode, setDevMode] = useDevMode();
-  const [section, setSection] = useState<SettingsSectionId>('general');
+  const [section, setSection] = useState<SettingsSectionId>(() => {
+    const candidate = (initialSection ?? 'general') as SettingsSectionId;
+    return VALID_SECTIONS.has(candidate) ? candidate : 'general';
+  });
 
   const refreshZap = useCallback(() => {
     setZapLoading(true);
@@ -393,6 +435,14 @@ export function DesktopSettings({
       .then((nodes) => setZapNodes(Array.isArray(nodes) ? nodes : []))
       .catch(() => setZapNodes([]))
       .finally(() => setZapLoading(false));
+  }, []);
+
+  const refreshTools = useCallback(() => {
+    setToolsLoading(true);
+    safeInvoke<DetectedToolRow[]>('detect_local_tools')
+      .then((rows) => setDetectedTools(Array.isArray(rows) ? rows : []))
+      .catch(() => setDetectedTools([]))
+      .finally(() => setToolsLoading(false));
   }, []);
 
   useEffect(() => {
@@ -441,19 +491,23 @@ export function DesktopSettings({
       });
 
     refreshZap();
+    refreshTools();
 
     return () => {
       cancelled = true;
       clearTimeout(timer);
       ctrl.abort();
     };
-  }, [localEngineUrl, refreshZap]);
+  }, [localEngineUrl, refreshZap, refreshTools]);
 
-  const applyTheme = (next: 'dark' | 'light') => {
-    setTheme(next);
-    writeLocalPref('hanzo.appearance', { theme: next });
+  const applyProfile = (next: AppearanceProfile) => {
+    setProfile(next);
+    const nextTheme = next === 'light' ? 'light' : 'dark';
+    writeLocalPref('hanzo.appearance', { theme: nextTheme, profile: next });
+    document.documentElement.dataset.themeProfile = next;
     document.documentElement.classList.remove('dark', 'light', 't_dark', 't_light');
-    document.documentElement.classList.add(next, `t_${next}`);
+    document.documentElement.classList.add(nextTheme, `t_${nextTheme}`);
+    window.dispatchEvent(new CustomEvent('hanzo:appearance-change', { detail: { profile: next, theme: nextTheme } }));
   };
 
   const applySidebarStyle = (next: SidebarStylePref) => {
@@ -507,7 +561,7 @@ export function DesktopSettings({
       data-testid="desktop-settings-page"
       height="100vh"
       width="100vw"
-      backgroundColor={isLight ? '#fafafa' : '#0a0a0a'}
+      backgroundColor={isLight ? '#fafafa' : profile === 'lelouch' ? '#0a0a0a' : '#000000'}
       color={isLight ? '#0a0a0a' : '#fafafa'}
     >
       {/* Top bar — Linear-density header */}
@@ -721,22 +775,28 @@ export function DesktopSettings({
                   </Text>
                 </YStack>
 
-                <SettingsGroup title="Theme">
+                <SettingsGroup title="Theme Profile">
                   <SettingsRow
-                    title="Interface theme"
-                    description="Obsidian monochrome dark mode or crisp daylight light mode."
+                    title="Appearance profile"
+                    description="Zen is pure Hanzo Dev black (default). Lelouch is the obsidian dark grey palette."
                     last
                     control={
                       <XStack gap="$1.5">
-                        {(['dark', 'light'] as const).map((opt) => (
+                        {(
+                          [
+                            ['zen', 'Zen'],
+                            ['lelouch', 'Lelouch'],
+                            ['light', 'Light'],
+                          ] as const
+                        ).map(([opt, label]) => (
                           <Button
                             key={opt}
                             size="xs"
                             data-testid={`desktop-theme-${opt}`}
-                            variant={theme === opt ? 'primary' : 'outline'}
-                            onPress={() => applyTheme(opt)}
+                            variant={profile === opt ? 'primary' : 'outline'}
+                            onPress={() => applyProfile(opt)}
                           >
-                            {opt === 'dark' ? 'Dark' : 'Light'}
+                            {label}
                           </Button>
                         ))}
                       </XStack>
@@ -747,7 +807,7 @@ export function DesktopSettings({
                 <SettingsGroup title="Sidebar Navigation">
                   <SettingsRow
                     title="Expanded sidebar layout"
-                    description="Flat lists apps (<icon> Chat, <icon> Dev) in one clean column. Nested pairs the fixed icon rail with per-app options."
+                    description="Flat lists apps (<icon> Chat, <icon> Dev) in one clean column. Nested pairs the single icon rail (click top Org badge to switch workspaces) with per-app options."
                     control={
                       <XStack gap="$1.5">
                         {(
@@ -769,8 +829,8 @@ export function DesktopSettings({
                     }
                   />
                   <SettingsRow
-                    title="3-mode sidebar switcher"
-                    description="Click the top-left sidebar toggle (or ⌘B) to cycle Compact (hover-peek) → Standard → Workspaces (Org & Machine Switcher)."
+                    title="Sidebar toggle"
+                    description="Toggle between Compact (single rail with hover-peek) and Expanded sidebar."
                     last
                     control={<Kbd>{apple ? '⌘B' : 'Ctrl+B'}</Kbd>}
                   />
@@ -780,15 +840,66 @@ export function DesktopSettings({
 
             {section === 'providers' ? (
               <>
-                <YStack gap="$1">
-                  <Text fontSize={18} fontWeight="600" color="$color">
-                    Providers & Models
+                <XStack alignItems="center" justifyContent="space-between">
+                  <YStack gap="$1">
+                    <Text fontSize={18} fontWeight="600" color="$color">
+                      Providers, Local Tools & Accounts
+                    </Text>
+                    <Text fontSize={13} color="$colorMuted">
+                      Auto-detected local AI coding tools, logged-in accounts, browser extension via ZAP, and provider API keys.
+                    </Text>
+                  </YStack>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    icon={<RefreshCw size={12} />}
+                    onPress={refreshTools}
+                  >
+                    {toolsLoading ? 'Scanning…' : 'Rescan'}
+                  </Button>
+                </XStack>
+
+                <SettingsGroup
+                  title="Detected Local AI Coding Tools, Accounts & Extension"
+                  subtitle="Discovered automatically on this machine — Hanzo reuses your existing CLIs, sessions, and ZAP browser extension."
+                >
+                  {detectedTools.length === 0 ? (
+                    <SettingsRow
+                      title={toolsLoading ? 'Scanning local coding tools…' : 'No local tools detected'}
+                      description="Install hanzo, claude, codex, gemini, opencode, aider, cursor, or Ollama to connect automatically."
+                      last
+                      control={<StatusPill online={false} loading={toolsLoading} />}
+                    />
+                  ) : (
+                    detectedTools.map((tool, idx) => (
+                      <SettingsRow
+                        key={tool.id}
+                        title={tool.name}
+                        description={
+                          tool.path
+                            ? `${tool.detail} · ${tool.path}`
+                            : tool.detail
+                        }
+                        last={idx === detectedTools.length - 1}
+                        control={
+                          <XStack alignItems="center" gap="$1.5">
+                            {tool.logged_in ? (
+                              <Kbd>{tool.category === 'extension' ? 'ZAP linked' : 'Logged in'}</Kbd>
+                            ) : null}
+                            <StatusPill online={tool.installed || tool.logged_in} />
+                          </XStack>
+                        }
+                      />
+                    ))
+                  )}
+                </SettingsGroup>
+
+                <YStack gap="$2">
+                  <Text fontSize={12} fontWeight="600" color="$colorMuted" paddingHorizontal="$1">
+                    API Keys & Cloud Providers
                   </Text>
-                  <Text fontSize={13} color="$colorMuted">
-                    Connect frontier and local providers directly on this machine or route through Hanzo Cloud.
-                  </Text>
+                  <ProvidersListSection />
                 </YStack>
-                <ProvidersListSection />
               </>
             ) : null}
 

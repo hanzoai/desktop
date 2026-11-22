@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import {
   ChevronRight,
+  Columns2,
   Cpu,
   ExternalLink,
   FileDiff,
@@ -19,6 +20,7 @@ import {
   PanelRight,
   Plus,
   RefreshCw,
+  Rows2,
   Send,
   Smartphone,
   SquareMenu,
@@ -193,10 +195,55 @@ export const SURFACES: readonly SurfaceDef[] = [
  */
 export function TopRightControls() {
   const { rightOpen, maximized, bottomOpen, detailsOpen } = useWorkspacePanels();
+  const [onTabs, setOnTabs] = useState(() =>
+    typeof window !== 'undefined' &&
+    (window.location.pathname === '/tabs' || window.location.pathname.startsWith('/tabs/')),
+  );
+
+  useEffect(() => {
+    const sync = () => {
+      const p = window.location.pathname;
+      setOnTabs(p === '/tabs' || p.startsWith('/tabs/'));
+    };
+    window.addEventListener('popstate', sync);
+    window.addEventListener('hanzo:moved', sync);
+    return () => {
+      window.removeEventListener('popstate', sync);
+      window.removeEventListener('hanzo:moved', sync);
+    };
+  }, []);
+
+  const triggerSplit = (dir: 'row' | 'col') => {
+    window.dispatchEvent(new CustomEvent('hanzo:tabs-action', { detail: { kind: 'split', dir } }));
+  };
 
   return (
     <div data-slot="desktop-top-controls" className="hz-top-controls">
       <Update />
+      {onTabs ? (
+        <>
+          <button
+            type="button"
+            data-slot="tabs-split-vertical"
+            className="hz-chrome-btn"
+            aria-label="Split vertical (⌘D)"
+            title="Split vertical (⌘D)"
+            onClick={() => triggerSplit('row')}
+          >
+            <Columns2 size={15} strokeWidth={1.85} />
+          </button>
+          <button
+            type="button"
+            data-slot="tabs-split-horizontal"
+            className="hz-chrome-btn"
+            aria-label="Split horizontal (⌘⇧D)"
+            title="Split horizontal (⌘⇧D)"
+            onClick={() => triggerSplit('col')}
+          >
+            <Rows2 size={15} strokeWidth={1.85} />
+          </button>
+        </>
+      ) : null}
       <button
         type="button"
         data-slot="surface-maximize"

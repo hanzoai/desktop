@@ -1,5 +1,5 @@
 diff --git a/components/workspace.tsx b/components/workspace.tsx
-index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6ba1f3d4a 100644
+index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..80524cf9310751b78dbe4c8af5d368980485fc10 100644
 --- a/components/workspace.tsx
 +++ b/components/workspace.tsx
 @@ -164,7 +164,7 @@ const ACTION_EVENT = 'hanzo:tabs-action';
@@ -204,27 +204,14 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
    if (live.length === 0 && !tile) {
      return (
        <YStack
-@@ -967,118 +1104,56 @@ export function Workspace({
+@@ -967,118 +1104,18 @@ export function Workspace({
    }
  
    return (
 -    <YStack height="100%" width="100%" gap="$2.5" p="$3">
 -      {/* One row. Actions, not a status report. */}
 -      <XStack shrink={0} items="center" gap="$2">
-+    <YStack height="100%" width="100%" gap={0} p={0} bg="#0a0a0a">
-+      {/* Minimal flush strip matching Hanzo Dev: split controls only, clear of top-left nav and top-right chrome */}
-+      <XStack
-+        data-slot="tabs-strip"
-+        shrink={0}
-+        height={36}
-+        items="center"
-+        justify="flex-end"
-+        gap="$1"
-+        pl={140}
-+        pr={136}
-+        bg="#0a0a0a"
-+      >
-         {start}
+-        {start}
 -        <Act
 -          run={() => openShell(null)}
 -          icon={<SquareTerminal size={14} />}
@@ -327,39 +314,15 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
 -            {paging ? null : <SizableText size="$1">Down</SizableText>}
 -          </Button>
 -          {end}
--        </XStack>
-+        <Button
-+          variant="ghost"
-+          size="icon-sm"
-+          minW={28}
-+          minH={28}
-+          rounded={7}
-+          borderWidth={0}
-+          data-tauri-drag-region="false"
-+          onPress={() => focus && split('row', focus)}
-+          disabled={!focus}
-+          title="Split vertical (⌘D)"
-+          aria-label="Split vertical (⌘D)"
-+        >
-+          <Columns2 size={15} />
-+        </Button>
-+        <Button
-+          variant="ghost"
-+          size="icon-sm"
-+          minW={28}
-+          minH={28}
-+          rounded={7}
-+          borderWidth={0}
-+          data-tauri-drag-region="false"
-+          onPress={() => focus && split('col', focus)}
-+          disabled={!focus}
-+          title="Split horizontal (⌘⇧D)"
-+          aria-label="Split horizontal (⌘⇧D)"
-+        >
-+          <Rows2 size={15} />
-+        </Button>
-+        {end ? <XStack shrink={0} items="center" gap="$1">{end}</XStack> : null}
-       </XStack>
++    <YStack height="100%" width="100%" gap={0} p={0} bg="var(--hz-ground, #000000)">
++      {/* Zero blank header above terminals: split controls live merged in the top-right window bar. */}
++      {start || end ? (
++        <XStack data-slot="tabs-strip" shrink={0} height={36} items="center" justify="flex-end" gap="$1" pl={140} pr={136}>
++          {start}
++          {end ? <XStack shrink={0} items="center" gap="$1">{end}</XStack> : null}
+         </XStack>
+-      </XStack>
++      ) : null}
  
        {/* The phone's pager. One chip per PAGE, because pages are what you swipe. */}
        {paging && pages > 1 ? (
@@ -368,7 +331,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
            {Array.from({ length: pages }, (_, i) => {
              const first = geo.rects.find((r) => Math.round(r.left / 100) === i);
              const b = first ? bind[first.id] : undefined;
-@@ -1121,9 +1196,9 @@ export function Workspace({
+@@ -1121,9 +1158,9 @@ export function Workspace({
          flex={1}
          minH={0}
          overflow="hidden"
@@ -381,7 +344,7 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
          bg={FRAME[scheme].ground}
        >
          <YStack
-@@ -1182,7 +1257,9 @@ export function Workspace({
+@@ -1182,7 +1219,9 @@ export function Workspace({
                    items="center"
                    gap="$1.5"
                    px="$2"
@@ -392,20 +355,34 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
                  >
                    {b.kind === 'page' ? (
                      <>
-@@ -1231,10 +1308,10 @@ export function Workspace({
+@@ -1229,24 +1268,11 @@ export function Workspace({
+                       <Bot size={14} />
+                     </Chip>
                    ) : null}
-                   {paging ? null : (
-                     <XStack ml="auto" items="center" gap="$1">
+-                  {paging ? null : (
+-                    <XStack ml="auto" items="center" gap="$1">
 -                      <Chip run={() => split('row', id)} title="Split right">
-+                      <Chip run={() => split('row', id)} title="Split vertical (⌘D)">
-                         <Columns2 size={14} />
-                       </Chip>
+-                        <Columns2 size={14} />
+-                      </Chip>
 -                      <Chip run={() => split('col', id)} title="Split down">
-+                      <Chip run={() => split('col', id)} title="Split horizontal (⌘⇧D)">
-                         <Rows2 size={14} />
-                       </Chip>
-                     </XStack>
-@@ -1254,10 +1331,10 @@ export function Workspace({
+-                        <Rows2 size={14} />
+-                      </Chip>
+-                    </XStack>
+-                  )}
+-                  {/* ONE bare button per row on a phone: globals.css grows every
+-                      button to 44px on a coarse pointer, so neighbours at a 24px
+-                      pitch overlap and the LAST wins — close was stealing taps
+-                      from split. */}
++                  {/* Per-tab split icons hidden: focused tab splits from the merged top-right bar or ⌘D / ⌘⇧D */}
+                   <Chip
+                     run={() => doClose(id)}
+                     title="Close pane"
+-                    ml={paging ? 'auto' : 0}
++                    ml="auto"
+                   >
+                     <X size={paging ? 16 : 14} />
+                   </Chip>
+@@ -1254,10 +1280,10 @@ export function Workspace({
  
                  <XStack flex={1} minH={0} flexDirection={paging ? 'column' : 'row'}>
                  <YStack position="relative" flex={1} minH={0} bg={FRAME[scheme].ground}>
@@ -418,16 +395,3 @@ index a21fa0f4040aa197b768f2bd5f93ebfa4d8feedd..4b0bacd958097db152ce9f362333c8c6
                        title={title}
                        // Scripts (a terminal is one), and `allow-same-origin` gives
                        // the frame ITS OWN origin — which ttyd needs for its socket
-diff --git a/lib/scheme.ts b/lib/scheme.ts
-index fe5e299205857b18c925fe5245ae86e3aeb55c90..2fab9e01854da589a9a2af98ee0bc06587f317aa 100644
---- a/lib/scheme.ts
-+++ b/lib/scheme.ts
-@@ -26,7 +26,7 @@ export function schemeOf(root: { className: string; theme: string | null }, syst
- 
- /** What a frame is painted with: its ground, the filter that turns the palette over, and how far an unfocused pane is dimmed. */
- export const FRAME = {
--  dark: { ground: 'black', turn: '', dim: 'brightness(0.65)' },
-+  dark: { ground: '#0a0a0a', turn: '', dim: 'brightness(0.88)' },
-   light: { ground: 'white', turn: 'invert(1) hue-rotate(180deg)', dim: 'brightness(0.94)' },
- } as const;
- 

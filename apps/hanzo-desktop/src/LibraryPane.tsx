@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { getBrand } from '@hanzo/desktop-brand-config';
 import { invoke } from '@tauri-apps/api/core';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import { HanzoMark } from '@hanzogui/shell';
+import { keychain } from './keychain';
+import { safeInvoke } from './utils/tauri-check';
 import {
   SiAnthropic,
   SiApple,
@@ -423,412 +426,155 @@ export function LibraryOverlay({ onClose }: { onClose: () => void }) {
 }
 
 /* ============================================================================
- * Plugins Directory — Connectors, Channels, MCP Plugins & Skills
+ * Plugins Directory — Real Connectors, Channels, MCP Servers & Skills
+ * Backed by:
+ *   - GET/POST/DELETE /v1/tools/mcp/servers & GET /v1/tools/catalog (MCP)
+ *   - GET /v1/connection, GET /v1/connection/providers, POST /v1/connection/:id/device, DELETE /v1/connection/:id
+ *   - GET /v1/provider, POST /v1/provider/:id/connect, POST /v1/provider/:id/disconnect (Channels)
+ *   - GET /v1/tools/skills & PUT /v1/tools/activation (Org Skills)
+ *   - Native ZAP Tauri IPC (`zap_nodes`, `browsers`) for local extensions
  * ============================================================================ */
 
 type PluginKind = 'connector' | 'channel' | 'skill';
 
-interface DirectoryPlugin {
+interface McpServerRow {
+  id: string;
+  name: string;
+  url?: string;
+  listing?: string;
+  transport?: string;
+  status?: string;
+}
+
+interface CatalogListing {
+  id: string;
+  name?: string;
+  title?: string;
+  vendor?: string;
+  description?: string;
+  logo?: string;
+  transports?: string[];
+  packages?: Array<{ registry?: string }>;
+}
+
+interface ConnectionRecord {
+  provider: string;
+  account?: string;
+  label?: string;
+  status?: string;
+}
+
+interface ConnectionProvider {
   id: string;
   name: string;
   description: string;
-  kind: PluginKind;
-  kindLabel: string;
-  author: string;
   category: string;
-  verified?: boolean;
-  popular?: boolean;
+  methods: string[];
 }
 
-const DIRECTORY_PLUGINS: readonly DirectoryPlugin[] = [
-  {
-    id: 'notion',
-    name: 'Notion',
-    description: 'Notion skills + Notion MCP server to search, update, and power workflows across your workspace.',
-    kind: 'connector',
-    kindLabel: 'Commands, connector & skills',
-    author: 'Notion',
-    category: 'Notes & memory',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'linear',
-    name: 'Linear',
-    description: 'Create issues, manage projects, update statuses, and search across workspaces.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Linear',
-    category: 'Developer tools',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'github',
-    name: 'GitHub',
-    description: 'Inspect pull requests, issues, CI runs, commits, and repositories via MCP.',
-    kind: 'connector',
-    kindLabel: 'Connector & skills',
-    author: 'GitHub',
-    category: 'Developer tools',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'figma',
-    name: 'Figma',
-    description: 'Generate diagrams and production code directly from live Figma frames and design tokens.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Figma',
-    category: 'Files & documents',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'canva',
-    name: 'Canva',
-    description: 'Create, edit, review, resize, and export Canva designs via the Canva MCP server.',
-    kind: 'connector',
-    kindLabel: 'Connector & skills',
-    author: 'Canva',
-    category: 'Files & documents',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'google-drive',
-    name: 'Google Drive',
-    description: 'Search, read, and upload files instantly across Drive, Docs, and Sheets.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Google',
-    category: 'Files & documents',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'gmail',
-    name: 'Gmail',
-    description: 'Draft replies, summarize threads, and search your inbox.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Google',
-    category: 'Email & messages',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'google-calendar',
-    name: 'Google Calendar',
-    description: 'Manage your schedule, check availability, and coordinate meetings.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Google',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'microsoft-365',
-    name: 'Microsoft 365',
-    description: 'Connect Outlook mail, calendar, Teams, and OneDrive files.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Microsoft',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'atlassian',
-    name: 'Atlassian MCP',
-    description: 'Search, read, and update Jira, Confluence, Bitbucket, and Loom with your permissions.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Atlassian',
-    category: 'Developer tools',
-    verified: true,
-  },
-  {
-    id: 'supabase',
-    name: 'Supabase',
-    description: 'Manage Postgres databases, migrations, authentication, and storage.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Supabase',
-    category: 'Developer tools',
-    verified: true,
-  },
-  {
-    id: 'vercel',
-    name: 'Vercel',
-    description: 'Build, inspect logs, and deploy web apps and agents.',
-    kind: 'connector',
-    kindLabel: 'Hooks, agents & connector',
-    author: 'Vercel',
-    category: 'Developer tools',
-    verified: true,
-  },
-  {
-    id: 'hubspot',
-    name: 'HubSpot',
-    description: 'CRM context for accounts, deals, pipeline, and customer insights.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'HubSpot',
-    category: 'Websites & commerce',
-    verified: true,
-  },
-  {
-    id: 'shopify',
-    name: 'Shopify',
-    description: 'Build, manage, and analyze your Shopify storefront and orders.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Shopify',
-    category: 'Websites & commerce',
-    verified: true,
-  },
-  {
-    id: 'firecrawl',
-    name: 'Firecrawl',
-    description: 'Crawl, search, and extract structured web data from any URL.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Firecrawl',
-    category: 'Websites & commerce',
-    verified: true,
-  },
-  {
-    id: 'exa',
-    name: 'Exa',
-    description: 'Neural web search and real-time code documentation search.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Exa',
-    category: 'Websites & commerce',
-    verified: true,
-  },
-  {
-    id: 'granola',
-    name: 'Granola',
-    description: 'Ask about your meeting notes, transcripts, and action items.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Granola',
-    category: 'Notes & memory',
-    verified: true,
-  },
-  {
-    id: 'dropbox',
-    name: 'Dropbox',
-    description: 'Browse, search, and share files stored in Dropbox.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'Dropbox',
-    category: 'Files & documents',
-    verified: true,
-  },
-  {
-    id: 'pubmed',
-    name: 'PubMed',
-    description: 'Search biomedical literature, abstracts, and clinical studies.',
-    kind: 'connector',
-    kindLabel: 'Connector',
-    author: 'NCBI',
-    category: 'Science',
-    verified: true,
-  },
-  {
-    id: 'channel-slack',
-    name: 'Slack',
-    description: 'Send messages, create canvases, monitor channels, and trigger agents from threads.',
-    kind: 'channel',
-    kindLabel: 'Channel & connector',
-    author: 'Slack',
-    category: 'Email & messages',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'channel-discord',
-    name: 'Discord',
-    description: 'Connect Hanzo agents to Discord servers, threads, and slash commands.',
-    kind: 'channel',
-    kindLabel: 'Channel',
-    author: 'Hanzo',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'channel-telegram',
-    name: 'Telegram',
-    description: 'Chat with your desktop and cloud agents directly from Telegram.',
-    kind: 'channel',
-    kindLabel: 'Channel',
-    author: 'Hanzo',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'channel-whatsapp',
-    name: 'WhatsApp',
-    description: 'Two-way messaging channel for personal or team assistant workflows.',
-    kind: 'channel',
-    kindLabel: 'Channel',
-    author: 'Hanzo',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'channel-imessage',
-    name: 'iMessage (macOS)',
-    description: 'Local macOS Messages bridge with approval-gated replies.',
-    kind: 'channel',
-    kindLabel: 'Local channel',
-    author: 'Hanzo',
-    category: 'Email & messages',
-    verified: true,
-  },
-  {
-    id: 'channel-zoom',
-    name: 'Zoom',
-    description: 'Search, recap, and act on Zoom meetings and transcripts.',
-    kind: 'channel',
-    kindLabel: 'Channel & connector',
-    author: 'Zoom',
-    category: 'Notes & memory',
-    verified: true,
-  },
-  {
-    id: 'skill-superpowers',
-    name: 'Superpowers',
-    description: 'Core engineering skills library: TDD, systematic debugging, architecture planning, and verification.',
-    kind: 'skill',
-    kindLabel: 'Hooks & skills',
-    author: 'Community',
-    category: 'Developer tools',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'skill-frontend-design',
-    name: 'Frontend Design',
-    description: 'UI/UX design craftsmanship, visual hierarchy, typography, and component systems.',
-    kind: 'skill',
-    kindLabel: 'Skill',
-    author: 'Hanzo',
-    category: 'Developer tools',
-    verified: true,
-    popular: true,
-  },
-  {
-    id: 'skill-engineering',
-    name: 'Engineering',
-    description: 'Streamline code reviews, incident triage, RFCs, and release checklists.',
-    kind: 'skill',
-    kindLabel: 'Connectors & skills',
-    author: 'Hanzo',
-    category: 'Developer tools',
-    verified: true,
-  },
-  {
-    id: 'skill-product',
-    name: 'Product Management',
-    description: 'Write feature specs, plan roadmaps, synthesize user feedback, and draft launch notes.',
-    kind: 'skill',
-    kindLabel: 'Commands & skills',
-    author: 'Hanzo',
-    category: 'Productivity',
-    verified: true,
-  },
-  {
-    id: 'skill-sales',
-    name: 'Sales',
-    description: 'Prep calls, research accounts, review pipeline, and draft follow-ups using CRM context.',
-    kind: 'skill',
-    kindLabel: 'Connectors & skills',
-    author: 'Hanzo',
-    category: 'Productivity',
-    verified: true,
-  },
-  {
-    id: 'skill-data',
-    name: 'Data & SQL',
-    description: 'Write SQL, explore datasets, generate interactive visualizations, and audit schemas.',
-    kind: 'skill',
-    kindLabel: 'Connectors & skills',
-    author: 'Hanzo',
-    category: 'Developer tools',
-    verified: true,
-  },
-  {
-    id: 'skill-carta',
-    name: 'Carta Cap Table',
-    description: 'Skills and hooks for querying cap tables, grants, SAFEs, 409A valuations, and financing rounds.',
-    kind: 'skill',
-    kindLabel: 'Hooks & skills',
-    author: 'Carta',
-    category: 'Finance',
-    verified: true,
-  },
-  {
-    id: 'skill-legal',
-    name: 'Legal',
-    description: 'Speed up contract review, NDA triage, redlines, and compliance summaries.',
-    kind: 'skill',
-    kindLabel: 'Connectors & skills',
-    author: 'Hanzo',
-    category: 'Productivity',
-    verified: true,
-  },
-];
-
-interface CustomPlugin {
+interface ChannelRow {
   id: string;
   name: string;
-  endpoint: string;
-  kind: PluginKind;
+  description: string;
+  category: string;
+  connected: boolean;
+  available: boolean;
+  account: string;
 }
 
-const ENABLED_PLUGINS_KEY = 'hanzo.desktop.enabledPlugins';
-const CUSTOM_PLUGINS_KEY = 'hanzo.desktop.customPlugins';
-
-function readEnabledPlugins(): string[] {
-  try {
-    const raw = localStorage.getItem(ENABLED_PLUGINS_KEY);
-    if (!raw) return ['notion', 'linear', 'github'];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+interface SkillRow {
+  name: string;
+  description: string;
+  activated: boolean;
 }
 
-function readCustomPlugins(): CustomPlugin[] {
+interface ZapBrowserRow {
+  id?: string;
+  name?: string;
+  browser?: string;
+  version?: string;
+}
+
+interface DeviceFlowPrompt {
+  provider: string;
+  name: string;
+  userCode: string;
+  verifyUrl: string;
+}
+
+const CATALOG_PLUMBING = new Set(['mcp', 'www', 'api', 'app', 'cloud', 'io', 'server']);
+
+function catalogLabel(listing: CatalogListing): string {
+  if (listing.title) return listing.title;
+  const vendorBrand = (listing.vendor ?? '')
+    .split('.')
+    .reverse()
+    .find((part) => part && !CATALOG_PLUMBING.has(part));
+  if (vendorBrand) return vendorBrand.charAt(0).toUpperCase() + vendorBrand.slice(1);
+  return listing.name?.split('/').pop() || listing.id;
+}
+
+function isCatalogReachable(listing: CatalogListing): boolean {
+  return (listing.transports ?? []).includes('streamable-http');
+}
+
+function platformApiBase(): string {
+  if (import.meta.env.DEV) return window.location.origin;
+  return getBrand().cloudApi.replace(/\/+$/, '');
+}
+
+function platformAuthHeaders(): Record<string, string> | null {
+  const token = keychain.getItem('hanzo_iam_access_token');
+  if (!token) return null;
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
   try {
-    const raw = localStorage.getItem(CUSTOM_PLUGINS_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    const org = window.localStorage.getItem('hanzo_iam_current_org');
+    if (org) headers['X-Org-Id'] = org;
   } catch {
-    return [];
+    // ignore storage errors
   }
+  return headers;
 }
 
 export function PluginsDirectoryOverlay({
   onClose,
+  onSignIn,
 }: {
   onClose: () => void;
+  onSignIn?: () => void;
 }) {
   const [filter, setFilter] = useState<'all' | PluginKind>('all');
   const [query, setQuery] = useState('');
-  const [enabledIds, setEnabledIds] = useState<string[]>(readEnabledPlugins);
-  const [customPlugins, setCustomPlugins] = useState<CustomPlugin[]>(readCustomPlugins);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [devicePrompt, setDevicePrompt] = useState<DeviceFlowPrompt | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Real live state from backend + native ZAP
+  const [signedIn, setSignedIn] = useState(() => Boolean(platformAuthHeaders()));
+  const [zapNodes, setZapNodes] = useState<Array<{ id: string; caps: string[] }>>([]);
+  const [zapBrowsers, setZapBrowsers] = useState<ZapBrowserRow[]>([]);
+  const [mcpServers, setMcpServers] = useState<McpServerRow[]>([]);
+  const [catalog, setCatalog] = useState<CatalogListing[]>([]);
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const [connections, setConnections] = useState<ConnectionRecord[]>([]);
+  const [connProviders, setConnProviders] = useState<ConnectionProvider[]>([]);
+  const [channels, setChannels] = useState<ChannelRow[]>([]);
+  const [skills, setSkills] = useState<SkillRow[]>([]);
+
+  // Custom MCP server form
   const [addMenuOpen, setAddMenuOpen] = useState(false);
-  const [addingCustom, setAddingCustom] = useState<PluginKind | null>(null);
+  const [addingCustom, setAddingCustom] = useState(false);
   const [customName, setCustomName] = useState('');
   const [customEndpoint, setCustomEndpoint] = useState('');
   const addMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedQuery(query.trim()), 220);
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   useEffect(() => {
     if (!addMenuOpen) return;
@@ -841,70 +587,413 @@ export function PluginsDirectoryOverlay({
     return () => window.removeEventListener('mousedown', onDown);
   }, [addMenuOpen]);
 
-  const togglePlugin = (id: string) => {
-    setEnabledIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+  const loadAll = useCallback(async (searchTerm: string) => {
+    setErrorMsg(null);
+    const [nodesRes, browsersRes] = await Promise.all([
+      safeInvoke<Array<{ id: string; caps: string[] }>>('zap_nodes').catch(() => []),
+      safeInvoke<ZapBrowserRow[]>('browsers').catch(() => []),
+    ]);
+    setZapNodes(Array.isArray(nodesRes) ? nodesRes : []);
+    setZapBrowsers(Array.isArray(browsersRes) ? browsersRes : []);
+
+    const headers = platformAuthHeaders();
+    setSignedIn(Boolean(headers));
+    if (!headers) {
+      setMcpServers([]);
+      setConnections([]);
+      setConnProviders([]);
+      setChannels([]);
+      setSkills([]);
+      setCatalog([]);
+      setCatalogTotal(0);
+      setLoading(false);
+      return;
+    }
+
+    const base = platformApiBase();
+    const fetchJson = async (path: string) => {
       try {
-        localStorage.setItem(ENABLED_PLUGINS_KEY, JSON.stringify(next));
+        const r = await fetch(`${base}${path}`, { headers });
+        if (!r.ok) return null;
+        return await r.json();
       } catch {
-        // ignore
+        return null;
       }
-      return next;
-    });
+    };
+
+    const catParams = new URLSearchParams();
+    if (searchTerm) {
+      catParams.set('q', searchTerm);
+    } else {
+      catParams.set('featured', 'true');
+    }
+    catParams.set('limit', '60');
+
+    const [mcpJson, connJson, connProvJson, chanJson, skillsJson, catJson] = await Promise.all([
+      fetchJson('/v1/tools/mcp/servers'),
+      fetchJson('/v1/connection'),
+      fetchJson('/v1/connection/providers'),
+      fetchJson('/v1/provider'),
+      fetchJson('/v1/tools/skills'),
+      fetchJson(`/v1/tools/catalog?${catParams.toString()}`),
+    ]);
+
+    const rawServers = Array.isArray(mcpJson?.servers)
+      ? mcpJson.servers
+      : Array.isArray(mcpJson)
+        ? mcpJson
+        : [];
+    setMcpServers(
+      rawServers.map((s: Record<string, unknown>) => ({
+        id: String(s.id ?? s.name ?? ''),
+        name: String(s.name ?? s.id ?? 'MCP Server'),
+        url: typeof s.url === 'string' ? s.url : undefined,
+        listing: typeof s.listing === 'string' ? s.listing : undefined,
+        transport: typeof s.transport === 'string' ? s.transport : undefined,
+        status: typeof s.status === 'string' ? s.status : undefined,
+      })),
+    );
+
+    const rawConns = Array.isArray(connJson?.connectors) ? connJson.connectors : [];
+    setConnections(
+      rawConns.map((c: Record<string, unknown>) => ({
+        provider: String(c.provider ?? c.id ?? ''),
+        account: typeof c.account === 'string' ? c.account : undefined,
+        label: typeof c.label === 'string' ? c.label : undefined,
+        status: typeof c.status === 'string' ? c.status : undefined,
+      })),
+    );
+
+    const rawProv = Array.isArray(connProvJson?.providers) ? connProvJson.providers : [];
+    setConnProviders(
+      rawProv.map((p: Record<string, unknown>) => ({
+        id: String(p.id ?? ''),
+        name: String(p.name ?? p.id ?? ''),
+        description: String(p.description ?? ''),
+        category: String(p.category ?? 'Connector'),
+        methods: Array.isArray(p.methods) ? p.methods.map(String) : [],
+      })),
+    );
+
+    const rawChans = Array.isArray(chanJson?.providers) ? chanJson.providers : [];
+    setChannels(
+      rawChans.map((p: Record<string, unknown>) => {
+        const link = (p.connection ?? {}) as Record<string, unknown>;
+        return {
+          id: String(p.id ?? ''),
+          name: String(p.name ?? p.id ?? ''),
+          description: String(p.description ?? ''),
+          category: String(p.category ?? 'Channel'),
+          connected: Boolean(p.connected),
+          available: Boolean(p.available),
+          account: String(link.account ?? link.label ?? ''),
+        };
+      }),
+    );
+
+    const rawSkills = Array.isArray(skillsJson?.tools) ? skillsJson.tools : [];
+    setSkills(
+      rawSkills.map((t: Record<string, unknown>) => ({
+        name: String(t.name ?? ''),
+        description: String(t.description ?? ''),
+        activated: t.activated === true,
+      })),
+    );
+
+    const rawCat = Array.isArray(catJson?.catalog) ? catJson.catalog : [];
+    setCatalog(rawCat as CatalogListing[]);
+    setCatalogTotal(typeof catJson?.total === 'number' ? catJson.total : rawCat.length);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    void loadAll(debouncedQuery);
+  }, [loadAll, debouncedQuery]);
+
+  // Refresh real connection state whenever user returns from browser OAuth/device flow
+  useEffect(() => {
+    const onReturn = () => {
+      if (document.visibilityState === 'visible') {
+        void loadAll(debouncedQuery);
+      }
+    };
+    const onFocus = () => void loadAll(debouncedQuery);
+    document.addEventListener('visibilitychange', onReturn);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', onReturn);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [loadAll, debouncedQuery]);
+
+  const installedListingIds = useMemo(
+    () => new Set(mcpServers.map((s) => s.listing).filter((x): x is string => Boolean(x))),
+    [mcpServers],
+  );
+  const connectedProviderIds = useMemo(
+    () => new Set(connections.map((c) => c.provider)),
+    [connections],
+  );
+
+  const installCatalogMcp = async (listing: CatalogListing) => {
+    const headers = platformAuthHeaders();
+    if (!headers) {
+      onSignIn?.();
+      return;
+    }
+    setBusyKey(`mcp:${listing.id}`);
+    setErrorMsg(null);
+    try {
+      const r = await fetch(`${platformApiBase()}/v1/tools/mcp/servers`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listing: listing.id }),
+      });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        throw new Error(text || `Install failed (${r.status})`);
+      }
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
   };
 
-  const saveCustomPlugin = () => {
+  const removeMcpServer = async (id: string) => {
+    const headers = platformAuthHeaders();
+    if (!headers) return;
+    setBusyKey(`rm-mcp:${id}`);
+    setErrorMsg(null);
+    try {
+      const r = await fetch(`${platformApiBase()}/v1/tools/mcp/servers/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!r.ok) throw new Error(`Disconnect failed (${r.status})`);
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const saveCustomMcp = async () => {
     const name = customName.trim();
     const endpoint = customEndpoint.trim();
-    if (!name || !endpoint || !addingCustom) return;
-    const next = [
-      ...customPlugins,
-      { id: `custom-${Date.now().toString(36)}`, name, endpoint, kind: addingCustom },
-    ];
-    setCustomPlugins(next);
-    try {
-      localStorage.setItem(CUSTOM_PLUGINS_KEY, JSON.stringify(next));
-    } catch {
-      // ignore
+    if (!name || !endpoint) return;
+    const headers = platformAuthHeaders();
+    if (!headers) {
+      onSignIn?.();
+      return;
     }
-    setCustomName('');
-    setCustomEndpoint('');
-    setAddingCustom(null);
+    setBusyKey('custom-mcp');
+    setErrorMsg(null);
+    try {
+      const isHttp = /^https?:\/\//i.test(endpoint);
+      const body = isHttp
+        ? { name, url: endpoint }
+        : { name, command: endpoint.split(/\s+/)[0], args: endpoint.split(/\s+/).slice(1) };
+      const r = await fetch(`${platformApiBase()}/v1/tools/mcp/servers`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        throw new Error(text || `Could not add MCP server (${r.status})`);
+      }
+      setCustomName('');
+      setCustomEndpoint('');
+      setAddingCustom(false);
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
   };
 
-  const removeCustomPlugin = (id: string) => {
-    const next = customPlugins.filter((p) => p.id !== id);
-    setCustomPlugins(next);
+  const connectOAuthProvider = async (prov: ConnectionProvider) => {
+    const headers = platformAuthHeaders();
+    if (!headers) {
+      onSignIn?.();
+      return;
+    }
+    setBusyKey(`conn:${prov.id}`);
+    setErrorMsg(null);
     try {
-      localStorage.setItem(CUSTOM_PLUGINS_KEY, JSON.stringify(next));
-    } catch {
-      // ignore
+      const r = await fetch(`${platformApiBase()}/v1/connection/${encodeURIComponent(prov.id)}/device`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        throw new Error(text || `Could not start ${prov.name} sign-in (${r.status})`);
+      }
+      const data = (await r.json()) as { userCode?: string; verifyUrl?: string; authorizeUrl?: string };
+      const targetUrl = data.verifyUrl || data.authorizeUrl;
+      if (data.userCode && targetUrl) {
+        setDevicePrompt({
+          provider: prov.id,
+          name: prov.name,
+          userCode: data.userCode,
+          verifyUrl: targetUrl,
+        });
+      }
+      if (targetUrl) {
+        await openUrl(targetUrl);
+      }
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const disconnectOAuthProvider = async (providerId: string) => {
+    const headers = platformAuthHeaders();
+    if (!headers) return;
+    setBusyKey(`rm-conn:${providerId}`);
+    setErrorMsg(null);
+    try {
+      const r = await fetch(`${platformApiBase()}/v1/connection/${encodeURIComponent(providerId)}`, {
+        method: 'DELETE',
+        headers,
+      });
+      if (!r.ok) throw new Error(`Disconnect failed (${r.status})`);
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const mutateChannel = async (chan: ChannelRow, verb: 'connect' | 'disconnect') => {
+    const headers = platformAuthHeaders();
+    if (!headers) {
+      onSignIn?.();
+      return;
+    }
+    setBusyKey(`chan:${chan.id}`);
+    setErrorMsg(null);
+    try {
+      const r = await fetch(`${platformApiBase()}/v1/provider/${encodeURIComponent(chan.id)}/${verb}`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: '{}',
+      });
+      if (!r.ok) {
+        const text = await r.text().catch(() => '');
+        throw new Error(text || `${verb === 'connect' ? 'Connect' : 'Disconnect'} failed (${r.status})`);
+      }
+      const j = (await r.json().catch(() => ({}))) as { authorizeUrl?: string };
+      if (j.authorizeUrl) {
+        await openUrl(j.authorizeUrl);
+      }
+      await loadAll(debouncedQuery);
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
+  const toggleSkill = async (skill: SkillRow) => {
+    const headers = platformAuthHeaders();
+    if (!headers) {
+      onSignIn?.();
+      return;
+    }
+    setBusyKey(`skill:${skill.name}`);
+    setErrorMsg(null);
+    try {
+      const body = skill.activated ? { deactivate: [skill.name] } : { activate: [skill.name] };
+      const r = await fetch(`${platformApiBase()}/v1/tools/activation`, {
+        method: 'PUT',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error(`Skill update failed (${r.status})`);
+      const data = (await r.json().catch(() => null)) as { enabled?: string[] } | null;
+      if (Array.isArray(data?.enabled)) {
+        const enabledSet = new Set(data.enabled);
+        setSkills((prev) => prev.map((s) => ({ ...s, activated: enabledSet.has(s.name) })));
+      } else {
+        await loadAll(debouncedQuery);
+      }
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusyKey(null);
     }
   };
 
   const q = query.trim().toLowerCase();
-  const visibleDirectory = DIRECTORY_PLUGINS.filter((item) => {
-    if (filter !== 'all' && item.kind !== filter) return false;
-    if (!q) return true;
-    return (
-      item.name.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q) ||
-      item.author.toLowerCase().includes(q)
-    );
-  });
+  const filteredConnProviders = useMemo(
+    () =>
+      connProviders.filter(
+        (p) =>
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q),
+      ),
+    [connProviders, q],
+  );
+  const filteredChannels = useMemo(
+    () =>
+      channels.filter(
+        (c) =>
+          !q ||
+          c.name.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.category.toLowerCase().includes(q),
+      ),
+    [channels, q],
+  );
+  const filteredSkills = useMemo(
+    () =>
+      skills.filter(
+        (s) => !q || s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q),
+      ),
+    [skills, q],
+  );
 
-  const enabledDirectoryItems = DIRECTORY_PLUGINS.filter((item) => enabledIds.includes(item.id));
+  const connectedChannels = useMemo(() => channels.filter((c) => c.connected), [channels]);
+  const activeSkills = useMemo(() => skills.filter((s) => s.activated), [skills]);
+  const totalActiveCount =
+    1 +
+    (zapBrowsers.length > 0 ? 1 : 0) +
+    mcpServers.length +
+    connections.length +
+    connectedChannels.length +
+    activeSkills.length;
 
   return (
     <div data-slot="desktop-plugins-pane" className="hz-stage-overlay">
       <div className="hz-plugins-shell">
         <div className="hz-plugins-top">
           <div className="hz-plugins-title-row">
-            <h1>Plugins</h1>
+            <h1>Plugins &amp; Connectors</h1>
+            <button
+              type="button"
+              className="hz-icon-mini"
+              onClick={() => void loadAll(debouncedQuery)}
+              aria-label="Refresh connectors"
+              title="Refresh live status"
+            >
+              <RefreshCw size={14} />
+            </button>
           </div>
           <p className="hz-plugins-subtitle">
-            Connect Hanzo to your apps, channels, MCP servers, and skills. Hanzo MCP is natively installed.
+            Live MCP servers, OAuth connectors, messaging channels, org skills, and native ZAP browser extensions.
           </p>
 
           <div className="hz-plugins-controls">
@@ -912,7 +1001,7 @@ export function PluginsDirectoryOverlay({
               <Search size={14} className="hz-surface-item-icon" />
               <input
                 type="text"
-                placeholder="Search plugins, connectors, channels & skills"
+                placeholder="Search MCP registry, connectors, channels & skills"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search plugins"
@@ -928,7 +1017,7 @@ export function PluginsDirectoryOverlay({
               {(
                 [
                   ['all', 'All'],
-                  ['connector', 'Connectors'],
+                  ['connector', 'Connectors & MCP'],
                   ['channel', 'Channels'],
                   ['skill', 'Skills'],
                 ] as const
@@ -962,35 +1051,11 @@ export function PluginsDirectoryOverlay({
                     className="hz-surface-menu-item"
                     onClick={() => {
                       setAddMenuOpen(false);
-                      setAddingCustom('connector');
+                      setAddingCustom(true);
                     }}
                   >
                     <Link2 size={14} className="hz-surface-item-icon" />
-                    <span>Add custom MCP connector</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="hz-surface-menu-item"
-                    onClick={() => {
-                      setAddMenuOpen(false);
-                      setAddingCustom('channel');
-                    }}
-                  >
-                    <Radio size={14} className="hz-surface-item-icon" />
-                    <span>Add channel</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="hz-surface-menu-item"
-                    onClick={() => {
-                      setAddMenuOpen(false);
-                      setAddingCustom('skill');
-                    }}
-                  >
-                    <Upload size={14} className="hz-surface-item-icon" />
-                    <span>Upload plugin / skill</span>
+                    <span>Add custom MCP server</span>
                   </button>
                   <button
                     type="button"
@@ -1015,7 +1080,7 @@ export function PluginsDirectoryOverlay({
                     }}
                   >
                     <Globe size={14} className="hz-surface-item-icon" />
-                    <span>Browse marketplace</span>
+                    <span>Browse hanzo.market</span>
                   </button>
                 </div>
               ) : null}
@@ -1023,17 +1088,68 @@ export function PluginsDirectoryOverlay({
           </div>
         </div>
 
+        {errorMsg ? (
+          <div className="hz-custom-plugin-box" role="alert" style={{ borderColor: 'rgba(239,68,68,0.35)' }}>
+            <div className="hz-custom-plugin-head">
+              <span style={{ color: '#fca5a5' }}>{errorMsg}</span>
+              <button type="button" className="hz-icon-mini" onClick={() => setErrorMsg(null)}>
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {devicePrompt ? (
+          <div className="hz-custom-plugin-box" role="status">
+            <div className="hz-custom-plugin-head">
+              <span>Finish connecting {devicePrompt.name}</span>
+              <button type="button" className="hz-icon-mini" onClick={() => setDevicePrompt(null)}>
+                <X size={13} />
+              </button>
+            </div>
+            <div className="hz-provider-input-row">
+              <span style={{ fontSize: 13, color: 'rgba(245,245,245,0.72)' }}>Enter verification code:</span>
+              <code
+                style={{
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  background: '#1a1a1a',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  color: '#ffffff',
+                }}
+              >
+                {devicePrompt.userCode}
+              </code>
+              <button
+                type="button"
+                className="hz-pill-btn"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(devicePrompt.userCode);
+                  setCopiedCode(true);
+                  window.setTimeout(() => setCopiedCode(false), 1500);
+                }}
+              >
+                {copiedCode ? 'Copied' : 'Copy code'}
+              </button>
+              <button
+                type="button"
+                className="hz-pill-btn"
+                onClick={() => void openUrl(devicePrompt.verifyUrl)}
+              >
+                Open sign-in page
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         {addingCustom ? (
           <div className="hz-custom-plugin-box">
             <div className="hz-custom-plugin-head">
-              <span>
-                {addingCustom === 'connector'
-                  ? 'Add custom MCP connector'
-                  : addingCustom === 'channel'
-                    ? 'Add messaging channel'
-                    : 'Add custom plugin or skill'}
-              </span>
-              <button type="button" className="hz-icon-mini" onClick={() => setAddingCustom(null)}>
+              <span>Add custom MCP server</span>
+              <button type="button" className="hz-icon-mini" onClick={() => setAddingCustom(false)}>
                 <X size={13} />
               </button>
             </div>
@@ -1048,16 +1164,17 @@ export function PluginsDirectoryOverlay({
               <input
                 type="text"
                 className="hz-surface-input"
-                placeholder={
-                  addingCustom === 'connector'
-                    ? 'https://mcp.example.com/sse or npx @org/mcp-server'
-                    : 'Endpoint URL, webhook, or local skill path'
-                }
+                placeholder="https://mcp.example.com/sse"
                 value={customEndpoint}
                 onChange={(e) => setCustomEndpoint(e.target.value)}
               />
-              <button type="button" className="hz-pill-btn" onClick={saveCustomPlugin}>
-                Add
+              <button
+                type="button"
+                className="hz-pill-btn"
+                disabled={busyKey === 'custom-mcp'}
+                onClick={() => void saveCustomMcp()}
+              >
+                {busyKey === 'custom-mcp' ? 'Adding…' : 'Install'}
               </button>
             </div>
           </div>
@@ -1066,10 +1183,8 @@ export function PluginsDirectoryOverlay({
         <div className="hz-plugins-body">
           <section className="hz-plugins-section">
             <div className="hz-plugins-section-head">
-              <h3>Your plugins</h3>
-              <span className="hz-plugins-count">
-                {2 + customPlugins.length + enabledDirectoryItems.length} active
-              </span>
+              <h3>Active &amp; installed</h3>
+              <span className="hz-plugins-count">{totalActiveCount} live</span>
             </div>
             <div className="hz-installed-list">
               <div className="hz-installed-row">
@@ -1079,9 +1194,11 @@ export function PluginsDirectoryOverlay({
                 <div className="hz-installed-meta">
                   <div className="hz-plugin-name-row">
                     <span>hanzo</span>
-                    <span className="hz-plugin-tag">Native</span>
+                    <span className="hz-plugin-tag">Native ZAP</span>
                   </div>
-                  <div className="hz-plugin-sub">Built-in MCP server · always installed</div>
+                  <div className="hz-plugin-sub">
+                    Built-in MCP &amp; ZAP router · {zapNodes.length} local node{zapNodes.length === 1 ? '' : 's'}
+                  </div>
                 </div>
                 <span className="hz-details-value">
                   <span className="hz-dot is-online" />
@@ -1096,118 +1213,358 @@ export function PluginsDirectoryOverlay({
                 <div className="hz-installed-meta">
                   <div className="hz-plugin-name-row">
                     <span>Control Chrome</span>
-                    <span className="hz-plugin-tag">Desktop extension</span>
+                    <span className="hz-plugin-tag">Browser extension</span>
                   </div>
-                  <div className="hz-plugin-sub">Live browser tabs & DOM automation via ZAP</div>
+                  <div className="hz-plugin-sub">
+                    {zapBrowsers.length > 0
+                      ? `${zapBrowsers.length} browser session${zapBrowsers.length === 1 ? '' : 's'} paired over native ZAP`
+                      : 'Install the Hanzo Browser Extension to automate live Chrome tabs over ZAP'}
+                  </div>
                 </div>
-                <span className="hz-details-value">
-                  <span className="hz-dot is-online" />
-                  Ready
-                </span>
+                {zapBrowsers.length > 0 ? (
+                  <span className="hz-details-value">
+                    <span className="hz-dot is-online" />
+                    Connected ({zapBrowsers.length})
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    className="hz-pill-btn"
+                    onClick={() => void openUrl('https://hanzo.ai/download')}
+                  >
+                    Install extension
+                  </button>
+                )}
               </div>
 
-              {customPlugins.map((cp) => (
-                <div key={cp.id} className="hz-installed-row">
+              {mcpServers.map((srv) => (
+                <div key={`srv-${srv.id}`} className="hz-installed-row">
                   <div className="hz-plugin-badge">
                     <Plug size={15} />
                   </div>
                   <div className="hz-installed-meta">
                     <div className="hz-plugin-name-row">
-                      <span>{cp.name}</span>
-                      <span className="hz-plugin-tag">Custom {cp.kind}</span>
+                      <span>{srv.name}</span>
+                      <span className="hz-plugin-tag">MCP</span>
                     </div>
-                    <div className="hz-plugin-sub">{cp.endpoint}</div>
-                  </div>
-                  <button
-                    type="button"
-                    className="hz-icon-mini"
-                    onClick={() => removeCustomPlugin(cp.id)}
-                    aria-label={`Remove ${cp.name}`}
-                  >
-                    <X size={13} />
-                  </button>
-                </div>
-              ))}
-
-              {enabledDirectoryItems.map((item) => (
-                <div key={item.id} className="hz-installed-row">
-                  <div className="hz-plugin-badge">
-                    <PluginIcon id={item.id} />
-                  </div>
-                  <div className="hz-installed-meta">
-                    <div className="hz-plugin-name-row">
-                      <span>{item.name}</span>
-                      <span className="hz-plugin-tag">{item.kindLabel}</span>
-                    </div>
-                    <div className="hz-plugin-sub">{item.description}</div>
+                    <div className="hz-plugin-sub">{srv.url || srv.listing || srv.transport || 'Connected MCP server'}</div>
                   </div>
                   <button
                     type="button"
                     className="hz-pill-btn"
-                    onClick={() => togglePlugin(item.id)}
+                    disabled={busyKey === `rm-mcp:${srv.id}`}
+                    onClick={() => void removeMcpServer(srv.id)}
                   >
-                    Connected
+                    {busyKey === `rm-mcp:${srv.id}` ? 'Removing…' : 'Disconnect'}
+                  </button>
+                </div>
+              ))}
+
+              {connections.map((conn) => (
+                <div key={`conn-${conn.provider}`} className="hz-installed-row">
+                  <div className="hz-plugin-badge">
+                    <PluginIcon id={conn.provider} />
+                  </div>
+                  <div className="hz-installed-meta">
+                    <div className="hz-plugin-name-row">
+                      <span>{conn.label || conn.provider}</span>
+                      <span className="hz-plugin-tag">Connector</span>
+                    </div>
+                    <div className="hz-plugin-sub">{conn.account || 'Connected via Hanzo Cloud'}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="hz-pill-btn"
+                    disabled={busyKey === `rm-conn:${conn.provider}`}
+                    onClick={() => void disconnectOAuthProvider(conn.provider)}
+                  >
+                    {busyKey === `rm-conn:${conn.provider}` ? 'Removing…' : 'Disconnect'}
+                  </button>
+                </div>
+              ))}
+
+              {connectedChannels.map((ch) => (
+                <div key={`ch-${ch.id}`} className="hz-installed-row">
+                  <div className="hz-plugin-badge">
+                    <PluginIcon id={`channel-${ch.id}`} />
+                  </div>
+                  <div className="hz-installed-meta">
+                    <div className="hz-plugin-name-row">
+                      <span>{ch.name}</span>
+                      <span className="hz-plugin-tag">Channel</span>
+                    </div>
+                    <div className="hz-plugin-sub">{ch.account || ch.description || 'Connected channel'}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="hz-pill-btn"
+                    disabled={busyKey === `chan:${ch.id}`}
+                    onClick={() => void mutateChannel(ch, 'disconnect')}
+                  >
+                    {busyKey === `chan:${ch.id}` ? 'Disconnecting…' : 'Disconnect'}
                   </button>
                 </div>
               ))}
             </div>
           </section>
 
-          <section className="hz-plugins-section">
-            <div className="hz-plugins-section-head">
-              <h3>
-                {filter === 'all'
-                  ? 'Directory'
-                  : filter === 'connector'
-                    ? 'Connectors & MCP servers'
-                    : filter === 'channel'
-                      ? 'Channels'
-                      : 'Skills & workflows'}
-              </h3>
-              <span className="hz-plugins-count">{visibleDirectory.length} available</span>
-            </div>
-
-            <div className="hz-directory-grid">
-              {visibleDirectory.map((item) => {
-                const connected = enabledIds.includes(item.id);
-                return (
-                  <div key={item.id} className="hz-directory-card">
-                    <div className="hz-plugin-badge">
-                      <PluginIcon id={item.id} />
-                    </div>
-                    <div className="hz-directory-card-body">
-                      <div className="hz-plugin-name-row">
-                        <span className="hz-directory-name">{item.name}</span>
-                        {item.verified ? (
-                          <BadgeCheck size={13} className="hz-verified-icon" />
-                        ) : null}
-                      </div>
-                      <p className="hz-directory-desc">{item.description}</p>
-                      <div className="hz-directory-meta">
-                        <span>{item.kindLabel}</span>
-                        <span>·</span>
-                        <span>By {item.author}</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className={`hz-connect-btn ${connected ? 'is-connected' : ''}`}
-                      onClick={() => togglePlugin(item.id)}
-                    >
-                      {connected ? (
-                        <>
-                          <Check size={12} />
-                          Added
-                        </>
-                      ) : (
-                        'Connect'
-                      )}
+          {!signedIn ? (
+            <section className="hz-plugins-section">
+              <div className="hz-custom-plugin-box">
+                <div className="hz-custom-plugin-head">
+                  <span>Sign in to connect cloud MCP servers, channels &amp; org skills</span>
+                  {onSignIn ? (
+                    <button type="button" className="hz-plugins-add-btn" onClick={onSignIn}>
+                      Sign in with Hanzo
                     </button>
+                  ) : null}
+                </div>
+                <p className="hz-plugins-subtitle">
+                  Org connectors, OAuth channels, and the live MCP registry require your Hanzo account session.
+                </p>
+              </div>
+            </section>
+          ) : loading ? (
+            <section className="hz-plugins-section">
+              <p className="hz-plugins-subtitle">Loading live connectors, channels, skills, and MCP registry…</p>
+            </section>
+          ) : (
+            <>
+              {(filter === 'all' || filter === 'connector') && filteredConnProviders.length > 0 ? (
+                <section className="hz-plugins-section">
+                  <div className="hz-plugins-section-head">
+                    <h3>Account connectors</h3>
+                    <span className="hz-plugins-count">{filteredConnProviders.length} available</span>
                   </div>
-                );
-              })}
-            </div>
-          </section>
+                  <div className="hz-directory-grid">
+                    {filteredConnProviders.map((prov) => {
+                      const isConnected = connectedProviderIds.has(prov.id);
+                      const busy = busyKey === `conn:${prov.id}` || busyKey === `rm-conn:${prov.id}`;
+                      return (
+                        <div key={`prov-${prov.id}`} className="hz-directory-card">
+                          <div className="hz-plugin-badge">
+                            <PluginIcon id={prov.id} />
+                          </div>
+                          <div className="hz-directory-card-body">
+                            <div className="hz-plugin-name-row">
+                              <span className="hz-directory-name">{prov.name}</span>
+                              <BadgeCheck size={13} className="hz-verified-icon" />
+                            </div>
+                            <p className="hz-directory-desc">{prov.description || 'OAuth / device connector'}</p>
+                            <div className="hz-directory-meta">
+                              <span>{prov.category}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className={`hz-connect-btn ${isConnected ? 'is-connected' : ''}`}
+                            disabled={busy}
+                            onClick={() =>
+                              void (isConnected ? disconnectOAuthProvider(prov.id) : connectOAuthProvider(prov))
+                            }
+                          >
+                            {busy ? (
+                              'Working…'
+                            ) : isConnected ? (
+                              <>
+                                <Check size={12} />
+                                Connected
+                              </>
+                            ) : (
+                              'Connect'
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+
+              {(filter === 'all' || filter === 'connector') ? (
+                <section className="hz-plugins-section">
+                  <div className="hz-plugins-section-head">
+                    <h3>MCP Registry</h3>
+                    <span className="hz-plugins-count">
+                      {debouncedQuery ? `${catalog.length} of ${catalogTotal} matching` : `${catalog.length} featured`}
+                    </span>
+                  </div>
+                  {catalog.length === 0 ? (
+                    <p className="hz-plugins-subtitle">
+                      {debouncedQuery ? `No MCP servers matching “${debouncedQuery}”.` : 'No MCP registry listings returned.'}
+                    </p>
+                  ) : (
+                    <div className="hz-directory-grid">
+                      {catalog.map((listing) => {
+                        const isInstalled = installedListingIds.has(listing.id);
+                        const reachable = isCatalogReachable(listing);
+                        const busy = busyKey === `mcp:${listing.id}`;
+                        const name = catalogLabel(listing);
+                        return (
+                          <div key={`cat-${listing.id}`} className="hz-directory-card">
+                            <div className="hz-plugin-badge">
+                              {listing.logo ? (
+                                <img
+                                  src={listing.logo}
+                                  alt=""
+                                  width={22}
+                                  height={22}
+                                  style={{ borderRadius: 5, objectFit: 'contain' }}
+                                />
+                              ) : (
+                                <PluginIcon id={name.toLowerCase()} />
+                              )}
+                            </div>
+                            <div className="hz-directory-card-body">
+                              <div className="hz-plugin-name-row">
+                                <span className="hz-directory-name">{name}</span>
+                              </div>
+                              <p className="hz-directory-desc">
+                                {listing.description || 'Published MCP server from registry.modelcontextprotocol.io'}
+                              </p>
+                              <div className="hz-directory-meta">
+                                <span>{reachable ? 'HTTP MCP' : `Local ${(listing.packages ?? [])[0]?.registry ?? 'stdio'}`}</span>
+                                {listing.vendor ? (
+                                  <>
+                                    <span>·</span>
+                                    <span>{listing.vendor}</span>
+                                  </>
+                                ) : null}
+                              </div>
+                            </div>
+                            {isInstalled ? (
+                              <span className="hz-connect-btn is-connected">
+                                <Check size={12} />
+                                Installed
+                              </span>
+                            ) : reachable ? (
+                              <button
+                                type="button"
+                                className="hz-connect-btn"
+                                disabled={busy}
+                                onClick={() => void installCatalogMcp(listing)}
+                              >
+                                {busy ? 'Installing…' : 'Install'}
+                              </button>
+                            ) : (
+                              <span className="hz-plugin-tag">CLI / Local</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              ) : null}
+
+              {(filter === 'all' || filter === 'channel') ? (
+                <section className="hz-plugins-section">
+                  <div className="hz-plugins-section-head">
+                    <h3>Channels</h3>
+                    <span className="hz-plugins-count">{filteredChannels.length} available</span>
+                  </div>
+                  {filteredChannels.length === 0 ? (
+                    <p className="hz-plugins-subtitle">No channels available for this workspace yet.</p>
+                  ) : (
+                    <div className="hz-directory-grid">
+                      {filteredChannels.map((ch) => {
+                        const busy = busyKey === `chan:${ch.id}`;
+                        return (
+                          <div key={`chan-${ch.id}`} className="hz-directory-card">
+                            <div className="hz-plugin-badge">
+                              <PluginIcon id={`channel-${ch.id}`} />
+                            </div>
+                            <div className="hz-directory-card-body">
+                              <div className="hz-plugin-name-row">
+                                <span className="hz-directory-name">{ch.name}</span>
+                              </div>
+                              <p className="hz-directory-desc">
+                                {ch.description || (ch.connected ? ch.account || 'Connected' : ch.category)}
+                              </p>
+                              <div className="hz-directory-meta">
+                                <span>{ch.connected ? ch.account || 'Connected' : ch.available ? ch.category : 'Needs app credentials'}</span>
+                              </div>
+                            </div>
+                            {ch.connected ? (
+                              <button
+                                type="button"
+                                className="hz-connect-btn is-connected"
+                                disabled={busy}
+                                onClick={() => void mutateChannel(ch, 'disconnect')}
+                              >
+                                {busy ? 'Working…' : 'Disconnect'}
+                              </button>
+                            ) : ch.available ? (
+                              <button
+                                type="button"
+                                className="hz-connect-btn"
+                                disabled={busy}
+                                onClick={() => void mutateChannel(ch, 'connect')}
+                              >
+                                {busy ? 'Opening…' : 'Connect'}
+                              </button>
+                            ) : (
+                              <span className="hz-plugin-tag">Admin setup</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              ) : null}
+
+              {(filter === 'all' || filter === 'skill') ? (
+                <section className="hz-plugins-section">
+                  <div className="hz-plugins-section-head">
+                    <h3>Org skills</h3>
+                    <span className="hz-plugins-count">
+                      {activeSkills.length} of {filteredSkills.length} enabled
+                    </span>
+                  </div>
+                  {filteredSkills.length === 0 ? (
+                    <p className="hz-plugins-subtitle">No skills configured in this organization yet.</p>
+                  ) : (
+                    <div className="hz-directory-grid">
+                      {filteredSkills.map((sk) => {
+                        const busy = busyKey === `skill:${sk.name}`;
+                        return (
+                          <div key={`sk-${sk.name}`} className="hz-directory-card">
+                            <div className="hz-plugin-badge">
+                              <Sparkles size={15} />
+                            </div>
+                            <div className="hz-directory-card-body">
+                              <div className="hz-plugin-name-row">
+                                <span className="hz-directory-name">{sk.name}</span>
+                              </div>
+                              <p className="hz-directory-desc">{sk.description || 'Agent skill'}</p>
+                            </div>
+                            <button
+                              type="button"
+                              className={`hz-connect-btn ${sk.activated ? 'is-connected' : ''}`}
+                              disabled={busy}
+                              onClick={() => void toggleSkill(sk)}
+                            >
+                              {busy ? (
+                                'Saving…'
+                              ) : sk.activated ? (
+                                <>
+                                  <Check size={12} />
+                                  Enabled
+                                </>
+                              ) : (
+                                'Enable'
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1378,7 +1735,7 @@ export function ProvidersPluginsOverlay({
   onClose: () => void;
 }) {
   if (initialTab === 'plugins') {
-    return <PluginsDirectoryOverlay onClose={onClose} />;
+    return <PluginsDirectoryOverlay onClose={onClose} onSignIn={onSignIn} />;
   }
 
   return (

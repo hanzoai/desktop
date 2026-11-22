@@ -4,7 +4,7 @@
 use std::sync::Arc;
 
 #[cfg(unix)]
-use crate::commands::browser::{browser, browsers, zap_call, zap_nodes};
+use crate::commands::browser::{browser, browsers, detect_local_tools, zap_call, zap_nodes};
 use crate::commands::engines::{engine_probe, engines_discover};
 use crate::commands::fetch::{get_request, post_request};
 use crate::commands::galxe::galxe_generate_proof;
@@ -277,6 +277,8 @@ fn main() {
             zap_nodes,
             #[cfg(unix)]
             zap_call,
+            #[cfg(unix)]
+            detect_local_tools,
                         retrieve_logs,
             download_logs,
             check_claude_installed,

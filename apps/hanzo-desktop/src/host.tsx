@@ -616,7 +616,10 @@ function Gate() {
   }, []);
 
   useEffect(() => {
-    const onOpenProviders = () => setProvidersPane('providers');
+    const onOpenProviders = () => {
+      setProvidersPane(null);
+      window.history.pushState(null, '', '/settings/providers');
+    };
     const onOpenPlugins = () => setProvidersPane('plugins');
     const onClickCapture = (e: globalThis.MouseEvent) => {
       const target = e.target as Element | null;
@@ -797,8 +800,10 @@ function Gate() {
     return <BenchmarkPage onBack={() => window.history.pushState(null, '', '/settings/advanced')} />;
   }
   if (isSettings) {
+    const sub = path.replace(/^\/settings\/?/, '').split('/')[0] || 'general';
     return (
       <DesktopSettings
+        initialSection={sub}
         isAuthenticated={isAuthenticated}
         siteUrl={SITE}
         localEngineUrl={LOCAL_ENGINE_URL}
@@ -827,30 +832,32 @@ function Gate() {
       data-right-open={rightOpen ? 'true' : undefined}
       data-active-section={activeSection}
     >
-      <div className="hz-desktop-main">
-        <div className="hz-desktop-app">
-          <Rooms router={router} path={appPath} route={appPath} Link={Anchor}>
-            <App bar={BAR} />
-          </Rooms>
-          {isLibraryPath ? (
-            <LibraryOverlay
-              onClose={() => window.history.pushState(null, '', '/chat')}
-            />
-          ) : null}
-          {providersPane ? (
-            <ProvidersPluginsOverlay
-              initialTab={providersPane}
-              onSignIn={() => {
-                setProvidersPane(null);
-                startSignIn();
-              }}
-              onClose={() => setProvidersPane(null)}
-            />
-          ) : null}
+      <div className="hz-desktop-row">
+        <div className="hz-desktop-main">
+          <div className="hz-desktop-app">
+            <Rooms router={router} path={appPath} route={appPath} Link={Anchor}>
+              <App bar={BAR} />
+            </Rooms>
+            {isLibraryPath ? (
+              <LibraryOverlay
+                onClose={() => window.history.pushState(null, '', '/chat')}
+              />
+            ) : null}
+            {providersPane ? (
+              <ProvidersPluginsOverlay
+                initialTab={providersPane}
+                onSignIn={() => {
+                  setProvidersPane(null);
+                  startSignIn();
+                }}
+                onClose={() => setProvidersPane(null)}
+              />
+            ) : null}
+          </div>
         </div>
-        <BottomTerminalDrawer />
+        <SurfacePanel />
       </div>
-      <SurfacePanel />
+      <BottomTerminalDrawer />
       <WorkspaceDetailsPopover
         onOpenSettings={() => window.history.pushState(null, '', '/settings')}
       />
@@ -862,26 +869,39 @@ export function Host() {
   const rawScheme = useScheme();
   const [ready, setReady] = useState(false);
 
-  // Default to dark theme unless the user explicitly chose light in appearance preferences
-  const scheme = (() => {
+  // Appearance profile: 'zen' (default pure Vercel/Hanzo Dev black), 'lelouch' (obsidian grey), or 'light'.
+  const [profile, setProfile] = useState<'zen' | 'lelouch' | 'light'>(() => {
     try {
-      const saved = localStorage.getItem('hanzo.appearance');
-      if (saved && saved.includes('"light"')) return 'light';
+      const raw = localStorage.getItem('hanzo.appearance');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { profile?: string; theme?: string };
+        if (parsed.profile === 'lelouch') return 'lelouch';
+        if (parsed.profile === 'light' || parsed.theme === 'light') return 'light';
+        if (parsed.profile === 'zen') return 'zen';
+      }
     } catch {}
-    return rawScheme || 'dark';
-  })();
-
-  // Keep Tailwind/dev-core `.dark` class in sync so `@hanzo/dev-core/style.css` never falls back to light `:root`.
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', scheme !== 'light');
-  }, [scheme]);
+    return rawScheme === 'light' ? 'light' : 'zen';
+  });
 
   useEffect(() => {
-    if (scheme === 'dark') {
-      document.documentElement.classList.remove('light', 't_light');
-      document.documentElement.classList.add('dark', 't_dark');
-    }
-  }, [scheme]);
+    const onAppearance = (e: Event) => {
+      const next = (e as CustomEvent<{ profile?: string }>).detail?.profile;
+      if (next === 'zen' || next === 'lelouch' || next === 'light') {
+        setProfile(next);
+      }
+    };
+    window.addEventListener('hanzo:appearance-change', onAppearance);
+    return () => window.removeEventListener('hanzo:appearance-change', onAppearance);
+  }, []);
+
+  const scheme = profile === 'light' ? 'light' : 'dark';
+
+  // Keep Tailwind/dev-core `.dark` class and `data-theme-profile` in sync.
+  useEffect(() => {
+    document.documentElement.dataset.themeProfile = profile;
+    document.documentElement.classList.remove('dark', 'light', 't_dark', 't_light');
+    document.documentElement.classList.add(scheme, `t_${scheme}`);
+  }, [profile, scheme]);
 
   useEffect(() => {
     const fallback = setTimeout(() => setReady(true), 1200);
