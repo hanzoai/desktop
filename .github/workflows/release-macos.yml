@@ -153,10 +153,12 @@ jobs:
           [ "$dec" = "$V" ] || { echo "::error::desktop/package.json declares $dec, expected $V" >&2; exit 1; }
 
       - name: Toolchain and workspace
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" ${{ matrix.rust_targets }}
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" ${{ matrix.rust_targets }}
 
       - name: Signing key
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
 
       - name: Build
         run: |
@@ -181,7 +183,8 @@ jobs:
 
       - name: Signatures verify against the key the app ships with
         if: matrix.arch == 'universal'
-        run: python3 -I "$RUNNER_TEMP/app-src/desktop/scripts/release/verify.py" "$UPDATER_CONF" "$RUNNER_TEMP/dist/Hanzo_Desktop_${V}_universal.app.tar.gz"
+        run: |
+          python3 -I "$RUNNER_TEMP/app-src/desktop/scripts/release/verify.py" "$UPDATER_CONF" "$RUNNER_TEMP/dist/Hanzo_Desktop_${V}_universal.app.tar.gz"
 
       - name: Upload
         run: |

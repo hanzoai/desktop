@@ -143,10 +143,12 @@ jobs:
           libglib2.0-bin libgtk-3-bin libgdk-pixbuf2.0-bin
 
       - name: Toolchain and workspace
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh"
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh"
 
       - name: Signing key
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
 
       - name: Build
         run: |
@@ -254,13 +256,16 @@ jobs:
           [ "$dec" = "$V" ] || { echo "::error::desktop/package.json declares $dec, expected $V" >&2; exit 1; }
 
       - name: Cross toolchain
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/cross-windows.sh"
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/cross-windows.sh"
 
       - name: Toolchain and workspace
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" "$TRIPLE"
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" "$TRIPLE"
 
       - name: Signing key
-        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
+        run: |
+          "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
 
       - name: Build
         run: |
@@ -285,7 +290,8 @@ jobs:
           ls -l "$d"
 
       - name: Signatures verify against the key the app ships with
-        run: python3 -I "$RUNNER_TEMP/app-src/desktop/scripts/release/verify.py" "$UPDATER_CONF" "$RUNNER_TEMP/dist/Hanzo_Desktop_${V}_x64-setup.exe"
+        run: |
+          python3 -I "$RUNNER_TEMP/app-src/desktop/scripts/release/verify.py" "$UPDATER_CONF" "$RUNNER_TEMP/dist/Hanzo_Desktop_${V}_x64-setup.exe"
 
       - name: Upload
         run: |
