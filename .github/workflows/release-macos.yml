@@ -1,0 +1,308 @@
+# Builds signed macOS (aarch64, x64, universal) Hanzo Desktop bundles on
+# GitHub-hosted macos-15 runners, uploads them to the hanzoai/desktop release
+# for v<version>, and refreshes SHA256SUMS and latest.json.
+name: release-macos
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_ref:
+        description: 'Source git ref to build (e.g. desktop-v1.1.70)'
+        required: true
+        default: 'main'
+        type: string
+      version:
+        description: 'Desktop semver version (e.g. 1.1.70)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-macos-${{ inputs.version }}
+  cancel-in-progress: false
+
+env:
+  RELEASE_REPO: hanzoai/desktop
+  GITHUB_TOKEN: ${{ github.token }}
+  KMS_CLIENT_ID: ${{ secrets.KMS_CLIENT_ID }}
+  KMS_CLIENT_SECRET: ${{ secrets.KMS_CLIENT_SECRET }}
+
+jobs:
+  meta:
+    runs-on: linux-amd64
+    concurrency:
+      group: desktop-release-draft-v${{ inputs.version }}
+      cancel-in-progress: false
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+      release: ${{ steps.meta.outputs.release }}
+      app_ref: ${{ steps.meta.outputs.app_ref }}
+    steps:
+      - id: meta
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_REF: ${{ inputs.app_ref }}
+        run: |
+          set -euo pipefail
+          version="${INPUT_VERSION#v}"
+          echo "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' \
+            || { echo "::error::invalid semver version: $INPUT_VERSION" >&2; exit 1; }
+          echo "$INPUT_REF" | grep -qE '^[A-Za-z0-9._/-]+$' \
+            || { echo "::error::invalid app_ref: $INPUT_REF" >&2; exit 1; }
+
+          tag="v${version}"
+          prerelease=false
+          case "$version" in *-*) prerelease=true ;; esac
+
+          api_base="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}"
+          api() {
+            curl -fsS --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$@"
+          }
+
+          rid=""
+          page=1
+          while :; do
+            out=$(api "$api_base/releases?per_page=100&page=$page")
+            rid=$(jq -r --arg t "$tag" '[.[] | select(.tag_name == $t)][0].id // empty' <<<"$out")
+            if [ -n "$rid" ]; then break; fi
+            [ "$(jq length <<<"$out")" -eq 100 ] || break
+            page=$((page + 1))
+          done
+
+          if [ -z "$rid" ]; then
+            rid=$(api -X POST "$api_base/releases" -H 'Content-Type: application/json' -d "$(jq -nc \
+              --arg t "$tag" --arg n "Hanzo Desktop $tag" --argjson pre "$prerelease" \
+              '{tag_name: $t, name: $n, draft: true, prerelease: $pre, target_commitish: "main", generate_release_notes: true}')" | jq -r .id)
+          fi
+
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "release=$rid"
+            echo "app_ref=$INPUT_REF"
+          } >> "$GITHUB_OUTPUT"
+          echo "release-macos: $tag (release $rid, ref $INPUT_REF)"
+
+  macos:
+    needs: meta
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            rust_targets: aarch64-apple-darwin
+            tauri_target: aarch64-apple-darwin
+          - arch: x64
+            rust_targets: x86_64-apple-darwin
+            tauri_target: x86_64-apple-darwin
+          - arch: universal
+            rust_targets: aarch64-apple-darwin x86_64-apple-darwin
+            tauri_target: universal-apple-darwin
+    runs-on: macos-15
+    timeout-minutes: 170
+    env:
+      V: ${{ needs.meta.outputs.version }}
+      APP_REF: ${{ needs.meta.outputs.app_ref }}
+      NODE_OPTIONS: --max_old_space_size=8192
+      APPLE_SIGNING_IDENTITY: '-'
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Fetch build tree into temporary workspace
+        env:
+          FALLBACK_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          endpoint="${KMS_ENDPOINT:-https://kms.hanzo.ai}"
+          kms_tok=$(curl -fsS --retry 3 "$endpoint/v1/kms/auth/login" -H 'Content-Type: application/json' \
+            -d "$(jq -nc --arg i "$KMS_CLIENT_ID" --arg s "$KMS_CLIENT_SECRET" '{clientId: $i, clientSecret: $s}')" \
+            | jq -r '.accessToken // empty')
+          [ -n "$kms_tok" ] || { echo "::error::KMS login refused" >&2; exit 1; }
+          echo "::add-mask::$kms_tok"
+
+          clone_tok=$(curl -fsS --retry 3 -H "Authorization: Bearer $kms_tok" \
+            "$endpoint/v1/kms/secrets/deploy/GITHUB_TOKEN?env=prod" | jq -r '.value // empty' || true)
+          [ -z "$clone_tok" ] || echo "::add-mask::$clone_tok"
+          [ -n "$clone_tok" ] || clone_tok="${FALLBACK_PAT:-}"
+          [ -n "$clone_tok" ] || { echo "::error::no deploy token available" >&2; exit 1; }
+
+          src="$RUNNER_TEMP/app-src"
+          rm -rf "$src"
+          if ! GIT_CONFIG_COUNT=1 \
+               GIT_CONFIG_KEY_0="url.https://x-access-token:${clone_tok}@github.com/.insteadOf" \
+               GIT_CONFIG_VALUE_0="https://github.com/" \
+               git clone --depth 1 --branch "$APP_REF" https://github.com/hanzo-inc/app.git "$src"; then
+            if [ -n "${FALLBACK_PAT:-}" ] && [ "$clone_tok" != "$FALLBACK_PAT" ]; then
+              rm -rf "$src"
+              GIT_CONFIG_COUNT=1 \
+              GIT_CONFIG_KEY_0="url.https://x-access-token:${FALLBACK_PAT}@github.com/.insteadOf" \
+              GIT_CONFIG_VALUE_0="https://github.com/" \
+                git clone --depth 1 --branch "$APP_REF" https://github.com/hanzo-inc/app.git "$src"
+            else
+              exit 1
+            fi
+          fi
+
+          dec=$(jq -r .version "$src/desktop/package.json")
+          [ "$dec" = "$V" ] || { echo "::error::desktop/package.json declares $dec, expected $V" >&2; exit 1; }
+
+      - name: Toolchain and workspace
+        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" ${{ matrix.rust_targets }}
+
+      - name: Signing key
+        run: "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/app-src/desktop"
+          pnpm exec tauri build --ci --target "${{ matrix.tauri_target }}" --bundles app,dmg
+
+      - name: Name the bundles
+        run: |
+          set -euo pipefail
+          s="$RUNNER_TEMP/app-src/desktop/scripts/release"
+          b="$RUNNER_TEMP/app-src/desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle"
+          d="$RUNNER_TEMP/dist"
+          rm -rf "$d" && mkdir -p "$d"
+          "$s/stage.sh" "$b/dmg/*.dmg" "$d/Hanzo_Desktop_${V}_${{ matrix.arch }}.dmg"
+          rm -f "$d/Hanzo_Desktop_${V}_${{ matrix.arch }}.dmg.sig"
+          if [ "${{ matrix.arch }}" = "universal" ]; then
+            "$s/stage.sh" "$b/macos/*.app.tar.gz" "$d/Hanzo_Desktop_${V}_universal.app.tar.gz"
+            test -f "$d/Hanzo_Desktop_${V}_universal.app.tar.gz.sig"
+          fi
+          ls -l "$d"
+
+      - name: Signatures verify against the key the app ships with
+        if: matrix.arch == 'universal'
+        run: python3 -I "$RUNNER_TEMP/app-src/desktop/scripts/release/verify.py" "$UPDATER_CONF" "$RUNNER_TEMP/dist/Hanzo_Desktop_${V}_universal.app.tar.gz"
+
+      - name: Upload
+        run: |
+          set -euo pipefail
+          export GITHUB_TOKEN="${{ github.token }}"
+          api_base="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}"
+          upload_base="https://uploads.github.com/repos/${GITHUB_REPOSITORY}"
+          api() {
+            curl -fsS --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$@"
+          }
+          release_assets() { api "$api_base/releases/$1/assets?per_page=100"; }
+          asset_put() {
+            local rid=$1 file=$2 name size aid got try
+            name=$(basename "$file")
+            size=$(wc -c < "$file" | tr -d ' ')
+            for try in 1 2 3 4 5 6; do
+              for aid in $(release_assets "$rid" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id'); do
+                api -X DELETE "$api_base/releases/assets/$aid" >/dev/null
+              done
+              if curl -fsS --max-time 3000 -X POST -o /dev/null \
+                  -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/octet-stream" \
+                  --data-binary @"$file" "$upload_base/releases/$rid/assets?name=$(jq -rn --arg n "$name" '$n|@uri')"; then
+                got=$(release_assets "$rid" | jq -r --arg n "$name" '.[] | select(.name == $n) | .size')
+                if [ "$got" = "$size" ]; then echo "uploaded $name ($size bytes)"; return 0; fi
+              fi
+              echo "upload of $name failed (try $try)" >&2; sleep $((try * 10))
+            done
+            return 1
+          }
+          for f in "$RUNNER_TEMP/dist"/*; do asset_put "${{ needs.meta.outputs.release }}" "$f"; done
+
+      - name: Clean temporary build tree
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/app-src" "$RUNNER_TEMP/dist"
+
+  manifest:
+    needs: [meta, macos]
+    runs-on: linux-amd64
+    concurrency:
+      group: desktop-release-manifest-v${{ inputs.version }}
+      cancel-in-progress: false
+    env:
+      ID: ${{ needs.meta.outputs.release }}
+      TAG: ${{ needs.meta.outputs.tag }}
+      V: ${{ needs.meta.outputs.version }}
+    steps:
+      - name: Recompute SHA256SUMS and latest.json
+        run: |
+          set -euo pipefail
+          api_base="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}"
+          upload_base="https://uploads.github.com/repos/${GITHUB_REPOSITORY}"
+          api() {
+            curl -fsS --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "$@"
+          }
+          release_assets() { api "$api_base/releases/$1/assets?per_page=100"; }
+          asset_put() {
+            local rid=$1 file=$2 name size aid got try
+            name=$(basename "$file")
+            size=$(wc -c < "$file" | tr -d ' ')
+            for try in 1 2 3 4 5 6; do
+              for aid in $(release_assets "$rid" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id'); do
+                api -X DELETE "$api_base/releases/assets/$aid" >/dev/null
+              done
+              if curl -fsS --max-time 3000 -X POST -o /dev/null \
+                  -H "Authorization: Bearer $GITHUB_TOKEN" -H "Content-Type: application/octet-stream" \
+                  --data-binary @"$file" "$upload_base/releases/$rid/assets?name=$(jq -rn --arg n "$name" '$n|@uri')"; then
+                got=$(release_assets "$rid" | jq -r --arg n "$name" '.[] | select(.name == $n) | .size')
+                if [ "$got" = "$size" ]; then echo "uploaded $name ($size bytes)"; return 0; fi
+              fi
+              echo "upload of $name failed (try $try)" >&2; sleep $((try * 10))
+            done
+            return 1
+          }
+
+          out=$(mktemp -d)
+          tries=60 pause=10
+          withdigest='select(.name != "SHA256SUMS" and .name != "latest.json")'
+          for try in $(seq "$tries"); do
+            assets=$(release_assets "$ID")
+            jq -e "all(.[] | $withdigest; (.digest // \"\") | startswith(\"sha256:\"))" <<<"$assets" >/dev/null && break
+            [ "$try" -lt "$tries" ] || { echo "::error::missing sha256 digest after $tries tries" >&2; exit 1; }
+            sleep "$pause"
+          done
+
+          jq -r '.[] | select(.name != "SHA256SUMS" and .name != "latest.json")
+                 | "\(.digest[7:])  \(.name)"' <<<"$assets" | LC_ALL=C sort -k2 > "$out/SHA256SUMS"
+
+          has() { jq -e --arg n "$1" 'any(.[]; .name == $n)' <<<"$assets" >/dev/null; }
+          sig() {
+            local id
+            id=$(jq -r --arg n "$1.sig" '.[] | select(.name == $n) | .id' <<<"$assets")
+            curl -fsSL --retry 3 -H "Authorization: Bearer $GITHUB_TOKEN" -H "Accept: application/octet-stream" \
+              "$api_base/releases/assets/$id" | tr -d '\n'
+          }
+
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+          platforms='{}'
+          while read -r bundle keys; do
+            has "$bundle" && has "$bundle.sig" || continue
+            s=$(sig "$bundle")
+            for key in $keys; do
+              platforms=$(jq --arg k "$key" --arg s "$s" --arg u "$base/$bundle" \
+                '. + {($k): {signature: $s, url: $u}}' <<<"$platforms")
+            done
+          done <<LIST
+          Hanzo_Desktop_${V}_amd64.AppImage linux-x86_64 linux-x86_64-appimage
+          Hanzo_Desktop_${V}_arm64.AppImage linux-aarch64 linux-aarch64-appimage
+          Hanzo_Desktop_${V}_amd64.deb linux-x86_64-deb
+          Hanzo_Desktop_${V}_arm64.deb linux-aarch64-deb
+          Hanzo_Desktop-${V}-1.x86_64.rpm linux-x86_64-rpm
+          Hanzo_Desktop-${V}-1.aarch64.rpm linux-aarch64-rpm
+          Hanzo_Desktop_${V}_x64-setup.exe windows-x86_64 windows-x86_64-nsis
+          Hanzo_Desktop_${V}_universal.app.tar.gz darwin-aarch64 darwin-x86_64 darwin-aarch64-app darwin-x86_64-app
+          LIST
+
+          jq -n --arg v "$V" --arg n "Hanzo Desktop $V" --arg d "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --argjson p "$platforms" '{version: $v, notes: $n, pub_date: $d, platforms: $p}' > "$out/latest.json"
+
+          asset_put "$ID" "$out/SHA256SUMS"
+          asset_put "$ID" "$out/latest.json"
+          echo "latest.json platforms: $(jq -r '.platforms | keys | join(", ")' "$out/latest.json")"
+          rm -rf "$out"
