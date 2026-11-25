@@ -114,6 +114,14 @@ jobs:
         with:
           node-version: 22
 
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Test macOS Node packaging
+        if: matrix.arch == 'universal'
+        run: bash scripts/test-macos-hanzod.sh
+
       - name: Fetch build tree into temporary workspace
         env:
           FALLBACK_PAT: ${{ secrets.GH_PAT }}
@@ -156,6 +164,11 @@ jobs:
         run: |
           "$RUNNER_TEMP/app-src/desktop/scripts/release/prepare.sh" ${{ matrix.rust_targets }}
 
+      - name: Stage Hanzo Node sidecar
+        run: |
+          bash "$GITHUB_WORKSPACE/scripts/macos-hanzod.sh" stage "${{ matrix.tauri_target }}" \
+            "$RUNNER_TEMP/app-src/desktop/src-tauri"
+
       - name: Signing key
         run: |
           "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
@@ -180,6 +193,11 @@ jobs:
             test -f "$d/Hanzo_Desktop_${V}_universal.app.tar.gz.sig"
           fi
           ls -l "$d"
+
+      - name: Verify Hanzo Node in the app bundle
+        run: |
+          bash "$GITHUB_WORKSPACE/scripts/macos-hanzod.sh" verify "${{ matrix.tauri_target }}" \
+            "$RUNNER_TEMP/app-src/desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle/macos/Hanzo.app"
 
       - name: Signatures verify against the key the app ships with
         if: matrix.arch == 'universal'
