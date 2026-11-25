@@ -1,4 +1,4 @@
-# Builds signed macOS (aarch64, x64, universal) Hanzo Desktop bundles on
+# Builds Developer ID-signed and notarized macOS (aarch64, x64, universal) bundles on
 # GitHub-hosted macos-15 runners, uploads them to the hanzoai/desktop release
 # for v<version>, and refreshes SHA256SUMS and latest.json.
 name: release-macos
@@ -108,7 +108,6 @@ jobs:
       V: ${{ needs.meta.outputs.version }}
       APP_REF: ${{ needs.meta.outputs.app_ref }}
       NODE_OPTIONS: --max_old_space_size=8192
-      APPLE_SIGNING_IDENTITY: '-'
     steps:
       - uses: actions/setup-node@v4
         with:
@@ -160,21 +159,74 @@ jobs:
         run: |
           "$RUNNER_TEMP/app-src/desktop/scripts/release/signing.sh" release
 
-      - name: Build
+      - name: Build, sign, and notarize macOS bundles
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
+          TAURI_TARGET: ${{ matrix.tauri_target }}
         run: |
           set -euo pipefail
-          cd "$RUNNER_TEMP/app-src/desktop"
-          pnpm exec tauri build --ci --target "${{ matrix.tauri_target }}" --bundles app,dmg
+          : "${APPLE_CERTIFICATE:?Configure the base64 Developer ID Application .p12}"
+          : "${APPLE_CERTIFICATE_PASSWORD:?Configure the .p12 export password}"
+          : "${APPLE_API_ISSUER:?Configure the App Store Connect issuer ID}"
+          : "${APPLE_API_KEY:?Configure the App Store Connect key ID}"
+          : "${APPLE_API_PRIVATE_KEY:?Configure the App Store Connect .p8 contents}"
 
-      - name: Name the bundles
+          notary_dir=$(mktemp -d "$RUNNER_TEMP/apple-notary.XXXXXX")
+          trap 'rm -rf "$notary_dir"' EXIT
+          export APPLE_API_KEY_PATH="$notary_dir/AuthKey.p8"
+          (umask 077; printf '%s\n' "$APPLE_API_PRIVATE_KEY" > "$APPLE_API_KEY_PATH")
+          unset APPLE_API_PRIVATE_KEY
+
+          cd "$RUNNER_TEMP/app-src/desktop"
+          pnpm exec tauri build --ci --target "$TAURI_TARGET" --bundles app,dmg
+
+          bundle="src-tauri/target/$TAURI_TARGET/release/bundle"
+          set -- "$bundle"/macos/*.app
+          if [ "$#" -ne 1 ] || [ ! -d "$1" ]; then
+            echo "::error::Expected one macOS app in $bundle/macos"
+            exit 1
+          fi
+          app=$1
+
+          # Tauri notarizes the app before it builds the updater archive.
+          xcrun stapler validate "$app"
+          syspolicy_check distribution "$app"
+
+          set -- "$bundle"/dmg/*.dmg
+          if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+            echo "::error::Expected one macOS disk image in $bundle/dmg"
+            exit 1
+          fi
+          dmg=$1
+
+          # The separately distributed disk image needs its own stapled ticket.
+          codesign --verify --strict "$dmg"
+          result=$(xcrun notarytool submit "$dmg" --key "$APPLE_API_KEY_PATH" \
+            --key-id "$APPLE_API_KEY" --issuer "$APPLE_API_ISSUER" \
+            --wait --timeout 30m --output-format json)
+          if ! jq -e '.status == "Accepted"' <<<"$result" >/dev/null; then
+            printf '%s\n' "$result"
+            echo "::error::Apple did not accept the macOS disk image for notarization"
+            exit 1
+          fi
+          xcrun stapler staple "$dmg"
+
+      - name: Stage and verify the bundles
         run: |
           set -euo pipefail
           s="$RUNNER_TEMP/app-src/desktop/scripts/release"
           b="$RUNNER_TEMP/app-src/desktop/src-tauri/target/${{ matrix.tauri_target }}/release/bundle"
           d="$RUNNER_TEMP/dist"
+          dmg="$d/Hanzo_Desktop_${V}_${{ matrix.arch }}.dmg"
           rm -rf "$d" && mkdir -p "$d"
-          "$s/stage.sh" "$b/dmg/*.dmg" "$d/Hanzo_Desktop_${V}_${{ matrix.arch }}.dmg"
-          rm -f "$d/Hanzo_Desktop_${V}_${{ matrix.arch }}.dmg.sig"
+          "$s/stage.sh" "$b/dmg/*.dmg" "$dmg"
+          rm -f "$dmg.sig"
+          xcrun stapler validate "$dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$dmg"
           if [ "${{ matrix.arch }}" = "universal" ]; then
             "$s/stage.sh" "$b/macos/*.app.tar.gz" "$d/Hanzo_Desktop_${V}_universal.app.tar.gz"
             test -f "$d/Hanzo_Desktop_${V}_universal.app.tar.gz.sig"
