@@ -57,6 +57,9 @@ pnpm typecheck
 pnpm test
 pnpm build
 
+# Run endpoint switcher QA smoke tests
+node --test test/endpoint_switcher_smoke.test.mjs
+
 # Run the starter frontend in browser preview mode (http://localhost:1420)
 pnpm dev
 

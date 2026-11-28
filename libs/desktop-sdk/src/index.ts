@@ -35,3 +35,16 @@ export {
   EngineStatusBadge,
   type EngineStatusBadgeProps,
 } from './components/EngineStatusBadge';
+
+export {
+  getEndpointConfig,
+  saveEndpointConfig,
+  resetToLocalDefaults,
+  probeEndpoints,
+  isLoopbackUrl,
+  LOCAL_CLOUD_URL,
+  LOCAL_ENGINE_URL,
+  PROD_CLOUD_URL,
+  PROD_ENGINE_URL,
+  type DesktopEndpointConfig,
+} from './endpoint-manager';
